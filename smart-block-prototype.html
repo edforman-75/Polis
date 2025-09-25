@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Block LD-JSON Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .editor-side {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .json-side {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            color: #d4d4d4;
+            font-family: 'Monaco', 'Consolas', monospace;
+            overflow: auto;
+            max-height: 80vh;
+            position: sticky;
+            top: 20px;
+        }
+
+        .smart-block {
+            border: 2px solid #e9e9e7;
+            border-radius: 8px;
+            margin: 20px 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .smart-block:hover {
+            border-color: #2eaadc;
+            box-shadow: 0 2px 8px rgba(46, 170, 220, 0.1);
+        }
+
+        .smart-block.active {
+            border-color: #2eaadc;
+            box-shadow: 0 4px 12px rgba(46, 170, 220, 0.15);
+        }
+
+        .block-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9e9e7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .block-type {
+            background: #2eaadc;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .block-content {
+            padding: 16px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #2eaadc;
+            box-shadow: 0 0 0 3px rgba(46, 170, 220, 0.1);
+        }
+
+        .field-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .validation-status {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .validation-status.valid {
+            background: #28a745;
+        }
+
+        .validation-status.partial {
+            background: #ffc107;
+        }
+
+        .json-header {
+            color: #569cd6;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .json-output {
+            background: #2d2d30;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .json-key {
+            color: #9cdcfe;
+        }
+
+        .json-string {
+            color: #ce9178;
+        }
+
+        .json-number {
+            color: #b5cea8;
+        }
+
+        .json-boolean {
+            color: #569cd6;
+        }
+
+        .add-block-menu {
+            margin: 20px 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #e9e9e7;
+        }
+
+        .block-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .block-option:hover {
+            background: white;
+        }
+
+        .block-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .block-description {
+            flex: 1;
+        }
+
+        .block-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .block-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .schema-preview {
+            margin-top: 20px;
+            padding: 12px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            border-left: 4px solid #2eaadc;
+        }
+
+        .schema-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .schema-fields {
+            font-size: 11px;
+            color: #1e40af;
+        }
+
+        .validation-errors {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fef2f2;
+            border-radius: 4px;
+            border-left: 3px solid #dc3545;
+        }
+
+        .error-item {
+            font-size: 12px;
+            color: #dc3545;
+            margin-bottom: 4px;
+        }
+
+        .export-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2eaadc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46, 170, 220, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-side">
+            <h1>Smart Block Editor with LD-JSON</h1>
+            <p style="color: #6b7280; margin-bottom: 30px;">Create content blocks that automatically generate structured data for SEO and platform optimization.</p>
+
+            <div id="blocks-container">
+                <!-- Blocks will be added here -->
+            </div>
+
+            <div class="add-block-menu">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #37352f;">Add Smart Block:</div>
+
+                <div class="block-option" onclick="addBlock('event')">
+                    <div class="block-icon">📅</div>
+                    <div class="block-description">
+                        <div class="block-name">Event Block</div>
+                        <div class="block-desc">Campaign events, town halls, announcements</div>
+                    </div>
+                </div>
+
+                <div class="block-option" onclick="addBlock('quote')">
+                    <div class="block-icon">💬</div>
+                    <div class="block-description">
+                        <div class="block-name">Quote Block</div>
+                        <div class="block-desc">Candidate statements with attribution</div>
+                    </div>
+                </div>
+
+                <div class="block-option" onclick="addBlock('policy')">
+                    <div class="block-icon">📋</div>
+                    <div class="block-description">
+                        <div class="block-name">Policy Block</div>
+                        <div class="block-desc">Government services, bills, initiatives</div>
+                    </div>
+                </div>
+
+                <div class="block-option" onclick="addBlock('person')">
+                    <div class="block-icon">👤</div>
+                    <div class="block-description">
+                        <div class="block-name">Person Block</div>
+                        <div class="block-desc">Staff, endorsers, officials</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="json-side">
+            <div class="json-header">📊 Generated LD-JSON Schema</div>
+            <div id="json-output">
+                <div style="color: #6b7280; font-style: italic;">Add smart blocks to see generated schemas...</div>
+            </div>
+
+            <div class="json-header">🌐 SEO Preview</div>
+            <div id="seo-preview" style="background: #2d2d30; border-radius: 6px; padding: 15px; color: #d4d4d4; font-size: 12px;">
+                <div style="color: #6b7280; font-style: italic;">Rich snippets will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="export-button" onclick="exportData()">📤 Export All Schemas</button>
+
+    <script>
+        let blockCounter = 0;
+        let allBlocks = [];
+
+        const schemaTemplates = {
+            event: {
+                "@context": "https://schema.org",
+                "@type": "Event",
+                "name": "",
+                "startDate": "",
+                "location": {
+                    "@type": "Place",
+                    "name": "",
+                    "address": ""
+                },
+                "description": "",
+                "organizer": {
+                    "@type": "Person",
+                    "name": ""
+                },
+                "isAccessibleForFree": true
+            },
+            quote: {
+                "@context": "https://schema.org",
+                "@type": "Quotation",
+                "text": "",
+                "spokenByCharacter": {
+                    "@type": "Person",
+                    "name": "",
+                    "jobTitle": ""
+                },
+                "dateCreated": "",
+                "about": ""
+            },
+            policy: {
+                "@context": "https://schema.org",
+                "@type": "GovernmentService",
+                "name": "",
+                "description": "",
+                "serviceType": "",
+                "areaServed": "",
+                "provider": {
+                    "@type": "GovernmentOrganization",
+                    "name": ""
+                },
+                "availableChannel": {
+                    "@type": "ServiceChannel",
+                    "serviceUrl": ""
+                }
+            },
+            person: {
+                "@context": "https://schema.org",
+                "@type": "Person",
+                "name": "",
+                "jobTitle": "",
+                "affiliation": {
+                    "@type": "Organization",
+                    "name": ""
+                },
+                "description": "",
+                "url": ""
+            }
+        };
+
+        function addBlock(type) {
+            const blockId = `block-${++blockCounter}`;
+            const block = {
+                id: blockId,
+                type: type,
+                data: JSON.parse(JSON.stringify(schemaTemplates[type])),
+                valid: false
+            };
+
+            allBlocks.push(block);
+            renderBlock(block);
+            updateJsonOutput();
+        }
+
+        function renderBlock(block) {
+            const container = document.getElementById('blocks-container');
+            const blockElement = document.createElement('div');
+            blockElement.className = 'smart-block';
+            blockElement.id = block.id;
+
+            let fieldsHtml = '';
+            if (block.type === 'event') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <label class="field-label">Event Name *</label>
+                        <input type="text" class="field-input" placeholder="Veterans Day Town Hall"
+                               onchange="updateBlockData('${block.id}', 'name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Date & Time *</label>
+                        <input type="datetime-local" class="field-input"
+                               onchange="updateBlockData('${block.id}', 'startDate', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Venue Name *</label>
+                        <input type="text" class="field-input" placeholder="Austin Community Center"
+                               onchange="updateBlockData('${block.id}', 'location.name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Address</label>
+                        <input type="text" class="field-input" placeholder="1234 Main St, Austin, TX"
+                               onchange="updateBlockData('${block.id}', 'location.address', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Description</label>
+                        <textarea class="field-input field-textarea" placeholder="Join us for a discussion on veterans' issues..."
+                                  onchange="updateBlockData('${block.id}', 'description', this.value)"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Organizer</label>
+                        <input type="text" class="field-input" placeholder="Jane Smith Campaign"
+                               onchange="updateBlockData('${block.id}', 'organizer.name', this.value)">
+                    </div>
+                `;
+            } else if (block.type === 'quote') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <label class="field-label">Quote Text *</label>
+                        <textarea class="field-input field-textarea" placeholder="We have a sacred duty to those who served our country"
+                                  onchange="updateBlockData('${block.id}', 'text', this.value)"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Speaker Name *</label>
+                        <input type="text" class="field-input" placeholder="Jane Smith"
+                               onchange="updateBlockData('${block.id}', 'spokenByCharacter.name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Speaker Title</label>
+                        <input type="text" class="field-input" placeholder="Congressional Candidate"
+                               onchange="updateBlockData('${block.id}', 'spokenByCharacter.jobTitle', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Date</label>
+                        <input type="date" class="field-input"
+                               onchange="updateBlockData('${block.id}', 'dateCreated', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">About/Context</label>
+                        <input type="text" class="field-input" placeholder="Veterans Day announcement"
+                               onchange="updateBlockData('${block.id}', 'about', this.value)">
+                    </div>
+                `;
+            } else if (block.type === 'policy') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <label class="field-label">Service/Program Name *</label>
+                        <input type="text" class="field-input" placeholder="Veterans Job Training Program"
+                               onchange="updateBlockData('${block.id}', 'name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Description *</label>
+                        <textarea class="field-input field-textarea" placeholder="Comprehensive job training for veterans transitioning to civilian careers"
+                                  onchange="updateBlockData('${block.id}', 'description', this.value)"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Service Type</label>
+                        <input type="text" class="field-input" placeholder="Veterans Services"
+                               onchange="updateBlockData('${block.id}', 'serviceType', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Area Served</label>
+                        <input type="text" class="field-input" placeholder="Congressional District 7"
+                               onchange="updateBlockData('${block.id}', 'areaServed', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Provider Organization</label>
+                        <input type="text" class="field-input" placeholder="Office of Jane Smith"
+                               onchange="updateBlockData('${block.id}', 'provider.name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Website/Application URL</label>
+                        <input type="url" class="field-input" placeholder="https://example.com/veterans-program"
+                               onchange="updateBlockData('${block.id}', 'availableChannel.serviceUrl', this.value)">
+                    </div>
+                `;
+            } else if (block.type === 'person') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <label class="field-label">Full Name *</label>
+                        <input type="text" class="field-input" placeholder="Jane Smith"
+                               onchange="updateBlockData('${block.id}', 'name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Job Title</label>
+                        <input type="text" class="field-input" placeholder="Congressional Candidate"
+                               onchange="updateBlockData('${block.id}', 'jobTitle', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Organization</label>
+                        <input type="text" class="field-input" placeholder="Smith for Congress"
+                               onchange="updateBlockData('${block.id}', 'affiliation.name', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Bio/Description</label>
+                        <textarea class="field-input field-textarea" placeholder="Jane Smith is a lifelong advocate for veterans' rights..."
+                                  onchange="updateBlockData('${block.id}', 'description', this.value)"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Website</label>
+                        <input type="url" class="field-input" placeholder="https://janesmith.com"
+                               onchange="updateBlockData('${block.id}', 'url', this.value)">
+                    </div>
+                `;
+            }
+
+            blockElement.innerHTML = `
+                <div class="validation-status" id="status-${block.id}"></div>
+                <div class="block-header">
+                    <span class="block-type">${block.type}</span>
+                    <span>${getBlockTitle(block.type)}</span>
+                </div>
+                <div class="block-content">
+                    ${fieldsHtml}
+                    <div class="schema-preview">
+                        <div class="schema-title">Generated Schema Fields:</div>
+                        <div class="schema-fields" id="preview-${block.id}">Building schema...</div>
+                    </div>
+                    <div class="validation-errors" id="errors-${block.id}" style="display: none;"></div>
+                </div>
+            `;
+
+            container.appendChild(blockElement);
+            validateBlock(block.id);
+        }
+
+        function getBlockTitle(type) {
+            const titles = {
+                event: 'Campaign Event',
+                quote: 'Quote Attribution',
+                policy: 'Government Service',
+                person: 'Person Profile'
+            };
+            return titles[type] || type;
+        }
+
+        function updateBlockData(blockId, path, value) {
+            const block = allBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            // Handle nested paths like 'location.name'
+            const pathParts = path.split('.');
+            let target = block.data;
+
+            for (let i = 0; i < pathParts.length - 1; i++) {
+                if (!target[pathParts[i]]) {
+                    target[pathParts[i]] = {};
+                }
+                target = target[pathParts[i]];
+            }
+
+            target[pathParts[pathParts.length - 1]] = value;
+
+            validateBlock(blockId);
+            updateJsonOutput();
+            updateSchemaPreview(blockId);
+        }
+
+        function validateBlock(blockId) {
+            const block = allBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            const errors = [];
+            const statusElement = document.getElementById(`status-${blockId}`);
+            const errorsElement = document.getElementById(`errors-${blockId}`);
+
+            // Basic validation rules
+            if (block.type === 'event') {
+                if (!block.data.name) errors.push('Event name is required');
+                if (!block.data.startDate) errors.push('Date and time is required');
+                if (!block.data.location?.name) errors.push('Venue name is required');
+            } else if (block.type === 'quote') {
+                if (!block.data.text) errors.push('Quote text is required');
+                if (!block.data.spokenByCharacter?.name) errors.push('Speaker name is required');
+            } else if (block.type === 'policy') {
+                if (!block.data.name) errors.push('Program name is required');
+                if (!block.data.description) errors.push('Description is required');
+            } else if (block.type === 'person') {
+                if (!block.data.name) errors.push('Full name is required');
+            }
+
+            block.valid = errors.length === 0;
+
+            // Update UI
+            if (errors.length === 0) {
+                statusElement.className = 'validation-status valid';
+                errorsElement.style.display = 'none';
+            } else {
+                statusElement.className = 'validation-status';
+                errorsElement.style.display = 'block';
+                errorsElement.innerHTML = errors.map(error => `<div class="error-item">• ${error}</div>`).join('');
+            }
+        }
+
+        function updateSchemaPreview(blockId) {
+            const block = allBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            const previewElement = document.getElementById(`preview-${blockId}`);
+            const requiredFields = getRequiredFields(block.type);
+            const filledFields = Object.keys(block.data).filter(key => {
+                const value = block.data[key];
+                return value && (typeof value !== 'object' || Object.keys(value).some(k => value[k]));
+            });
+
+            previewElement.innerHTML = `
+                <div>Required: ${requiredFields.join(', ')}</div>
+                <div>Filled: ${filledFields.length}/${Object.keys(block.data).length} fields</div>
+            `;
+        }
+
+        function getRequiredFields(type) {
+            const required = {
+                event: ['name', 'startDate', 'location'],
+                quote: ['text', 'spokenByCharacter'],
+                policy: ['name', 'description'],
+                person: ['name']
+            };
+            return required[type] || [];
+        }
+
+        function updateJsonOutput() {
+            const validBlocks = allBlocks.filter(b => b.valid);
+            const schemas = validBlocks.map(b => b.data);
+
+            const jsonOutput = document.getElementById('json-output');
+            const seoPreview = document.getElementById('seo-preview');
+
+            if (schemas.length === 0) {
+                jsonOutput.innerHTML = '<div style="color: #6b7280; font-style: italic;">Add and complete smart blocks to see generated schemas...</div>';
+                seoPreview.innerHTML = '<div style="color: #6b7280; font-style: italic;">Rich snippets will appear here...</div>';
+                return;
+            }
+
+            // Format JSON with syntax highlighting
+            const formattedJson = schemas.map(schema => {
+                return JSON.stringify(schema, null, 2)
+                    .replace(/"([^"]+)":/g, '<span class="json-key">"$1":</span>')
+                    .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+                    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+                    .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+            }).join(',\n\n');
+
+            jsonOutput.innerHTML = `<pre>${formattedJson}</pre>`;
+
+            // Generate SEO preview
+            const seoItems = validBlocks.map(block => {
+                if (block.type === 'event') {
+                    return `📅 <strong>${block.data.name}</strong><br>
+                            📍 ${block.data.location?.name || 'Location TBD'}<br>
+                            🕒 ${block.data.startDate ? new Date(block.data.startDate).toLocaleString() : 'Date TBD'}`;
+                } else if (block.type === 'quote') {
+                    return `💬 "${block.data.text}"<br>
+                            👤 — ${block.data.spokenByCharacter?.name || 'Unknown'}, ${block.data.spokenByCharacter?.jobTitle || ''}`;
+                } else if (block.type === 'policy') {
+                    return `📋 <strong>${block.data.name}</strong><br>
+                            🏛️ ${block.data.provider?.name || 'Government Service'}<br>
+                            📍 Serving: ${block.data.areaServed || 'Area TBD'}`;
+                } else if (block.type === 'person') {
+                    return `👤 <strong>${block.data.name}</strong><br>
+                            💼 ${block.data.jobTitle || 'Title TBD'}<br>
+                            🏢 ${block.data.affiliation?.name || 'Organization TBD'}`;
+                }
+                return '';
+            });
+
+            seoPreview.innerHTML = seoItems.join('<br><br>');
+        }
+
+        function exportData() {
+            const validBlocks = allBlocks.filter(b => b.valid);
+            if (validBlocks.length === 0) {
+                alert('Please complete at least one smart block before exporting.');
+                return;
+            }
+
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                blocks: validBlocks.map(b => ({
+                    type: b.type,
+                    schema: b.data
+                })),
+                combinedSchema: {
+                    "@context": "https://schema.org",
+                    "@graph": validBlocks.map(b => b.data)
+                }
+            };
+
+            // Create download
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `campaign-schemas-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize with an example
+        window.addEventListener('load', function() {
+            // Auto-add an event block as example
+            addBlock('event');
+        });
+    </script>
+</body>
+</html>

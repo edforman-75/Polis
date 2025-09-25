@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Mode Testing Interface</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .test-header {
+            color: #1e293b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .test-results {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-warning { background: #f59e0b; }
+        .status-info { background: #3b82f6; }
+
+        .test-step {
+            margin: 10px 0;
+            padding: 8px 12px;
+            border-left: 3px solid #e2e8f0;
+        }
+
+        .test-step.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .test-step.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .test-step.running {
+            border-left-color: #3b82f6;
+            background: #eff6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-header">🧪 Page Preview View Mode Testing</h1>
+
+        <p>This interface will test all three view modes in the page preview:</p>
+        <ul>
+            <li><strong>📝 Section View</strong> - Structured editing with hover labels</li>
+            <li><strong>✏️ Edit View</strong> - Raw content editing mode</li>
+            <li><strong>👁️ Preview View</strong> - Read-only final preview</li>
+        </ul>
+
+        <div style="margin: 20px 0;">
+            <button class="btn" onclick="runFullTest()">🚀 Run Full Test Suite</button>
+            <button class="btn btn-secondary" onclick="testSectionView()">📝 Test Section View</button>
+            <button class="btn btn-secondary" onclick="testEditView()">✏️ Test Edit View</button>
+            <button class="btn btn-secondary" onclick="testPreviewView()">👁️ Test Preview View</button>
+            <button class="btn btn-secondary" onclick="testSmartPaste()">📋 Test Smart Paste</button>
+            <button class="btn btn-secondary" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div class="test-results" id="testResults">
+Ready to run tests...
+
+Click "Run Full Test Suite" to automatically test all view modes and features.
+        </div>
+    </div>
+
+    <script>
+        let testWindow = null;
+        let testResults = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = `status-${type}`;
+            const entry = `[${timestamp}] ${message}`;
+
+            testResults.push({
+                timestamp,
+                message,
+                type,
+                entry
+            });
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.textContent = testResults.map(r => r.entry).join('\n');
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            testResults = [];
+            document.getElementById('testResults').textContent = 'Results cleared. Ready for new tests...';
+        }
+
+        async function openTestWindow() {
+            if (testWindow && !testWindow.closed) {
+                testWindow.close();
+            }
+
+            log('🔌 Opening page preview window...', 'info');
+
+            const url = 'http://localhost:3001/page-preview.html?title=Test Press Release&location=NEW YORK, NY - September 23, 2025&content=This is a test press release for the Campaign AI Editor system.';
+
+            testWindow = window.open(url, 'testWindow', 'width=1200,height=800');
+
+            return new Promise((resolve) => {
+                testWindow.onload = () => {
+                    setTimeout(() => {
+                        log('✅ Page preview window loaded successfully', 'success');
+                        resolve();
+                    }, 1000);
+                };
+
+                setTimeout(() => {
+                    if (!testWindow || testWindow.closed) {
+                        log('❌ Failed to open test window', 'error');
+                        resolve();
+                    }
+                }, 5000);
+            });
+        }
+
+        function executeInTestWindow(code) {
+            if (!testWindow || testWindow.closed) {
+                log('❌ Test window not available', 'error');
+                return null;
+            }
+
+            try {
+                return testWindow.eval(code);
+            } catch (error) {
+                log(`❌ Error executing code: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function testSectionView() {
+            log('📝 Testing Section View mode...', 'info');
+
+            if (!testWindow || testWindow.closed) {
+                await openTestWindow();
+            }
+
+            // Switch to section view
+            executeInTestWindow("switchViewMode('section')");
+            log('   → Switched to section view', 'success');
+
+            // Check if section view class is applied
+            const hasClass = executeInTestWindow("document.getElementById('page-content').classList.contains('section-view')");
+            if (hasClass) {
+                log('   → Section view CSS class applied correctly', 'success');
+            } else {
+                log('   → Section view CSS class NOT applied', 'error');
+            }
+
+            // Check if elements are editable
+            const isEditable = executeInTestWindow("document.getElementById('headline').contentEditable === 'true'");
+            if (isEditable) {
+                log('   → Headlines are properly editable', 'success');
+            } else {
+                log('   → Headlines are NOT editable', 'error');
+            }
+
+            // Test section hover labels (pseudo-elements can't be directly tested)
+            log('   → Section hover labels implemented (visual inspection needed)', 'info');
+
+            log('✅ Section View test completed', 'success');
+        }
+
+        async function testEditView() {
+            log('✏️ Testing Edit View mode...', 'info');
+
+            if (!testWindow || testWindow.closed) {
+                await openTestWindow();
+            }
+
+            // Switch to edit view
+            executeInTestWindow("switchViewMode('edit')");
+            log('   → Switched to edit view', 'success');
+
+            // Check if edit view class is applied
+            const hasClass = executeInTestWindow("document.getElementById('page-content').classList.contains('edit-view')");
+            if (hasClass) {
+                log('   → Edit view CSS class applied correctly', 'success');
+            } else {
+                log('   → Edit view CSS class NOT applied', 'error');
+            }
+
+            // Check if elements are editable
+            const isEditable = executeInTestWindow("document.getElementById('headline').contentEditable === 'true'");
+            if (isEditable) {
+                log('   → Content is properly editable in edit mode', 'success');
+            } else {
+                log('   → Content is NOT editable in edit mode', 'error');
+            }
+
+            // Check if headline gets focused (timing dependent)
+            setTimeout(() => {
+                const isFocused = executeInTestWindow("document.activeElement === document.getElementById('headline')");
+                if (isFocused) {
+                    log('   → Headline auto-focus working correctly', 'success');
+                } else {
+                    log('   → Headline auto-focus may not be working', 'warning');
+                }
+            }, 500);
+
+            log('✅ Edit View test completed', 'success');
+        }
+
+        async function testPreviewView() {
+            log('👁️ Testing Preview View mode...', 'info');
+
+            if (!testWindow || testWindow.closed) {
+                await openTestWindow();
+            }
+
+            // Switch to preview view
+            executeInTestWindow("switchViewMode('preview')");
+            log('   → Switched to preview view', 'success');
+
+            // Check if preview view class is applied
+            const hasClass = executeInTestWindow("document.getElementById('page-content').classList.contains('preview-view')");
+            if (hasClass) {
+                log('   → Preview view CSS class applied correctly', 'success');
+            } else {
+                log('   → Preview view CSS class NOT applied', 'error');
+            }
+
+            // Check if elements are NOT editable (read-only)
+            const isNotEditable = executeInTestWindow("document.getElementById('headline').contentEditable === 'false'");
+            if (isNotEditable) {
+                log('   → Content properly set to read-only', 'success');
+            } else {
+                log('   → Content is still editable (should be read-only)', 'error');
+            }
+
+            // Check if text is still selectable
+            const isSelectable = executeInTestWindow("getComputedStyle(document.getElementById('headline')).userSelect !== 'none'");
+            if (isSelectable) {
+                log('   → Text remains selectable for copying', 'success');
+            } else {
+                log('   → Text selection may be disabled', 'warning');
+            }
+
+            log('✅ Preview View test completed', 'success');
+        }
+
+        async function testSmartPaste() {
+            log('📋 Testing Smart Paste functionality...', 'info');
+
+            if (!testWindow || testWindow.closed) {
+                await openTestWindow();
+            }
+
+            // Switch to section view for smart paste testing
+            executeInTestWindow("switchViewMode('section')");
+
+            // Test smart paste dialog
+            executeInTestWindow("showPasteDialog()");
+            log('   → Smart paste dialog opened', 'success');
+
+            // Check if dialog exists
+            const dialogExists = executeInTestWindow("document.querySelector('[style*=\"position: fixed\"]') !== null");
+            if (dialogExists) {
+                log('   → Smart paste dialog is visible', 'success');
+            } else {
+                log('   → Smart paste dialog not found', 'error');
+            }
+
+            // Simulate pasting content
+            const testContent = `Breaking: NYC Council Candidate Announces Healthcare Initiative
+NEW YORK, NY - September 23, 2025
+"We need comprehensive healthcare for all New Yorkers," said the candidate during today's press conference.
+This groundbreaking initiative will provide accessible healthcare services to underserved communities throughout the district.`;
+
+            executeInTestWindow(`
+                const input = document.getElementById('paste-input');
+                if (input) {
+                    input.value = \`${testContent}\`;
+                }
+            `);
+
+            log('   → Test content added to paste dialog', 'success');
+
+            // Test intelligent content allocation
+            executeInTestWindow('processPastedContent()');
+            log('   → Smart paste processing executed', 'success');
+
+            // Verify content was allocated correctly
+            setTimeout(() => {
+                const headline = executeInTestWindow("document.getElementById('headline').textContent");
+                const location = executeInTestWindow("document.getElementById('location-date').textContent");
+
+                if (headline && headline.includes('Breaking')) {
+                    log('   → Headline properly allocated from smart paste', 'success');
+                } else {
+                    log('   → Headline allocation may have failed', 'warning');
+                }
+
+                if (location && location.includes('NEW YORK, NY')) {
+                    log('   → Location properly allocated from smart paste', 'success');
+                } else {
+                    log('   → Location allocation may have failed', 'warning');
+                }
+            }, 1000);
+
+            log('✅ Smart Paste test completed', 'success');
+        }
+
+        async function runFullTest() {
+            log('🚀 Starting full test suite...', 'info');
+            log('==========================================', 'info');
+
+            await openTestWindow();
+
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            await testSectionView();
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testEditView();
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testPreviewView();
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testSmartPaste();
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            log('==========================================', 'info');
+            log('🎉 Full test suite completed!', 'success');
+
+            const successCount = testResults.filter(r => r.type === 'success').length;
+            const errorCount = testResults.filter(r => r.type === 'error').length;
+            const warningCount = testResults.filter(r => r.type === 'warning').length;
+
+            log(`📊 Results: ${successCount} passed, ${errorCount} failed, ${warningCount} warnings`, 'info');
+        }
+
+        // Auto-run test on page load for demonstration
+        setTimeout(() => {
+            log('🔄 Auto-running full test suite in 2 seconds...', 'info');
+            setTimeout(runFullTest, 2000);
+        }, 1000);
+    </script>
+</body>
+</html>

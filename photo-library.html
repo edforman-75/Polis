@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Photo Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .filter-btn:hover:not(.active) {
+            background: #f1f5f9;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 12px;
+            min-width: 400px;
+            gap: 8px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .ai-search-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .ai-search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .search-loading {
+            color: #8b5cf6;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .search-results-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .photo-relevance {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(139, 92, 246, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .upload-btn {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .photo-preview {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder {
+            color: #94a3b8;
+            font-size: 48px;
+        }
+
+        .photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .photo-card:hover .photo-overlay {
+            opacity: 1;
+        }
+
+        .photo-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        .photo-info {
+            padding: 16px;
+        }
+
+        .photo-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .photo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .photo-date {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .photo-category {
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .photo-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .photo-tag {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .photo-usage {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px;
+        }
+
+        .modal-content {
+            padding: 20px;
+        }
+
+        .photo-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .photo-detail-preview {
+            aspect-ratio: 16/9;
+            background: #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-detail-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-detail-info {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 13px;
+        }
+
+        .detail-value {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .insert-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .insert-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .insert-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .size-options {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .size-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .size-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* Upload Modal Styles */
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📸 Campaign Photo Library</h1>
+        <p>Manage and organize photos for all campaign content</p>
+    </header>
+
+    <div class="container">
+        <div class="toolbar">
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterPhotos('all')">All Photos</button>
+                <button class="filter-btn" onclick="filterPhotos('events')">Events</button>
+                <button class="filter-btn" onclick="filterPhotos('portraits')">Portraits</button>
+                <button class="filter-btn" onclick="filterPhotos('community')">Community</button>
+                <button class="filter-btn" onclick="filterPhotos('policy')">Policy</button>
+                <button class="filter-btn" onclick="filterPhotos('social')">Social Media</button>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="search-box">
+                    <input type="text" placeholder="Try: 'photos of Mandami speaking to crowds' or 'warm family-friendly images'" id="photo-search" oninput="debounceAISearch()">
+                    <span id="search-icon">🔍</span>
+                    <button class="ai-search-btn" onclick="performAISearch()" title="AI-powered photo search">✨ AI Search</button>
+                    <button onclick="clearSearch()" title="Clear search" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px;">✕</button>
+                </div>
+                <button class="upload-btn" onclick="openUploadModal()">
+                    📤 Upload Photos
+                </button>
+            </div>
+        </div>
+
+        <div class="photo-grid" id="photo-grid">
+            <!-- Photos will be populated here -->
+        </div>
+    </div>
+
+    <!-- Photo Detail Modal -->
+    <div class="modal-overlay" id="photo-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Photo Details</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="photo-detail-grid">
+                    <div>
+                        <div class="photo-detail-preview" id="detail-preview">
+                            <!-- Photo will be shown here -->
+                        </div>
+                        <div class="insert-actions">
+                            <button class="insert-btn" onclick="insertPhoto('full')">
+                                📝 Insert Full Size
+                            </button>
+                            <button class="insert-btn" onclick="insertPhoto('medium')">
+                                📝 Insert Medium
+                            </button>
+                            <button class="insert-btn" onclick="insertPhoto('thumbnail')">
+                                📝 Insert Thumbnail
+                            </button>
+                        </div>
+                        <div class="size-options">
+                            <button class="size-btn active" data-size="full">Full Width</button>
+                            <button class="size-btn" data-size="medium">Medium</button>
+                            <button class="size-btn" data-size="small">Small</button>
+                        </div>
+                    </div>
+                    <div class="photo-detail-info" id="detail-info">
+                        <!-- Photo details will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="upload-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Upload Photos</div>
+                <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Click to upload or drag photos here</div>
+                    <div class="upload-hint">Supports JPG, PNG, WebP • Max 10MB per file</div>
+                </div>
+                <input type="file" id="file-input" multiple accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+
+                <div style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-input" id="upload-category">
+                            <option value="events">Events</option>
+                            <option value="portraits">Portraits</option>
+                            <option value="community">Community</option>
+                            <option value="policy">Policy</option>
+                            <option value="social">Social Media</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags (comma separated)</label>
+                        <input type="text" class="form-input" id="upload-tags" placeholder="townhall, healthcare, community">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Caption/Description</label>
+                        <input type="text" class="form-input" id="upload-caption" placeholder="Brief description of the photo">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend-api.js"></script>
+    <script>
+        // Campaign Photo Library - Mandami for NYC Campaign
+        const photoLibrary = [
+            {
+                id: 1,
+                title: "Mandami Healthcare Town Hall - Queens Community Center",
+                url: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "events",
+                tags: ["townhall", "healthcare", "queens", "speaking", "mandami"],
+                date: "2024-03-15",
+                usage: "Used in 5 posts",
+                size: "1920x1080",
+                caption: "Mandami addressing healthcare accessibility at Queens community town hall"
+            },
+            {
+                id: 2,
+                title: "Community Listening Session - Astoria",
+                url: "https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "events",
+                tags: ["community", "listening", "astoria", "engagement", "residents"],
+                date: "2024-03-12",
+                usage: "Used in 3 posts",
+                size: "1920x1080",
+                caption: "Residents sharing concerns about housing and transportation with Mandami"
+            },
+            {
+                id: 3,
+                title: "Official Campaign Portrait - Professional",
+                url: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80",
+                category: "portraits",
+                tags: ["headshot", "professional", "campaign", "mandami", "official"],
+                date: "2024-01-20",
+                usage: "Used in 15+ posts",
+                size: "2000x2000",
+                caption: "Official campaign portrait for Mandami's NYC Council race"
+            },
+            {
+                id: 4,
+                title: "Small Business Visit - Jackson Heights",
+                url: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "community",
+                tags: ["business", "jackson-heights", "economy", "immigrants", "local"],
+                date: "2024-03-08",
+                usage: "Used in 2 posts",
+                size: "1920x1080",
+                caption: "Mandami meeting immigrant business owners in Jackson Heights"
+            },
+            {
+                id: 5,
+                title: "Subway Infrastructure Tour - Roosevelt Ave",
+                url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "policy",
+                tags: ["subway", "infrastructure", "roosevelt", "transit", "MTA"],
+                date: "2024-03-05",
+                usage: "Used in 4 posts",
+                size: "1920x1080",
+                caption: "Mandami highlighting need for subway accessibility improvements"
+            },
+            {
+                id: 6,
+                title: "Community Festival - Diversity Plaza",
+                url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80",
+                category: "community",
+                tags: ["festival", "diversity", "families", "culture", "celebration"],
+                date: "2024-03-18",
+                usage: "Perfect for social media",
+                size: "1080x1080",
+                caption: "Celebrating cultural diversity at annual Diversity Plaza festival"
+            },
+            {
+                id: 7,
+                title: "Campaign Team Planning Session",
+                url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "portraits",
+                tags: ["team", "staff", "campaign", "planning", "strategy", "diverse"],
+                date: "2024-02-25",
+                usage: "Used in 1 post",
+                size: "1920x1080",
+                caption: "Mandami's diverse campaign team planning community outreach strategy"
+            },
+            {
+                id: 8,
+                title: "Housing Justice Rally - Court Square",
+                url: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "policy",
+                tags: ["housing", "justice", "rally", "affordability", "tenants"],
+                date: "2024-03-20",
+                usage: "Used in 6 posts",
+                size: "1920x1080",
+                caption: "Mandami speaking at housing affordability rally in Long Island City"
+            },
+            {
+                id: 9,
+                title: "School Visit - PS 122 Reading Program",
+                url: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "community",
+                tags: ["education", "children", "school", "reading", "ps122"],
+                date: "2024-03-22",
+                usage: "New - great for families",
+                size: "1920x1080",
+                caption: "Mandami reading with students during literacy week at PS 122"
+            },
+            {
+                id: 10,
+                title: "Street Team Canvassing - Elmhurst",
+                url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "portraits",
+                tags: ["canvassing", "volunteers", "elmhurst", "grassroots", "doorknocking"],
+                date: "2024-03-25",
+                usage: "Used in 2 posts",
+                size: "1920x1080",
+                caption: "Campaign volunteers canvassing in Elmhurst neighborhood"
+            },
+            {
+                id: 11,
+                title: "Climate Action Press Conference",
+                url: "https://images.unsplash.com/photo-1556075798-4825dfaaf498?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "policy",
+                tags: ["climate", "environment", "press", "green-new-deal", "sustainability"],
+                date: "2024-03-28",
+                usage: "Used in 3 posts",
+                size: "1920x1080",
+                caption: "Mandami announcing comprehensive climate action plan for NYC"
+            },
+            {
+                id: 12,
+                title: "Social Media Portrait - Casual",
+                url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80",
+                category: "social",
+                tags: ["social-media", "casual", "approachable", "instagram", "square"],
+                date: "2024-02-10",
+                usage: "Instagram ready",
+                size: "1080x1080",
+                caption: "Casual portrait perfect for social media engagement"
+            },
+            {
+                id: 13,
+                title: "Labor Union Endorsement Event",
+                url: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "events",
+                tags: ["union", "labor", "endorsement", "workers", "solidarity"],
+                date: "2024-03-30",
+                usage: "Used in 4 posts",
+                size: "1920x1080",
+                caption: "Receiving endorsement from Local 1199 healthcare workers union"
+            },
+            {
+                id: 14,
+                title: "Community Garden Initiative - Corona",
+                url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "community",
+                tags: ["garden", "environment", "corona", "food-justice", "sustainability"],
+                date: "2024-04-02",
+                usage: "New",
+                size: "1920x1080",
+                caption: "Mandami helping plant community garden in Corona neighborhood"
+            },
+            {
+                id: 15,
+                title: "Seniors Center Visit - Woodside",
+                url: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+                category: "community",
+                tags: ["seniors", "elderly", "woodside", "healthcare", "social-services"],
+                date: "2024-04-05",
+                usage: "Used in 1 post",
+                size: "1920x1080",
+                caption: "Meeting with seniors about Medicare and Social Security concerns"
+            }
+        ];
+
+        let currentFilter = 'all';
+        let searchTerm = '';
+        let selectedPhoto = null;
+
+        // Initialize photo library
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPhotos();
+        });
+
+        function renderPhotos() {
+            const grid = document.getElementById('photo-grid');
+            const filteredPhotos = photoLibrary.filter(photo => {
+                const matchesFilter = currentFilter === 'all' || photo.category === currentFilter;
+                const matchesSearch = searchTerm === '' ||
+                    photo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    photo.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                return matchesFilter && matchesSearch;
+            });
+
+            grid.innerHTML = filteredPhotos.map(photo => `
+                <div class="photo-card" onclick="openPhotoModal(${photo.id})">
+                    <div class="photo-preview">
+                        <img src="${photo.url}" alt="${photo.title}" loading="lazy">
+                        <div class="photo-overlay">
+                            <div class="photo-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); insertPhoto('medium', ${photo.id})">Insert</button>
+                                <button class="action-btn" onclick="event.stopPropagation(); openPhotoModal(${photo.id})">Details</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="photo-info">
+                        <div class="photo-title">${photo.title}</div>
+                        <div class="photo-meta">
+                            <div class="photo-date">${formatDate(photo.date)}</div>
+                            <div class="photo-category">${photo.category}</div>
+                        </div>
+                        <div class="photo-tags">
+                            ${photo.tags.slice(0, 3).map(tag => `<span class="photo-tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="photo-usage">
+                            📊 ${photo.usage}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterPhotos(category) {
+            currentFilter = category;
+
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderPhotos();
+        }
+
+        let aiSearchTimeout;
+        let currentSearchResults = null;
+
+        function searchPhotos() {
+            searchTerm = document.getElementById('photo-search').value;
+
+            // If we have AI search results, use them, otherwise fall back to basic search
+            if (currentSearchResults) {
+                renderAISearchResults();
+            } else {
+                renderPhotos();
+            }
+        }
+
+        function debounceAISearch() {
+            clearTimeout(aiSearchTimeout);
+            const query = document.getElementById('photo-search').value.trim();
+
+            // For short queries, just do basic search
+            if (query.length < 3) {
+                currentSearchResults = null;
+                searchPhotos();
+                return;
+            }
+
+            // Debounce AI search for longer queries
+            aiSearchTimeout = setTimeout(() => {
+                if (query.length >= 10) { // Only use AI for more descriptive queries
+                    performAISearch();
+                }
+            }, 1000);
+        }
+
+        async function performAISearch() {
+            const query = document.getElementById('photo-search').value.trim();
+            if (!query) return;
+
+            const searchIcon = document.getElementById('search-icon');
+            const searchBtn = document.querySelector('.ai-search-btn');
+
+            // Show loading state
+            searchIcon.textContent = '🔄';
+            searchIcon.classList.add('search-loading');
+            if (searchBtn) searchBtn.textContent = '⏳ Searching...';
+
+            try {
+                const context = {
+                    campaign: 'Mandami for NYC Council',
+                    contentType: 'campaign content',
+                    platform: 'multi-platform'
+                };
+
+                const response = await window.campaignAPI.searchPhotos(query, context);
+                currentSearchResults = response.results;
+
+                // Update UI
+                displaySearchResults(response);
+                renderAISearchResults();
+
+            } catch (error) {
+                console.error('AI search failed:', error);
+                // Fall back to basic search
+                currentSearchResults = null;
+                searchPhotos();
+                showSearchError();
+            } finally {
+                // Reset loading state
+                searchIcon.textContent = '🔍';
+                searchIcon.classList.remove('search-loading');
+                if (searchBtn) searchBtn.textContent = '✨ AI Search';
+            }
+        }
+
+        function renderAISearchResults() {
+            const container = document.getElementById('photo-grid');
+
+            if (!currentSearchResults || currentSearchResults.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #6b7280;">No photos found matching your search.</div>';
+                return;
+            }
+
+            container.innerHTML = currentSearchResults.map(photo => `
+                <div class="photo-item" onclick="openPhotoModal(${photo.id})" style="position: relative;">
+                    <img src="${photo.url}" alt="${photo.title}" loading="lazy">
+                    <div class="photo-overlay">
+                        <h4 class="photo-title">${photo.title}</h4>
+                        <div class="photo-meta">
+                            <span class="photo-date">${formatDate(photo.date)}</span>
+                            <span class="photo-category">${photo.category}</span>
+                        </div>
+                        <div class="photo-tags">
+                            ${photo.tags.slice(0, 3).map(tag => `<span class="photo-tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="photo-usage">${photo.usage}</div>
+                    </div>
+                    ${photo.relevance_score ? `<div class="photo-relevance">${photo.relevance_score}/10</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function displaySearchResults(searchResponse) {
+            // Remove any existing search info
+            const existingInfo = document.querySelector('.search-results-info');
+            if (existingInfo) existingInfo.remove();
+
+            if (searchResponse.results.length > 0) {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'search-results-info';
+                infoDiv.innerHTML = `
+                    <strong>AI Search Results:</strong> Found ${searchResponse.results.length} photos matching "${searchResponse.query}"
+                    ${searchResponse.fallback ? ' (using basic search - AI temporarily unavailable)' : ''}
+                `;
+
+                document.querySelector('.photo-grid').insertAdjacentElement('beforebegin', infoDiv);
+            }
+        }
+
+        function showSearchError() {
+            const existingInfo = document.querySelector('.search-results-info');
+            if (existingInfo) existingInfo.remove();
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'search-results-info';
+            infoDiv.style.background = '#fef2f2';
+            infoDiv.style.borderColor = '#fecaca';
+            infoDiv.style.color = '#dc2626';
+            infoDiv.innerHTML = `
+                <strong>Search Error:</strong> AI search temporarily unavailable. Using basic keyword search instead.
+            `;
+
+            document.querySelector('.photo-grid').insertAdjacentElement('beforebegin', infoDiv);
+        }
+
+        function clearSearch() {
+            document.getElementById('photo-search').value = '';
+            currentSearchResults = null;
+            searchTerm = '';
+
+            // Remove search results info
+            const existingInfo = document.querySelector('.search-results-info');
+            if (existingInfo) existingInfo.remove();
+
+            renderPhotos();
+        }
+
+        function openPhotoModal(photoId) {
+            selectedPhoto = photoLibrary.find(p => p.id === photoId);
+            if (!selectedPhoto) return;
+
+            const modal = document.getElementById('photo-modal');
+            const preview = document.getElementById('detail-preview');
+            const info = document.getElementById('detail-info');
+
+            preview.innerHTML = `<img src="${selectedPhoto.url}" alt="${selectedPhoto.title}">`;
+
+            info.innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">Title</span>
+                    <span class="detail-value">${selectedPhoto.title}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">${selectedPhoto.category}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">${formatDate(selectedPhoto.date)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Size</span>
+                    <span class="detail-value">${selectedPhoto.size}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Usage</span>
+                    <span class="detail-value">${selectedPhoto.usage}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tags</span>
+                    <span class="detail-value">${selectedPhoto.tags.join(', ')}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Caption</span>
+                    <span class="detail-value">${selectedPhoto.caption}</span>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function insertPhoto(size, photoId = null) {
+            const photo = photoId ? photoLibrary.find(p => p.id === photoId) : selectedPhoto;
+            if (!photo) return;
+
+            // Create photo block data
+            const photoBlock = {
+                type: 'photo',
+                data: {
+                    id: photo.id,
+                    title: photo.title,
+                    url: photo.url,
+                    alt: photo.caption,
+                    size: size,
+                    caption: photo.caption,
+                    credit: 'Campaign Photo'
+                }
+            };
+
+            // Send to parent window (editor) if opened as popup
+            if (window.opener && window.opener.insertPhotoBlock) {
+                window.opener.insertPhotoBlock(photoBlock);
+                window.close();
+            } else {
+                // For standalone use, show notification
+                showNotification(`📷 Photo "${photo.title}" ready to insert as ${size} size`);
+                closeModal();
+            }
+        }
+
+        function openUploadModal() {
+            document.getElementById('upload-modal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').style.display = 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('photo-modal').style.display = 'none';
+        }
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            const category = document.getElementById('upload-category').value;
+            const tags = document.getElementById('upload-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const caption = document.getElementById('upload-caption').value;
+
+            // Simulate upload process
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newPhoto = {
+                        id: photoLibrary.length + index + 1,
+                        title: file.name.replace(/\.[^/.]+$/, ""),
+                        url: e.target.result,
+                        category: category,
+                        tags: tags.length > 0 ? tags : [category],
+                        date: new Date().toISOString().split('T')[0],
+                        usage: "New",
+                        size: "Unknown",
+                        caption: caption || `Uploaded image: ${file.name}`
+                    };
+
+                    photoLibrary.unshift(newPhoto);
+                    renderPhotos();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            showNotification(`📤 Uploaded ${files.length} photo(s) successfully!`);
+            closeUploadModal();
+
+            // Reset form
+            document.getElementById('upload-tags').value = '';
+            document.getElementById('upload-caption').value = '';
+            event.target.value = '';
+        }
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('upload-area');
+
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            document.getElementById('file-input').files = files;
+            handleFileUpload({ target: { files: files } });
+        });
+
+        // Size button selection
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Helper functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-weight: 600;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1001;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeUploadModal();
+            }
+        });
+    </script>
+</body>
+</html>

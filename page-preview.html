@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Preview - Campaign Content</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .view-mode-selector {
+            display: flex;
+            gap: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 4px;
+            margin-right: 8px;
+        }
+
+        .btn-mode {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .btn-mode:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .btn-mode.active {
+            background: white;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-primary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #3b82f6;
+            border: 1px solid #3b82f6;
+        }
+
+        .btn-secondary:hover {
+            background: #eff6ff;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 72px);
+        }
+
+        .content-area {
+            flex: 1;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .page-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .press-release {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .press-release-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .campaign-logo {
+            width: 120px;
+            height: 80px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            margin: 0 auto 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .press-release-meta {
+            text-align: left;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 16px;
+        }
+
+        .press-release-headline {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .press-release-content {
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .press-release-content p {
+            margin-bottom: 20px;
+        }
+
+        .press-release-quote {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 30px 0;
+            font-style: italic;
+            font-size: 18px;
+        }
+
+        .contact-info {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .schema-panel {
+            width: 400px;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .schema-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .schema-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .schema-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .schema-tab {
+            padding: 6px 12px;
+            background: #374151;
+            color: #d1d5db;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .schema-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .schema-content {
+            background: #111827;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .schema-validation {
+            margin-top: 16px;
+            padding: 12px;
+            background: #064e3b;
+            border-radius: 6px;
+            border-left: 3px solid #10b981;
+        }
+
+        .schema-validation.warning {
+            background: #451a03;
+            border-left-color: #f59e0b;
+        }
+
+        .schema-validation.error {
+            background: #450a0a;
+            border-left-color: #ef4444;
+        }
+
+        .validation-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #10b981;
+        }
+
+        .validation-title.warning {
+            color: #f59e0b;
+        }
+
+        .validation-title.error {
+            color: #ef4444;
+        }
+
+        .validation-list {
+            list-style: none;
+            font-size: 11px;
+        }
+
+        .validation-list li {
+            margin-bottom: 4px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .validation-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+        }
+
+        .validation-list li.warning::before {
+            content: '⚠';
+            color: #f59e0b;
+        }
+
+        .validation-list li.error::before {
+            content: '✗';
+            color: #ef4444;
+        }
+
+        .ai-insights {
+            margin-top: 20px;
+            padding: 16px;
+            background: #1e1b4b;
+            border-radius: 6px;
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .insights-title {
+            color: #a78bfa;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .insight-item {
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .insight-label {
+            color: #c4b5fd;
+            font-weight: 500;
+        }
+
+        .insight-value {
+            color: #e2e8f0;
+        }
+
+        .view-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 8px;
+            background: #374151;
+            color: #d1d5db;
+            border: none;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #4b5563;
+        }
+
+        .syntax-highlight .key {
+            color: #60a5fa;
+        }
+
+        .syntax-highlight .string {
+            color: #34d399;
+        }
+
+        .syntax-highlight .number {
+            color: #fbbf24;
+        }
+
+        .syntax-highlight .boolean {
+            color: #f87171;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* View Mode Styles */
+        .section-view .press-release-meta,
+        .section-view .press-release-headline,
+        .section-view .press-release-content,
+        .section-view .press-release-quote {
+            border: 2px dashed transparent;
+            padding: 12px;
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .section-view .press-release-meta:hover,
+        .section-view .press-release-headline:hover,
+        .section-view .press-release-content:hover,
+        .section-view .press-release-quote:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .section-view .press-release-meta::before {
+            content: "📍 Location & Date";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .section-view .press-release-headline::before {
+            content: "📝 Headline";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .section-view .press-release-content::before {
+            content: "📄 Content";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .section-view .press-release-quote::before {
+            content: "💬 Quote";
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .section-view .press-release-meta:hover::before,
+        .section-view .press-release-headline:hover::before,
+        .section-view .press-release-content:hover::before,
+        .section-view .press-release-quote:hover::before {
+            opacity: 1;
+        }
+
+        .edit-view .press-release {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .edit-view .press-release-header,
+        .edit-view .contact-info {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .edit-view .press-release-meta,
+        .edit-view .press-release-headline,
+        .edit-view .press-release-content,
+        .edit-view .press-release-quote {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin: 8px 0;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .edit-view .press-release-headline {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .preview-view .press-release-meta,
+        .preview-view .press-release-headline,
+        .preview-view .press-release-content,
+        .preview-view .press-release-quote {
+            cursor: default;
+            user-select: text;
+        }
+
+        .preview-view [contenteditable="true"] {
+            cursor: default;
+            outline: none;
+        }
+
+        .preview-view [contenteditable="true"]:focus {
+            border: none;
+            background: transparent;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .schema-panel {
+                width: 100%;
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Page Preview</h1>
+        <div class="view-controls">
+            <div class="view-mode-selector">
+                <button class="btn btn-mode active" onclick="switchViewMode('section')" id="section-mode">
+                    📝 Section
+                </button>
+                <button class="btn btn-mode" onclick="switchViewMode('edit')" id="edit-mode">
+                    ✏️ Edit
+                </button>
+                <button class="btn btn-mode" onclick="switchViewMode('preview')" id="preview-mode">
+                    👁️ Preview
+                </button>
+            </div>
+            <button class="btn btn-secondary" onclick="showPasteDialog()" title="Smart paste content">
+                📋 Smart Paste
+            </button>
+            <button class="btn btn-secondary" onclick="toggleSchemaPanel()" id="schema-toggle">
+                🔧 Hide Schema
+            </button>
+            <button class="btn btn-primary" onclick="window.close()">✕ Close</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="content-area">
+            <div class="page-content" id="page-content">
+                <div class="press-release" id="press-release">
+                    <div class="press-release-header">
+                        <div class="campaign-logo">
+                            CAMPAIGN
+                        </div>
+                    </div>
+
+                    <div class="press-release-meta" id="press-meta">
+                        FOR IMMEDIATE RELEASE<br>
+                        <span id="location-date">AUSTIN, TX - January 15, 2024</span>
+                    </div>
+
+                    <h1 class="press-release-headline" id="headline">
+                        Local Healthcare Provider Announces Expanded Services for Rural Communities in District 7
+                    </h1>
+
+                    <div class="press-release-content" id="content">
+                        <p>Democratic candidate Jane Smith today unveiled a comprehensive healthcare expansion plan that will bring specialized medical services to rural communities in District 7.</p>
+                        
+                        <p>The plan, announced at a press conference in Austin, focuses on three key areas: telemedicine expansion, mobile health clinics, and partnerships with major healthcare systems. "Healthcare improvements will be discussed by local experts," Smith said.</p>
+                        
+                        <p>The initiative is expected to serve over 500 families in the community center's 500-seat auditorium during the announcement event.</p>
+                    </div>
+
+                    <div class="press-release-quote" id="quote-section" style="display: none;">
+                        <div id="quote-text"></div>
+                    </div>
+
+                    <div class="contact-info" id="contact-section">
+                        <strong>Media Contact:</strong>
+                        <button onclick="showContactSelector()" style="margin-left: 10px; padding: 2px 8px; font-size: 11px; background: #3b82f6; color: white; border: none; border-radius: 3px; cursor: pointer;">Change</button>
+                        <br>
+                        <div id="contact-details" contenteditable="true" style="margin-top: 8px;">
+                            <span id="contact-name">Campaign Communications Team</span><br>
+                            <span id="contact-email">Email: press@campaign.com</span><br>
+                            <span id="contact-phone">Phone: (512) 555-0123</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="schema-panel" id="schema-panel">
+            <div class="schema-header">
+                <div class="schema-title">📊 LD-JSON Schema Markup</div>
+            </div>
+
+            <div class="schema-tabs">
+                <button class="schema-tab active" onclick="showSchemaTab('structured')" id="structured-tab">
+                    Structured Data
+                </button>
+                <button class="schema-tab" onclick="showSchemaTab('raw')" id="raw-tab">
+                    Raw JSON
+                </button>
+                <button class="schema-tab" onclick="showSchemaTab('validation')" id="validation-tab">
+                    Validation
+                </button>
+            </div>
+
+            <div class="schema-content" id="structured-content">
+                <div class="syntax-highlight" id="structured-schema">
+                    <!-- Structured schema will be populated by JavaScript -->
+                </div>
+                <button class="copy-btn" onclick="copySchema('structured')">Copy</button>
+            </div>
+
+            <div class="schema-content hidden" id="raw-content">
+                <div id="raw-schema">
+                    <!-- Raw JSON will be populated by JavaScript -->
+                </div>
+                <button class="copy-btn" onclick="copySchema('raw')">Copy</button>
+            </div>
+
+            <div class="schema-content hidden" id="validation-content">
+                <div class="schema-validation">
+                    <div class="validation-title">✓ Schema Validation Results</div>
+                    <ul class="validation-list" id="validation-results">
+                        <!-- Validation results will be populated by JavaScript -->
+                    </ul>
+                </div>
+
+                <div class="ai-insights">
+                    <div class="insights-title">🤖 AI Discovery Insights</div>
+                    <div class="insight-item">
+                        <span class="insight-label">Google AI Overviews:</span>
+                        <span class="insight-value" id="google-score">85%</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="insight-label">Voice Search Ready:</span>
+                        <span class="insight-value" id="voice-score">72%</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="insight-label">Schema Completeness:</span>
+                        <span class="insight-value" id="schema-completeness">90%</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="insight-label">Fact-Check Ready:</span>
+                        <span class="insight-value" id="fact-score">95%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSchemaTab = 'structured';
+        let schemaVisible = true;
+        let pageData = {};
+        let currentViewMode = 'section';
+
+        // Initialize page with URL parameters
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPageData();
+            generateSchema();
+            populateContent();
+
+            // Initialize with section view mode
+            switchViewMode('section');
+        });
+
+        function loadPageData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            pageData = {
+                title: urlParams.get('title') || 'Sample Press Release Title',
+                location: urlParams.get('location') || 'AUSTIN, TX - January 15, 2024',
+                content: urlParams.get('content') || 'Default press release content...',
+                quote: urlParams.get('quote') || '',
+                blocks: urlParams.get('blocks') || null
+            };
+        }
+
+        function populateContent() {
+            document.getElementById('headline').textContent = pageData.title;
+            document.getElementById('location-date').textContent = pageData.location;
+
+            // Use block data if available, otherwise fall back to simple content
+            if (pageData.blocks) {
+                renderBlockContent();
+            } else {
+                renderSimpleContent();
+            }
+
+            // Show quote if provided
+            if (pageData.quote && pageData.quote.trim()) {
+                document.getElementById('quote-section').style.display = 'block';
+                document.getElementById('quote-text').textContent = pageData.quote;
+            }
+
+            // Add paste functionality
+            addPasteFunctionality();
+        }
+
+        function renderBlockContent() {
+            const contentDiv = document.getElementById('content');
+            let blocks;
+
+            try {
+                blocks = JSON.parse(pageData.blocks);
+            } catch (e) {
+                console.error('Failed to parse blocks:', e);
+                renderSimpleContent();
+                return;
+            }
+
+            if (!Array.isArray(blocks)) {
+                renderSimpleContent();
+                return;
+            }
+
+            const blockElements = blocks.map(block => renderBlock(block)).filter(Boolean);
+            contentDiv.innerHTML = blockElements.join('');
+        }
+
+        function renderSimpleContent() {
+            const contentDiv = document.getElementById('content');
+            const paragraphs = pageData.content.split('\n\n').filter(p => p.trim());
+            contentDiv.innerHTML = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+        }
+
+        function renderBlock(block) {
+            switch (block.type) {
+                case 'heading':
+                    const level = block.content.level || block.attributes.level || 2;
+                    const alignment = block.attributes.alignment ? `text-align: ${block.attributes.alignment};` : '';
+                    return `<h${level} style="${alignment}">${block.content.text}</h${level}>`;
+
+                case 'photo':
+                    const size = block.attributes.size || 'large';
+                    const width = size === 'small' ? '40%' : size === 'medium' ? '60%' : '100%';
+                    const photoAlignment = block.attributes.alignment || 'center';
+
+                    return `
+                        <div class="photo-block" style="text-align: ${photoAlignment}; margin: 20px 0;">
+                            <img src="${block.content.url}"
+                                 alt="${block.content.alt}"
+                                 style="max-width: ${width}; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            ${block.content.caption ? `<div style="margin-top: 8px; font-style: italic; color: #64748b; font-size: 14px;">${block.content.caption}</div>` : ''}
+                            ${block.content.credit ? `<div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">${block.content.credit}</div>` : ''}
+                        </div>
+                    `;
+
+                case 'quote':
+                    const alignment2 = block.attributes.alignment ? `text-align: ${block.attributes.alignment};` : '';
+                    return `
+                        <blockquote style="border-left: 4px solid #3b82f6; padding-left: 20px; margin: 20px 0; font-style: italic; ${alignment2}">
+                            <p>${block.content.text}</p>
+                            ${block.content.citation ? `<cite style="display: block; margin-top: 10px; font-size: 14px; color: #64748b;">— ${block.content.citation}</cite>` : ''}
+                        </blockquote>
+                    `;
+
+                case 'paragraph':
+                default:
+                    const alignment3 = block.attributes.alignment ? `text-align: ${block.attributes.alignment};` : '';
+                    return `<p style="${alignment3}">${block.content.text}</p>`;
+            }
+        }
+
+        function addPasteFunctionality() {
+            // Add paste listeners to key sections
+            const headline = document.getElementById('headline');
+            const locationDate = document.getElementById('location-date');
+            const contentDiv = document.getElementById('content');
+
+            // Make sections editable and add paste handlers
+            [headline, locationDate, contentDiv].forEach(element => {
+                if (element) {
+                    element.contentEditable = true;
+                    element.addEventListener('paste', handleIntelligentPaste);
+                    element.addEventListener('input', handleContentChange);
+
+                    // Add visual indicators
+                    element.style.border = '2px dashed transparent';
+                    element.addEventListener('focus', () => {
+                        element.style.border = '2px dashed #3b82f6';
+                        element.style.backgroundColor = '#f8fafc';
+                    });
+                    element.addEventListener('blur', () => {
+                        element.style.border = '2px dashed transparent';
+                        element.style.backgroundColor = 'transparent';
+                    });
+                }
+            });
+
+            // Add paste anywhere functionality
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'v' && !e.target.contentEditable) {
+                    e.preventDefault();
+                    showPasteDialog();
+                }
+            });
+        }
+
+        function handleIntelligentPaste(e) {
+            e.preventDefault();
+            const pastedData = (e.clipboardData || window.clipboardData).getData('text');
+            const targetElement = e.target;
+
+            // Determine the best allocation for the pasted content
+            const allocation = intelligentContentAllocation(pastedData, targetElement);
+
+            // Apply the allocation
+            applyContentAllocation(allocation);
+        }
+
+        function intelligentContentAllocation(content, targetElement = null) {
+            const lines = content.split('\n').filter(line => line.trim());
+            const allocation = {
+                headline: '',
+                location: '',
+                paragraphs: [],
+                quotes: [],
+                photos: []
+            };
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+
+                // Skip empty lines
+                if (!trimmedLine) return;
+
+                // Detect headlines (short, title-case, or starts with caps)
+                if (trimmedLine.length < 100 &&
+                    (isLikelyHeadline(trimmedLine) || targetElement?.id === 'headline')) {
+                    if (!allocation.headline) {
+                        allocation.headline = trimmedLine;
+                        return;
+                    }
+                }
+
+                // Detect location/date info
+                if (containsLocationOrDate(trimmedLine) || targetElement?.id === 'location-date') {
+                    if (!allocation.location) {
+                        allocation.location = trimmedLine;
+                        return;
+                    }
+                }
+
+                // Detect quotes (starts with quote marks or "said", etc.)
+                if (isLikelyQuote(trimmedLine)) {
+                    allocation.quotes.push(trimmedLine);
+                    return;
+                }
+
+                // Detect photo URLs or references
+                if (isPhotoReference(trimmedLine)) {
+                    allocation.photos.push(trimmedLine);
+                    return;
+                }
+
+                // Everything else is paragraph content
+                allocation.paragraphs.push(trimmedLine);
+            });
+
+            return allocation;
+        }
+
+        function isLikelyHeadline(text) {
+            // Check for title case, short length, no period at end
+            const titleCasePattern = /^[A-Z][a-z]*(\s[A-Z][a-z]*)*$/;
+            const shortAndCapitalized = text.length < 80 && /^[A-Z]/.test(text) && !text.endsWith('.');
+            return titleCasePattern.test(text) || shortAndCapitalized;
+        }
+
+        function containsLocationOrDate(text) {
+            const locationDatePatterns = [
+                /\b\d{1,2}\/\d{1,2}\/\d{4}\b/,  // Date patterns
+                /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/i,
+                /\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/i,
+                /\b(Street|Ave|Avenue|Blvd|Boulevard|Road|Dr|Drive|Plaza|Center|Hall)\b/i,
+                /\b[A-Z][a-z]+,\s*[A-Z]{2}\b/,  // City, State
+                /(NEW YORK|NYC|MANHATTAN|BROOKLYN|QUEENS|BRONX)/i
+            ];
+            return locationDatePatterns.some(pattern => pattern.test(text));
+        }
+
+        function isLikelyQuote(text) {
+            return text.startsWith('"') || text.startsWith("'") ||
+                   /\b(said|stated|declared|announced|commented)\b/i.test(text);
+        }
+
+        function isPhotoReference(text) {
+            return /\.(jpg|jpeg|png|gif|webp)/i.test(text) ||
+                   text.toLowerCase().includes('photo') ||
+                   text.toLowerCase().includes('image');
+        }
+
+        function applyContentAllocation(allocation) {
+            // Update headline
+            if (allocation.headline) {
+                const headline = document.getElementById('headline');
+                if (headline) {
+                    headline.textContent = allocation.headline;
+                    updatePageData('title', allocation.headline);
+                }
+            }
+
+            // Update location
+            if (allocation.location) {
+                const locationDate = document.getElementById('location-date');
+                if (locationDate) {
+                    locationDate.textContent = allocation.location;
+                    updatePageData('location', allocation.location);
+                }
+            }
+
+            // Update content with paragraphs and quotes
+            if (allocation.paragraphs.length > 0 || allocation.quotes.length > 0) {
+                const contentDiv = document.getElementById('content');
+                if (contentDiv) {
+                    const newContent = [
+                        ...allocation.paragraphs.map(p => `<p>${p}</p>`),
+                        ...allocation.quotes.map(q => `<blockquote style="border-left: 4px solid #3b82f6; padding-left: 20px; margin: 20px 0; font-style: italic;"><p>${q}</p></blockquote>`)
+                    ].join('');
+
+                    contentDiv.innerHTML = newContent;
+                    updatePageData('content', allocation.paragraphs.join('\n\n'));
+                }
+            }
+
+            // Handle photos (would need integration with photo system)
+            if (allocation.photos.length > 0) {
+                console.log('Photo references found:', allocation.photos);
+                // Could integrate with photo library here
+            }
+
+            showAllocationFeedback(allocation);
+        }
+
+        window.showPasteDialog = function() {
+            const dialog = document.createElement('div');
+            dialog.id = 'paste-dialog';
+            dialog.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: white; padding: 20px; border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000;
+                max-width: 400px; width: 90%;
+            `;
+
+            dialog.innerHTML = `
+                <h3 style="margin: 0 0 15px 0;">Paste Content</h3>
+                <textarea id="paste-input" placeholder="Paste your content here..." style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closePasteDialog()" style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                    <button onclick="processPastedContent()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Smart Paste</button>
+                </div>
+            `;
+
+            document.body.appendChild(dialog);
+            document.getElementById('paste-input').focus();
+        }
+
+        window.closePasteDialog = function() {
+            const dialog = document.getElementById('paste-dialog');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        window.processPastedContent = function() {
+            const content = document.getElementById('paste-input').value;
+            if (content.trim()) {
+                const allocation = intelligentContentAllocation(content);
+                applyContentAllocation(allocation);
+            }
+            closePasteDialog();
+        }
+
+        // Media contact management
+        const mediaContacts = [
+            {
+                name: 'Campaign Communications Team',
+                email: 'press@campaign.com',
+                phone: '(512) 555-0123'
+            },
+            {
+                name: 'Sarah Johnson - Press Secretary',
+                email: 'sarah.johnson@campaign.com',
+                phone: '(512) 555-0124'
+            },
+            {
+                name: 'Michael Chen - Digital Communications',
+                email: 'michael.chen@campaign.com',
+                phone: '(512) 555-0125'
+            },
+            {
+                name: 'Regional Press Office',
+                email: 'regional@campaign.com',
+                phone: '(512) 555-0126'
+            }
+        ];
+
+        window.showContactSelector = function() {
+            const dialog = document.createElement('div');
+            dialog.id = 'contact-selector-dialog';
+            dialog.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: white; padding: 20px; border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000;
+                max-width: 400px; width: 90%;
+            `;
+
+            let contactOptions = mediaContacts.map((contact, index) => `
+                <div style="padding: 8px; margin: 4px 0; background: #f8fafc; border-radius: 4px; cursor: pointer;"
+                     onmouseover="this.style.background='#e2e8f0'"
+                     onmouseout="this.style.background='#f8fafc'"
+                     onclick="selectMediaContact(${index})">
+                    <strong>${contact.name}</strong><br>
+                    <span style="font-size: 12px; color: #64748b;">
+                        ${contact.email} • ${contact.phone}
+                    </span>
+                </div>
+            `).join('');
+
+            dialog.innerHTML = `
+                <h3 style="margin: 0 0 15px 0;">Select Media Contact</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${contactOptions}
+                    <div style="padding: 8px; margin: 8px 0; background: #eff6ff; border-radius: 4px; cursor: pointer; border: 1px dashed #3b82f6;"
+                         onclick="createNewContact()">
+                        <strong>➕ Create New Contact</strong>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closeContactSelector()" style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                </div>
+            `;
+
+            document.body.appendChild(dialog);
+        }
+
+        window.selectMediaContact = function(index) {
+            const contact = mediaContacts[index];
+            document.getElementById('contact-name').textContent = contact.name;
+            document.getElementById('contact-email').textContent = `Email: ${contact.email}`;
+            document.getElementById('contact-phone').textContent = `Phone: ${contact.phone}`;
+            closeContactSelector();
+
+            // Update page data
+            updatePageData('mediaContact', contact);
+        }
+
+        window.createNewContact = function() {
+            const name = prompt('Contact Name:');
+            if (!name) return;
+
+            const email = prompt('Contact Email:');
+            if (!email) return;
+
+            const phone = prompt('Contact Phone:');
+            if (!phone) return;
+
+            const newContact = { name, email, phone };
+            mediaContacts.push(newContact);
+
+            // Select the new contact
+            selectMediaContact(mediaContacts.length - 1);
+        }
+
+        window.closeContactSelector = function() {
+            const dialog = document.getElementById('contact-selector-dialog');
+            if (dialog) {
+                dialog.remove();
+            }
+        }
+
+        function showAllocationFeedback(allocation) {
+            const feedback = [];
+            if (allocation.headline) feedback.push(`Headline: "${allocation.headline.substring(0, 30)}..."`);
+            if (allocation.location) feedback.push(`Location: "${allocation.location.substring(0, 30)}..."`);
+            if (allocation.paragraphs.length) feedback.push(`${allocation.paragraphs.length} paragraph(s)`);
+            if (allocation.quotes.length) feedback.push(`${allocation.quotes.length} quote(s)`);
+            if (allocation.photos.length) feedback.push(`${allocation.photos.length} photo reference(s)`);
+
+            if (feedback.length > 0) {
+                const toast = document.createElement('div');
+                toast.style.cssText = `
+                    position: fixed; bottom: 20px; right: 20px;
+                    background: #10b981; color: white; padding: 12px 20px;
+                    border-radius: 6px; z-index: 1000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+                toast.textContent = `Content allocated: ${feedback.join(', ')}`;
+
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
+            }
+        }
+
+        function handleContentChange(e) {
+            // Sync changes back to pageData
+            const element = e.target;
+            if (element.id === 'headline') {
+                updatePageData('title', element.textContent);
+            } else if (element.id === 'location-date') {
+                updatePageData('location', element.textContent);
+            } else if (element.id === 'content') {
+                updatePageData('content', element.textContent);
+            }
+        }
+
+        function updatePageData(key, value) {
+            pageData[key] = value;
+
+            // Regenerate schema when content changes
+            setTimeout(() => {
+                generateSchema();
+            }, 500);
+
+            // Could sync back to parent window if needed
+            if (window.opener && window.opener.documentState) {
+                window.opener.documentState[key] = value;
+            }
+        }
+
+        function generateSchema() {
+            // Extract clean text content without HTML
+            const contentElement = document.getElementById('content');
+            const cleanContent = contentElement ? contentElement.textContent || contentElement.innerText : pageData.content;
+            const description = cleanContent.substring(0, 160).replace(/\s+/g, ' ').trim() + "...";
+
+            // Create comprehensive schema with campaign-specific enhancements
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "NewsArticle",
+                "headline": pageData.title,
+                "alternativeHeadline": pageData.title, // For SEO variations
+                "datePublished": new Date().toISOString(),
+                "dateModified": new Date().toISOString(),
+                "author": {
+                    "@type": "Organization",
+                    "name": "Mandami for NYC Council",
+                    "alternateName": "Mandami Campaign",
+                    "url": "https://mandami.nyc",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://mandami.nyc/logo.png",
+                        "width": 400,
+                        "height": 400
+                    },
+                    "sameAs": [
+                        "https://twitter.com/MandamiNYC",
+                        "https://facebook.com/MandamiNYC",
+                        "https://instagram.com/MandamiNYC"
+                    ]
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Mandami for NYC Council",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://mandami.nyc/logo.png",
+                        "width": 600,
+                        "height": 400
+                    }
+                },
+                "description": description,
+                "articleBody": cleanContent,
+                "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": window.location.href
+                },
+                "image": {
+                    "@type": "ImageObject",
+                    "url": "https://mandami.nyc/press-images/default.jpg",
+                    "width": 1200,
+                    "height": 630,
+                    "caption": "Mandami Campaign Press Release"
+                },
+                "speakable": {
+                    "@type": "SpeakableSpecification",
+                    "cssSelector": [".press-release-headline", ".press-release-content p:first-child"],
+                    "xpath": ["//*[@class='press-release-headline']", "//*[@class='press-release-content']/p[1]"]
+                },
+                "isAccessibleForFree": true,
+                "inLanguage": "en-US",
+                "copyrightYear": new Date().getFullYear(),
+                "copyrightHolder": {
+                    "@type": "Organization",
+                    "name": "Mandami for NYC Council"
+                },
+                "hasPart": {
+                    "@type": "WebPageElement",
+                    "isAccessibleForFree": true,
+                    "cssSelector": ".press-release-content"
+                },
+                "about": {
+                    "@type": "Thing",
+                    "name": "NYC Council Election",
+                    "description": "Campaign updates and policy positions for NYC Council District"
+                },
+                "keywords": extractKeywords(cleanContent),
+                "genre": "Politics",
+                "articleSection": "Campaign News"
+            };
+
+            // Add location data if available
+            if (pageData.location && containsLocationOrDate(pageData.location)) {
+                const locationMatch = pageData.location.match(/([A-Z\s]+),\s*([A-Z]{2})/);
+                if (locationMatch) {
+                    schema.locationCreated = {
+                        "@type": "Place",
+                        "name": locationMatch[1].trim(),
+                        "address": {
+                            "@type": "PostalAddress",
+                            "addressLocality": locationMatch[1].trim(),
+                            "addressRegion": locationMatch[2]
+                        }
+                    };
+                }
+            }
+
+            // Add quote if present
+            if (pageData.quote && pageData.quote.trim()) {
+                schema.citation = {
+                    "@type": "CreativeWork",
+                    "author": {
+                        "@type": "Person",
+                        "name": "Mandami"
+                    },
+                    "text": pageData.quote
+                };
+            }
+
+            // Embed the actual LD-JSON in the page head for search engines
+            embedSchemaInHead(schema);
+
+            // Populate schema displays
+            populateStructuredSchema(schema);
+            populateRawSchema(schema);
+            validateSchema(schema);
+        }
+
+        function extractKeywords(content) {
+            // Extract meaningful keywords from content
+            const commonWords = new Set([
+                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+                'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after',
+                'above', 'below', 'is', 'are', 'was', 'were', 'been', 'be', 'have', 'has', 'had',
+                'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall'
+            ]);
+
+            const words = content.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(word => word.length > 3 && !commonWords.has(word));
+
+            const wordCount = {};
+            words.forEach(word => {
+                wordCount[word] = (wordCount[word] || 0) + 1;
+            });
+
+            // Get top 10 most frequent meaningful words
+            const keywords = Object.entries(wordCount)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10)
+                .map(([word]) => word);
+
+            // Add campaign-specific keywords
+            const campaignKeywords = ['mandami', 'nyc council', 'campaign', 'healthcare', 'housing', 'community'];
+
+            return [...new Set([...campaignKeywords, ...keywords])].join(', ');
+        }
+
+        function embedSchemaInHead(schema) {
+            // Remove existing schema if present
+            const existingSchema = document.querySelector('script[type="application/ld+json"]');
+            if (existingSchema) {
+                existingSchema.remove();
+            }
+
+            // Create and insert new schema script tag
+            const schemaScript = document.createElement('script');
+            schemaScript.type = 'application/ld+json';
+            schemaScript.textContent = JSON.stringify(schema, null, 2);
+            document.head.appendChild(schemaScript);
+
+            console.log('✅ LD-JSON Schema embedded in page head for search engines');
+        }
+
+        function populateStructuredSchema(schema) {
+            const container = document.getElementById('structured-schema');
+            
+            const structuredHtml = `
+                <div style="margin-bottom: 16px;">
+                    <div style="color: #60a5fa; font-weight: bold;">📰 NewsArticle Schema</div>
+                    <div style="margin-left: 16px; margin-top: 8px;">
+                        <div><span class="key">headline:</span> <span class="string">"${schema.headline}"</span></div>
+                        <div><span class="key">datePublished:</span> <span class="string">"${schema.datePublished}"</span></div>
+                        <div><span class="key">author:</span> <span class="string">"${schema.author.name}"</span></div>
+                        <div><span class="key">publisher:</span> <span class="string">"${schema.publisher.name}"</span></div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="color: #34d399; font-weight: bold;">🎤 Speakable Content</div>
+                    <div style="margin-left: 16px; margin-top: 8px;">
+                        <div><span class="key">cssSelector:</span></div>
+                        <div style="margin-left: 16px;">
+                            ${schema.speakable.cssSelector.map(selector => 
+                                `<div>• <span class="string">"${selector}"</span></div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="color: #fbbf24; font-weight: bold;">🖼️ Image Metadata</div>
+                    <div style="margin-left: 16px; margin-top: 8px;">
+                        <div><span class="key">url:</span> <span class="string">"${schema.image.url}"</span></div>
+                        <div><span class="key">width:</span> <span class="number">${schema.image.width}</span></div>
+                        <div><span class="key">height:</span> <span class="number">${schema.image.height}</span></div>
+                    </div>
+                </div>
+                
+                ${schema.citation ? `
+                    <div style="margin-bottom: 16px;">
+                        <div style="color: #f87171; font-weight: bold;">💬 Citation</div>
+                        <div style="margin-left: 16px; margin-top: 8px;">
+                            <div><span class="key">text:</span> <span class="string">"${schema.citation.text}"</span></div>
+                            <div><span class="key">author:</span> <span class="string">"${schema.citation.author.name}"</span></div>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div>
+                    <div style="color: #a78bfa; font-weight: bold;">♿ Accessibility</div>
+                    <div style="margin-left: 16px; margin-top: 8px;">
+                        <div><span class="key">isAccessibleForFree:</span> <span class="boolean">${schema.isAccessibleForFree}</span></div>
+                        <div><span class="key">hasPart:</span> <span class="string">"${schema.hasPart.cssSelector}"</span></div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = structuredHtml;
+        }
+
+        function populateRawSchema(schema) {
+            const container = document.getElementById('raw-schema');
+            container.textContent = JSON.stringify(schema, null, 2);
+        }
+
+        function validateSchema(schema) {
+            const results = document.getElementById('validation-results');
+            const validations = [
+                { 
+                    valid: !!schema.headline, 
+                    message: 'Headline present and properly formatted',
+                    type: schema.headline ? 'valid' : 'error'
+                },
+                { 
+                    valid: !!schema.author, 
+                    message: 'Author information included',
+                    type: schema.author ? 'valid' : 'error'
+                },
+                { 
+                    valid: !!schema.publisher, 
+                    message: 'Publisher details with logo',
+                    type: schema.publisher ? 'valid' : 'error'
+                },
+                { 
+                    valid: !!schema.speakable, 
+                    message: 'Speakable markup for voice assistants',
+                    type: schema.speakable ? 'valid' : 'warning'
+                },
+                { 
+                    valid: !!schema.image, 
+                    message: 'Social media image metadata',
+                    type: schema.image ? 'valid' : 'warning'
+                },
+                { 
+                    valid: schema.headline && schema.headline.length <= 60, 
+                    message: 'Headline optimized for AI extraction (≤60 chars)',
+                    type: (schema.headline && schema.headline.length <= 60) ? 'valid' : 'warning'
+                },
+                { 
+                    valid: !!schema.citation, 
+                    message: 'Quote citation for credibility',
+                    type: schema.citation ? 'valid' : 'warning'
+                }
+            ];
+
+            results.innerHTML = validations.map(validation => 
+                `<li class="${validation.type}">${validation.message}</li>`
+            ).join('');
+
+            // Update AI insights
+            const validCount = validations.filter(v => v.valid).length;
+            const completeness = Math.round((validCount / validations.length) * 100);
+            
+            document.getElementById('schema-completeness').textContent = completeness + '%';
+            
+            // Calculate other scores based on schema quality
+            document.getElementById('google-score').textContent = Math.min(100, completeness + 5) + '%';
+            document.getElementById('voice-score').textContent = (schema.speakable ? 85 : 65) + '%';
+            document.getElementById('fact-score').textContent = (schema.citation ? 95 : 80) + '%';
+        }
+
+        window.showSchemaTab = function(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.schema-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName + '-tab').classList.add('active');
+
+            // Show corresponding content
+            document.querySelectorAll('.schema-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+
+            currentSchemaTab = tabName;
+        }
+
+        window.toggleSchemaPanel = function() {
+            const panel = document.getElementById('schema-panel');
+            const toggle = document.getElementById('schema-toggle');
+            
+            if (schemaVisible) {
+                panel.style.display = 'none';
+                toggle.textContent = '🔧 Show Schema';
+                schemaVisible = false;
+            } else {
+                panel.style.display = 'block';
+                toggle.textContent = '🔧 Hide Schema';
+                schemaVisible = true;
+            }
+        }
+
+        window.copySchema = function(type) {
+            let textToCopy = '';
+            
+            if (type === 'structured') {
+                textToCopy = document.getElementById('structured-schema').textContent;
+            } else if (type === 'raw') {
+                textToCopy = document.getElementById('raw-schema').textContent;
+            }
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Show feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.background = '#10b981';
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#374151';
+                }, 1500);
+            });
+        }
+
+        window.switchViewMode = function(mode) {
+            // Update active button
+            document.querySelectorAll('.btn-mode').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(mode + '-mode').classList.add('active');
+
+            // Update view class on main container
+            const pageContent = document.getElementById('page-content');
+            pageContent.className = `page-content ${mode}-view`;
+
+            // Handle editing capabilities based on view mode
+            const editableElements = [
+                document.getElementById('headline'),
+                document.getElementById('location-date'),
+                document.getElementById('content'),
+                document.querySelector('#quote-section')
+            ];
+
+            editableElements.forEach(element => {
+                if (element) {
+                    if (mode === 'preview') {
+                        // Read-only mode: disable editing but keep text selectable
+                        element.contentEditable = false;
+                        element.style.cursor = 'text';
+                        element.style.userSelect = 'text';
+                    } else {
+                        // Section and Edit modes: enable editing
+                        element.contentEditable = true;
+                        element.style.cursor = 'text';
+                        element.style.userSelect = 'text';
+                    }
+                }
+            });
+
+            // Show mode-specific feedback
+            const modeLabels = {
+                section: 'Section View: Structured editing with smart paste',
+                edit: 'Edit View: Raw content editing without formatting',
+                preview: 'Preview: Read-only final preview'
+            };
+
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 80px; right: 20px;
+                background: #1e293b; color: white; padding: 12px 20px;
+                border-radius: 6px; z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-size: 14px;
+                max-width: 300px;
+            `;
+            toast.textContent = modeLabels[mode];
+
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+
+            currentViewMode = mode;
+
+            // If switching to edit view, focus on headline for immediate editing
+            if (mode === 'edit') {
+                setTimeout(() => {
+                    const headline = document.getElementById('headline');
+                    if (headline) {
+                        headline.focus();
+                        // Select all text for easy replacement
+                        const range = document.createRange();
+                        range.selectNodeContents(headline);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }, 100);
+            }
+        }
+
+        // Ensure functions are explicitly available globally for testing
+        window.pagePreviewFunctions = {
+            switchViewMode: window.switchViewMode,
+            showPasteDialog: window.showPasteDialog,
+            closePasteDialog: window.closePasteDialog,
+            processPastedContent: window.processPastedContent,
+            showSchemaTab: window.showSchemaTab,
+            toggleSchemaPanel: window.toggleSchemaPanel,
+            copySchema: window.copySchema
+        };
+
+        // Debug log for testing
+        console.log('✅ Page Preview Functions loaded:', Object.keys(window.pagePreviewFunctions));
+    </script>
+</body>
+</html>

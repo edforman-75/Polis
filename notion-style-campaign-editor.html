@@ -1,0 +1,4452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cache Control for Development -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Campaign Content Editor - Notion Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            border-bottom: 1px solid #e9e9e7;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 100;
+        }
+
+        .app-title {
+            font-size: 14px;
+            color: #787774;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #37352f;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: #2383e2;
+            color: white;
+            border-color: #2383e2;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+        }
+
+        .editor-pane {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .sidebar-pane {
+            width: 320px;
+            border-left: 1px solid #e9e9e7;
+            background: #fbfbfa;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: margin-right 0.3s ease;
+        }
+
+        .sidebar-pane.collapsed {
+            margin-right: -320px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            left: -32px;
+            top: 20px;
+            width: 32px;
+            height: 64px;
+            background: #fbfbfa;
+            border: 1px solid #e9e9e7;
+            border-right: none;
+            border-radius: 6px 0 0 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .sidebar-toggle:hover {
+            background: #f1f1ef;
+        }
+
+        .sidebar-toggle-icon {
+            transition: transform 0.3s;
+            font-size: 16px;
+        }
+
+        .sidebar-pane.collapsed .sidebar-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #37352f;
+            margin-bottom: 8px;
+            outline: none;
+            border: none;
+            background: none;
+            width: 100%;
+            padding: 8px 0;
+        }
+
+        .page-title:empty:before {
+            content: "Untitled";
+            color: #9b9a97;
+        }
+
+        .assignment-info {
+            background: #f7f6f3;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .assignment-meta {
+            color: #787774;
+            margin-bottom: 12px;
+        }
+
+        .assignment-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff2cc;
+            color: #7c5500;
+        }
+
+        .content-area {
+            min-height: 400px;
+        }
+
+        .block {
+            position: relative;
+            margin: 2px 0;
+            padding: 3px 0;
+            border-radius: 3px;
+            transition: background-color 0.15s ease;
+        }
+
+        .block:hover {
+            background: rgba(55, 53, 47, 0.03);
+        }
+
+        .block-handle {
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            color: #9b9a97;
+            font-size: 12px;
+        }
+
+        .block:hover .block-handle {
+            opacity: 1;
+        }
+
+        .block-handle:hover {
+            background: #f1f1ef;
+        }
+
+        .block-content {
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            resize: none;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #37352f;
+            padding: 4px 0;
+            min-height: 28px;
+        }
+
+        .block-content:empty:before {
+            content: attr(data-placeholder);
+            color: #9b9a97;
+        }
+
+        .block-text .block-content {
+            /* Default text styling */
+        }
+
+        .block-heading1 .block-content {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 16px 0 8px 0;
+        }
+
+        .block-heading2 .block-content {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 12px 0 6px 0;
+        }
+
+        .block-heading3 .block-content {
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 8px 0 4px 0;
+        }
+
+        .block-quote {
+            border-left: 3px solid #e9e9e7;
+            padding-left: 16px;
+            margin: 8px 0;
+        }
+
+        .block-quote .block-content {
+            font-size: 18px;
+            font-style: italic;
+            color: #787774;
+        }
+
+        .block-callout {
+            background: #f7f6f3;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .block-callout-icon {
+            font-size: 16px;
+            margin-top: 2px;
+            min-width: 20px;
+        }
+
+        .block-callout .block-content {
+            flex: 1;
+            background: transparent;
+            font-size: 14px;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            background: #37352f;
+            border-radius: 6px;
+            padding: 4px;
+            display: none;
+            align-items: center;
+            gap: 2px;
+            z-index: 1000;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .floating-toolbar.active {
+            display: flex;
+        }
+
+        .toolbar-btn {
+            padding: 6px 8px;
+            background: none;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toolbar-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .slash-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            padding: 8px 0;
+            min-width: 280px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .slash-menu.active {
+            display: block;
+        }
+
+        .slash-menu-section {
+            padding: 4px 0;
+        }
+
+        .slash-menu-header {
+            padding: 8px 16px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #9b9a97;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .slash-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            transition: background-color 0.15s ease;
+        }
+
+        .slash-menu-item:hover,
+        .slash-menu-item.selected {
+            background: #f1f1ef;
+        }
+
+        .slash-menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .slash-menu-content {
+            flex: 1;
+        }
+
+        .slash-menu-title {
+            font-weight: 500;
+            color: #37352f;
+        }
+
+        .slash-menu-desc {
+            font-size: 12px;
+            color: #9b9a97;
+            margin-top: 2px;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid #e9e9e7;
+            padding: 16px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9b9a97;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f1f1ef;
+            border-radius: 6px;
+            padding: 2px;
+            margin-bottom: 16px;
+        }
+
+        .assignment-brief {
+            font-size: 13px;
+            color: #37352f;
+            line-height: 1.5;
+        }
+
+        .assignment-brief p {
+            margin: 6px 0;
+        }
+
+        .assignment-brief ul {
+            margin: 5px 0;
+            padding-left: 18px;
+        }
+
+        .assignment-brief li {
+            margin: 2px 0;
+        }
+
+        .assignment-brief strong {
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .assignment-type-badge {
+            background: #37352f;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .paste-content-btn {
+            margin-bottom: 16px;
+            text-align: center;
+            padding: 12px;
+            background: #f7f6f3;
+            border: 2px dashed #e9e9e7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .paste-content-btn:hover {
+            background: #f1f1ef;
+            border-color: #d3d2ce;
+        }
+
+        .document-template-selector {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f7f6f3;
+            border-radius: 6px;
+        }
+
+        .template-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .template-btn {
+            padding: 6px 10px;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            background: #f1f1ef;
+        }
+
+        .view-toggle-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            background: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: #9b9a97;
+        }
+
+        .view-toggle-btn.active {
+            background: white;
+            color: #37352f;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .schema-status {
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .schema-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        .schema-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e9e9e7;
+        }
+
+        .schema-indicator.valid {
+            background: #00b894;
+        }
+
+        /* Content Quality Styles */
+        .quality-overview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .quality-score-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .quality-score-circle.excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .quality-score-circle.good {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .quality-score-circle.poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .quality-status {
+            flex: 1;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .quality-indicators {
+            margin-bottom: 16px;
+        }
+
+        .quality-indicator {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .quality-indicator:last-child {
+            border-bottom: none;
+        }
+
+        .quality-icon {
+            font-size: 16px;
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .quality-info {
+            flex: 1;
+        }
+
+        .quality-label {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.2;
+        }
+
+        .quality-score {
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .quality-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e9ecef;
+            margin-left: 8px;
+        }
+
+        .quality-status-dot.excellent {
+            background: #28a745;
+        }
+
+        .quality-status-dot.good {
+            background: #ffc107;
+        }
+
+        .quality-status-dot.poor {
+            background: #dc3545;
+        }
+
+        .quality-status-dot.checking {
+            background: #007bff;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .quality-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .quality-action-btn {
+            padding: 8px 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            color: #495057;
+        }
+
+        .quality-action-btn:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .quality-action-btn:active {
+            background: #e9ecef;
+        }
+
+        .quality-action-btn.running {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .quality-issues {
+            border-top: 1px solid #e9ecef;
+            padding-top: 12px;
+        }
+
+        .quality-issue {
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .quality-issue.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 3px solid #dc3545;
+        }
+
+        .quality-issue.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 3px solid #ffc107;
+        }
+
+        .quality-issue.suggestion {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 3px solid #17a2b8;
+        }
+
+        .quality-issue-title {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .quality-issue-message {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .quality-issue-action {
+            margin-top: 4px;
+            padding: 2px 6px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .quality-issue-action:hover {
+            background: rgba(255,255,255,0.9);
+        }
+
+        .preview-content {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9e9e7;
+            margin: 16px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .preview-platform {
+            display: none;
+        }
+
+        .preview-platform.active {
+            display: block;
+        }
+
+        .platform-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .platform-tab {
+            padding: 6px 12px;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            background: white;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .platform-tab.active {
+            background: #2383e2;
+            color: white;
+            border-color: #2383e2;
+        }
+
+        .social-post {
+            background: #f8f9fa;
+            border: 1px solid #e9e9e7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .post-content {
+            color: #37352f;
+            margin-bottom: 8px;
+        }
+
+        .post-quote {
+            background: #f0f9ff;
+            border-left: 3px solid #2383e2;
+            padding: 12px;
+            margin: 8px 0;
+            font-style: italic;
+        }
+
+        .editable-preview {
+            outline: none;
+            background: transparent;
+            border: 1px dashed transparent;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .editable-preview:hover {
+            border-color: #e9e9e7;
+            background: rgba(55, 53, 47, 0.03);
+        }
+
+        .editable-preview:focus {
+            border-color: #2383e2;
+            background: white;
+            box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.1);
+        }
+
+        .research-panel {
+            position: fixed;
+            top: 20%;
+            right: 20px;
+            width: 380px;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            padding: 0;
+            display: none;
+            z-index: 1001;
+            max-height: 60vh;
+            flex-direction: column;
+        }
+
+        .research-panel.active {
+            display: flex;
+        }
+
+        .research-header {
+            padding: 16px;
+            border-bottom: 1px solid #e9e9e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .research-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #37352f;
+        }
+
+        .research-conversation {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            max-height: 300px;
+        }
+
+        .research-message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .research-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .research-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .research-avatar.user {
+            background: #2383e2;
+            color: white;
+        }
+
+        .research-avatar.ai {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .research-bubble {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 10px 14px;
+            max-width: 280px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .research-message.user .research-bubble {
+            background: #2383e2;
+            color: white;
+        }
+
+        .research-message.ai .research-bubble {
+            background: #f8f9fa;
+            color: #37352f;
+        }
+
+        .research-sources {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #9b9a97;
+        }
+
+        .research-source-link {
+            color: #2383e2;
+            text-decoration: none;
+            margin-right: 8px;
+        }
+
+        .research-source-link:hover {
+            text-decoration: underline;
+        }
+
+        .research-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .research-action-btn {
+            padding: 4px 8px;
+            border: 1px solid #e9e9e7;
+            border-radius: 4px;
+            background: white;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .research-action-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .research-input-area {
+            padding: 16px;
+            border-top: 1px solid #e9e9e7;
+            background: #fbfbfa;
+        }
+
+        .research-query {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            resize: none;
+            min-height: 36px;
+            max-height: 100px;
+        }
+
+        .research-query:focus {
+            outline: none;
+            border-color: #2383e2;
+            box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.1);
+        }
+
+        .research-input-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .research-suggestions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .research-suggestion {
+            padding: 2px 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.15s ease;
+        }
+
+        .research-suggestion:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .research-send-btn {
+            padding: 6px 12px;
+            background: #2383e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .research-send-btn:hover {
+            background: #1e40af;
+        }
+
+        .research-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .research-typing {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #9b9a97;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 2px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #9b9a97;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+            30% {
+                opacity: 1;
+            }
+        }
+
+        .add-block-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            color: #9b9a97;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 8px 0;
+            transition: color 0.15s ease;
+        }
+
+        .add-block-btn:hover {
+            color: #37352f;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .sidebar-pane {
+                width: 100%;
+                order: -1;
+                border-left: none;
+                border-bottom: 1px solid #e9e9e7;
+            }
+
+            .editor-pane {
+                padding: 24px;
+            }
+
+            .research-panel {
+                position: fixed;
+                top: 10%;
+                left: 10px;
+                right: 10px;
+                width: auto;
+                max-height: 70vh;
+            }
+        }
+
+        /* Consultation Panel Styles */
+        .consultation-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 380px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            border: 1px solid #e1e5e9;
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .consultation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            background: #f8f9fa;
+        }
+
+        .consultation-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #37352f;
+        }
+
+        .consultation-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .consultation-teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .team-option {
+            padding: 16px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        .team-option:hover {
+            border-color: #2383e2;
+            background: #f0f7ff;
+        }
+
+        .team-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            pointer-events: none;
+        }
+
+        .team-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: #37352f;
+            margin-bottom: 4px;
+            pointer-events: none;
+        }
+
+        .team-description {
+            font-size: 12px;
+            color: #6b7280;
+            pointer-events: none;
+        }
+
+        .consultation-message {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+        }
+
+        .consultation-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .consultation-back-btn, .consultation-send-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .consultation-back-btn {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            color: #6b7280;
+        }
+
+        .consultation-back-btn:hover {
+            background: #e9ecef;
+        }
+
+        .consultation-send-btn {
+            background: #2383e2;
+            border: 1px solid #2383e2;
+            color: white;
+        }
+
+        .consultation-send-btn:hover {
+            background: #1a73e8;
+        }
+
+        @media (max-width: 768px) {
+            .consultation-panel {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                width: auto;
+                max-height: 70vh;
+            }
+
+            .consultation-teams {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Bundle System Styles */
+        .bundle-info {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5e9;
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .bundle-current {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bundle-docs {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .bundle-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bundle-modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 600px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .bundle-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bundle-modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .bundle-close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .bundle-close-btn:hover {
+            background: #f1f1f1;
+        }
+
+        .bundle-modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .bundle-create-section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .bundle-create-section h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .bundle-create-section input,
+        .bundle-create-section textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .bundle-create-section textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .bundle-create-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .bundle-create-btn:hover {
+            background: #0056b3;
+        }
+
+        .bundle-list-section h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .bundle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .bundle-item {
+            border: 1px solid #e1e5e9;
+            border-radius: 6px;
+            padding: 12px;
+            background: #f8f9fa;
+        }
+
+        .bundle-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .bundle-item-header strong {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .bundle-date {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .bundle-item-desc {
+            color: #495057;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .bundle-item-docs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .doc-type {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .doc-type:hover {
+            background: #e3f2fd;
+            border-color: #1976d2;
+        }
+
+        .add-doc-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .add-doc-btn:hover {
+            background: #218838;
+        }
+
+        .doc-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .doc-type-option {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .doc-type-option:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+
+        .doc-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .doc-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .bundle-modal-content {
+                width: 95vw;
+                margin: 10px;
+            }
+
+            .doc-type-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <div class="app-title">📝 Campaign Content Editor</div>
+            <div class="header-actions">
+                <button class="btn" onclick="window.location.href='/dashboard'">📊 Dashboard</button>
+                <button class="btn" onclick="showBundleManager()">📁 My Assignments</button>
+                <button class="btn" onclick="undo()" id="undoBtn" disabled>↶</button>
+                <button class="btn" onclick="redo()" id="redoBtn" disabled>↷</button>
+                <button class="btn" onclick="togglePreview()" id="previewBtn">👁️ Preview</button>
+                <button class="btn" onclick="saveDraft()">💾 Save</button>
+                <button class="btn btn-primary" onclick="publish()">🚀 Publish</button>
+            </div>
+        </div>
+
+        <!-- Bundle Info Bar -->
+        <div id="bundleInfo" class="bundle-info" style="display: none;">
+        </div>
+
+        <div class="main-content">
+            <div class="editor-pane">
+                <div class="assignment-info">
+                    <div class="assignment-meta">📋 Assignment A-2024-003: Veterans Day Social Media Series</div>
+                    <div>Assigned by David Park • Due: Nov 11, 2024</div>
+                    <div style="margin-top: 8px;">
+                        <span class="assignment-status">⚠️ Blocked</span>
+                    </div>
+                </div>
+
+                <div contenteditable="true" class="page-title" data-placeholder="Untitled" id="pageTitle">Veterans Day Social Media Series</div>
+
+                <div class="content-area" id="contentArea">
+                    <div class="block block-text" data-block-id="1">
+                        <div class="block-handle">⋮⋮</div>
+                        <div class="block-content"
+                             contenteditable="true"
+                             data-placeholder="Type '/' for commands, or just start writing..."
+                             data-block-type="text"></div>
+                    </div>
+                </div>
+
+                <div class="add-block-btn" onclick="addNewBlock()">
+                    <span>+</span>
+                    <span>Add a block</span>
+                </div>
+            </div>
+
+            <div class="sidebar-pane" id="sidebarPane">
+                <div class="sidebar-toggle" onclick="toggleSidebar()">
+                    <span class="sidebar-toggle-icon">◀</span>
+                </div>
+
+                <!-- Assignment Brief Section -->
+                <div class="sidebar-section" id="assignmentBriefSection">
+                    <div class="sidebar-title">ASSIGNMENT BRIEF</div>
+                    <div class="assignment-brief" id="assignmentBrief">
+                        <p><strong>Type:</strong> <span class="assignment-type-badge">Social Media Post</span></p>
+                        <p><strong>Title:</strong> Veterans Day Social Media Series</p>
+                        <p><strong>Objective:</strong> Create engaging social media content honoring veterans and their service.</p>
+                        <p><strong>Audience:</strong> Veterans, military families, general public</p>
+                        <p><strong>Key Messages:</strong></p>
+                        <ul>
+                            <li>Honor and recognition</li>
+                            <li>Support for veteran services</li>
+                            <li>Community appreciation</li>
+                        </ul>
+                        <p><strong>Tone:</strong> Respectful, grateful, inspiring</p>
+                        <p><strong>Platforms:</strong> Facebook, Twitter, Instagram</p>
+                        <p><strong>Required Elements:</strong></p>
+                        <ul>
+                            <li>Personal story or quote</li>
+                            <li>Call to action</li>
+                            <li>Resource links</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="view-toggle">
+                        <button class="view-toggle-btn active" onclick="switchView('edit')" id="editViewBtn">✏️ Edit</button>
+                        <button class="view-toggle-btn" onclick="switchView('preview')" id="previewViewBtn">👁️ Preview</button>
+                    </div>
+                </div>
+
+                <div class="sidebar-section" id="editView">
+                    <div class="sidebar-title">Content Quality</div>
+                    <!-- Overall Quality Score -->
+                    <div class="quality-overview">
+                        <div class="quality-score-circle" id="overallScoreCircle">
+                            <span id="overallScore">--</span>
+                        </div>
+                        <div class="quality-status" id="qualityStatus">Analyzing...</div>
+                    </div>
+
+                    <!-- Quality Indicators -->
+                    <div class="quality-indicators">
+                        <div class="quality-indicator" id="grammarIndicator">
+                            <span class="quality-icon">📝</span>
+                            <div class="quality-info">
+                                <div class="quality-label">Grammar</div>
+                                <div class="quality-score" id="grammarScore">--</div>
+                            </div>
+                            <div class="quality-status-dot" id="grammarDot"></div>
+                        </div>
+
+                        <div class="quality-indicator" id="complianceIndicator">
+                            <span class="quality-icon">⚖️</span>
+                            <div class="quality-info">
+                                <div class="quality-label">Compliance</div>
+                                <div class="quality-score" id="complianceScore">--</div>
+                            </div>
+                            <div class="quality-status-dot" id="complianceDot"></div>
+                        </div>
+
+                        <div class="quality-indicator" id="schemaIndicator">
+                            <span class="quality-icon">🏗️</span>
+                            <div class="quality-info">
+                                <div class="quality-label">Schema</div>
+                                <div class="quality-score" id="schemaScore">--</div>
+                            </div>
+                            <div class="quality-status-dot" id="schemaDot"></div>
+                        </div>
+
+                        <div class="quality-indicator" id="readabilityIndicator">
+                            <span class="quality-icon">👥</span>
+                            <div class="quality-info">
+                                <div class="quality-label">Readability</div>
+                                <div class="quality-score" id="readabilityScore">--</div>
+                            </div>
+                            <div class="quality-status-dot" id="readabilityDot"></div>
+                        </div>
+
+                        <div class="quality-indicator" id="authenticityIndicator">
+                            <span class="quality-icon">🗣️</span>
+                            <div class="quality-info">
+                                <div class="quality-label">Authenticity</div>
+                                <div class="quality-score" id="authenticityScore">--</div>
+                            </div>
+                            <div class="quality-status-dot" id="authenticityDot"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quality-actions">
+                        <button class="quality-action-btn" onclick="runGrammarCheck()" id="grammarCheckBtn">
+                            📝 Grammar
+                        </button>
+                        <button class="quality-action-btn" onclick="runFactCheck()" id="factCheckBtn">
+                            🔍 Fact Check
+                        </button>
+                        <button class="quality-action-btn" onclick="runAuthenticityCheck()" id="authenticityBtn">
+                            🗣️ Authenticity
+                        </button>
+                        <button class="quality-action-btn" onclick="exportSchema()" id="schemaBtn">
+                            📤 Schema
+                        </button>
+                    </div>
+
+                    <!-- Issues Panel -->
+                    <div class="quality-issues" id="qualityIssues" style="display: none;">
+                        <div class="sidebar-title" style="margin-top: 16px;">Issues & Suggestions</div>
+                        <div id="issuesList"></div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section" id="previewView" style="display: none;">
+                    <div class="sidebar-title">Platform Preview</div>
+                    <div class="platform-tabs">
+                        <button class="platform-tab active" onclick="switchPlatform('twitter')" id="twitterTab">🐦 Twitter</button>
+                        <button class="platform-tab" onclick="switchPlatform('facebook')" id="facebookTab">📘 Facebook</button>
+                        <button class="platform-tab" onclick="switchPlatform('instagram')" id="instagramTab">📷 IG</button>
+                    </div>
+
+                    <div id="platformPreview">
+                        <div id="twitterPreview" class="preview-platform active">
+                            <div class="social-post">
+                                <div class="post-header">🐦 Twitter Thread</div>
+                                <div class="post-content editable-preview" contenteditable="true" data-sync-to="content">
+                                    Start writing to see preview...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="facebookPreview" class="preview-platform">
+                            <div class="social-post">
+                                <div class="post-header">📘 Facebook Post</div>
+                                <div class="post-content editable-preview" contenteditable="true" data-sync-to="content">
+                                    Start writing to see preview...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="instagramPreview" class="preview-platform">
+                            <div class="social-post">
+                                <div class="post-header">📷 Instagram Post</div>
+                                <div class="post-content editable-preview" contenteditable="true" data-sync-to="content">
+                                    Start writing to see preview...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toolbar -->
+    <div class="floating-toolbar" id="floatingToolbar">
+        <button class="toolbar-btn" data-cmd="bold" data-action="formatText" data-param="bold">B</button>
+        <button class="toolbar-btn" data-cmd="italic" data-action="formatText" data-param="italic">I</button>
+        <button class="toolbar-btn" data-cmd="underline" data-action="formatText" data-param="underline">U</button>
+        <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.3); margin: 0 4px;"></div>
+        <button class="toolbar-btn" data-action="convertToBlock" data-param="quote" title="Quote">💬</button>
+        <button class="toolbar-btn" data-action="runAuthenticityCheck" title="Check Authenticity">🗣️</button>
+        <button class="toolbar-btn" data-action="showConsultationMenu" title="Consult Colleagues" onclick="event.stopPropagation(); event.preventDefault(); showConsultationMenu(); hideFloatingToolbar();">💡</button>
+        <button class="toolbar-btn" data-action="showResearchPanel" title="Research">🔍</button>
+    </div>
+
+    <!-- Slash Menu -->
+    <div class="slash-menu" id="slashMenu">
+        <div class="slash-menu-section">
+            <div class="slash-menu-header">Basic Blocks</div>
+            <div class="slash-menu-item" onclick="convertBlock('text')" data-command="text">
+                <div class="slash-menu-icon">📝</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Text</div>
+                    <div class="slash-menu-desc">Just start writing with plain text</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('heading1')" data-command="h1">
+                <div class="slash-menu-icon">H1</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Heading 1</div>
+                    <div class="slash-menu-desc">Big section heading</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('heading2')" data-command="h2">
+                <div class="slash-menu-icon">H2</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Heading 2</div>
+                    <div class="slash-menu-desc">Medium section heading</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('heading3')" data-command="h3">
+                <div class="slash-menu-icon">H3</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Heading 3</div>
+                    <div class="slash-menu-desc">Smaller section heading</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slash-menu-section">
+            <div class="slash-menu-header">Campaign Blocks</div>
+            <div class="slash-menu-item" onclick="convertBlock('quote')" data-command="quote">
+                <div class="slash-menu-icon">💬</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Quote</div>
+                    <div class="slash-menu-desc">Capture a quote or statement</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('callout')" data-command="callout">
+                <div class="slash-menu-icon">💡</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Callout</div>
+                    <div class="slash-menu-desc">Make important information stand out</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('event')" data-command="event">
+                <div class="slash-menu-icon">📅</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Event Block</div>
+                    <div class="slash-menu-desc">Structured event information</div>
+                </div>
+            </div>
+            <div class="slash-menu-item" onclick="convertBlock('policy')" data-command="policy">
+                <div class="slash-menu-icon">📋</div>
+                <div class="slash-menu-content">
+                    <div class="slash-menu-title">Policy Block</div>
+                    <div class="slash-menu-desc">Government service or policy info</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Research Panel -->
+    <div class="research-panel" id="researchPanel">
+        <div class="research-header" style="cursor: pointer;" onclick="closeResearchPanel()" title="Click here or the × to close">
+            <div class="research-title">🔍 Research Assistant</div>
+            <button id="closeResearchBtn" onclick="closeResearchPanel(); event.stopPropagation();" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #9b9a97; padding: 4px 8px; border-radius: 4px; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f1ef'" onmouseout="this.style.background='none'" title="Close">×</button>
+        </div>
+
+        <div class="research-conversation" id="researchConversation">
+            <div class="research-message ai">
+                <div class="research-avatar ai">AI</div>
+                <div class="research-bubble">
+                    Hi! I'm your research assistant. I can help you find information about veterans, events, statistics, policy details, and more. What would you like to know?
+                </div>
+            </div>
+        </div>
+
+        <div class="research-input-area">
+            <textarea class="research-query" placeholder="Ask me anything about your content..." id="researchQuery" onkeydown="handleResearchKeydown(event)"></textarea>
+            <div class="research-input-actions">
+                <div class="research-suggestions" id="researchSuggestions">
+                    <span class="research-suggestion" onclick="askResearchQuestion('How many veterans live in District 7?')">veterans count</span>
+                    <span class="research-suggestion" onclick="askResearchQuestion('When is Veterans Day 2025?')">veterans day</span>
+                    <span class="research-suggestion" onclick="askResearchQuestion('Find venues in Austin')">venues</span>
+                </div>
+                <button class="research-send-btn" onclick="sendResearchQuery()" id="researchSendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultation Panel -->
+    <div class="consultation-panel" id="consultationPanel">
+        <div class="consultation-header" style="cursor: pointer;" onclick="closeConsultationPanel()" title="Click here or the × to close">
+            <div class="consultation-title">💡 Consult Colleagues</div>
+            <button id="closeConsultationBtn" onclick="closeConsultationPanel(); event.stopPropagation();" style="background: none; border: none; cursor: pointer; font-size: 18px; color: #9b9a97; padding: 4px 8px; border-radius: 4px; transition: all 0.15s ease;" onmouseover="this.style.background='#f1f1ef'" onmouseout="this.style.background='none'" title="Close">×</button>
+        </div>
+
+        <div class="consultation-content">
+            <p style="margin: 0 0 16px; color: #6b7280; font-size: 14px;">
+                Get input from the right team based on your content:
+            </p>
+
+            <div class="consultation-teams" id="consultationTeams">
+                <!-- Team options will be populated by JavaScript -->
+            </div>
+
+            <div class="consultation-form" id="consultationForm" style="display: none;">
+                <h4 style="margin: 16px 0 8px; color: #374151;" id="consultationTeamName">Team</h4>
+                <textarea class="consultation-message" placeholder="What would you like to ask or share with this team?" id="consultationMessage"></textarea>
+                <div class="consultation-actions">
+                    <button class="consultation-back-btn" onclick="showTeamSelection()">← Back</button>
+                    <button class="consultation-send-btn" onclick="sendConsultation()">Send Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bundle Manager Modal -->
+    <div id="bundleModal" class="bundle-modal" style="display: none;">
+        <div class="bundle-modal-content">
+            <div class="bundle-modal-header">
+                <h2>📁 My Assignments</h2>
+                <button onclick="closeBundleModal()" class="bundle-close-btn">×</button>
+            </div>
+
+            <div class="bundle-modal-body">
+                <div class="bundle-create-section">
+                    <h3>Create New Bundle</h3>
+                    <input type="text" id="newBundleName" placeholder="Bundle name (e.g., Veterans Day 2025)" />
+                    <textarea id="newBundleDesc" placeholder="Description (optional)"></textarea>
+                    <button onclick="createNewBundle()" class="bundle-create-btn">Create Bundle</button>
+                </div>
+
+                <div class="bundle-list-section">
+                    <h3>Existing Bundles</h3>
+                    <div id="bundleList" class="bundle-list">
+                        <!-- Bundle items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Type Selector Modal -->
+    <div id="docTypeModal" class="bundle-modal" style="display: none;">
+        <div class="bundle-modal-content">
+            <div class="bundle-modal-header">
+                <h2>📄 Choose Document Type</h2>
+                <button onclick="closeDocTypeModal()" class="bundle-close-btn">×</button>
+            </div>
+
+            <div class="bundle-modal-body">
+                <div id="docTypeSelector" class="doc-type-grid">
+                    <!-- Document type options will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Frontend API Service (inlined to avoid loading issues)
+        class CampaignAPI {
+            constructor() {
+                this.baseURL = window.location.protocol + '//' + window.location.host + '/api';
+                this.token = localStorage.getItem('campaign_token');
+            }
+
+            async request(endpoint, options = {}) {
+                const url = `${this.baseURL}${endpoint}`;
+                const config = {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Dev-User': 'true',
+                        ...options.headers,
+                    },
+                    credentials: 'include',
+                };
+
+                if (this.token) {
+                    config.headers.Authorization = `Bearer ${this.token}`;
+                }
+
+                try {
+                    const response = await fetch(url, config);
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+
+            async devLogin(role = 'writer') {
+                return this.request('/auth/dev-login', {
+                    method: 'POST',
+                    body: JSON.stringify({ role }),
+                });
+            }
+
+            async performResearch(query, assignmentId = null, context = {}) {
+                return this.request('/research/query', {
+                    method: 'POST',
+                    body: JSON.stringify({ query, assignmentId, context }),
+                });
+            }
+
+            async getAssignment(id) {
+                return this.request(`/assignments/${id}`);
+            }
+
+            async saveBlocks(assignmentId, blocks) {
+                return this.request('/content/blocks', {
+                    method: 'POST',
+                    body: JSON.stringify({ assignmentId, blocks }),
+                });
+            }
+
+            async saveVersion(assignmentId, versionData, message) {
+                return this.request('/content/version', {
+                    method: 'POST',
+                    body: JSON.stringify({ assignmentId, versionData, message }),
+                });
+            }
+        }
+
+        // Create global instance and auto-login
+        window.campaignAPI = new CampaignAPI();
+        if (window.location.hostname === 'localhost') {
+            window.campaignAPI.devLogin('writer').then(response => {
+                console.log('Dev login successful:', response.user);
+            }).catch(error => {
+                console.error('Dev login failed:', error);
+            });
+        }
+    </script>
+
+    <script>
+        let blocks = [];
+        let currentBlock = null;
+        let blockCounter = 1;
+        let undoStack = [];
+        let redoStack = [];
+        let isPreviewMode = false;
+        let conversationHistory = [];
+        let currentAssignmentId = null;
+
+        // Get assignment ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        currentAssignmentId = urlParams.get('assignment') || null;
+
+        // Sample research database (fallback if API fails)
+        const researchDB = {
+            "veterans statistics": [
+                { title: "22,000 veterans in District 7", source: "VA Database 2023", content: "Based on latest census data" },
+                { title: "15% unemployment rate among veterans", source: "Bureau of Labor Statistics", content: "Higher than civilian rate" }
+            ],
+            "veterans day": [
+                { title: "November 11, 2024", source: "Federal Calendar", content: "Official federal holiday" },
+                { title: "Veterans Day History", source: "VA.gov", content: "Originally called Armistice Day" }
+            ],
+            "austin venues": [
+                { title: "Austin Community Center", source: "City of Austin", content: "Capacity: 350 seats" },
+                { title: "Veterans Memorial Hall", source: "Local Directory", content: "Capacity: 200 seats" }
+            ]
+        };
+
+        function saveState() {
+            undoStack.push(JSON.parse(JSON.stringify(blocks)));
+            if (undoStack.length > 50) undoStack.shift();
+            redoStack = [];
+            updateUndoRedo();
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(JSON.parse(JSON.stringify(blocks)));
+                blocks = undoStack.pop();
+                rerenderBlocks();
+                updateUndoRedo();
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(JSON.parse(JSON.stringify(blocks)));
+                blocks = redoStack.pop();
+                rerenderBlocks();
+                updateUndoRedo();
+            }
+        }
+
+        function updateUndoRedo() {
+            document.getElementById('undoBtn').disabled = undoStack.length === 0;
+            document.getElementById('redoBtn').disabled = redoStack.length === 0;
+        }
+
+        function initializeEditor() {
+            const contentArea = document.getElementById('contentArea');
+
+            // Initialize with one text block
+            blocks = [{
+                id: 'block-1',
+                type: 'text',
+                content: '',
+                data: {}
+            }];
+
+            setupEventListeners();
+            updateSchemaStatus();
+        }
+
+        function setupEventListeners() {
+            document.addEventListener('selectionchange', handleSelectionChange);
+            document.addEventListener('click', handleDocumentClick);
+            document.addEventListener('keydown', handleGlobalKeydown);
+
+            // Setup block event listeners
+            const contentArea = document.getElementById('contentArea');
+            contentArea.addEventListener('input', handleBlockInput);
+            contentArea.addEventListener('keydown', handleBlockKeydown);
+            contentArea.addEventListener('paste', handlePaste);
+
+            // Setup toolbar event listeners
+            const toolbar = document.getElementById('floatingToolbar');
+            toolbar.addEventListener('click', handleToolbarClick);
+
+            // Setup research panel close button
+            const closeResearchBtn = document.getElementById('closeResearchBtn');
+            if (closeResearchBtn) {
+                closeResearchBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Close button clicked');
+                    closeResearchPanel();
+                });
+            } else {
+                console.log('Close research button not found');
+            }
+        }
+
+        function handleToolbarClick(event) {
+            console.log('handleToolbarClick called, event target:', event.target);
+            const button = event.target.closest('.toolbar-btn');
+            console.log('Found button:', button);
+            if (!button) {
+                console.log('No toolbar button found, returning');
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const action = button.dataset.action;
+            const param = button.dataset.param;
+
+            console.log('Toolbar button clicked:', {
+                button: button,
+                action: action,
+                param: param,
+                innerHTML: button.innerHTML,
+                title: button.title
+            });
+
+            switch (action) {
+                case 'formatText':
+                    formatText(param);
+                    break;
+                case 'convertToBlock':
+                    convertToBlock(param);
+                    hideFloatingToolbar();
+                    break;
+                case 'showResearchPanel':
+                    showResearchPanel();
+                    break;
+                case 'showConsultationMenu':
+                    console.log('Light bulb clicked - showing consultation menu');
+                    showConsultationMenu();
+                    hideFloatingToolbar();
+                    break;
+            }
+        }
+
+        function handleBlockInput(event) {
+            const blockElement = event.target.closest('.block');
+            if (!blockElement) return;
+
+            const blockId = blockElement.dataset.blockId;
+            const content = event.target.textContent;
+
+            // Update block data
+            const block = blocks.find(b => b.id === blockId);
+            if (block) {
+                block.content = content;
+                updatePreview();
+                updateSchemaStatus();
+            }
+
+            // Auto-resize
+            autoResize(event.target);
+
+            // Handle slash commands
+            handleSlashCommand(event.target, content);
+        }
+
+        function handleBlockKeydown(event) {
+            const blockElement = event.target.closest('.block');
+            if (!blockElement) return;
+
+            const blockId = blockElement.dataset.blockId;
+
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                createNewBlock(blockId);
+            } else if (event.key === 'Backspace' && event.target.textContent === '') {
+                event.preventDefault();
+                deleteBlock(blockId);
+            } else if (event.key === '/') {
+                setTimeout(() => showSlashMenu(event.target), 0);
+            }
+
+            // Markdown shortcuts
+            if (event.ctrlKey || event.metaKey) {
+                if (event.key === 'b') {
+                    event.preventDefault();
+                    formatText('bold');
+                } else if (event.key === 'i') {
+                    event.preventDefault();
+                    formatText('italic');
+                }
+            }
+        }
+
+        function handleSlashCommand(element, content) {
+            if (content.startsWith('/')) {
+                showSlashMenu(element);
+            } else {
+                hideSlashMenu();
+            }
+        }
+
+        function showSlashMenu(element) {
+            const menu = document.getElementById('slashMenu');
+            const rect = element.getBoundingClientRect();
+
+            menu.style.left = rect.left + 'px';
+            menu.style.top = rect.bottom + 8 + 'px';
+            menu.classList.add('active');
+
+            // Filter menu items based on current input
+            const content = element.textContent.toLowerCase();
+            const query = content.startsWith('/') ? content.slice(1) : '';
+
+            filterSlashMenu(query);
+        }
+
+        function hideSlashMenu() {
+            document.getElementById('slashMenu').classList.remove('active');
+        }
+
+        function filterSlashMenu(query) {
+            const items = document.querySelectorAll('.slash-menu-item');
+            items.forEach(item => {
+                const command = item.dataset.command || '';
+                const title = item.querySelector('.slash-menu-title').textContent.toLowerCase();
+                const visible = title.includes(query) || command.includes(query);
+                item.style.display = visible ? 'flex' : 'none';
+            });
+        }
+
+        function convertBlock(type) {
+            // Get the currently focused block or use selection
+            let currentBlockElement = document.querySelector('.block-content:focus');
+
+            // If no focused block, try to get from selection
+            if (!currentBlockElement) {
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    let element = range.commonAncestorContainer;
+
+                    while (element && element.nodeType !== undefined) {
+                        if (element.nodeType === Node.ELEMENT_NODE && element.classList?.contains('block-content')) {
+                            currentBlockElement = element;
+                            break;
+                        } else if (element.parentElement?.classList?.contains('block-content')) {
+                            currentBlockElement = element.parentElement;
+                            break;
+                        }
+                        element = element.parentElement;
+                    }
+                }
+            }
+
+            if (!currentBlockElement) {
+                console.log('No block content element found');
+                return;
+            }
+
+            const blockElement = currentBlockElement.closest('.block');
+            const blockId = blockElement.dataset.blockId;
+            const block = blocks.find(b => b.id === blockId);
+
+            console.log('Converting block:', blockId, 'to type:', type);
+
+            if (block) {
+                saveState();
+
+                // Remove slash command from content if present
+                let content = currentBlockElement.textContent;
+                if (content.startsWith('/')) {
+                    content = content.slice(content.indexOf(' ') + 1);
+                }
+
+                block.type = type;
+                block.content = content;
+
+                // Remove existing type classes
+                blockElement.className = blockElement.className.replace(/block-\w+/g, '');
+                blockElement.classList.add('block', `block-${type}`);
+
+                currentBlockElement.dataset.blockType = type;
+
+                // Add special elements for certain block types
+                if (type === 'callout') {
+                    // Remove existing callout icon if any
+                    const existingIcon = blockElement.querySelector('.block-callout-icon');
+                    if (existingIcon) existingIcon.remove();
+
+                    // Add new callout structure
+                    const icon = document.createElement('div');
+                    icon.className = 'block-callout-icon';
+                    icon.textContent = '💡';
+
+                    // Insert icon before content
+                    blockElement.insertBefore(icon, currentBlockElement);
+                }
+
+                updateSchemaStatus();
+                hideSlashMenu();
+                currentBlockElement.focus();
+
+                console.log('Block converted successfully to:', type);
+            } else {
+                console.log('Block not found in blocks array');
+            }
+        }
+
+        function createNewBlock(afterBlockId) {
+            saveState();
+
+            const afterBlock = blocks.find(b => b.id === afterBlockId);
+            const afterIndex = blocks.indexOf(afterBlock);
+
+            const newBlock = {
+                id: `block-${++blockCounter}`,
+                type: 'text',
+                content: '',
+                data: {}
+            };
+
+            blocks.splice(afterIndex + 1, 0, newBlock);
+            rerenderBlocks();
+
+            // Focus the new block
+            setTimeout(() => {
+                const newBlockElement = document.querySelector(`[data-block-id="${newBlock.id}"] .block-content`);
+                if (newBlockElement) newBlockElement.focus();
+            }, 0);
+        }
+
+        function deleteBlock(blockId) {
+            if (blocks.length <= 1) return; // Keep at least one block
+
+            saveState();
+
+            const blockIndex = blocks.findIndex(b => b.id === blockId);
+            const prevBlock = blocks[blockIndex - 1];
+
+            blocks = blocks.filter(b => b.id !== blockId);
+            rerenderBlocks();
+
+            // Focus previous block
+            if (prevBlock) {
+                setTimeout(() => {
+                    const prevBlockElement = document.querySelector(`[data-block-id="${prevBlock.id}"] .block-content`);
+                    if (prevBlockElement) {
+                        prevBlockElement.focus();
+                        // Move cursor to end
+                        const range = document.createRange();
+                        range.selectNodeContents(prevBlockElement);
+                        range.collapse(false);
+                        const selection = window.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                }, 0);
+            }
+        }
+
+        function addNewBlock() {
+            const lastBlock = blocks[blocks.length - 1];
+            createNewBlock(lastBlock.id);
+        }
+
+        function rerenderBlocks() {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '';
+
+            blocks.forEach(block => {
+                const blockElement = document.createElement('div');
+                blockElement.className = `block block-${block.type}`;
+                blockElement.dataset.blockId = block.id;
+
+                const handle = document.createElement('div');
+                handle.className = 'block-handle';
+                handle.textContent = '⋮⋮';
+
+                const content = document.createElement('div');
+                content.className = 'block-content';
+                content.contentEditable = true;
+                content.dataset.blockType = block.type;
+                content.dataset.placeholder = getPlaceholder(block.type);
+                content.textContent = block.content;
+
+                blockElement.appendChild(handle);
+
+                if (block.type === 'callout') {
+                    const icon = document.createElement('div');
+                    icon.className = 'block-callout-icon';
+                    icon.textContent = '💡';
+                    blockElement.appendChild(icon);
+                }
+
+                blockElement.appendChild(content);
+                contentArea.appendChild(blockElement);
+            });
+
+            updatePreview();
+        }
+
+        function getPlaceholder(type) {
+            const placeholders = {
+                text: "Type '/' for commands, or just start writing...",
+                heading1: "Heading 1",
+                heading2: "Heading 2",
+                heading3: "Heading 3",
+                quote: "Enter a quote...",
+                callout: "Important information...",
+                event: "Event details...",
+                policy: "Policy information..."
+            };
+            return placeholders[type] || "Start typing...";
+        }
+
+        function handleSelectionChange() {
+            const selection = window.getSelection();
+
+            // Debug logging
+            console.log('Selection changed:', selection.toString());
+
+            if (selection.rangeCount === 0) {
+                hideFloatingToolbar();
+                return;
+            }
+
+            const range = selection.getRangeAt(0);
+            if (range.collapsed) {
+                hideFloatingToolbar();
+                return;
+            }
+
+            const selectedText = selection.toString().trim();
+            if (selectedText.length === 0) {
+                hideFloatingToolbar();
+                return;
+            }
+
+            // Check if selection is within a block
+            let blockContent = null;
+            let element = range.commonAncestorContainer;
+
+            // Traverse up the DOM to find block-content
+            while (element && element.nodeType !== undefined) {
+                if (element.nodeType === Node.ELEMENT_NODE && element.classList?.contains('block-content')) {
+                    blockContent = element;
+                    break;
+                } else if (element.parentElement?.classList?.contains('block-content')) {
+                    blockContent = element.parentElement;
+                    break;
+                }
+                element = element.parentElement;
+            }
+
+            console.log('Block content found:', !!blockContent);
+
+            if (blockContent) {
+                console.log('Showing floating toolbar');
+                showFloatingToolbar(range);
+            }
+        }
+
+        function showFloatingToolbar(range) {
+            console.log('showFloatingToolbar called');
+            const toolbar = document.getElementById('floatingToolbar');
+            console.log('Floating toolbar element:', toolbar);
+            const rect = range.getBoundingClientRect();
+
+            toolbar.style.left = rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2) + 'px';
+            toolbar.style.top = rect.top - toolbar.offsetHeight - 8 + 'px';
+            toolbar.classList.add('active');
+
+            // Update button states
+            updateToolbarButtonStates();
+        }
+
+        function hideFloatingToolbar() {
+            document.getElementById('floatingToolbar').classList.remove('active');
+        }
+
+        function updateToolbarButtonStates() {
+            const commands = ['bold', 'italic', 'underline'];
+            commands.forEach(cmd => {
+                const btn = document.querySelector(`[data-cmd="${cmd}"]`);
+                if (btn) {
+                    btn.classList.toggle('active', document.queryCommandState(cmd));
+                }
+            });
+        }
+
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            updateToolbarButtonStates();
+        }
+
+        function convertToBlock(type) {
+            console.log('convertToBlock called with type:', type);
+            console.log('Call stack:', new Error().stack);
+
+            // Just call convertBlock - it now handles selection properly
+            convertBlock(type);
+            hideFloatingToolbar();
+        }
+
+        function showResearchPanel() {
+            const panel = document.getElementById('researchPanel');
+
+            // Get currently selected text
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            // Clear previous conversations except the initial AI greeting
+            const conversation = document.getElementById('researchConversation');
+            // Keep only the first AI greeting message
+            const firstMessage = conversation.querySelector('.research-message.ai');
+            conversation.innerHTML = '';
+            if (firstMessage) {
+                conversation.appendChild(firstMessage);
+            }
+
+            // If text is selected, provide context-aware suggestions and initial response
+            if (selectedText && selectedText.length > 2) {
+                console.log('Research opened with selected text:', selectedText);
+
+                // Update suggestions based on selected text
+                updateResearchSuggestions(selectedText);
+
+                // Generate an automatic initial response
+                generateContextualResponse(selectedText);
+            } else {
+                // Reset to default suggestions
+                resetResearchSuggestions();
+            }
+
+            panel.classList.add('active');
+            panel.style.display = 'flex';
+
+            setTimeout(() => {
+                document.getElementById('researchQuery').focus();
+            }, 0);
+        }
+
+        function closeResearchPanel() {
+            console.log('closeResearchPanel called');
+            const panel = document.getElementById('researchPanel');
+            if (panel) {
+                panel.classList.remove('active');
+                panel.style.display = 'none'; // Force hide with inline style
+                console.log('Research panel closed');
+            }
+        }
+
+        function handleResearchKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendResearchQuery();
+            }
+        }
+
+        async function sendResearchQuery() {
+            const query = document.getElementById('researchQuery').value.trim();
+            if (!query) return;
+
+            // Add user message to conversation
+            addResearchMessage('user', query);
+
+            // Clear input
+            document.getElementById('researchQuery').value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            try {
+                // Call backend API
+                const response = await window.campaignAPI.performResearch(query, currentAssignmentId, {
+                    currentContent: blocks.map(b => b.content).join(' '),
+                    conversationHistory: conversationHistory
+                });
+
+                hideTypingIndicator();
+
+                // Format actions with callbacks
+                const formattedActions = response.actions?.map(action => ({
+                    label: action.label,
+                    data: action.data,
+                    callback: (data) => {
+                        if (action.type === 'insert_stat' || action.type === 'insert_text') {
+                            insertTextIntoBlock(data);
+                        } else if (action.type === 'create_quote') {
+                            createQuoteBlock(data);
+                        } else if (action.type === 'create_event') {
+                            createEventBlock(data);
+                        } else if (action.type === 'create_policy') {
+                            createPolicyBlock(data);
+                        } else if (action.type === 'follow_up') {
+                            document.getElementById('researchQuery').value = data;
+                            sendResearchQuery();
+                        }
+                    }
+                })) || [];
+
+                addResearchMessage('ai', response.text, response.sources, formattedActions);
+
+            } catch (error) {
+                hideTypingIndicator();
+                console.error('Research API error:', error);
+
+                // Show error message
+                addResearchMessage('ai',
+                    'I\'m sorry, but I\'m having trouble connecting to the research service right now. Please try again in a moment.',
+                    [],
+                    [{
+                        label: 'Try again',
+                        data: query,
+                        callback: () => {
+                            document.getElementById('researchQuery').value = query;
+                            sendResearchQuery();
+                        }
+                    }]
+                );
+            }
+        }
+
+        function askResearchQuestion(question) {
+            document.getElementById('researchQuery').value = question;
+            sendResearchQuery();
+        }
+
+        function updateResearchSuggestions(selectedText) {
+            const suggestionsContainer = document.getElementById('researchSuggestions');
+            const lowerText = selectedText.toLowerCase();
+
+            let suggestions = [];
+
+            // Generate contextual suggestions based on selected text
+            if (lowerText.includes('veteran')) {
+                suggestions = [
+                    `Veterans statistics for "${selectedText}"`,
+                    `Benefits related to ${selectedText}`,
+                    `Events for ${selectedText}`
+                ];
+            } else if (lowerText.includes('day') || lowerText.includes('date')) {
+                suggestions = [
+                    `When is ${selectedText}?`,
+                    `Events on ${selectedText}`,
+                    `History of ${selectedText}`
+                ];
+            } else if (lowerText.includes('health') || lowerText.includes('care')) {
+                suggestions = [
+                    `Healthcare policies for ${selectedText}`,
+                    `Statistics on ${selectedText}`,
+                    `Resources for ${selectedText}`
+                ];
+            } else {
+                // Generic suggestions based on selected text
+                suggestions = [
+                    `Tell me more about "${selectedText}"`,
+                    `Statistics on ${selectedText}`,
+                    `Recent news about ${selectedText}`
+                ];
+            }
+
+            // Update the suggestions in the UI
+            suggestionsContainer.innerHTML = suggestions.map(suggestion =>
+                `<span class="research-suggestion" onclick="askResearchQuestion('${suggestion.replace(/'/g, "\\'")}')">
+                    ${suggestion.length > 30 ? suggestion.substring(0, 30) + '...' : suggestion}
+                </span>`
+            ).join('');
+        }
+
+        function resetResearchSuggestions() {
+            const suggestionsContainer = document.getElementById('researchSuggestions');
+            suggestionsContainer.innerHTML = `
+                <span class="research-suggestion" onclick="askResearchQuestion('How many veterans live in District 7?')">veterans count</span>
+                <span class="research-suggestion" onclick="askResearchQuestion('When is Veterans Day 2025?')">veterans day</span>
+                <span class="research-suggestion" onclick="askResearchQuestion('Find venues in Austin')">venues</span>
+            `;
+        }
+
+        function generateContextualSuggestions(selectedText) {
+            const currentContent = blocks.map(b => b.content).join(' ').toLowerCase();
+            const suggestions = [];
+
+            // Base suggestions for the selected text
+            suggestions.push(`Key facts about "${selectedText}"`);
+            suggestions.push(`Statistics for "${selectedText}"`);
+
+            // Context-aware suggestions based on document content
+            if (currentContent.includes('veteran') || currentContent.includes('military')) {
+                suggestions.push(`When is Veterans Day ${new Date().getFullYear()}?`);
+                suggestions.push(`Veterans programs for "${selectedText}"`);
+                suggestions.push(`How "${selectedText}" impacts veterans`);
+            }
+
+            if (currentContent.includes('healthcare') || currentContent.includes('health')) {
+                suggestions.push(`Healthcare policies affecting "${selectedText}"`);
+                suggestions.push(`Health outcomes for "${selectedText}"`);
+            }
+
+            if (currentContent.includes('economy') || currentContent.includes('job')) {
+                suggestions.push(`Economic impact of "${selectedText}"`);
+                suggestions.push(`Job creation from "${selectedText}"`);
+            }
+
+            if (currentContent.includes('education') || currentContent.includes('school')) {
+                suggestions.push(`Education programs for "${selectedText}"`);
+                suggestions.push(`School impact of "${selectedText}"`);
+            }
+
+            // Event-specific suggestions
+            if (currentContent.includes('event') || currentContent.includes('day')) {
+                suggestions.push(`When does this event occur?`);
+                suggestions.push(`Event details for "${selectedText}"`);
+            }
+
+            // Add general research suggestions
+            suggestions.push(`Local examples of "${selectedText}"`);
+            suggestions.push(`Recent news about "${selectedText}"`);
+
+            return suggestions.slice(0, 6); // Limit to 6 suggestions
+        }
+
+        function generateContextualResponse(selectedText) {
+            const suggestions = generateContextualSuggestions(selectedText);
+
+            // Create suggestion message
+            const suggestionText = `Research suggestions for "${selectedText}":`;
+
+            const suggestionActions = suggestions.map(suggestion => ({
+                label: suggestion,
+                data: suggestion,
+                callback: (query) => {
+                    document.getElementById('researchQuery').value = query;
+                    sendResearchQuery();
+                }
+            }));
+
+            addResearchMessage('ai', suggestionText, [], suggestionActions);
+        }
+
+        function replaceSelectedText(newText) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(newText));
+                range.collapse(false);
+
+                // Update the corresponding block data
+                const blockContent = range.commonAncestorContainer.parentElement?.closest('.block-content');
+                if (blockContent) {
+                    const blockElement = blockContent.closest('.block');
+                    const blockId = blockElement.dataset.blockId;
+                    const block = blocks.find(b => b.id === blockId);
+                    if (block) {
+                        block.content = blockContent.textContent;
+                    }
+                }
+            }
+        }
+
+        function addResearchMessage(sender, text, sources = [], actions = []) {
+            // Add to conversation history
+            conversationHistory.push({
+                role: sender === 'user' ? 'user' : 'assistant',
+                content: text,
+                timestamp: new Date().toISOString()
+            });
+
+            // Keep only last 10 messages to avoid too much context
+            if (conversationHistory.length > 10) {
+                conversationHistory.splice(0, conversationHistory.length - 10);
+            }
+
+            const conversation = document.getElementById('researchConversation');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `research-message ${sender}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `research-avatar ${sender}`;
+            avatar.textContent = sender === 'user' ? 'You' : 'AI';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'research-bubble';
+            bubble.textContent = text;
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+
+            // Add sources if provided
+            if (sources && sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'research-sources';
+                sourcesDiv.innerHTML = 'Sources: ' + sources.map(source =>
+                    `<a href="#" class="research-source-link">${source}</a>`
+                ).join('');
+                bubble.appendChild(sourcesDiv);
+            }
+
+            // Add action buttons if provided
+            if (actions && actions.length > 0) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'research-actions';
+                actions.forEach(action => {
+                    const btn = document.createElement('button');
+                    btn.className = 'research-action-btn';
+                    btn.textContent = action.label;
+                    btn.onclick = () => action.callback(action.data);
+                    actionsDiv.appendChild(btn);
+                });
+                bubble.appendChild(actionsDiv);
+            }
+
+            conversation.appendChild(messageDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const conversation = document.getElementById('researchConversation');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'research-message ai';
+            typingDiv.id = 'typingIndicator';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'research-avatar ai';
+            avatar.textContent = 'AI';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'research-bubble';
+
+            const typingText = document.createElement('div');
+            typingText.className = 'research-typing';
+            typingText.innerHTML = `
+                <span>AI is typing</span>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+
+            bubble.appendChild(typingText);
+            typingDiv.appendChild(avatar);
+            typingDiv.appendChild(bubble);
+
+            conversation.appendChild(typingDiv);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function getAIResponse(query) {
+            const lowerQuery = query.toLowerCase();
+
+            // Veterans-related queries
+            if (lowerQuery.includes('veteran') && lowerQuery.includes('district')) {
+                return {
+                    text: "District 7 has approximately 22,000 veterans according to the latest VA database. The unemployment rate among veterans in this district is 15%, which is higher than the civilian rate of 8%.",
+                    sources: ['VA Database 2023', 'Bureau of Labor Statistics'],
+                    actions: [
+                        { label: 'Insert stat', data: '22,000 veterans', callback: insertTextIntoBlock },
+                        { label: 'Add to quote', data: 'District 7 has approximately 22,000 veterans', callback: createQuoteBlock }
+                    ]
+                };
+            }
+
+            if (lowerQuery.includes('veterans day')) {
+                return {
+                    text: "Veterans Day 2025 falls on Tuesday, November 11th. It's a federal holiday originally called Armistice Day, commemorating the end of World War I. Many organizations hold special events and ceremonies.",
+                    sources: ['Federal Calendar', 'VA.gov'],
+                    actions: [
+                        { label: 'Insert date', data: 'November 11, 2025', callback: insertTextIntoBlock },
+                        { label: 'Create event', data: 'Veterans Day 2025', callback: createEventBlock }
+                    ]
+                };
+            }
+
+            if (lowerQuery.includes('venue') || lowerQuery.includes('location')) {
+                return {
+                    text: "Here are some venues in the area: Austin Community Center (capacity: 350), Veterans Memorial Hall (capacity: 200), and Central Library Meeting Room (capacity: 50). All are wheelchair accessible.",
+                    sources: ['City of Austin', 'Local Directory'],
+                    actions: [
+                        { label: 'Insert venue', data: 'Austin Community Center', callback: insertTextIntoBlock },
+                        { label: 'Create event', data: 'Event at Austin Community Center', callback: createEventBlock }
+                    ]
+                };
+            }
+
+            // Policy-related queries
+            if (lowerQuery.includes('policy') || lowerQuery.includes('benefit')) {
+                return {
+                    text: "Key veteran benefits include disability compensation, healthcare through VA, education benefits (GI Bill), home loans, and vocational rehabilitation. The latest policy updates expanded mental health services.",
+                    sources: ['VA.gov', 'Veterans Benefits Administration'],
+                    actions: [
+                        { label: 'Create policy block', data: 'Veterans Benefits Overview', callback: createPolicyBlock },
+                        { label: 'Insert benefits', data: 'disability compensation, healthcare, education benefits', callback: insertTextIntoBlock }
+                    ]
+                };
+            }
+
+            // Default response
+            return {
+                text: `I found some information related to "${query}". Could you be more specific about what you'd like to know? I can help with veterans statistics, event details, policy information, or venue research.`,
+                sources: [],
+                actions: [
+                    { label: 'Veterans stats', data: 'How many veterans live in District 7?', callback: askResearchQuestion },
+                    { label: 'Event info', data: 'When is Veterans Day 2025?', callback: askResearchQuestion },
+                    { label: 'Find venues', data: 'Find venues in Austin', callback: askResearchQuestion }
+                ]
+            };
+        }
+
+        function insertTextIntoBlock(text) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(text));
+                range.collapse(false);
+            } else {
+                // Insert into current block or first block
+                const currentBlockContent = document.querySelector('.block-content:focus') ||
+                                          document.querySelector('.block-content');
+                if (currentBlockContent) {
+                    currentBlockContent.textContent += text;
+                    currentBlockContent.focus();
+                }
+            }
+            closeResearchPanel();
+        }
+
+        function createQuoteBlock(text) {
+            saveState();
+            const newBlock = {
+                id: `block-${++blockCounter}`,
+                type: 'quote',
+                content: text,
+                data: {}
+            };
+            blocks.push(newBlock);
+            rerenderBlocks();
+            closeResearchPanel();
+        }
+
+        function createEventBlock(text) {
+            saveState();
+            const newBlock = {
+                id: `block-${++blockCounter}`,
+                type: 'event',
+                content: text,
+                data: {}
+            };
+            blocks.push(newBlock);
+            rerenderBlocks();
+            closeResearchPanel();
+        }
+
+        function createPolicyBlock(text) {
+            saveState();
+            const newBlock = {
+                id: `block-${++blockCounter}`,
+                type: 'policy',
+                content: text,
+                data: {}
+            };
+            blocks.push(newBlock);
+            rerenderBlocks();
+            closeResearchPanel();
+        }
+
+
+        function handleDocumentClick(event) {
+            // Close slash menu if clicking outside
+            if (!event.target.closest('.slash-menu') && !event.target.closest('.block-content')) {
+                hideSlashMenu();
+            }
+
+            // Close research panel if clicking outside (but not on the research button)
+            const researchPanel = document.getElementById('researchPanel');
+            const floatingToolbar = document.getElementById('floatingToolbar');
+
+            if (researchPanel.classList.contains('active')) {
+                const clickedInsidePanel = event.target.closest('.research-panel');
+                const clickedResearchButton = event.target.closest('[data-action="showResearchPanel"]');
+
+                if (!clickedInsidePanel && !clickedResearchButton) {
+                    closeResearchPanel();
+                }
+            }
+        }
+
+        function handleGlobalKeydown(event) {
+            if (event.key === 'Escape') {
+                hideSlashMenu();
+                closeResearchPanel();
+                hideFloatingToolbar();
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }
+
+        function switchView(view) {
+            isPreviewMode = view === 'preview';
+
+            document.getElementById('editViewBtn').classList.toggle('active', view === 'edit');
+            document.getElementById('previewViewBtn').classList.toggle('active', view === 'preview');
+
+            document.getElementById('editView').style.display = view === 'edit' ? 'block' : 'none';
+            document.getElementById('previewView').style.display = view === 'preview' ? 'block' : 'none';
+
+            if (view === 'preview') {
+                updatePreview();
+            }
+        }
+
+        function switchPlatform(platform) {
+            document.querySelectorAll('.platform-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(platform + 'Tab').classList.add('active');
+
+            document.querySelectorAll('.preview-platform').forEach(preview => preview.classList.remove('active'));
+            document.getElementById(platform + 'Preview').classList.add('active');
+        }
+
+        function updatePreview() {
+            const content = blocks.map(block => {
+                // Format content based on block type
+                if (block.type === 'heading1') return `<h1>${block.content}</h1>`;
+                if (block.type === 'heading2') return `<h2>${block.content}</h2>`;
+                if (block.type === 'heading3') return `<h3>${block.content}</h3>`;
+                if (block.type === 'quote') return `<blockquote>💬 ${block.content}</blockquote>`;
+                if (block.type === 'callout') return `<div style="background: #fff3cd; padding: 12px; border-radius: 6px;">💡 ${block.content}</div>`;
+                if (block.type === 'event') return `<div style="background: #e8f5e9; padding: 12px; border-radius: 6px;">📅 ${block.content}</div>`;
+                if (block.type === 'policy') return `<div style="background: #e3f2fd; padding: 12px; border-radius: 6px;">📋 ${block.content}</div>`;
+                return `<p>${block.content}</p>`;
+            }).filter(c => c.trim()).join('');
+
+            // Update all platform previews
+            document.querySelectorAll('.editable-preview').forEach(preview => {
+                // Store current cursor position
+                const selection = window.getSelection();
+                const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                const isThisPreviewFocused = preview === document.activeElement;
+
+                preview.innerHTML = content || '<span style="color: #999;">Start writing to see preview...</span>';
+
+                // Restore cursor position if this preview was focused
+                if (isThisPreviewFocused && range) {
+                    try {
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } catch(e) {
+                        // Cursor restoration failed, that's ok
+                    }
+                }
+            });
+        }
+
+        function updateSchemaStatus() {
+            const eventBlocks = blocks.filter(b => b.type === 'event').length;
+            const quoteBlocks = blocks.filter(b => b.type === 'quote').length;
+            const policyBlocks = blocks.filter(b => b.type === 'policy').length;
+
+            document.getElementById('eventCount').textContent = eventBlocks;
+            document.getElementById('quoteCount').textContent = quoteBlocks;
+            document.getElementById('policyCount').textContent = policyBlocks;
+
+            document.getElementById('eventIndicator').classList.toggle('valid', eventBlocks > 0);
+            document.getElementById('quoteIndicator').classList.toggle('valid', quoteBlocks > 0);
+            document.getElementById('policyIndicator').classList.toggle('valid', policyBlocks > 0);
+        }
+
+        function autoResize(element) {
+            element.style.height = 'auto';
+            element.style.height = element.scrollHeight + 'px';
+        }
+
+        function handlePaste(event) {
+            event.preventDefault();
+            const text = (event.clipboardData || window.clipboardData).getData('text');
+            const selection = window.getSelection();
+            if (selection.rangeCount) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(text));
+                range.collapse(false);
+            }
+        }
+
+        function togglePreview() {
+            switchView(isPreviewMode ? 'edit' : 'preview');
+        }
+
+        async function saveDraft() {
+            try {
+                // Save to backend if we have an assignment ID
+                if (currentAssignmentId) {
+                    await window.campaignAPI.saveBlocks(currentAssignmentId, blocks);
+                    await window.campaignAPI.saveVersion(
+                        currentAssignmentId,
+                        { blocks, title: document.getElementById('pageTitle').textContent },
+                        'Draft saved'
+                    );
+                }
+
+                // Also save locally
+                localStorage.setItem('campaign-draft', JSON.stringify({
+                    title: document.getElementById('pageTitle').textContent,
+                    blocks: blocks,
+                    assignmentId: currentAssignmentId,
+                    timestamp: new Date().toISOString()
+                }));
+
+                // Show success notification
+                showNotification('Draft saved successfully!', 'success');
+
+            } catch (error) {
+                console.error('Save error:', error);
+                // Still save locally even if backend fails
+                localStorage.setItem('campaign-draft', JSON.stringify({
+                    title: document.getElementById('pageTitle').textContent,
+                    blocks: blocks,
+                    timestamp: new Date().toISOString()
+                }));
+                showNotification('Saved locally (backend unavailable)', 'warning');
+            }
+        }
+
+        function publish() {
+            if (blocks.filter(b => b.content.trim()).length === 0) {
+                alert('Please add some content before publishing.');
+                return;
+            }
+            alert('Content published successfully!');
+        }
+
+        function exportSchema() {
+            const schemas = blocks.filter(b => ['event', 'quote', 'policy'].includes(b.type)).map(b => ({
+                type: b.type,
+                content: b.content,
+                data: b.data
+            }));
+
+            const exportData = {
+                "@context": "https://schema.org",
+                "content": schemas,
+                "exported": new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'campaign-schema.json';
+            a.click();
+        }
+
+        // Notification helper
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#00b894' : type === 'warning' ? '#fdcb6e' : '#2383e2'};
+                color: white;
+                border-radius: 6px;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                font-size: 14px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Load assignment data on init
+        async function loadAssignmentData() {
+            if (!currentAssignmentId) return;
+
+            try {
+                const assignment = await window.campaignAPI.getAssignment(currentAssignmentId);
+
+                // Update UI with assignment info
+                document.querySelector('.assignment-meta').textContent =
+                    `📋 Assignment ${assignment.id}: ${assignment.title}`;
+
+                document.getElementById('pageTitle').textContent = assignment.title;
+
+                // Load existing blocks if available
+                if (assignment.blocks && assignment.blocks.length > 0) {
+                    blocks = assignment.blocks;
+                    rerenderBlocks();
+                } else if (assignment.brief) {
+                    // If no blocks but has brief, create initial block with brief
+                    blocks = [{
+                        id: 'block-1',
+                        type: 'text',
+                        content: assignment.brief,
+                        data: {}
+                    }];
+                    rerenderBlocks();
+                }
+
+                showNotification('Assignment loaded', 'success');
+
+            } catch (error) {
+                console.error('Failed to load assignment:', error);
+                showNotification('Could not load assignment data', 'warning');
+            }
+        }
+
+        // Initialize the editor
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeEditor();
+            loadAssignmentData();
+        });
+
+        // Setup bidirectional editing for preview
+        document.addEventListener('input', function(event) {
+            if (event.target.classList.contains('editable-preview')) {
+                // Parse the HTML back into blocks
+                const previewHTML = event.target.innerHTML;
+                syncPreviewToBlocks(previewHTML);
+            }
+        });
+
+        // Sync preview edits back to blocks
+        function syncPreviewToBlocks(html) {
+            // Create a temporary div to parse HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Extract text content from each element
+            const newBlocks = [];
+            let blockId = 1;
+
+            tempDiv.childNodes.forEach(node => {
+                let content = '';
+                let type = 'text';
+
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    content = node.textContent.trim();
+
+                    // Determine block type from HTML element
+                    if (node.tagName === 'H1') type = 'heading1';
+                    else if (node.tagName === 'H2') type = 'heading2';
+                    else if (node.tagName === 'H3') type = 'heading3';
+                    else if (node.tagName === 'BLOCKQUOTE') {
+                        type = 'quote';
+                        content = content.replace('💬 ', '');
+                    }
+                    else if (node.innerHTML.includes('💡')) {
+                        type = 'callout';
+                        content = content.replace('💡 ', '');
+                    }
+                    else if (node.innerHTML.includes('📅')) {
+                        type = 'event';
+                        content = content.replace('📅 ', '');
+                    }
+                    else if (node.innerHTML.includes('📋')) {
+                        type = 'policy';
+                        content = content.replace('📋 ', '');
+                    }
+
+                    if (content) {
+                        newBlocks.push({
+                            id: `block-${blockId++}`,
+                            type: type,
+                            content: content,
+                            data: {}
+                        });
+                    }
+                } else if (node.nodeType === Node.TEXT_NODE) {
+                    content = node.textContent.trim();
+                    if (content) {
+                        newBlocks.push({
+                            id: `block-${blockId++}`,
+                            type: 'text',
+                            content: content,
+                            data: {}
+                        });
+                    }
+                }
+            });
+
+            // Update blocks if there are changes
+            if (newBlocks.length > 0) {
+                blocks = newBlocks;
+                blockCounter = blockId;
+                rerenderBlocks();
+                updateSchemaStatus();
+            }
+        }
+
+        // Consultation Panel Functions
+        function showConsultationMenu() {
+            console.log('showConsultationMenu function called');
+            const panel = document.getElementById('consultationPanel');
+            console.log('Consultation panel element:', panel);
+            const currentContent = blocks.map(b => b.content).join(' ').toLowerCase();
+
+            // Smart team suggestions based on content
+            const teams = getRelevantTeams(currentContent);
+
+            populateTeamOptions(teams);
+            showTeamSelection();
+
+            panel.style.display = 'flex';
+        }
+
+        function closeConsultationPanel() {
+            const panel = document.getElementById('consultationPanel');
+            panel.style.display = 'none';
+
+            // Reset to team selection view
+            showTeamSelection();
+            document.getElementById('consultationMessage').value = '';
+        }
+
+        function getRelevantTeams(content) {
+            const allTeams = [
+                {
+                    id: 'scheduling',
+                    name: 'Scheduling Team',
+                    icon: '📅',
+                    description: 'Events & calendar',
+                    keywords: ['event', 'date', 'schedule', 'calendar', 'meeting', 'venue', 'time']
+                },
+                {
+                    id: 'policy',
+                    name: 'Policy Team',
+                    icon: '📋',
+                    description: 'Policy & research',
+                    keywords: ['policy', 'position', 'research', 'statistics', 'data', 'facts']
+                },
+                {
+                    id: 'communications',
+                    name: 'Communications',
+                    icon: '📢',
+                    description: 'Messaging & media',
+                    keywords: ['message', 'media', 'press', 'statement', 'announcement']
+                },
+                {
+                    id: 'digital',
+                    name: 'Digital Team',
+                    icon: '💻',
+                    description: 'Social media & web',
+                    keywords: ['social', 'facebook', 'twitter', 'instagram', 'website', 'digital']
+                },
+                {
+                    id: 'fundraising',
+                    name: 'Fundraising',
+                    icon: '💰',
+                    description: 'Donations & finance',
+                    keywords: ['donate', 'contribution', 'fundraising', 'money', 'budget']
+                },
+                {
+                    id: 'volunteers',
+                    name: 'Volunteer Coordinator',
+                    icon: '🤝',
+                    description: 'Volunteer management',
+                    keywords: ['volunteer', 'help', 'support', 'community', 'organize']
+                }
+            ];
+
+            // Sort teams by relevance to content
+            return allTeams.map(team => {
+                const relevanceScore = team.keywords.reduce((score, keyword) => {
+                    return score + (content.includes(keyword) ? 1 : 0);
+                }, 0);
+                return { ...team, relevanceScore };
+            }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+        }
+
+        function populateTeamOptions(teams) {
+            const teamsContainer = document.getElementById('consultationTeams');
+            teamsContainer.innerHTML = '';
+
+            teams.forEach(team => {
+                const teamDiv = document.createElement('div');
+                teamDiv.className = 'team-option';
+                teamDiv.style.cursor = 'pointer';
+
+                teamDiv.innerHTML = `
+                    <div class="team-icon">${team.icon}</div>
+                    <div class="team-name">${team.name}</div>
+                    <div class="team-description">${team.description}</div>
+                `;
+
+                // Add click event listener after creating the element
+                teamDiv.addEventListener('click', function() {
+                    console.log('Team clicked:', team.name);
+                    selectTeam(team);
+                });
+
+                teamsContainer.appendChild(teamDiv);
+            });
+        }
+
+        function selectTeam(team) {
+            console.log('selectTeam called with:', team);
+            // Show the consultation form
+            document.getElementById('consultationTeams').style.display = 'none';
+            document.getElementById('consultationForm').style.display = 'block';
+            document.getElementById('consultationTeamName').textContent = `${team.icon} ${team.name}`;
+
+            // Store selected team for sending
+            window.selectedTeam = team;
+
+            // Pre-populate message with context
+            const currentSelection = window.getSelection().toString().trim();
+            const contextMessage = currentSelection
+                ? `I'm working on content that includes: "${currentSelection}"\n\n`
+                : 'I\'m working on this content and would like your input:\n\n';
+
+            document.getElementById('consultationMessage').value = contextMessage;
+            document.getElementById('consultationMessage').focus();
+        }
+
+        function showTeamSelection() {
+            document.getElementById('consultationTeams').style.display = 'grid';
+            document.getElementById('consultationForm').style.display = 'none';
+        }
+
+        function sendConsultation() {
+            const message = document.getElementById('consultationMessage').value.trim();
+            const team = window.selectedTeam;
+
+            if (!message) {
+                alert('Please enter a message before sending.');
+                return;
+            }
+
+            // Simulate sending the consultation
+            simulateConsultationSend(team, message);
+
+            // Close the panel
+            closeConsultationPanel();
+        }
+
+        function simulateConsultationSend(team, message) {
+            // For now, simulate the consultation being sent
+            const confirmation = document.createElement('div');
+            confirmation.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1001;
+                font-size: 14px;
+                max-width: 300px;
+            `;
+            confirmation.innerHTML = `
+                <strong>✓ Sent to ${team.name}</strong><br>
+                <small>They'll review your request and respond via your team's messaging platform.</small>
+            `;
+
+            document.body.appendChild(confirmation);
+
+            // Remove after 4 seconds
+            setTimeout(() => {
+                document.body.removeChild(confirmation);
+            }, 4000);
+
+            console.log('Consultation sent:', {
+                team: team.name,
+                message: message,
+                content: blocks.map(b => b.content).join(' ').substring(0, 200) + '...',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // ===== CONTENT BUNDLES SYSTEM =====
+
+        // Document type templates with different block structures
+        const documentTemplates = {
+            'press-release': {
+                name: 'Press Release',
+                icon: '📰',
+                defaultBlocks: [
+                    { type: 'heading1', content: 'FOR IMMEDIATE RELEASE' },
+                    { type: 'heading2', content: '[Headline Goes Here]' },
+                    { type: 'paragraph', content: '[City, Date] – [Opening paragraph with key announcement]' },
+                    { type: 'quote', content: '"[Quote from candidate/spokesperson]"', source: '[Name, Title]' },
+                    { type: 'paragraph', content: '[Supporting details and context]' },
+                    { type: 'callout', content: 'CONTACT:\n[Name]\n[Phone]\n[Email]' }
+                ]
+            },
+            'social-post': {
+                name: 'Social Media Post',
+                icon: '📱',
+                defaultBlocks: [
+                    { type: 'paragraph', content: '[Engaging hook or question]' },
+                    { type: 'paragraph', content: '[Main message with key points]' },
+                    { type: 'callout', content: '#hashtags #campaign2025' }
+                ]
+            },
+            'talking-points': {
+                name: 'Talking Points',
+                icon: '📋',
+                defaultBlocks: [
+                    { type: 'heading1', content: 'Talking Points: [Event/Topic]' },
+                    { type: 'heading2', content: 'Key Messages' },
+                    { type: 'paragraph', content: '• [Main point 1]' },
+                    { type: 'paragraph', content: '• [Main point 2]' },
+                    { type: 'paragraph', content: '• [Main point 3]' },
+                    { type: 'heading2', content: 'Supporting Facts' },
+                    { type: 'paragraph', content: '• [Fact 1 with source]' },
+                    { type: 'paragraph', content: '• [Fact 2 with source]' }
+                ]
+            },
+            'email': {
+                name: 'Email Newsletter',
+                icon: '📧',
+                defaultBlocks: [
+                    { type: 'heading1', content: 'Subject: [Email Subject Line]' },
+                    { type: 'paragraph', content: 'Dear [Name/Supporter],' },
+                    { type: 'paragraph', content: '[Opening paragraph]' },
+                    { type: 'heading2', content: '[Section header]' },
+                    { type: 'paragraph', content: '[Content section]' },
+                    { type: 'callout', content: 'Take Action: [Call to action]' },
+                    { type: 'paragraph', content: 'Thank you for your support,\n[Candidate Name]' }
+                ]
+            },
+            'speech': {
+                name: 'Speech/Remarks',
+                icon: '🎤',
+                defaultBlocks: [
+                    { type: 'heading1', content: 'Remarks: [Event Name]' },
+                    { type: 'paragraph', content: '[Opening/Thank you]' },
+                    { type: 'heading2', content: 'Introduction' },
+                    { type: 'paragraph', content: '[Personal connection to topic]' },
+                    { type: 'heading2', content: 'Main Points' },
+                    { type: 'paragraph', content: '[Key message 1]' },
+                    { type: 'paragraph', content: '[Key message 2]' },
+                    { type: 'heading2', content: 'Call to Action' },
+                    { type: 'paragraph', content: '[Closing and next steps]' }
+                ]
+            }
+        };
+
+        // Content bundle structure
+        let contentBundles = {
+            // Example: 'veterans-day-2025': {
+            //     name: 'Veterans Day 2025',
+            //     description: 'Content for Veterans Day announcement and events',
+            //     created: '2025-01-15',
+            //     documents: {
+            //         'press-release': { blocks: [...], lastModified: '...' },
+            //         'social-post': { blocks: [...], lastModified: '...' }
+            //     }
+            // }
+        };
+
+        let currentBundle = null;
+        let currentDocumentType = 'press-release';
+
+        // Load bundles from localStorage
+        function loadBundles() {
+            const saved = localStorage.getItem('campaign_content_bundles');
+            if (saved) {
+                contentBundles = JSON.parse(saved);
+            } else {
+                // Create demo bundles that would be set up by communications director
+                createDemoBundles();
+            }
+        }
+
+        // Create demo bundles (simulating what communications director would create)
+        function createDemoBundles() {
+            contentBundles = {
+                'veterans-day-2025': {
+                    name: 'Veterans Day 2025',
+                    description: 'Content for Veterans Day events and social media campaign',
+                    created: '2025-01-15',
+                    documents: {
+                        'press-release': {
+                            blocks: JSON.parse(JSON.stringify(documentTemplates['press-release'].defaultBlocks)),
+                            lastModified: new Date().toISOString()
+                        },
+                        'social-post': {
+                            blocks: JSON.parse(JSON.stringify(documentTemplates['social-post'].defaultBlocks)),
+                            lastModified: new Date().toISOString()
+                        }
+                    }
+                },
+                'town-hall-march': {
+                    name: 'March Town Hall',
+                    description: 'Materials for community town hall on healthcare policy',
+                    created: '2025-01-10',
+                    documents: {
+                        'talking-points': {
+                            blocks: JSON.parse(JSON.stringify(documentTemplates['talking-points'].defaultBlocks)),
+                            lastModified: new Date().toISOString()
+                        }
+                    }
+                }
+            };
+            saveBundles();
+        }
+
+        // Save bundles to localStorage
+        function saveBundles() {
+            localStorage.setItem('campaign_content_bundles', JSON.stringify(contentBundles));
+        }
+
+        // Create new bundle
+        function createBundle(name, description) {
+            const bundleId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            contentBundles[bundleId] = {
+                name: name,
+                description: description,
+                created: new Date().toISOString().split('T')[0],
+                documents: {}
+            };
+            saveBundles();
+            return bundleId;
+        }
+
+        // Switch to a bundle and document type
+        function switchToBundle(bundleId, docType = 'press-release') {
+            currentBundle = bundleId;
+            currentDocumentType = docType;
+
+            if (contentBundles[bundleId] && contentBundles[bundleId].documents[docType]) {
+                // Load existing document
+                blocks = contentBundles[bundleId].documents[docType].blocks;
+            } else {
+                // Create new document from template
+                blocks = JSON.parse(JSON.stringify(documentTemplates[docType].defaultBlocks));
+                // Save the new document
+                saveCurrentDocument();
+            }
+
+            renderBlocks();
+            updateBundleUI();
+        }
+
+        // Save current document to bundle
+        function saveCurrentDocument() {
+            if (!currentBundle) return;
+
+            if (!contentBundles[currentBundle].documents[currentDocumentType]) {
+                contentBundles[currentBundle].documents[currentDocumentType] = {};
+            }
+
+            contentBundles[currentBundle].documents[currentDocumentType] = {
+                blocks: JSON.parse(JSON.stringify(blocks)),
+                lastModified: new Date().toISOString()
+            };
+
+            saveBundles();
+        }
+
+        // Update bundle UI
+        function updateBundleUI() {
+            const bundleInfo = document.getElementById('bundleInfo');
+            if (currentBundle && contentBundles[currentBundle]) {
+                const bundle = contentBundles[currentBundle];
+                const template = documentTemplates[currentDocumentType];
+                bundleInfo.innerHTML = `
+                    <div class="bundle-current">
+                        <strong>${bundle.name}</strong> - ${template.icon} ${template.name}
+                        <span class="bundle-docs">${Object.keys(bundle.documents).length} docs</span>
+                    </div>
+                `;
+                bundleInfo.style.display = 'block';
+            } else {
+                bundleInfo.style.display = 'none';
+            }
+        }
+
+        // Show bundle manager
+        function showBundleManager() {
+            const modal = document.getElementById('bundleModal');
+            updateBundleList();
+
+            // Check user role for bundle creation permissions
+            const currentUser = getCurrentUserRole();
+            const createSection = document.querySelector('.bundle-create-section');
+
+            if (currentUser === 'writer') {
+                createSection.style.display = 'none';
+            } else {
+                createSection.style.display = 'block';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // Get current user role (simplified for demo)
+        function getCurrentUserRole() {
+            // In a real app, this would come from authentication
+            // For now, defaulting to writer role
+            return 'writer'; // Could be 'communications-director', 'traffic-manager', 'writer'
+        }
+
+        // Update bundle list in manager
+        function updateBundleList() {
+            const list = document.getElementById('bundleList');
+            list.innerHTML = '';
+
+            const currentUser = getCurrentUserRole();
+            const canManageBundles = currentUser !== 'writer';
+
+            Object.entries(contentBundles).forEach(([id, bundle]) => {
+                const item = document.createElement('div');
+                item.className = 'bundle-item';
+
+                const addDocButton = canManageBundles
+                    ? `<button class="add-doc-btn" onclick="showDocTypeSelector('${id}')">+ Add Document</button>`
+                    : '';
+
+                item.innerHTML = `
+                    <div class="bundle-item-header">
+                        <strong>${bundle.name}</strong>
+                        <span class="bundle-date">${bundle.created}</span>
+                    </div>
+                    <div class="bundle-item-desc">${bundle.description}</div>
+                    <div class="bundle-item-docs">
+                        ${Object.keys(bundle.documents).map(docType =>
+                            `<span class="doc-type" onclick="switchToBundle('${id}', '${docType}'); closeBundleModal();">
+                                ${documentTemplates[docType].icon} ${documentTemplates[docType].name}
+                            </span>`
+                        ).join('')}
+                        ${addDocButton}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            // Show helpful message for writers
+            if (!canManageBundles && Object.keys(contentBundles).length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No content bundles available. Contact your communications director to create bundles.</div>';
+            }
+        }
+
+        // Show document type selector
+        function showDocTypeSelector(bundleId) {
+            const modal = document.getElementById('docTypeModal');
+            const selector = document.getElementById('docTypeSelector');
+            selector.innerHTML = '';
+
+            Object.entries(documentTemplates).forEach(([type, template]) => {
+                const option = document.createElement('div');
+                option.className = 'doc-type-option';
+                option.onclick = () => {
+                    switchToBundle(bundleId, type);
+                    closeDocTypeModal();
+                    closeBundleModal();
+                };
+                option.innerHTML = `
+                    <span class="doc-icon">${template.icon}</span>
+                    <span class="doc-name">${template.name}</span>
+                `;
+                selector.appendChild(option);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        // Close modals
+        function closeBundleModal() {
+            document.getElementById('bundleModal').style.display = 'none';
+        }
+
+        function closeDocTypeModal() {
+            document.getElementById('docTypeModal').style.display = 'none';
+        }
+
+        // Create new bundle from form
+        function createNewBundle() {
+            const name = document.getElementById('newBundleName').value.trim();
+            const description = document.getElementById('newBundleDesc').value.trim();
+
+            if (!name) {
+                alert('Please enter a bundle name');
+                return;
+            }
+
+            const bundleId = createBundle(name, description);
+            switchToBundle(bundleId, 'press-release');
+            closeBundleModal();
+
+            // Clear form
+            document.getElementById('newBundleName').value = '';
+            document.getElementById('newBundleDesc').value = '';
+        }
+
+        // Auto-save when blocks change
+        const originalAddBlock = addBlock;
+        window.addBlock = function(type, index) {
+            originalAddBlock(type, index);
+            if (currentBundle) {
+                setTimeout(saveCurrentDocument, 100);
+            }
+        };
+
+        // Initialize bundles
+        loadBundles();
+
+        // Auto-save on content changes
+        setInterval(() => {
+            if (currentBundle) {
+                saveCurrentDocument();
+            }
+        }, 30000); // Save every 30 seconds
+
+        // Content Quality System
+        let contentQualityState = {
+            isAnalyzing: false,
+            lastAnalysis: null,
+            autoCheckTimeout: null
+        };
+
+        // Auto-analyze content after typing stops
+        function scheduleContentAnalysis() {
+            if (contentQualityState.autoCheckTimeout) {
+                clearTimeout(contentQualityState.autoCheckTimeout);
+            }
+
+            contentQualityState.autoCheckTimeout = setTimeout(() => {
+                if (!contentQualityState.isAnalyzing) {
+                    runContentAnalysis();
+                }
+            }, 2000); // Wait 2 seconds after typing stops
+        }
+
+        // Run comprehensive content analysis
+        async function runContentAnalysis() {
+            if (contentQualityState.isAnalyzing) return;
+
+            const text = blocks.map(b => b.content).join('\n').trim();
+            if (!text) {
+                resetQualityIndicators();
+                return;
+            }
+
+            contentQualityState.isAnalyzing = true;
+            setQualityLoading();
+
+            try {
+                const analysis = await window.campaignAPI.analyzeContentQuality(text, blocks);
+                updateQualityDisplay(analysis);
+                contentQualityState.lastAnalysis = analysis;
+            } catch (error) {
+                console.error('Content analysis failed:', error);
+                showQualityError();
+            } finally {
+                contentQualityState.isAnalyzing = false;
+            }
+        }
+
+        // Individual quality check functions
+        async function runGrammarCheck() {
+            const btn = document.getElementById('grammarCheckBtn');
+            btn.classList.add('running');
+            btn.textContent = '📝 Checking...';
+
+            try {
+                const text = blocks.map(b => b.content).join('\n').trim();
+                const result = await window.campaignAPI.checkGrammar(text);
+
+                displayGrammarResults(result);
+                updateQualityIndicator('grammar', result.score);
+            } catch (error) {
+                console.error('Grammar check failed:', error);
+                showNotification('Grammar check failed', 'error');
+            } finally {
+                btn.classList.remove('running');
+                btn.textContent = '📝 Grammar';
+            }
+        }
+
+        async function runFactCheck() {
+            const btn = document.getElementById('factCheckBtn');
+            btn.classList.add('running');
+            btn.textContent = '🔍 Checking...';
+
+            try {
+                const text = blocks.map(b => b.content).join('\n').trim();
+                const result = await window.campaignAPI.factCheckContent(text);
+
+                displayFactCheckResults(result);
+            } catch (error) {
+                console.error('Fact check failed:', error);
+                showNotification('Fact check failed', 'error');
+            } finally {
+                btn.classList.remove('running');
+                btn.textContent = '🔍 Fact Check';
+            }
+        }
+
+        async function runEnhancement() {
+            const btn = document.getElementById('enhanceBtn');
+            btn.classList.add('running');
+            btn.textContent = '✨ Enhancing...';
+
+            try {
+                const text = blocks.map(b => b.content).join('\n').trim();
+                const result = await window.campaignAPI.enhanceContent(text, blocks);
+
+                displayEnhancementResults(result);
+            } catch (error) {
+                console.error('Content enhancement failed:', error);
+                showNotification('Content enhancement failed', 'error');
+            } finally {
+                btn.classList.remove('running');
+                btn.textContent = '✨ Enhance';
+            }
+        }
+
+        // Display functions
+        function updateQualityDisplay(analysis) {
+            // Update overall score
+            const scoreElement = document.getElementById('overallScore');
+            const circleElement = document.getElementById('overallScoreCircle');
+            const statusElement = document.getElementById('qualityStatus');
+
+            scoreElement.textContent = analysis.overallScore;
+
+            // Update circle color based on score
+            circleElement.className = 'quality-score-circle';
+            if (analysis.overallScore >= 85) {
+                circleElement.classList.add('excellent');
+                statusElement.textContent = 'Excellent quality';
+            } else if (analysis.overallScore >= 70) {
+                circleElement.classList.add('good');
+                statusElement.textContent = 'Good quality';
+            } else {
+                circleElement.classList.add('poor');
+                statusElement.textContent = 'Needs improvement';
+            }
+
+            // Update individual scores
+            updateQualityIndicator('grammar', analysis.scores.grammar);
+            updateQualityIndicator('compliance', analysis.scores.compliance);
+            updateQualityIndicator('schema', analysis.scores.schema);
+            updateQualityIndicator('readability', analysis.scores.readability);
+            updateQualityIndicator('authenticity', analysis.scores.voice || analysis.scores.authenticity || 75);
+
+            // Show issues if any
+            if (hasQualityIssues(analysis)) {
+                displayQualityIssues(analysis);
+            } else {
+                hideQualityIssues();
+            }
+        }
+
+        function updateQualityIndicator(type, score) {
+            const scoreElement = document.getElementById(`${type}Score`);
+            const dotElement = document.getElementById(`${type}Dot`);
+
+            scoreElement.textContent = Math.round(score);
+
+            // Update dot color
+            dotElement.className = 'quality-status-dot';
+            if (score >= 85) {
+                dotElement.classList.add('excellent');
+            } else if (score >= 70) {
+                dotElement.classList.add('good');
+            } else {
+                dotElement.classList.add('poor');
+            }
+        }
+
+        function setQualityLoading() {
+            document.getElementById('overallScore').textContent = '...';
+            document.getElementById('qualityStatus').textContent = 'Analyzing...';
+
+            ['grammar', 'compliance', 'schema', 'readability', 'authenticity'].forEach(type => {
+                document.getElementById(`${type}Score`).textContent = '...';
+                const dot = document.getElementById(`${type}Dot`);
+                dot.className = 'quality-status-dot checking';
+            });
+        }
+
+        function resetQualityIndicators() {
+            document.getElementById('overallScore').textContent = '--';
+            document.getElementById('qualityStatus').textContent = 'No content to analyze';
+
+            ['grammar', 'compliance', 'schema', 'readability', 'authenticity'].forEach(type => {
+                document.getElementById(`${type}Score`).textContent = '--';
+                document.getElementById(`${type}Dot`).className = 'quality-status-dot';
+            });
+
+            hideQualityIssues();
+        }
+
+        function showQualityError() {
+            document.getElementById('overallScore').textContent = '!';
+            document.getElementById('qualityStatus').textContent = 'Analysis failed';
+        }
+
+        function hasQualityIssues(analysis) {
+            return (analysis.grammar && analysis.grammar.issues && analysis.grammar.issues.length > 0) ||
+                   (analysis.compliance && !analysis.compliance.compliant) ||
+                   (analysis.schema && analysis.schema.missing && analysis.schema.missing.length > 0);
+        }
+
+        function displayQualityIssues(analysis) {
+            const issuesPanel = document.getElementById('qualityIssues');
+            const issuesList = document.getElementById('issuesList');
+
+            let issuesHTML = '';
+
+            // Grammar issues
+            if (analysis.grammar && analysis.grammar.issues) {
+                analysis.grammar.issues.forEach(issue => {
+                    issuesHTML += `
+                        <div class="quality-issue ${issue.severity}">
+                            <div class="quality-issue-title">${issue.type.toUpperCase()}: ${issue.message}</div>
+                            ${issue.suggestion ? `<div class="quality-issue-message">Suggestion: ${issue.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            // Compliance issues
+            if (analysis.compliance && analysis.compliance.issues) {
+                analysis.compliance.issues.forEach(issue => {
+                    issuesHTML += `
+                        <div class="quality-issue ${issue.severity}">
+                            <div class="quality-issue-title">COMPLIANCE: ${issue.message}</div>
+                            ${issue.suggestion ? `<div class="quality-issue-message">${issue.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            // Schema issues
+            if (analysis.schema && analysis.schema.missing) {
+                analysis.schema.missing.forEach(missing => {
+                    issuesHTML += `
+                        <div class="quality-issue suggestion">
+                            <div class="quality-issue-title">SCHEMA: Missing ${missing.missing}</div>
+                            <div class="quality-issue-message">${missing.suggestion}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (issuesHTML) {
+                issuesList.innerHTML = issuesHTML;
+                issuesPanel.style.display = 'block';
+            } else {
+                hideQualityIssues();
+            }
+        }
+
+        function hideQualityIssues() {
+            document.getElementById('qualityIssues').style.display = 'none';
+        }
+
+        function displayGrammarResults(result) {
+            // Show detailed grammar results in issues panel
+            if (result.issues && result.issues.length > 0) {
+                const analysis = { grammar: result };
+                displayQualityIssues(analysis);
+            } else {
+                showNotification(`Grammar score: ${result.score}/100`, 'success');
+            }
+        }
+
+        function displayFactCheckResults(result) {
+            showNotification(`Fact check complete. Risk level: ${result.riskAssessment}`, 'info');
+            // Could open research panel with detailed results
+        }
+
+        function displayEnhancementResults(result) {
+            if (result.suggestions && result.suggestions.length > 0) {
+                showNotification(`Found ${result.suggestions.length} enhancement suggestions`, 'info');
+                // Could display suggestions in issues panel
+            } else {
+                showNotification('Content looks great!', 'success');
+            }
+        }
+
+        async function runAuthenticityCheck() {
+            const btn = document.getElementById('authenticityBtn');
+            btn.classList.add('running');
+            btn.textContent = '🗣️ Checking...';
+
+            try {
+                const text = blocks.map(b => b.content).join('\n').trim();
+                if (!text) {
+                    showNotification('No content to check for authenticity', 'info');
+                    return;
+                }
+
+                const result = await window.campaignAPI.checkVoice(text);
+                displayAuthenticityResults(result);
+                updateQualityIndicator('authenticity', result.voiceScore);
+
+            } catch (error) {
+                console.error('Authenticity check failed:', error);
+                showNotification('Authenticity check failed', 'error');
+            } finally {
+                btn.classList.remove('running');
+                btn.textContent = '🗣️ Authenticity';
+            }
+        }
+
+        function displayAuthenticityResults(result) {
+            if (result.issues && result.issues.length > 0) {
+                let issuesHTML = '';
+                result.issues.forEach(issue => {
+                    issuesHTML += `
+                        <div class="quality-issue warning">
+                            <div class="quality-issue-title">AUTHENTICITY: ${issue.message}</div>
+                            ${issue.suggestion ? `<div class="quality-issue-message">Suggestion: ${issue.suggestion}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                const issuesPanel = document.getElementById('qualityIssues');
+                const issuesList = document.getElementById('issuesList');
+                issuesList.innerHTML = issuesHTML;
+                issuesPanel.style.display = 'block';
+            } else {
+                showNotification(`Authenticity score: ${result.voiceScore}/100 - ${result.authenticity} authenticity`, 'success');
+            }
+
+            // Show strengths and improvements if available
+            if (result.strengths && result.strengths.length > 0) {
+                console.log('Voice strengths:', result.strengths);
+            }
+            if (result.improvements && result.improvements.length > 0) {
+                console.log('Voice improvements:', result.improvements);
+            }
+        }
+
+        // Integrate with existing editor events
+        document.addEventListener('input', function(event) {
+            if (event.target.classList.contains('block-content')) {
+                scheduleContentAnalysis();
+            }
+        });
+
+        // Document Templates
+        const documentTemplates = {
+            'social-media': {
+                title: 'Social Media Post',
+                blocks: [
+                    { type: 'heading1', content: 'Engaging Headline' },
+                    { type: 'text', content: 'Main message that connects with your audience...' },
+                    { type: 'quote', content: 'Powerful quote or testimonial', data: { author: 'Source Name' } },
+                    { type: 'callout', content: 'Call to Action: What do you want people to do?' }
+                ],
+                schema: { platform: 'social', audience: 'general' }
+            },
+            'press-release': {
+                title: 'Press Release',
+                blocks: [
+                    { type: 'heading1', content: 'Press Release Headline' },
+                    { type: 'text', content: 'City, Date - Lead paragraph with who, what, when, where, why...' },
+                    { type: 'quote', content: 'Key quote from candidate or spokesperson', data: { author: 'Speaker Name, Title' } },
+                    { type: 'text', content: 'Supporting details and background information...' },
+                    { type: 'text', content: '###' }
+                ],
+                schema: { type: 'press-release', distribution: 'media' }
+            },
+            'email': {
+                title: 'Campaign Email',
+                blocks: [
+                    { type: 'heading1', content: 'Subject Line Preview' },
+                    { type: 'text', content: 'Personal greeting and opening...' },
+                    { type: 'text', content: 'Main message body...' },
+                    { type: 'callout', content: 'Clear call to action' },
+                    { type: 'text', content: 'Thank you and sign-off' }
+                ],
+                schema: { type: 'email', audience: 'supporters' }
+            },
+            'speech': {
+                title: 'Campaign Speech',
+                blocks: [
+                    { type: 'heading1', content: 'Speech Title' },
+                    { type: 'text', content: 'Opening - Connect with audience...' },
+                    { type: 'text', content: 'Main point 1...' },
+                    { type: 'text', content: 'Main point 2...' },
+                    { type: 'text', content: 'Main point 3...' },
+                    { type: 'callout', content: 'Closing call to action' }
+                ],
+                schema: { type: 'speech', event: 'campaign-event' }
+            },
+            'blog': {
+                title: 'Blog Post',
+                blocks: [
+                    { type: 'heading1', content: 'Blog Post Title' },
+                    { type: 'text', content: 'Introduction paragraph...' },
+                    { type: 'heading2', content: 'Key Point 1' },
+                    { type: 'text', content: 'Supporting details...' },
+                    { type: 'heading2', content: 'Key Point 2' },
+                    { type: 'text', content: 'Supporting details...' },
+                    { type: 'text', content: 'Conclusion and next steps...' }
+                ],
+                schema: { type: 'blog-post', category: 'policy' }
+            }
+        };
+
+        // Template and utility functions
+        function loadTemplate(templateType) {
+            const template = documentTemplates[templateType];
+            if (!template) return;
+
+            // Update page title
+            document.getElementById('pageTitle').textContent = template.title;
+
+            // Clear existing blocks
+            blocks = [];
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '';
+
+            // Add template blocks
+            template.blocks.forEach((blockTemplate, index) => {
+                const block = {
+                    id: Date.now() + index,
+                    type: blockTemplate.type,
+                    content: blockTemplate.content,
+                    data: blockTemplate.data || {}
+                };
+                blocks.push(block);
+
+                // Create DOM element
+                const blockElement = createBlockElement(block);
+                contentArea.appendChild(blockElement);
+            });
+
+            hideEmptyStateOptions();
+            saveState();
+            showNotification(`${template.title} template loaded!`, 'success');
+
+            // Trigger content analysis
+            setTimeout(runContentAnalysis, 500);
+        }
+
+        function showEmptyStateOptions() {
+            const hasContent = blocks.some(b => b.content && b.content.trim());
+            if (!hasContent) {
+                const templateSelector = document.getElementById('templateSelector');
+                const pasteBtn = document.getElementById('pasteContentBtn');
+                if (templateSelector) templateSelector.style.display = 'block';
+                if (pasteBtn) pasteBtn.style.display = 'block';
+            }
+        }
+
+        function hideEmptyStateOptions() {
+            const templateSelector = document.getElementById('templateSelector');
+            const pasteBtn = document.getElementById('pasteContentBtn');
+            if (templateSelector) templateSelector.style.display = 'none';
+            if (pasteBtn) pasteBtn.style.display = 'none';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarPane');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function showPasteDialog() {
+            const content = prompt('Paste your content here:');
+            if (content && content.trim()) {
+                importPastedContent(content.trim());
+            }
+        }
+
+        function importPastedContent(content) {
+            // Clear existing content
+            blocks = [];
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = '';
+
+            // Intelligent content parsing
+            const parsedBlocks = parseContentIntoBlocks(content);
+
+            parsedBlocks.forEach((blockData, index) => {
+                const block = {
+                    id: Date.now() + index,
+                    type: blockData.type,
+                    content: blockData.content,
+                    data: blockData.data || {}
+                };
+                blocks.push(block);
+
+                const blockElement = createBlockElement(block);
+                contentArea.appendChild(blockElement);
+            });
+
+            hideEmptyStateOptions();
+            saveState();
+            showNotification(`Content imported - ${parsedBlocks.length} blocks created!`, 'success');
+
+            // Trigger content analysis
+            setTimeout(runContentAnalysis, 500);
+        }
+
+        function parseContentIntoBlocks(content) {
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+            const blocks = [];
+            let currentParagraph = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+
+                // Check for various block types
+                const blockType = detectBlockType(line);
+
+                if (blockType !== 'text') {
+                    // Process any accumulated paragraph first
+                    if (currentParagraph.length > 0) {
+                        blocks.push({
+                            type: 'text',
+                            content: currentParagraph.join(' ')
+                        });
+                        currentParagraph = [];
+                    }
+
+                    // Add the special block
+                    blocks.push(processSpecialBlock(line, blockType));
+                } else {
+                    // Accumulate text for paragraph
+                    currentParagraph.push(line);
+
+                    // Check if next line is empty or special - end paragraph
+                    const nextLine = lines[i + 1];
+                    if (!nextLine || nextLine === '' || detectBlockType(nextLine) !== 'text') {
+                        if (currentParagraph.length > 0) {
+                            blocks.push({
+                                type: 'text',
+                                content: currentParagraph.join(' ')
+                            });
+                            currentParagraph = [];
+                        }
+                    }
+                }
+            }
+
+            // Add any remaining paragraph
+            if (currentParagraph.length > 0) {
+                blocks.push({
+                    type: 'text',
+                    content: currentParagraph.join(' ')
+                });
+            }
+
+            return blocks.filter(block => block.content && block.content.trim());
+        }
+
+        function detectBlockType(line) {
+            const trimmed = line.trim();
+
+            // Headings - multiple patterns
+            if (/^#{1,3}\s/.test(trimmed)) {
+                return trimmed.startsWith('###') ? 'heading3' :
+                       trimmed.startsWith('##') ? 'heading2' : 'heading1';
+            }
+
+            // Title case headings (all caps, mixed case with multiple capital letters)
+            if (/^[A-Z][A-Z\s]{5,}$/.test(trimmed) ||
+                (/^[A-Z]/.test(trimmed) && /[A-Z].*[A-Z]/.test(trimmed) && trimmed.length < 80)) {
+                return 'heading1';
+            }
+
+            // Quote patterns
+            if (/^[""].+[""]$/.test(trimmed) ||
+                /^"[^"]+"\s*[-–—]\s*\w+/.test(trimmed) ||
+                /^"[^"]+"/.test(trimmed)) {
+                return 'quote';
+            }
+
+            // Callout patterns (call to action, urgent, action items)
+            if (/^(CALL TO ACTION|DONATE|VOLUNTEER|VOTE|ACTION|URGENT|IMPORTANT)[:!]/i.test(trimmed) ||
+                /\b(donate|volunteer|vote|sign up|call|contact|visit|learn more|join us)\b.*[!.]$/i.test(trimmed)) {
+                return 'callout';
+            }
+
+            // List items that could be callouts
+            if (/^[•\-*]\s*(donate|volunteer|vote|call|action|important)/i.test(trimmed)) {
+                return 'callout';
+            }
+
+            // Press release markers
+            if (/^(FOR IMMEDIATE RELEASE|CONTACT:|###|--30--|[A-Z]{2,},\s*[A-Z][a-z]+\s*\d)/i.test(trimmed)) {
+                return 'text'; // Keep as text for press releases
+            }
+
+            return 'text';
+        }
+
+        function processSpecialBlock(line, blockType) {
+            const trimmed = line.trim();
+
+            switch (blockType) {
+                case 'heading1':
+                case 'heading2':
+                case 'heading3':
+                    return {
+                        type: blockType,
+                        content: trimmed.replace(/^#{1,3}\s*/, '').trim()
+                    };
+
+                case 'quote':
+                    const quoteMatch = trimmed.match(/^[""](.+)[""](?:\s*[-–—]\s*(.+))?$/) ||
+                                     trimmed.match(/^"([^"]+)"\s*[-–—]\s*(.+)$/) ||
+                                     trimmed.match(/^"([^"]+)"$/);
+
+                    if (quoteMatch) {
+                        return {
+                            type: 'quote',
+                            content: quoteMatch[1].trim(),
+                            data: { author: quoteMatch[2]?.trim() || 'Unknown' }
+                        };
+                    }
+                    return {
+                        type: 'quote',
+                        content: trimmed.replace(/^[""]?|[""]?$/g, ''),
+                        data: { author: 'Unknown' }
+                    };
+
+                case 'callout':
+                    return {
+                        type: 'callout',
+                        content: trimmed.replace(/^[•\-*]\s*/, '')
+                    };
+
+                default:
+                    return {
+                        type: 'text',
+                        content: trimmed
+                    };
+            }
+        }
+
+        // Run initial analysis when editor loads
+        setTimeout(() => {
+            if (blocks.length > 0 && blocks.some(b => b.content.trim())) {
+                runContentAnalysis();
+            } else {
+                showEmptyStateOptions();
+            }
+        }, 1000);
+
+        // Update content change detection to show/hide empty state
+        document.addEventListener('input', function(event) {
+            if (event.target.classList.contains('block-content')) {
+                const hasContent = blocks.some(b => b.content && b.content.trim());
+                if (hasContent) {
+                    hideEmptyStateOptions();
+                } else {
+                    showEmptyStateOptions();
+                }
+                scheduleContentAnalysis();
+            }
+        });
+    </script>
+</body>
+</html>

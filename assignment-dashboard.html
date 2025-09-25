@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writer Assignment Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        select, input[type="text"], input[type="date"] {
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+        }
+
+        /* Status workflow bar */
+        .status-workflow {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .workflow-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            gap: 6px;
+            justify-content: space-between;
+        }
+
+        .workflow-step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 0;
+        }
+
+        .workflow-step.summary-card {
+            cursor: default;
+            border: 1px solid #e2e8f0;
+        }
+
+        .workflow-step.summary-card:hover {
+            background: inherit;
+            transform: none;
+        }
+
+        .workflow-step:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .workflow-step.selected {
+            background: #e0f2fe;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .step-icon {
+            font-size: 16px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .step-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-label {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .step-count {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1;
+        }
+
+        .status-new { background: #f0f9ff; }
+        .status-in-progress { background: #fffbeb; }
+        .status-review { background: #faf5ff; }
+        .status-blocked { background: #fef2f2; }
+        .status-completed { background: #f0fdf4; }
+
+        .assignments-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-toggle {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-toggle.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .view-toggle:first-child {
+            border-radius: 4px 0 0 4px;
+        }
+
+        .view-toggle:last-child {
+            border-radius: 0 4px 4px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            color: #475569;
+        }
+
+        .sortable::after {
+            content: ' ↕';
+            opacity: 0.3;
+        }
+
+        .sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc !important;
+        }
+
+        /* Priority row backgrounds - Red, Yellow, Green system */
+        .assignments-table tr.priority-urgent {
+            background: #fee2e2;
+        }
+
+        .assignments-table tr.priority-urgent:hover {
+            background: #fecaca !important;
+        }
+
+        .assignments-table tr.priority-high {
+            background: #fef3c7;
+        }
+
+        .assignments-table tr.priority-high:hover {
+            background: #fde68a !important;
+        }
+
+        .assignments-table tr.priority-normal {
+            background: #dcfce7;
+        }
+
+        .assignments-table tr.priority-normal:hover {
+            background: #bbf7d0 !important;
+        }
+
+        .assignments-table tr.priority-low {
+            background: #f8fafc;
+        }
+
+        .assignments-table tr.priority-low:hover {
+            background: #f1f5f9 !important;
+        }
+
+        td {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .assignment-name {
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        .assignment-name:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        .assignor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .due-date {
+            font-weight: 500;
+        }
+
+        .due-soon {
+            color: #f59e0b;
+        }
+
+        .overdue {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-new {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-in-progress {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-review {
+            background: #e9d5ff;
+            color: #7c3aed;
+        }
+
+        .status-blocked {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .dependency {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .dependency-icon {
+            font-size: 10px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .priority-indicator {
+            width: 4px;
+            height: 30px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .priority-urgent {
+            background: #ef4444;
+        }
+
+        .priority-high {
+            background: #f59e0b;
+        }
+
+        .priority-normal {
+            background: #3b82f6;
+        }
+
+        .priority-low {
+            background: #94a3b8;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #f8fafc;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .description-preview {
+            font-size: 13px;
+            color: #64748b;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 6px;
+            background: #f1f5f9;
+            color: #475569;
+            border-radius: 3px;
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .stats-row {
+                flex-direction: column;
+            }
+
+            .assignments-table {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1>
+                    <span>📋</span>
+                    Assignment Queue
+                </h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="refreshData()">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn btn-primary" onclick="openEditor()">
+                        ✏️ Open Editor
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="🔍 Search assignments..." id="searchInput" onkeyup="filterAssignments()">
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Status:</label>
+                    <select id="statusFilter" onchange="syncStatusFilter()">
+                        <option value="">All</option>
+                        <option value="new">New</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="review">Under Review</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Assignor:</label>
+                    <select id="assignorFilter" onchange="filterAssignments()">
+                        <option value="">All</option>
+                        <option value="Michael Chen">Michael Chen</option>
+                        <option value="Jennifer Davis">Jennifer Davis</option>
+                        <option value="David Park">David Park</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Priority:</label>
+                    <select id="priorityFilter" onchange="filterAssignments()">
+                        <option value="">All</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="normal">Normal</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Due:</label>
+                    <select id="dueFilter" onchange="filterAssignments()">
+                        <option value="">Any time</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Overview Ribbon -->
+        <div class="status-workflow">
+            <div class="workflow-title">Assignment Overview</div>
+            <div class="workflow-steps">
+                <div class="workflow-step summary-card" style="background: #f8fafc;">
+                    <div class="step-icon">📊</div>
+                    <div class="step-info">
+                        <div class="step-label">Total</div>
+                        <div class="step-count" id="totalAssignments">24</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-new" onclick="filterByStatus('new')" data-status="new">
+                    <div class="step-icon">📥</div>
+                    <div class="step-info">
+                        <div class="step-label">New</div>
+                        <div class="step-count" id="newCount">4</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-in-progress" onclick="filterByStatus('in-progress')" data-status="in-progress">
+                    <div class="step-icon">✏️</div>
+                    <div class="step-info">
+                        <div class="step-label">In Progress</div>
+                        <div class="step-count" id="workingCount">8</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-review" onclick="filterByStatus('review')" data-status="review">
+                    <div class="step-icon">👁️</div>
+                    <div class="step-info">
+                        <div class="step-label">Under Review</div>
+                        <div class="step-count" id="reviewCount">5</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-blocked" onclick="filterByStatus('blocked')" data-status="blocked">
+                    <div class="step-icon">⚠️</div>
+                    <div class="step-info">
+                        <div class="step-label">Blocked</div>
+                        <div class="step-count" id="blockedStatusCount">3</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-completed" onclick="filterByStatus('completed')" data-status="completed">
+                    <div class="step-icon">✅</div>
+                    <div class="step-info">
+                        <div class="step-label">Completed</div>
+                        <div class="step-count" id="completedCount">4</div>
+                    </div>
+                </div>
+                <div class="workflow-step summary-card" style="background: #fef3c7;">
+                    <div class="step-icon">⏰</div>
+                    <div class="step-info">
+                        <div class="step-label">Due Today</div>
+                        <div class="step-count" id="dueTodayCount">5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments Table -->
+        <div class="assignments-table">
+            <div class="table-header">
+                <div class="table-title">Active Assignments</div>
+                <div class="view-toggles">
+                    <button class="view-toggle active" onclick="setView('list')">List</button>
+                    <button class="view-toggle" onclick="setView('kanban')">Kanban</button>
+                </div>
+            </div>
+
+            <table id="assignmentsTable">
+                <thead>
+                    <tr>
+                        <th class="sortable sort-desc" onclick="sortTable('priority')">Priority</th>
+                        <th class="sortable" onclick="sortTable('name')">Assignment</th>
+                        <th class="sortable" onclick="sortTable('assignor')">Assignor</th>
+                        <th class="sortable" onclick="sortTable('dueDate')">Due Date</th>
+                        <th>Description</th>
+                        <th class="sortable" onclick="sortTable('status')">Status</th>
+                        <th>Dependencies</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="assignmentsList">
+                    <!-- Assignments will be populated here -->
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <div class="pagination-info">
+                    Showing <span id="showingStart">1</span>-<span id="showingEnd">10</span> of <span id="totalCount">24</span> assignments
+                </div>
+                <div class="pagination-controls">
+                    <button class="page-btn" onclick="previousPage()" id="prevBtn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn" onclick="nextPage()" id="nextBtn">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        const assignments = [
+            {
+                id: 1,
+                assignmentNumber: 'A-2024-001',
+                priority: 'urgent',
+                name: 'Healthcare Rally Speech - District 7',
+                assignor: 'Michael Chen',
+                dueDate: new Date(Date.now() + 2 * 60 * 60 * 1000),
+                description: 'Opening speech for healthcare town hall focusing on prescription drug costs and Medicare expansion',
+                status: 'in-progress',
+                dependencies: ['Waiting for policy team fact sheet'],
+                tags: ['speech', 'healthcare']
+            },
+            {
+                id: 2,
+                assignmentNumber: 'A-2024-002',
+                priority: 'high',
+                name: 'Infrastructure Bill Press Release',
+                assignor: 'Jennifer Davis',
+                dueDate: new Date(Date.now() + 8 * 60 * 60 * 1000),
+                description: 'Announce support for federal infrastructure bill with local impact statistics',
+                status: 'review',
+                dependencies: [],
+                tags: ['press-release', 'infrastructure']
+            },
+            {
+                id: 3,
+                assignmentNumber: 'A-2024-003',
+                priority: 'normal',
+                name: 'Veterans Day Social Media Series',
+                assignor: 'David Park',
+                dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                description: 'Create 5-post series honoring local veterans with personal stories',
+                status: 'blocked',
+                dependencies: ['Awaiting veteran interviews', 'Photos from field team'],
+                tags: ['social-media', 'veterans']
+            },
+            {
+                id: 4,
+                assignmentNumber: 'A-2024-004',
+                priority: 'high',
+                name: 'Education Funding Op-Ed',
+                assignor: 'Jennifer Davis',
+                dueDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                description: 'Opinion piece on state education budget for major newspaper',
+                status: 'in-progress',
+                dependencies: ['Budget analysis from research'],
+                tags: ['op-ed', 'education']
+            },
+            {
+                id: 5,
+                assignmentNumber: 'A-2024-005',
+                priority: 'normal',
+                name: 'Weekly Donor Email Update',
+                assignor: 'Michael Chen',
+                dueDate: new Date(Date.now() + 48 * 60 * 60 * 1000),
+                description: 'Campaign progress update highlighting recent endorsements and upcoming events',
+                status: 'new',
+                dependencies: [],
+                tags: ['email', 'fundraising']
+            },
+            {
+                id: 6,
+                assignmentNumber: 'A-2024-006',
+                priority: 'low',
+                name: 'Volunteer Thank You Letters',
+                assignor: 'David Park',
+                dueDate: new Date(Date.now() + 72 * 60 * 60 * 1000),
+                description: 'Personalized thank you templates for phone banking volunteers',
+                status: 'new',
+                dependencies: [],
+                tags: ['letter', 'volunteer']
+            },
+            {
+                id: 7,
+                assignmentNumber: 'A-2024-007',
+                priority: 'urgent',
+                name: 'Debate Prep: Climate Response',
+                assignor: 'Jennifer Davis',
+                dueDate: new Date(Date.now() + 4 * 60 * 60 * 1000),
+                description: '2-minute response on climate action plan for tomorrow\'s debate',
+                status: 'blocked',
+                dependencies: ['Environmental policy position paper', 'Latest polling data'],
+                tags: ['debate', 'climate']
+            },
+            {
+                id: 8,
+                assignmentNumber: 'A-2024-008',
+                priority: 'high',
+                name: 'Labor Union Endorsement Announcement',
+                assignor: 'Michael Chen',
+                dueDate: new Date(Date.now() + 6 * 60 * 60 * 1000),
+                description: 'Press release and social media content for SEIU endorsement',
+                status: 'in-progress',
+                dependencies: [],
+                tags: ['press-release', 'labor']
+            }
+        ];
+
+        let currentSort = { field: 'priority', order: 'desc' };
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        // Calculate priority based on due date
+        function calculatePriority(dueDate) {
+            if (!dueDate) return 'low';
+            const now = new Date();
+            const due = new Date(dueDate);
+            const hoursDiff = (due - now) / (1000 * 60 * 60);
+
+            if (hoursDiff < 0) return 'urgent'; // Overdue
+            else if (hoursDiff <= 24) return 'urgent'; // Due within 24 hours
+            else if (hoursDiff <= 72) return 'high'; // Due within 3 days
+            else if (hoursDiff <= 168) return 'normal'; // Due within 1 week
+            else return 'low'; // Due later than 1 week
+        }
+
+        function renderAssignments(filteredAssignments = assignments) {
+            const tbody = document.getElementById('assignmentsList');
+
+            if (filteredAssignments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div>No assignments match your filters</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageAssignments = filteredAssignments.slice(start, end);
+
+            tbody.innerHTML = pageAssignments.map(assignment => {
+                const dueDate = new Date(assignment.dueDate);
+                const now = new Date();
+                const isOverdue = dueDate < now;
+                const isDueSoon = !isOverdue && (dueDate - now) < 24 * 60 * 60 * 1000;
+
+                // Calculate dynamic priority based on due date
+                const calculatedPriority = calculatePriority(assignment.dueDate);
+
+                return `
+                    <tr class="priority-${calculatedPriority}">
+                        <td>
+                            <span class="priority-indicator priority-${calculatedPriority}"></span>
+                            ${calculatedPriority.charAt(0).toUpperCase() + calculatedPriority.slice(1)}
+                        </td>
+                        <td>
+                            <div class="assignment-name" onclick="openAssignment(${assignment.id})">
+                                ${assignment.assignmentNumber}: ${assignment.name}
+                            </div>
+                            <div style="margin-top: 4px;">
+                                ${assignment.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="assignor">
+                                <div class="avatar">${getInitials(assignment.assignor)}</div>
+                                <span>${assignment.assignor}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="due-date ${isOverdue ? 'overdue' : isDueSoon ? 'due-soon' : ''}">
+                                ${formatDueDate(dueDate)}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="description-preview" title="${assignment.description}">
+                                ${assignment.description}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${assignment.status}">
+                                ${formatStatus(assignment.status)}
+                            </span>
+                        </td>
+                        <td>
+                            ${assignment.dependencies.length > 0
+                                ? assignment.dependencies.map(dep =>
+                                    `<div class="dependency">
+                                        <span class="dependency-icon">⚠️</span>
+                                        ${dep}
+                                    </div>`
+                                ).join('')
+                                : '<span style="color: #94a3b8; font-size: 13px;">None</span>'
+                            }
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn" onclick="openAssignment(${assignment.id})">Open</button>
+                                <button class="action-btn" onclick="updateStatus(${assignment.id})">Update</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updatePagination(filteredAssignments.length);
+            updateStats(filteredAssignments);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('');
+        }
+
+        function formatDueDate(date) {
+            const now = new Date();
+            const diffMs = date - now;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMs < 0) {
+                return `Overdue by ${Math.abs(diffHours)} hours`;
+            } else if (diffHours < 24) {
+                return `Due in ${diffHours} hours`;
+            } else {
+                return `Due in ${diffDays} days`;
+            }
+        }
+
+        function formatStatus(status) {
+            return status.split('-').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        function sortTable(field) {
+            const th = event.target;
+            const allTh = document.querySelectorAll('th');
+
+            allTh.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            if (currentSort.field === field) {
+                currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.field = field;
+                currentSort.order = 'asc';
+            }
+
+            th.classList.add(currentSort.order === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            const sorted = [...assignments].sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+
+                if (field === 'dueDate') {
+                    aVal = new Date(aVal);
+                    bVal = new Date(bVal);
+                } else if (field === 'priority') {
+                    // Use calculated priority for sorting
+                    aVal = calculatePriority(a.dueDate);
+                    bVal = calculatePriority(b.dueDate);
+
+                    // Define priority order: urgent > high > normal > low
+                    const priorityOrder = { 'urgent': 4, 'high': 3, 'normal': 2, 'low': 1 };
+                    aVal = priorityOrder[aVal] || 0;
+                    bVal = priorityOrder[bVal] || 0;
+                }
+
+                if (currentSort.order === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            renderAssignments(sorted);
+        }
+
+        // Status pipeline filter state
+        let currentStatusFilter = '';
+
+        function filterByStatus(status) {
+            // Toggle filter if clicking the same status
+            if (currentStatusFilter === status) {
+                currentStatusFilter = '';
+                // Remove selected state from all workflow steps
+                document.querySelectorAll('.workflow-step').forEach(step => {
+                    step.classList.remove('selected');
+                });
+                // Clear the status dropdown
+                document.getElementById('statusFilter').value = '';
+            } else {
+                currentStatusFilter = status;
+                // Update UI to show selected status
+                document.querySelectorAll('.workflow-step').forEach(step => {
+                    step.classList.remove('selected');
+                });
+                document.querySelector(`[data-status="${status}"]`).classList.add('selected');
+                // Update the status dropdown to match
+                document.getElementById('statusFilter').value = status;
+            }
+
+            // Apply the filter
+            filterAssignments();
+        }
+
+        function syncStatusFilter() {
+            const dropdownValue = document.getElementById('statusFilter').value;
+            currentStatusFilter = dropdownValue;
+
+            // Update workflow step visual state
+            document.querySelectorAll('.workflow-step').forEach(step => {
+                step.classList.remove('selected');
+            });
+
+            if (dropdownValue) {
+                const selectedStep = document.querySelector(`[data-status="${dropdownValue}"]`);
+                if (selectedStep) {
+                    selectedStep.classList.add('selected');
+                }
+            }
+
+            filterAssignments();
+        }
+
+        function filterAssignments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = currentStatusFilter || document.getElementById('statusFilter').value;
+            const assignorFilter = document.getElementById('assignorFilter').value;
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            const dueFilter = document.getElementById('dueFilter').value;
+
+            let filtered = assignments.filter(assignment => {
+                const matchesSearch = !searchTerm ||
+                    assignment.name.toLowerCase().includes(searchTerm) ||
+                    assignment.description.toLowerCase().includes(searchTerm) ||
+                    assignment.tags.some(tag => tag.includes(searchTerm));
+
+                const matchesStatus = !statusFilter || assignment.status === statusFilter;
+                const matchesAssignor = !assignorFilter || assignment.assignor === assignorFilter;
+                const matchesPriority = !priorityFilter || assignment.priority === priorityFilter;
+
+                let matchesDue = true;
+                if (dueFilter) {
+                    const now = new Date();
+                    const dueDate = new Date(assignment.dueDate);
+                    const diffMs = dueDate - now;
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                    switch(dueFilter) {
+                        case 'overdue':
+                            matchesDue = diffMs < 0;
+                            break;
+                        case 'today':
+                            matchesDue = diffDays === 0;
+                            break;
+                        case 'week':
+                            matchesDue = diffDays >= 0 && diffDays <= 7;
+                            break;
+                        case 'month':
+                            matchesDue = diffDays >= 0 && diffDays <= 30;
+                            break;
+                    }
+                }
+
+                return matchesSearch && matchesStatus && matchesAssignor && matchesPriority && matchesDue;
+            });
+
+            currentPage = 1;
+            renderAssignments(filtered);
+        }
+
+        function updateStats(filteredAssignments) {
+            const newCount = filteredAssignments.filter(a => a.status === 'new').length;
+            const inProgress = filteredAssignments.filter(a => a.status === 'in-progress').length;
+            const review = filteredAssignments.filter(a => a.status === 'review').length;
+            const blocked = filteredAssignments.filter(a => a.status === 'blocked').length;
+            const completed = filteredAssignments.filter(a => a.status === 'completed').length;
+            const dueToday = filteredAssignments.filter(a => {
+                const dueDate = new Date(a.dueDate);
+                const today = new Date();
+                return dueDate.toDateString() === today.toDateString();
+            }).length;
+
+            // Update status workflow counts
+            document.getElementById('newCount').textContent = newCount;
+            document.getElementById('workingCount').textContent = inProgress;
+            document.getElementById('reviewCount').textContent = review;
+            document.getElementById('blockedStatusCount').textContent = blocked;
+            document.getElementById('completedCount').textContent = completed;
+
+            // Update summary cards
+            document.getElementById('totalAssignments').textContent = filteredAssignments.length;
+            document.getElementById('dueTodayCount').textContent = dueToday;
+        }
+
+        function updatePagination(totalItems) {
+            const start = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
+            const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+            document.getElementById('showingStart').textContent = start;
+            document.getElementById('showingEnd').textContent = end;
+            document.getElementById('totalCount').textContent = totalItems;
+
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = end >= totalItems;
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                filterAssignments();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(assignments.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                filterAssignments();
+            }
+        }
+
+        function openAssignment(id) {
+            window.location.href = `integrated-editor.html?assignment=${id}`;
+        }
+
+        function openEditor() {
+            window.location.href = 'integrated-editor.html';
+        }
+
+        function updateStatus(id) {
+            // In real implementation, would open status update modal
+            console.log('Update status for assignment:', id);
+        }
+
+        function refreshData() {
+            // In real implementation, would fetch fresh data from server
+            renderAssignments();
+            showNotification('Data refreshed');
+        }
+
+        function setView(view) {
+            document.querySelectorAll('.view-toggle').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (view === 'kanban') {
+                alert('Kanban view coming soon!');
+            }
+        }
+
+        function showNotification(message) {
+            // Simple notification - in real app would be more sophisticated
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            // In production, would check for new assignments
+            updateStats(assignments);
+        }, 30000);
+
+        // Initialize
+        renderAssignments();
+    </script>
+</body>
+</html>

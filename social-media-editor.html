@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign AI - Social Media Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        .brief-panel {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            overflow-y: auto;
+        }
+
+        .brief-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .brief-content {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .generate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .platforms-area {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .platform-tabs {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0 20px;
+            overflow-x: auto;
+        }
+
+        .platform-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .platform-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: white;
+        }
+
+        .platform-tab:hover:not(.active) {
+            background: #e2e8f0;
+        }
+
+        .platform-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .platform-panel {
+            display: none;
+        }
+
+        .platform-panel.active {
+            display: block;
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .platform-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .platform-details h3 {
+            font-size: 18px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .platform-details p {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .content-variations {
+            display: grid;
+            gap: 20px;
+        }
+
+        .variation-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .variation-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .variation-title {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .char-count {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .char-count.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .char-count.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .variation-content {
+            padding: 16px;
+        }
+
+        .content-editor {
+            width: 100%;
+            border: none;
+            resize: vertical;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .content-editor:focus {
+            outline: none;
+        }
+
+        .hashtag-suggestions {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .hashtag-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .hashtag-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .hashtag-pill {
+            background: #eff6ff;
+            color: #2563eb;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #bfdbfe;
+            transition: all 0.2s;
+        }
+
+        .hashtag-pill:hover {
+            background: #dbeafe;
+        }
+
+        .hashtag-pill.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .platform-features {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .feature-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: #d1d5db;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: left 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        /* Platform-specific styling */
+        .twitter { background: #1da1f2; }
+        .facebook { background: #1877f2; }
+        .instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .linkedin { background: #0077b5; }
+        .tiktok { background: #000000; }
+        .threads { background: #000000; }
+        .bluesky { background: #1DA1F2; }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .preview-mode {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .preview-mode h4 {
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .mock-post {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🚀 Social Media Campaign Editor</h1>
+        <p>Create platform-optimized content from a single brief</p>
+    </header>
+
+    <div class="main-container">
+        <!-- Brief Input Panel -->
+        <div class="brief-panel">
+            <div class="brief-header">
+                <h2 style="color: #374151; font-size: 16px;">📝 Content Brief</h2>
+            </div>
+            <div class="brief-content">
+                <div class="form-group">
+                    <label for="campaign-topic">Campaign Topic</label>
+                    <input type="text" id="campaign-topic" class="form-control"
+                           placeholder="e.g., Healthcare Town Hall Announcement"
+                           value="Mandami Healthcare Town Hall - Queens">
+                </div>
+
+                <div class="form-group">
+                    <label for="key-message">Key Message</label>
+                    <textarea id="key-message" class="form-control"
+                              placeholder="What's the main message you want to communicate?"
+                              >Join Mandami for a crucial discussion about healthcare access and affordability in Queens. Your voice matters in shaping policies that ensure every family can access quality healthcare without breaking the bank.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="call-to-action">Call to Action</label>
+                    <input type="text" id="call-to-action" class="form-control"
+                           placeholder="e.g., Register now, Learn more, Vote"
+                           value="RSVP: mandami.nyc/healthcare">
+                </div>
+
+                <div class="form-group">
+                    <label for="target-audience">Target Audience</label>
+                    <select id="target-audience" class="form-control">
+                        <option value="general">General Public</option>
+                        <option value="young-voters">Young Voters (18-35)</option>
+                        <option value="families" selected>Families with Children</option>
+                        <option value="seniors">Seniors (65+)</option>
+                        <option value="professionals">Working Professionals</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tone">Content Tone</label>
+                    <select id="tone" class="form-control">
+                        <option value="professional" selected>Professional</option>
+                        <option value="casual">Casual & Friendly</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="inspiring">Inspiring</option>
+                        <option value="informative">Informative</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Platforms</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-twitter" checked>
+                            <label for="platform-twitter">Twitter/X</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-facebook" checked>
+                            <label for="platform-facebook">Facebook</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-instagram" checked>
+                            <label for="platform-instagram">Instagram</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-linkedin" checked>
+                            <label for="platform-linkedin">LinkedIn</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-tiktok">
+                            <label for="platform-tiktok">TikTok</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-threads">
+                            <label for="platform-threads">Threads</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="platform-bluesky">
+                            <label for="platform-bluesky">Bluesky</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="generate-btn" onclick="generateContent()">
+                    🎯 Generate Platform Content
+                </button>
+            </div>
+        </div>
+
+        <!-- Platform Tabs and Content -->
+        <div class="platforms-area">
+            <div class="platform-tabs" id="platform-tabs">
+                <button class="platform-tab active" data-platform="twitter">
+                    🐦 Twitter/X
+                </button>
+                <button class="platform-tab" data-platform="facebook">
+                    📘 Facebook
+                </button>
+                <button class="platform-tab" data-platform="instagram">
+                    📸 Instagram
+                </button>
+                <button class="platform-tab" data-platform="linkedin">
+                    💼 LinkedIn
+                </button>
+                <button class="platform-tab" data-platform="tiktok">
+                    🎵 TikTok
+                </button>
+                <button class="platform-tab" data-platform="threads">
+                    🧵 Threads
+                </button>
+                <button class="platform-tab" data-platform="bluesky">
+                    ☁️ Bluesky
+                </button>
+            </div>
+
+            <div class="platform-content">
+                <!-- Twitter Panel -->
+                <div class="platform-panel active" id="twitter-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon twitter">🐦</div>
+                            <div class="platform-details">
+                                <h3>Twitter/X</h3>
+                                <p>Short, engaging posts • 280 character limit • Hashtags encouraged</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Main Post</span>
+                                <span class="char-count" id="twitter-main-count">0/280</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="twitter-main"
+                                          placeholder="Your main Twitter post will be generated here..."
+                                          oninput="updateCharCount('twitter-main')"></textarea>
+                                <div class="hashtag-suggestions">
+                                    <div class="hashtag-label">Suggested Hashtags:</div>
+                                    <div class="hashtag-pills" id="twitter-hashtags">
+                                        <span class="hashtag-pill">#HealthcareForAll</span>
+                                        <span class="hashtag-pill">#CommunityFirst</span>
+                                        <span class="hashtag-pill">#TownHall</span>
+                                        <span class="hashtag-pill">#Healthcare</span>
+                                        <span class="hashtag-pill">#YourVoiceMatters</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Thread Follow-up</span>
+                                <span class="char-count" id="twitter-thread-count">0/280</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="twitter-thread"
+                                          placeholder="Additional context for a Twitter thread..."
+                                          oninput="updateCharCount('twitter-thread')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Include poll option</span>
+                            <div class="toggle-switch" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Add thread continuation</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facebook Panel -->
+                <div class="platform-panel" id="facebook-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon facebook">📘</div>
+                            <div class="platform-details">
+                                <h3>Facebook</h3>
+                                <p>Longer content • Images encouraged • Event creation • Community building</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Main Post</span>
+                                <span class="char-count" id="facebook-main-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="facebook-main" style="min-height: 120px;"
+                                          placeholder="Your Facebook post will be generated here..."
+                                          oninput="updateCharCount('facebook-main')"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Event Description</span>
+                                <span class="char-count" id="facebook-event-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="facebook-event"
+                                          placeholder="Event-specific content for Facebook Events..."
+                                          oninput="updateCharCount('facebook-event')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Create Facebook Event</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Enable fundraising</span>
+                            <div class="toggle-switch" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instagram Panel -->
+                <div class="platform-panel" id="instagram-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon instagram" style="color: white;">📸</div>
+                            <div class="platform-details">
+                                <h3>Instagram</h3>
+                                <p>Visual-first • Stories & Reels • 2200 character limit • Hashtag strategy</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Feed Post Caption</span>
+                                <span class="char-count" id="instagram-feed-count">0/2200</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="instagram-feed"
+                                          placeholder="Your Instagram feed caption will be generated here..."
+                                          oninput="updateCharCount('instagram-feed')"></textarea>
+                                <div class="hashtag-suggestions">
+                                    <div class="hashtag-label">Instagram Hashtags (up to 30):</div>
+                                    <div class="hashtag-pills" id="instagram-hashtags">
+                                        <span class="hashtag-pill">#HealthcareAccess</span>
+                                        <span class="hashtag-pill">#CommunityEngagement</span>
+                                        <span class="hashtag-pill">#TownHallMeeting</span>
+                                        <span class="hashtag-pill">#PublicHealth</span>
+                                        <span class="hashtag-pill">#Democracy</span>
+                                        <span class="hashtag-pill">#CivicDuty</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Stories Text</span>
+                                <span class="char-count" id="instagram-story-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="instagram-story"
+                                          placeholder="Short, punchy text for Instagram Stories..."
+                                          oninput="updateCharCount('instagram-story')"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Reels Script</span>
+                                <span class="char-count" id="instagram-reel-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="instagram-reel"
+                                          placeholder="Script for Instagram Reel video content..."
+                                          oninput="updateCharCount('instagram-reel')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Create Story series</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Reel video script</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LinkedIn Panel -->
+                <div class="platform-panel" id="linkedin-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon linkedin" style="color: white;">💼</div>
+                            <div class="platform-details">
+                                <h3>LinkedIn</h3>
+                                <p>Professional tone • Long-form content • Industry focus • Career impact</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Professional Post</span>
+                                <span class="char-count" id="linkedin-post-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="linkedin-post" style="min-height: 150px;"
+                                          placeholder="Professional LinkedIn post will be generated here..."
+                                          oninput="updateCharCount('linkedin-post')"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Article Excerpt</span>
+                                <span class="char-count" id="linkedin-article-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="linkedin-article"
+                                          placeholder="Excerpt for LinkedIn article..."
+                                          oninput="updateCharCount('linkedin-article')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Create LinkedIn article</span>
+                            <div class="toggle-switch" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Professional hashtags</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TikTok Panel -->
+                <div class="platform-panel" id="tiktok-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon tiktok" style="color: white;">🎵</div>
+                            <div class="platform-details">
+                                <h3>TikTok</h3>
+                                <p>Video scripts • Trending sounds • Gen Z language • Creative hooks</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Video Script</span>
+                                <span class="char-count" id="tiktok-script-count">0 characters</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="tiktok-script"
+                                          placeholder="TikTok video script will be generated here..."
+                                          oninput="updateCharCount('tiktok-script')"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Caption Text</span>
+                                <span class="char-count" id="tiktok-caption-count">0/150</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="tiktok-caption"
+                                          placeholder="Short caption for TikTok post..."
+                                          oninput="updateCharCount('tiktok-caption')"></textarea>
+                                <div class="hashtag-suggestions">
+                                    <div class="hashtag-label">Trending Hashtags:</div>
+                                    <div class="hashtag-pills">
+                                        <span class="hashtag-pill">#Healthcare</span>
+                                        <span class="hashtag-pill">#Community</span>
+                                        <span class="hashtag-pill">#YourVoice</span>
+                                        <span class="hashtag-pill">#Politics</span>
+                                        <span class="hashtag-pill">#Change</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Trending sound suggestions</span>
+                            <div class="toggle-switch" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Gen Z language adaptation</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Threads Panel -->
+                <div class="platform-panel" id="threads-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon threads" style="color: white;">🧵</div>
+                            <div class="platform-details">
+                                <h3>Threads</h3>
+                                <p>Twitter-like • Meta ecosystem • 500 character limit • Text-focused</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Main Thread</span>
+                                <span class="char-count" id="threads-main-count">0/500</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="threads-main"
+                                          placeholder="Your Threads post will be generated here..."
+                                          oninput="updateCharCount('threads-main')"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Follow-up Thread</span>
+                                <span class="char-count" id="threads-followup-count">0/500</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="threads-followup"
+                                          placeholder="Additional context in thread format..."
+                                          oninput="updateCharCount('threads-followup')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Multi-post thread</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Cross-post to Instagram</span>
+                            <div class="toggle-switch" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bluesky Panel -->
+                <div class="platform-panel" id="bluesky-panel">
+                    <div class="platform-header">
+                        <div class="platform-info">
+                            <div class="platform-icon bluesky" style="color: white;">☁️</div>
+                            <div class="platform-details">
+                                <h3>Bluesky</h3>
+                                <p>Decentralized Twitter alternative • 300 character limit • Open protocol • Growing community</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-variations">
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Main Post</span>
+                                <span class="char-count" id="bluesky-main-count">0/300</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="bluesky-main"
+                                          placeholder="Your Bluesky post will be generated here..."
+                                          oninput="updateCharCount('bluesky-main')"></textarea>
+                                <div class="hashtag-suggestions">
+                                    <div class="hashtag-label">Bluesky Hashtags:</div>
+                                    <div class="hashtag-pills" id="bluesky-hashtags">
+                                        <span class="hashtag-pill">#Healthcare</span>
+                                        <span class="hashtag-pill">#CommunityFirst</span>
+                                        <span class="hashtag-pill">#TownHall</span>
+                                        <span class="hashtag-pill">#OpenDiscussion</span>
+                                        <span class="hashtag-pill">#Democracy</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="variation-card">
+                            <div class="variation-header">
+                                <span class="variation-title">Thread Post</span>
+                                <span class="char-count" id="bluesky-thread-count">0/300</span>
+                            </div>
+                            <div class="variation-content">
+                                <textarea class="content-editor" id="bluesky-thread"
+                                          placeholder="Follow-up post for Bluesky thread..."
+                                          oninput="updateCharCount('bluesky-thread')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="platform-features">
+                        <div class="feature-toggle">
+                            <span>Create thread series</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                        <div class="feature-toggle">
+                            <span>Community-focused tone</span>
+                            <div class="toggle-switch active" onclick="toggleFeature(this)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend-api.js"></script>
+    <script>
+        // Platform data and limits
+        const platformLimits = {
+            'twitter-main': 280,
+            'twitter-thread': 280,
+            'instagram-feed': 2200,
+            'tiktok-caption': 150,
+            'threads-main': 500,
+            'threads-followup': 500,
+            'bluesky-main': 300,
+            'bluesky-thread': 300
+        };
+
+        // Initialize platform tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePlatformTabs();
+            updateVisibleTabs();
+
+            // Update tabs when checkboxes change
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="platform-"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateVisibleTabs);
+            });
+        });
+
+        function initializePlatformTabs() {
+            const tabs = document.querySelectorAll('.platform-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => switchPlatform(tab.dataset.platform));
+            });
+        }
+
+        function updateVisibleTabs() {
+            const tabs = document.querySelectorAll('.platform-tab');
+            tabs.forEach(tab => {
+                const platform = tab.dataset.platform;
+                const checkbox = document.getElementById(`platform-${platform}`);
+                tab.style.display = checkbox.checked ? 'flex' : 'none';
+            });
+
+            // Ensure active tab is visible
+            const activeTab = document.querySelector('.platform-tab.active');
+            if (activeTab && activeTab.style.display === 'none') {
+                const firstVisibleTab = document.querySelector('.platform-tab[style="display: flex;"]');
+                if (firstVisibleTab) {
+                    switchPlatform(firstVisibleTab.dataset.platform);
+                }
+            }
+        }
+
+        function switchPlatform(platform) {
+            // Update tabs
+            document.querySelectorAll('.platform-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.platform === platform);
+            });
+
+            // Update panels
+            document.querySelectorAll('.platform-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === `${platform}-panel`);
+            });
+        }
+
+        function updateCharCount(editorId) {
+            const editor = document.getElementById(editorId);
+            const countElement = document.getElementById(`${editorId}-count`);
+            const text = editor.value;
+            const limit = platformLimits[editorId];
+
+            if (limit) {
+                countElement.textContent = `${text.length}/${limit}`;
+                countElement.className = 'char-count';
+
+                if (text.length > limit * 0.9) {
+                    countElement.classList.add('warning');
+                }
+                if (text.length > limit) {
+                    countElement.classList.add('error');
+                }
+            } else {
+                countElement.textContent = `${text.length} characters`;
+            }
+        }
+
+        function toggleFeature(toggle) {
+            toggle.classList.toggle('active');
+        }
+
+        async function generateContent() {
+            const button = document.querySelector('.generate-btn');
+            button.disabled = true;
+            button.innerHTML = '<div class="spinner"></div> Generating Content...';
+
+            try {
+                const brief = {
+                    topic: document.getElementById('campaign-topic').value,
+                    message: document.getElementById('key-message').value,
+                    cta: document.getElementById('call-to-action').value,
+                    audience: document.getElementById('target-audience').value,
+                    tone: document.getElementById('tone').value
+                };
+
+                const platforms = Array.from(document.querySelectorAll('input[type="checkbox"][id^="platform-"]:checked'))
+                    .map(cb => cb.id.replace('platform-', ''));
+
+                // Show loading state in content areas
+                platforms.forEach(platform => {
+                    showLoadingState(platform);
+                });
+
+                // Generate content for each platform
+                for (const platform of platforms) {
+                    await generatePlatformContent(platform, brief);
+                }
+
+            } catch (error) {
+                console.error('Error generating content:', error);
+                alert('Error generating content. Please try again.');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '🎯 Generate Platform Content';
+            }
+        }
+
+        function showLoadingState(platform) {
+            const panel = document.getElementById(`${platform}-panel`);
+            const editors = panel.querySelectorAll('.content-editor');
+            editors.forEach(editor => {
+                editor.value = '';
+                editor.placeholder = 'Generating content...';
+            });
+        }
+
+        async function generatePlatformContent(platform, brief) {
+            try {
+                const prompt = createPlatformPrompt(platform, brief);
+
+                const response = await window.campaignAPI.generateContent('social-media', {
+                    platform: platform,
+                    brief: brief,
+                    prompt: prompt
+                });
+
+                populatePlatformContent(platform, response);
+
+            } catch (error) {
+                console.error(`Error generating ${platform} content:`, error);
+                // Show fallback content
+                populateFallbackContent(platform, brief);
+            }
+        }
+
+        function createPlatformPrompt(platform, brief) {
+            const platformSpecs = {
+                twitter: `Create Twitter content (280 char limit). Include main tweet and thread follow-up. Focus on engagement and hashtags.`,
+                facebook: `Create Facebook content. Longer format allowed. Include main post and event description. Community-focused tone.`,
+                instagram: `Create Instagram content. Include feed caption (visual-first), stories text, and Reels script. Use relevant hashtags (max 30).`,
+                linkedin: `Create LinkedIn content. Professional tone. Include main post and article excerpt. Focus on policy impact and professional relevance.`,
+                tiktok: `Create TikTok content. Include video script and caption. Use Gen Z language, trending elements, and creative hooks.`,
+                threads: `Create Threads content. Twitter-like format but 500 char limit. Include main thread and follow-up. Text-focused.`,
+                bluesky: `Create Bluesky content. Decentralized Twitter alternative, 300 char limit. Community-focused, open discussion tone. Include main post and thread follow-up.`
+            };
+
+            return `${platformSpecs[platform]}
+
+Brief: ${brief.topic}
+Message: ${brief.message}
+Call to Action: ${brief.cta}
+Target Audience: ${brief.audience}
+Tone: ${brief.tone}
+
+Generate platform-optimized content that resonates with the target audience and follows platform best practices.`;
+        }
+
+        function populatePlatformContent(platform, response) {
+            // This would parse the AI response and populate the appropriate fields
+            // For demo purposes, using sample content
+            populateFallbackContent(platform, {
+                topic: document.getElementById('campaign-topic').value,
+                message: document.getElementById('key-message').value,
+                cta: document.getElementById('call-to-action').value
+            });
+        }
+
+        function populateFallbackContent(platform, brief) {
+            const sampleContent = {
+                twitter: {
+                    main: `🏥 Healthcare is a right, not a privilege! Join our town hall to discuss making quality healthcare accessible for every family in our community. ${brief.cta} #HealthcareForAll #CommunityFirst`,
+                    thread: `We'll be discussing: ✅ Lowering prescription costs ✅ Expanding community health centers ✅ Mental health support ✅ Healthcare worker shortages. Your voice shapes our priorities! 🗳️`
+                },
+                facebook: {
+                    main: `Healthcare affects every single family in our community. That's why I'm hosting a town hall meeting where WE can discuss the real challenges you're facing and the solutions we need.\n\nWhether it's the rising cost of prescriptions, finding quality mental health care, or ensuring our local hospital stays funded - these conversations matter.\n\n📅 Join us for an open, honest discussion about healthcare access and affordability\n🎯 ${brief.cta}\n\nYour experiences and ideas will help shape policies that actually work for working families. See you there! 👥`,
+                    event: `Healthcare Town Hall Meeting\n\nJoin us for an important community discussion about healthcare access, affordability, and quality in our district. This is your opportunity to share your experiences, ask questions, and help shape healthcare policies that work for everyone.\n\nTopics include:\n• Prescription drug costs\n• Mental health services\n• Community health centers\n• Healthcare worker support\n\nAll community members welcome. Light refreshments provided.\n\n${brief.cta}`
+                },
+                instagram: {
+                    feed: `Healthcare shouldn't be a luxury 💙\n\nEvery family deserves access to quality, affordable healthcare. That's why we're bringing the conversation directly to YOU.\n\n🏥 Join our healthcare town hall\n🗣️ Share your experiences\n💡 Help shape real solutions\n📋 ${brief.cta}\n\nBecause when we come together as a community, we create change that lasts. Your voice matters, and your story has power.\n\nSee you there! ✊\n\n#HealthcareAccess #CommunityFirst #YourVoiceMatters #TownHall #HealthcareForAll #CommunityEngagement #PublicHealth #Democracy #CivicDuty #Change`,
+                    story: `Your healthcare story matters 💙\n\nJoin the conversation ➡️\n${brief.cta}`,
+                    reel: `[Scene 1: Hook]\n"What if I told you healthcare could be affordable for EVERYONE?"\n\n[Scene 2: Problem]\n"Too many families are choosing between medications and groceries..."\n\n[Scene 3: Solution]\n"That's why we're hosting a town hall - YOUR voices, YOUR solutions"\n\n[Scene 4: CTA]\n"Join us! Link in bio 👆"\n\n[Text overlay throughout: "Healthcare Town Hall - Your Community Needs YOU"]`
+                },
+                linkedin: {
+                    post: `Healthcare access is more than a policy issue—it's an economic imperative that affects workforce productivity, small business competitiveness, and community resilience.\n\nAs healthcare costs continue to rise, we're seeing talented professionals leave our region, small businesses struggle with insurance premiums, and families make impossible choices.\n\nThat's why I'm convening a healthcare town hall focused on practical, business-friendly solutions:\n\n• Expanding employer healthcare options\n• Supporting community health initiatives\n• Addressing healthcare workforce shortages\n• Improving preventive care access\n\nFor our region to thrive economically, we need healthy communities and sustainable healthcare systems. ${brief.cta}\n\nLooking forward to productive discussions with healthcare professionals, business leaders, and community members.\n\n#Healthcare #EconomicDevelopment #CommunityLeadership #PublicPolicy`,
+                    article: `The Healthcare Challenge: Building Sustainable Systems for Working Communities\n\nHealthcare infrastructure directly impacts our region's economic competitiveness and quality of life. This town hall will examine evidence-based approaches to expanding access while supporting local healthcare providers and businesses...\n\n[Full article preview - discussing policy frameworks, economic impact analysis, and stakeholder collaboration strategies]`
+                },
+                tiktok: {
+                    script: `[Hook - first 3 seconds]\n"POV: Healthcare was actually affordable for everyone in your community" 👀\n\n[Build tension]\n"But right now families are literally choosing between medicine and meals..." 😰\n\n[Solution reveal]\n"That's exactly why we're doing something about it!"\n\n[Call to action]\n"Town hall meeting - pull up! Your voice = real change"\n"Link in bio to register 💪"\n\n[End with trending sound/music]\n\n[Text overlays: "Healthcare town hall" "Your community needs YOU" "Real solutions start here"]`,
+                    caption: `Healthcare town hall hits different when your community shows up 💯 ${brief.cta} #Healthcare #Community #YourVoice #Politics #Change`
+                },
+                threads: {
+                    main: `Healthcare accessibility isn't just a policy debate—it's about whether families in our community can afford to stay healthy without going broke.\n\nWe're hosting a town hall because real solutions come from real conversations with the people living these challenges every day.\n\n${brief.cta}`,
+                    followup: `What we'll discuss:\n→ Prescription cost relief\n→ Mental health service gaps\n→ Community health center funding\n→ Healthcare worker shortages\n\nYour experiences matter. Your ideas matter. Your voice in this conversation matters.\n\nSee you there 🤝`
+                },
+                bluesky: {
+                    main: `Healthcare shouldn't bankrupt families. Join our town hall for real talk about solutions that actually work. Open discussion, all voices welcome. ${brief.cta} #Healthcare #CommunityFirst #OpenDiscussion`,
+                    thread: `This isn't about politics—it's about people. Parents choosing between medicine and rent. Seniors rationing insulin. We can do better, and it starts with listening to each other. Town hall details: ${brief.cta}`
+                }
+            };
+
+            const content = sampleContent[platform];
+            if (!content) return;
+
+            Object.keys(content).forEach(type => {
+                const editorId = `${platform}-${type}`;
+                const editor = document.getElementById(editorId);
+                if (editor) {
+                    editor.value = content[type];
+                    editor.placeholder = `Your ${platform} ${type} content...`;
+                    updateCharCount(editorId);
+                }
+            });
+        }
+
+        // Initialize hashtag pill interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const hashtagPills = document.querySelectorAll('.hashtag-pill');
+            hashtagPills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

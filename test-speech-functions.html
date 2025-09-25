@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Editor Function Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .pass { background: #dcfce7; border: 1px solid #16a34a; color: #166534; }
+        .fail { background: #fef2f2; border: 1px solid #dc2626; color: #991b1b; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-section {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Speech Editor Function Test</h1>
+    <p>This tests the speech editor's view switching and teleprompter functionality.</p>
+
+    <div class="test-section">
+        <h3>🚀 Quick Test</h3>
+        <button onclick="testWithSample()">Test with Sample Speech</button>
+        <button onclick="testFunctions()">Test Function Accessibility</button>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🎯 Manual Testing</h3>
+        <p>1. <button onclick="openSpeechEditor()">Open Speech Editor</button></p>
+        <p>2. Paste sample speech text in Edit view</p>
+        <p>3. Switch to Formatted view to see sections</p>
+        <p>4. Switch to Teleprompter and test scroll controls</p>
+    </div>
+
+    <script>
+        let testWindow = null;
+
+        const sampleSpeech = `My Fellow Americans,
+
+Today marks a new chapter in our nation's journey. We stand at the crossroads of history, where our choices will define the future for generations to come.
+
+Let me be clear - we will not back down from the challenges that face us. We will stand together, united in purpose and determined in action.
+
+The path forward requires courage. It demands that we believe in ourselves and in each other. We must fight for what is right, not what is easy.
+
+I believe in the American spirit. I believe in our capacity to overcome any obstacle. Together, we will build a future that our children can be proud of.
+
+Thank you, and God bless America.`;
+
+        function testWithSample() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h4>Testing with Sample Speech...</h4>';
+
+            // Open speech editor with sample data
+            const url = `http://localhost:3001/speech-editor.html?speech=${encodeURIComponent(sampleSpeech)}`;
+            testWindow = window.open(url, 'speechTest', 'width=1200,height=800');
+
+            testWindow.onload = () => {
+                setTimeout(() => {
+                    testFunctions();
+                }, 2000);
+            };
+        }
+
+        function testFunctions() {
+            const results = document.getElementById('results');
+
+            if (!testWindow || testWindow.closed) {
+                results.innerHTML += '<div class="fail">❌ No speech editor window open. Click "Test with Sample Speech" first.</div>';
+                return;
+            }
+
+            const functions = ['switchView', 'startScroll', 'pauseScroll', 'resetScroll', 'adjustSpeed'];
+
+            functions.forEach(funcName => {
+                try {
+                    const exists = testWindow.eval(`typeof ${funcName} === 'function'`);
+                    if (exists) {
+                        results.innerHTML += `<div class="pass">✅ ${funcName} - Function accessible</div>`;
+                    } else {
+                        results.innerHTML += `<div class="fail">❌ ${funcName} - Function not found</div>`;
+                    }
+                } catch (error) {
+                    results.innerHTML += `<div class="fail">❌ ${funcName} - Error: ${error.message}</div>`;
+                }
+            });
+
+            // Test view switching
+            try {
+                testWindow.eval("switchView('formatted')");
+                results.innerHTML += '<div class="pass">✅ switchView(\'formatted\') - Executed</div>';
+
+                setTimeout(() => {
+                    try {
+                        testWindow.eval("switchView('teleprompter')");
+                        results.innerHTML += '<div class="pass">✅ switchView(\'teleprompter\') - Executed</div>';
+                    } catch (error) {
+                        results.innerHTML += `<div class="fail">❌ Teleprompter switch failed: ${error.message}</div>`;
+                    }
+                }, 1000);
+            } catch (error) {
+                results.innerHTML += `<div class="fail">❌ View switching failed: ${error.message}</div>`;
+            }
+        }
+
+        function openSpeechEditor() {
+            testWindow = window.open('http://localhost:3001/speech-editor.html', 'speechEditor', 'width=1200,height=800');
+        }
+    </script>
+</body>
+</html>

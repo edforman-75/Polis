@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fact Research & Quote Generation Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .demo-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .panel-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .demo-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .research-results {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .research-results.active {
+            display: block;
+        }
+
+        .research-status {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .research-status.researching {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .research-status.verified {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .research-status.questionable {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .research-status.unverified {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .research-progress {
+            margin: 16px 0;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .progress-item.active {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .progress-item.complete {
+            color: #10b981;
+        }
+
+        .progress-icon {
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        .sources-list {
+            margin-top: 16px;
+        }
+
+        .source-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .source-item.government {
+            border-left: 4px solid #10b981;
+        }
+
+        .source-item.news {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .source-item.academic {
+            border-left: 4px solid #8b5cf6;
+        }
+
+        .source-item.contradiction {
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .source-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .reliability-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .source-excerpt {
+            color: #64748b;
+            font-size: 14px;
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+
+        .verification-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .quote-results {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .quote-results.active {
+            display: block;
+        }
+
+        .quote-option {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .quote-option:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .quote-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .quote-number {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .quote-metrics {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .metric {
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #64748b;
+        }
+
+        .quote-text {
+            font-size: 16px;
+            color: #1e293b;
+            margin-bottom: 12px;
+            padding: 16px;
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+
+        .quote-context {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .quote-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tracking-panel {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tracking-section {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .tracking-section h4 {
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .tracking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .tracking-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-accepted {
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .status-rejected {
+            color: #ef4444;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            color: #f59e0b;
+            font-weight: 500;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .candidate-profile {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .candidate-profile h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .voice-characteristics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quote-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍💬 Fact Research & Quote Generation</h1>
+        <p>AI-powered fact checking and candidate voice quote generation for campaign content</p>
+    </div>
+
+    <div class="container">
+        <div class="demo-grid">
+            <!-- Fact Research Panel -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">🔍</span>
+                    <h2 class="panel-title">Fact Research</h2>
+                </div>
+
+                <p style="margin-bottom: 16px; color: #64748b;">
+                    Enter a factual claim to research using trusted sources
+                </p>
+
+                <textarea 
+                    class="demo-input" 
+                    id="fact-claim" 
+                    rows="3"
+                    placeholder="e.g., 'This plan will create 50,000 new jobs in Texas over 5 years'"
+                >This plan will create 50,000 new jobs in Texas over 5 years</textarea>
+
+                <button class="btn btn-primary" onclick="startFactResearch()">
+                    🚀 Research Fact
+                </button>
+
+                <div class="research-results" id="research-results">
+                    <div class="research-status researching" id="research-status">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <span class="spinner"></span>
+                            Researching claim across trusted sources...
+                        </div>
+                    </div>
+
+                    <div class="research-progress" id="research-progress">
+                        <!-- Progress will be populated by JavaScript -->
+                    </div>
+
+                    <div class="sources-list" id="sources-list">
+                        <!-- Sources will be populated by JavaScript -->
+                    </div>
+
+                    <div class="verification-actions" id="verification-actions" style="display: none;">
+                        <button class="btn btn-success" onclick="acceptFact()">
+                            ✅ Accept as Verified
+                        </button>
+                        <button class="btn btn-secondary" onclick="acceptWithoutVerification()">
+                            ⚠️ Accept Without Full Verification
+                        </button>
+                        <button class="btn btn-danger" onclick="rejectFact()">
+                            ❌ Reject Claim
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Generation Panel -->
+            <div class="demo-panel">
+                <div class="panel-header">
+                    <span class="panel-icon">💬</span>
+                    <h2 class="panel-title">Quote Generator</h2>
+                </div>
+
+                <div class="candidate-profile">
+                    <h4>👤 Jane Smith - Candidate Profile</h4>
+                    <div class="voice-characteristics">
+                        <div><strong>Tone:</strong> Professional-warm</div>
+                        <div><strong>Style:</strong> Direct & optimistic</div>
+                        <div><strong>Key phrases:</strong> "hardworking families"</div>
+                        <div><strong>Approach:</strong> Solution-focused</div>
+                    </div>
+                </div>
+
+                <p style="margin-bottom: 16px; color: #64748b;">
+                    Generate quotes in the candidate's voice for any topic
+                </p>
+
+                <input 
+                    class="demo-input" 
+                    id="quote-topic" 
+                    placeholder="e.g., healthcare, infrastructure, education"
+                    value="healthcare"
+                >
+
+                <select class="demo-input" id="quote-tone">
+                    <option value="professional-warm">Professional & Warm</option>
+                    <option value="conversational">Conversational</option>
+                    <option value="formal">Formal</option>
+                    <option value="inspirational">Inspirational</option>
+                </select>
+
+                <button class="btn btn-primary" onclick="generateQuotes()">
+                    ✨ Generate Quotes
+                </button>
+
+                <div class="quote-results" id="quote-results">
+                    <!-- Quotes will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Tracking Panel -->
+        <div class="tracking-panel">
+            <div class="panel-header">
+                <span class="panel-icon">📊</span>
+                <h2 class="panel-title">Decision Tracking & Source Management</h2>
+            </div>
+
+            <div class="tracking-grid">
+                <div class="tracking-section">
+                    <h4>🔍 Fact Verification History</h4>
+                    <div id="fact-history">
+                        <div class="tracking-item">
+                            <span>Job creation claim (Infrastructure)</span>
+                            <span class="status-accepted">✅ Verified</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Budget allocation figure</span>
+                            <span class="status-accepted">⚠️ Accepted w/o verification</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Timeline estimate</span>
+                            <span class="status-rejected">❌ Rejected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-section">
+                    <h4>💬 Quote Usage Tracking</h4>
+                    <div id="quote-history">
+                        <div class="tracking-item">
+                            <span>"Healthcare is a fundamental right..."</span>
+                            <span class="status-accepted">✅ Used</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>"Infrastructure investment means..."</span>
+                            <span class="status-accepted">✏️ Modified & used</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>"Education is the great equalizer..."</span>
+                            <span class="status-rejected">❌ Not suitable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-section">
+                    <h4>📚 Trusted Sources</h4>
+                    <div>
+                        <div class="tracking-item">
+                            <span>Bureau of Labor Statistics</span>
+                            <span style="color: #10b981;">98% reliable</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Congressional Budget Office</span>
+                            <span style="color: #10b981;">95% reliable</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Associated Press</span>
+                            <span style="color: #10b981;">88% reliable</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Local News Sources</span>
+                            <span style="color: #f59e0b;">75% reliable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-section">
+                    <h4>🎯 Performance Metrics</h4>
+                    <div>
+                        <div class="tracking-item">
+                            <span>Facts researched today</span>
+                            <span style="font-weight: bold;">7</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Verification rate</span>
+                            <span style="color: #10b981;">85%</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Quotes generated</span>
+                            <span style="font-weight: bold;">12</span>
+                        </div>
+                        <div class="tracking-item">
+                            <span>Quote acceptance rate</span>
+                            <span style="color: #10b981;">75%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentResearch = null;
+        let currentQuotes = [];
+        let factHistory = [];
+        let quoteHistory = [];
+
+        // Fact Research Functions
+        async function startFactResearch() {
+            const claim = document.getElementById('fact-claim').value.trim();
+            if (!claim) return;
+
+            const resultsPanel = document.getElementById('research-results');
+            const statusPanel = document.getElementById('research-status');
+            const progressPanel = document.getElementById('research-progress');
+            const actionsPanel = document.getElementById('verification-actions');
+            
+            resultsPanel.classList.add('active');
+            statusPanel.className = 'research-status researching';
+            statusPanel.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span class="spinner"></span>
+                    Researching claim across trusted sources...
+                </div>
+            `;
+            actionsPanel.style.display = 'none';
+
+            // Simulate research progress
+            await simulateResearchProgress(progressPanel);
+            
+            // Generate research results
+            const research = await simulateFactResearch(claim);
+            currentResearch = research;
+            
+            // Update status
+            statusPanel.className = `research-status ${research.status}`;
+            statusPanel.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 8px;">
+                    ${research.status === 'verified' ? '✅ Claim Verified' :
+                      research.status === 'questionable' ? '⚠️ Questionable Claim' :
+                      '❌ Unverified Claim'}
+                </div>
+                <div style="font-size: 14px;">
+                    ${Math.round(research.confidence * 100)}% confidence based on ${research.sources.length} sources
+                </div>
+            `;
+
+            // Show sources
+            displaySources(research.sources);
+            
+            // Show actions
+            actionsPanel.style.display = 'flex';
+        }
+
+        async function simulateResearchProgress(container) {
+            const steps = [
+                { text: 'Searching Bureau of Labor Statistics...', delay: 800 },
+                { text: 'Checking Census Bureau data...', delay: 600 },
+                { text: 'Reviewing academic research...', delay: 700 },
+                { text: 'Cross-referencing news sources...', delay: 500 },
+                { text: 'Checking campaign documents...', delay: 400 }
+            ];
+
+            container.innerHTML = '';
+            
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                const stepEl = document.createElement('div');
+                stepEl.className = 'progress-item active';
+                stepEl.innerHTML = `<span class="progress-icon">⏳</span>${step.text}`;
+                container.appendChild(stepEl);
+                
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+                
+                stepEl.className = 'progress-item complete';
+                stepEl.innerHTML = `<span class="progress-icon">✓</span>${step.text}`;
+            }
+        }
+
+        async function simulateFactResearch(claim) {
+            // Simulate fact research with realistic results
+            const sources = [];
+            let confidence = 0.7;
+
+            // Government sources
+            if (claim.includes('jobs')) {
+                sources.push({
+                    type: 'government',
+                    name: 'Bureau of Labor Statistics',
+                    title: 'Employment Projections Database',
+                    excerpt: 'Infrastructure investment typically creates 25-30 jobs per $1M invested, supporting the projected job creation numbers.',
+                    reliability: 0.98,
+                    url: 'https://www.bls.gov/emp/'
+                });
+                confidence += 0.15;
+            }
+
+            if (claim.includes('Texas')) {
+                sources.push({
+                    type: 'government',
+                    name: 'Texas Workforce Commission',
+                    title: 'State Employment Data',
+                    excerpt: 'Historical data shows similar infrastructure projects in Texas have met or exceeded job creation projections.',
+                    reliability: 0.92,
+                    url: 'https://www.twc.texas.gov/'
+                });
+                confidence += 0.1;
+            }
+
+            // Academic sources
+            sources.push({
+                type: 'academic',
+                name: 'Economic Policy Institute',
+                title: 'Infrastructure Investment Multiplier Effects',
+                excerpt: 'Research indicates public infrastructure investment generates significant employment multiplier effects in related sectors.',
+                reliability: 0.85,
+                url: 'https://www.epi.org/'
+            });
+
+            // News sources
+            sources.push({
+                type: 'news',
+                name: 'Associated Press',
+                title: 'Infrastructure Job Creation Analysis',
+                excerpt: 'Recent reporting on similar infrastructure initiatives shows comparable job creation estimates are achievable.',
+                reliability: 0.88,
+                url: 'https://apnews.com/'
+            });
+
+            // Potential contradiction
+            if (Math.random() > 0.7) {
+                sources.push({
+                    type: 'contradiction',
+                    name: 'Campaign Consistency Check',
+                    title: 'Previous Campaign Document',
+                    excerpt: 'Previous statement mentioned 45,000 jobs - verify consistency of job creation numbers.',
+                    reliability: 0.95,
+                    url: '/documents/previous-announcement'
+                });
+                confidence -= 0.2;
+            }
+
+            confidence = Math.max(0.1, Math.min(0.98, confidence));
+            
+            return {
+                claim,
+                confidence,
+                status: confidence > 0.8 ? 'verified' : confidence > 0.5 ? 'questionable' : 'unverified',
+                sources,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function displaySources(sources) {
+            const container = document.getElementById('sources-list');
+            container.innerHTML = '<h4 style="margin-bottom: 12px;">Sources Found:</h4>';
+            
+            sources.forEach(source => {
+                const sourceEl = document.createElement('div');
+                sourceEl.className = `source-item ${source.type}`;
+                sourceEl.innerHTML = `
+                    <div class="source-header">
+                        <div class="source-name">${source.name}</div>
+                        <div class="reliability-badge">${Math.round(source.reliability * 100)}% reliable</div>
+                    </div>
+                    <div style="font-weight: 500; margin-bottom: 4px;">${source.title}</div>
+                    <div class="source-excerpt">"${source.excerpt}"</div>
+                    <div style="font-size: 12px; color: #64748b;">
+                        <a href="${source.url}" target="_blank">${source.url}</a>
+                    </div>
+                `;
+                container.appendChild(sourceEl);
+            });
+        }
+
+        function acceptFact() {
+            if (!currentResearch) return;
+            
+            factHistory.unshift({
+                claim: currentResearch.claim,
+                status: 'verified',
+                timestamp: new Date(),
+                sources: currentResearch.sources.length
+            });
+            
+            updateFactHistory();
+            showNotification('✅ Fact accepted as verified');
+        }
+
+        function acceptWithoutVerification() {
+            if (!currentResearch) return;
+            
+            factHistory.unshift({
+                claim: currentResearch.claim,
+                status: 'accepted_unverified',
+                timestamp: new Date(),
+                sources: currentResearch.sources.length
+            });
+            
+            updateFactHistory();
+            showNotification('⚠️ Fact accepted without full verification');
+        }
+
+        function rejectFact() {
+            if (!currentResearch) return;
+            
+            const reason = prompt('Why are you rejecting this claim? (Optional)');
+            
+            factHistory.unshift({
+                claim: currentResearch.claim,
+                status: 'rejected',
+                timestamp: new Date(),
+                reason: reason,
+                sources: currentResearch.sources.length
+            });
+            
+            updateFactHistory();
+            showNotification('❌ Fact rejected');
+        }
+
+        // Quote Generation Functions
+        async function generateQuotes() {
+            const topic = document.getElementById('quote-topic').value.trim();
+            const tone = document.getElementById('quote-tone').value;
+            
+            if (!topic) return;
+
+            const resultsPanel = document.getElementById('quote-results');
+            resultsPanel.classList.add('active');
+            resultsPanel.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #64748b;">
+                    <span class="spinner"></span> Generating quotes in Jane Smith's voice...
+                </div>
+            `;
+
+            // Simulate quote generation delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            const quotes = await simulateQuoteGeneration(topic, tone);
+            currentQuotes = quotes;
+            displayQuotes(quotes);
+        }
+
+        async function simulateQuoteGeneration(topic, tone) {
+            const candidateQuotes = {
+                healthcare: [
+                    {
+                        text: '"Healthcare is a fundamental right, and every hardworking family in our community deserves access to quality, affordable care." - Jane Smith, Candidate for Governor',
+                        confidence: 0.92,
+                        voiceMatch: 0.89,
+                        context: 'Perfect for healthcare policy announcements and town halls'
+                    },
+                    {
+                        text: '"We\'re going to make sure that no one has to choose between paying for medicine and putting food on the table - that\'s what real leadership means." - Jane Smith',
+                        confidence: 0.88,
+                        voiceMatch: 0.91,
+                        context: 'Great for press releases and campaign events'
+                    },
+                    {
+                        text: '"As someone who has seen firsthand how healthcare costs impact families, we will bring real solutions to make care more affordable and accessible." - Jane Smith',
+                        confidence: 0.85,
+                        voiceMatch: 0.87,
+                        context: 'Ideal for personal stories and testimonials'
+                    }
+                ],
+                infrastructure: [
+                    {
+                        text: '"Investing in infrastructure means investing in our future - better roads, better jobs, and better opportunities for every family in our community." - Jane Smith',
+                        confidence: 0.90,
+                        voiceMatch: 0.88,
+                        context: 'Perfect for infrastructure project announcements'
+                    },
+                    {
+                        text: '"When we rebuild our infrastructure, we\'re not just fixing roads and bridges, we\'re rebuilding the foundation for economic growth and bringing people together." - Jane Smith',
+                        confidence: 0.87,
+                        voiceMatch: 0.85,
+                        context: 'Great for economic development events'
+                    }
+                ],
+                education: [
+                    {
+                        text: '"Every child deserves a world-class education, regardless of their zip code - that\'s how we build a stronger future for our community." - Jane Smith',
+                        confidence: 0.89,
+                        voiceMatch: 0.90,
+                        context: 'Ideal for education policy releases and school visits'
+                    }
+                ]
+            };
+
+            return candidateQuotes[topic] || candidateQuotes.healthcare;
+        }
+
+        function displayQuotes(quotes) {
+            const container = document.getElementById('quote-results');
+            
+            container.innerHTML = quotes.map((quote, index) => `
+                <div class="quote-option">
+                    <div class="quote-header">
+                        <span class="quote-number">Quote ${index + 1}</span>
+                        <div class="quote-metrics">
+                            <span class="metric">${Math.round(quote.confidence * 100)}% confident</span>
+                            <span class="metric">${Math.round(quote.voiceMatch * 100)}% voice match</span>
+                        </div>
+                    </div>
+                    
+                    <div class="quote-text">${quote.text}</div>
+                    
+                    <div class="quote-context">
+                        <strong>Best for:</strong> ${quote.context}
+                    </div>
+                    
+                    <div class="quote-actions">
+                        <button class="btn btn-success" onclick="useQuote(${index})">
+                            ✅ Use This Quote
+                        </button>
+                        <button class="btn btn-secondary" onclick="modifyQuote(${index})">
+                            ✏️ Edit Quote
+                        </button>
+                        <button class="btn btn-danger" onclick="rejectQuote(${index})">
+                            ❌ Not Right
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function useQuote(index) {
+            const quote = currentQuotes[index];
+            
+            quoteHistory.unshift({
+                text: quote.text,
+                status: 'used',
+                timestamp: new Date(),
+                confidence: quote.confidence
+            });
+            
+            updateQuoteHistory();
+            showNotification('✅ Quote added to content');
+        }
+
+        function modifyQuote(index) {
+            const quote = currentQuotes[index];
+            const modified = prompt('Edit this quote:', quote.text);
+            
+            if (modified && modified !== quote.text) {
+                quoteHistory.unshift({
+                    text: modified,
+                    status: 'modified',
+                    timestamp: new Date(),
+                    original: quote.text
+                });
+                
+                updateQuoteHistory();
+                showNotification('✏️ Modified quote added to content');
+            }
+        }
+
+        function rejectQuote(index) {
+            const quote = currentQuotes[index];
+            
+            quoteHistory.unshift({
+                text: quote.text,
+                status: 'rejected',
+                timestamp: new Date(),
+                reason: 'Not suitable for current content'
+            });
+            
+            updateQuoteHistory();
+            showNotification('❌ Quote marked as not suitable');
+        }
+
+        // Update tracking displays
+        function updateFactHistory() {
+            const container = document.getElementById('fact-history');
+            container.innerHTML = factHistory.slice(0, 3).map(fact => `
+                <div class="tracking-item">
+                    <span>${fact.claim.substring(0, 30)}...</span>
+                    <span class="status-${fact.status.replace('_', '-')}">
+                        ${fact.status === 'verified' ? '✅ Verified' :
+                          fact.status === 'accepted_unverified' ? '⚠️ Accepted w/o verification' :
+                          '❌ Rejected'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateQuoteHistory() {
+            const container = document.getElementById('quote-history');
+            container.innerHTML = quoteHistory.slice(0, 3).map(quote => `
+                <div class="tracking-item">
+                    <span>"${quote.text.substring(0, 30)}..."</span>
+                    <span class="status-${quote.status}">
+                        ${quote.status === 'used' ? '✅ Used' :
+                          quote.status === 'modified' ? '✏️ Modified & used' :
+                          '❌ Not suitable'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function showNotification(message) {
+            // Create and show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

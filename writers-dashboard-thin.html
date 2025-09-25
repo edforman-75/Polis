@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writers Dashboard - Campaign AI Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 10px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .content-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .content-type-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .content-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: #3b82f6;
+        }
+
+        .content-type-card.active {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .content-type-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .content-type-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .content-type-count {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: 1fr 150px 150px 150px 120px;
+            gap: 16px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .search-input, .filter-select {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .content-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .content-table th {
+            background: #f8fafc;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .content-table th:hover {
+            background: #f1f5f9;
+        }
+
+        .content-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .content-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .content-title {
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .content-title:hover {
+            color: #3b82f6;
+        }
+
+        .content-meta {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-draft { background: #fef3c7; color: #92400e; }
+        .status-review { background: #dbeafe; color: #1e40af; }
+        .status-published { background: #d1fae5; color: #059669; }
+        .status-archived { background: #f3f4f6; color: #6b7280; }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #f9fafb;
+        }
+
+        .action-btn.primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .action-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .showing-text {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1>
+                    ✍️ Writers Dashboard
+                </h1>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="refreshData()">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn-primary" onclick="showCreateModal()">
+                        ➕ Create Content
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Type Cards -->
+            <div class="content-types" id="contentTypes">
+                <div class="content-type-card active" onclick="selectContentType('all')" data-type="all">
+                    <div class="content-type-icon">📄</div>
+                    <div class="content-type-title">All Content</div>
+                    <div class="content-type-count" id="allCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('speeches')" data-type="speeches">
+                    <div class="content-type-icon">🎤</div>
+                    <div class="content-type-title">Speeches</div>
+                    <div class="content-type-count" id="speechesCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('social_posts')" data-type="social_posts">
+                    <div class="content-type-icon">📱</div>
+                    <div class="content-type-title">Social Media</div>
+                    <div class="content-type-count" id="social_postsCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('policy_documents')" data-type="policy_documents">
+                    <div class="content-type-icon">📋</div>
+                    <div class="content-type-title">Policy Docs</div>
+                    <div class="content-type-count" id="policy_documentsCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('press_releases')" data-type="press_releases">
+                    <div class="content-type-icon">📰</div>
+                    <div class="content-type-title">Press Releases</div>
+                    <div class="content-type-count" id="press_releasesCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('campaign_materials')" data-type="campaign_materials">
+                    <div class="content-type-icon">📢</div>
+                    <div class="content-type-title">Campaign Materials</div>
+                    <div class="content-type-count" id="campaign_materialsCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('event_content')" data-type="event_content">
+                    <div class="content-type-icon">🎯</div>
+                    <div class="content-type-title">Event Content</div>
+                    <div class="content-type-count" id="event_contentCount">-</div>
+                </div>
+                <div class="content-type-card" onclick="selectContentType('voter_outreach')" data-type="voter_outreach">
+                    <div class="content-type-icon">🗳️</div>
+                    <div class="content-type-title">Voter Outreach</div>
+                    <div class="content-type-count" id="voter_outreachCount">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search content..." onkeyup="debounceFilter()">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select id="statusFilter" class="filter-select" onchange="filterContent()">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="review">Review</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Assignment</label>
+                    <select id="assignmentFilter" class="filter-select" onchange="filterContent()">
+                        <option value="">All Assignments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date Range</label>
+                    <select id="dateFilter" class="filter-select" onchange="filterContent()">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn-secondary" onclick="clearFilters()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments Needing Speeches -->
+        <div id="assignmentsSection" class="content-list" style="margin-bottom: 20px; display: none;">
+            <div style="padding: 20px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        📋 Assignments Needing Speeches
+                    </h3>
+                </div>
+                <div id="assignmentsList"></div>
+            </div>
+        </div>
+
+        <!-- Content List -->
+        <div class="content-list">
+            <div id="loadingState" class="loading">
+                Loading content...
+            </div>
+            <div id="contentTable" style="display: none;">
+                <table class="content-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortBy('title')">Title</th>
+                            <th onclick="sortBy('type')">Type</th>
+                            <th onclick="sortBy('status')">Status</th>
+                            <th onclick="sortBy('assignment_id')">Assignment</th>
+                            <th onclick="sortBy('updated_at')">Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contentBody">
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <div class="showing-text">
+                        Showing <span id="showingStart">0</span>-<span id="showingEnd">0</span> of <span id="totalCount">0</span> items
+                    </div>
+                    <div class="pagination-controls">
+                        <button id="prevBtn" class="action-btn" onclick="previousPage()">Previous</button>
+                        <button id="nextBtn" class="action-btn" onclick="nextPage()">Next</button>
+                    </div>
+                </div>
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <div>No content found</div>
+                <p style="margin-top: 8px; font-size: 14px;">Create your first piece of content to get started</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Content Modal -->
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Create New Content</div>
+                <button class="close-btn" onclick="hideCreateModal()">&times;</button>
+            </div>
+            <form id="createForm">
+                <div class="form-group">
+                    <label class="form-label">Content Type</label>
+                    <select id="createType" class="form-select" required onchange="updateCreateForm()">
+                        <option value="">Select content type</option>
+                        <option value="speeches">Speech</option>
+                        <option value="social_posts">Social Media Post</option>
+                        <option value="policy_documents">Policy Document</option>
+                        <option value="press_releases">Press Release</option>
+                        <option value="campaign_materials">Campaign Material</option>
+                        <option value="event_content">Event Content</option>
+                        <option value="voter_outreach">Voter Outreach</option>
+                    </select>
+                </div>
+                <div id="dynamicFields"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="hideCreateModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Content</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/thin-client.js"></script>
+    <script>
+        // Writers Dashboard Thin Client
+        class WritersDashboard {
+            constructor() {
+                this.currentContentType = 'all';
+                this.currentPage = 1;
+                this.itemsPerPage = 20;
+                this.sortField = 'updated_at';
+                this.sortOrder = 'desc';
+                this.content = [];
+                this.filteredContent = [];
+                this.assignments = [];
+                this.filterTimeout = null;
+            }
+
+            async init() {
+                try {
+                    await this.loadInitialData();
+                    this.renderContent();
+                    this.updateCounts();
+                    this.setupEventListeners();
+                    console.log('✅ Writers Dashboard initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize dashboard:', error);
+                    this.showToast('Failed to load dashboard', 'error');
+                }
+            }
+
+            async loadInitialData() {
+                document.getElementById('loadingState').style.display = 'block';
+
+                try {
+                    // Load assignments for filter dropdown
+                    const assignmentsResponse = await this.apiCall('GET', '/assignments');
+                    this.assignments = assignmentsResponse || [];
+                    this.populateAssignmentFilter();
+
+                    // Load all content types
+                    await this.loadAllContent();
+
+                    // Show assignments needing speeches
+                    this.renderAssignmentsNeedingSpeeches();
+                } finally {
+                    document.getElementById('loadingState').style.display = 'none';
+                }
+            }
+
+            async loadAllContent() {
+                const contentTypes = ['speeches', 'social_posts', 'policy_documents', 'press_releases', 'campaign_materials', 'event_content', 'voter_outreach'];
+
+                this.content = [];
+
+                // Load speeches separately (different API)
+                try {
+                    const speeches = await this.apiCall('GET', '/speeches');
+                    speeches.forEach(item => {
+                        this.content.push({
+                            ...item,
+                            type: 'speeches',
+                            title: item.title || 'Untitled Speech'
+                        });
+                    });
+                } catch (error) {
+                    console.warn('Failed to load speeches:', error);
+                }
+
+                // Load other political content types
+                for (const type of contentTypes.filter(t => t !== 'speeches')) {
+                    try {
+                        const items = await this.apiCall('GET', `/political-content/${type}`);
+                        items.forEach(item => {
+                            this.content.push({
+                                ...item,
+                                type: type,
+                                title: item.title || item.headline || item.campaign_name || item.event_name || 'Untitled'
+                            });
+                        });
+                    } catch (error) {
+                        console.warn(`Failed to load ${type}:`, error);
+                    }
+                }
+
+                // Sort by updated_at desc by default
+                this.content.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                this.filteredContent = [...this.content];
+            }
+
+            populateAssignmentFilter() {
+                const select = document.getElementById('assignmentFilter');
+                select.innerHTML = '<option value="">All Assignments</option>';
+
+                this.assignments.forEach(assignment => {
+                    const option = document.createElement('option');
+                    option.value = assignment.id;
+                    option.textContent = `${assignment.id}: ${assignment.title}`;
+                    select.appendChild(option);
+                });
+            }
+
+            updateCounts() {
+                const counts = {};
+                counts.all = this.content.length;
+
+                // Count by content type
+                const contentTypes = ['speeches', 'social_posts', 'policy_documents', 'press_releases', 'campaign_materials', 'event_content', 'voter_outreach'];
+                contentTypes.forEach(type => {
+                    counts[type] = this.content.filter(item => item.type === type).length;
+                });
+
+                // Update UI
+                Object.entries(counts).forEach(([type, count]) => {
+                    const element = document.getElementById(`${type}Count`);
+                    if (element) element.textContent = count;
+                });
+            }
+
+            selectContentType(type) {
+                this.currentContentType = type;
+                this.currentPage = 1;
+
+                // Update UI
+                document.querySelectorAll('.content-type-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                document.querySelector(`[data-type="${type}"]`).classList.add('active');
+
+                this.filterContent();
+            }
+
+            filterContent() {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const statusFilter = document.getElementById('statusFilter').value;
+                const assignmentFilter = document.getElementById('assignmentFilter').value;
+                const dateFilter = document.getElementById('dateFilter').value;
+
+                this.filteredContent = this.content.filter(item => {
+                    // Content type filter
+                    if (this.currentContentType !== 'all' && item.type !== this.currentContentType) {
+                        return false;
+                    }
+
+                    // Search filter
+                    if (searchTerm && !item.title.toLowerCase().includes(searchTerm) &&
+                        !(item.content && item.content.toLowerCase().includes(searchTerm))) {
+                        return false;
+                    }
+
+                    // Status filter
+                    if (statusFilter && item.status !== statusFilter) {
+                        return false;
+                    }
+
+                    // Assignment filter
+                    if (assignmentFilter && item.assignment_id !== assignmentFilter) {
+                        return false;
+                    }
+
+                    // Date filter
+                    if (dateFilter) {
+                        const itemDate = new Date(item.updated_at);
+                        const now = new Date();
+                        const diffDays = Math.floor((now - itemDate) / (1000 * 60 * 60 * 24));
+
+                        switch (dateFilter) {
+                            case 'today':
+                                if (diffDays !== 0) return false;
+                                break;
+                            case 'week':
+                                if (diffDays > 7) return false;
+                                break;
+                            case 'month':
+                                if (diffDays > 30) return false;
+                                break;
+                        }
+                    }
+
+                    return true;
+                });
+
+                this.renderContent();
+            }
+
+            renderContent() {
+                const tbody = document.getElementById('contentBody');
+                const contentTable = document.getElementById('contentTable');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.filteredContent.length === 0) {
+                    contentTable.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                contentTable.style.display = 'block';
+                emptyState.style.display = 'none';
+
+                // Pagination
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+                const pageContent = this.filteredContent.slice(start, end);
+
+                tbody.innerHTML = pageContent.map(item => `
+                    <tr>
+                        <td>
+                            <a href="${this.getEditUrl(item)}" class="content-title">
+                                ${item.title}
+                            </a>
+                            <div class="content-meta">
+                                ${item.assignment_id ? `Assignment: ${item.assignment_id}` : 'No assignment'}
+                            </div>
+                        </td>
+                        <td>${this.formatContentType(item.type)}</td>
+                        <td>
+                            <span class="status-badge status-${item.status || 'draft'}">
+                                ${this.formatStatus(item.status || 'draft')}
+                            </span>
+                        </td>
+                        <td>${item.assignment_id || '-'}</td>
+                        <td>${this.formatDate(item.updated_at)}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="${this.getEditUrl(item)}" class="action-btn primary">Edit</a>
+                                <button class="action-btn" onclick="dashboard.deleteContent('${item.type}', ${item.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+                this.updatePagination();
+            }
+
+            getEditUrl(item) {
+                if (item.type === 'speeches') {
+                    return `speech-editor-thin?id=${item.id}`;
+                }
+                return `content-editor.html?type=${item.type}&id=${item.id}`;
+            }
+
+            formatContentType(type) {
+                const types = {
+                    speeches: 'Speech',
+                    social_posts: 'Social Media',
+                    policy_documents: 'Policy Document',
+                    press_releases: 'Press Release',
+                    campaign_materials: 'Campaign Material',
+                    event_content: 'Event Content',
+                    voter_outreach: 'Voter Outreach'
+                };
+                return types[type] || type;
+            }
+
+            formatStatus(status) {
+                return status.charAt(0).toUpperCase() + status.slice(1);
+            }
+
+            formatDate(dateStr) {
+                const date = new Date(dateStr);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                if (diffDays < 7) return `${diffDays} days ago`;
+                return date.toLocaleDateString();
+            }
+
+            updatePagination() {
+                const start = Math.min((this.currentPage - 1) * this.itemsPerPage + 1, this.filteredContent.length);
+                const end = Math.min(this.currentPage * this.itemsPerPage, this.filteredContent.length);
+
+                document.getElementById('showingStart').textContent = start;
+                document.getElementById('showingEnd').textContent = end;
+                document.getElementById('totalCount').textContent = this.filteredContent.length;
+
+                document.getElementById('prevBtn').disabled = this.currentPage === 1;
+                document.getElementById('nextBtn').disabled = end >= this.filteredContent.length;
+            }
+
+            renderAssignmentsNeedingSpeeches() {
+                // Find assignments that likely need speeches
+                const speechAssignments = this.assignments.filter(assignment => {
+                    const title = assignment.title.toLowerCase();
+                    const description = (assignment.description || '').toLowerCase();
+                    const brief = (assignment.brief || '').toLowerCase();
+
+                    return title.includes('speech') ||
+                           description.includes('speech') ||
+                           brief.includes('speech') ||
+                           title.includes('remarks') ||
+                           description.includes('remarks') ||
+                           brief.includes('remarks');
+                });
+
+                const container = document.getElementById('assignmentsList');
+                const section = document.getElementById('assignmentsSection');
+
+                if (speechAssignments.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                section.style.display = 'block';
+                container.innerHTML = speechAssignments.map(assignment => `
+                    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; background: #f9fafb;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="color: #1e293b; margin-bottom: 4px;">${assignment.title}</h4>
+                                <p style="color: #64748b; font-size: 14px; margin-bottom: 8px;">${assignment.description || 'No description'}</p>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 12px;">
+                                        ${assignment.status}
+                                    </span>
+                                    ${assignment.due_date ? `<span style="color: #64748b; font-size: 12px;">Due: ${new Date(assignment.due_date).toLocaleDateString()}</span>` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <button onclick="dashboard.createSpeechForAssignment('${assignment.id}')"
+                                        style="background: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                    🎤 Create Speech
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async createSpeechForAssignment(assignmentId) {
+                try {
+                    const assignment = this.assignments.find(a => a.id === assignmentId);
+                    if (!assignment) {
+                        this.showToast('Assignment not found', 'error');
+                        return;
+                    }
+
+                    // Check if speech already exists for this assignment
+                    const existingSpeeches = await this.apiCall('GET', `/speeches?assignment_id=${assignmentId}`);
+                    if (existingSpeeches.length > 0) {
+                        // Navigate to existing speech
+                        window.location.href = `speech-editor-thin?id=${existingSpeeches[0].id}`;
+                        return;
+                    }
+
+                    // Create new speech for assignment
+                    const speechData = {
+                        title: assignment.title,
+                        content: `# ${assignment.title}\n\n[Start writing your speech here...]\n\n${assignment.brief ? `\n\n## Brief:\n${assignment.brief}` : ''}`,
+                        assignment_id: assignmentId,
+                        status: 'draft'
+                    };
+
+                    const newSpeech = await this.apiCall('POST', '/speeches', speechData);
+                    this.showToast('Speech created for assignment', 'success');
+
+                    // Navigate to speech editor
+                    window.location.href = `speech-editor-thin?id=${newSpeech.id}&assignment=${assignmentId}`;
+                } catch (error) {
+                    console.error('Failed to create speech for assignment:', error);
+                    this.showToast('Failed to create speech', 'error');
+                }
+            }
+
+            // API methods
+            async apiCall(method, endpoint, data = null) {
+                try {
+                    const config = {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    };
+
+                    if (data && (method === 'POST' || method === 'PUT')) {
+                        config.body = JSON.stringify(data);
+                    }
+
+                    let url;
+                    if (endpoint.startsWith('/speeches')) {
+                        url = `/api${endpoint}`;
+                    } else if (endpoint.startsWith('/political-content')) {
+                        url = `/api${endpoint}`;
+                    } else {
+                        url = `/api${endpoint}`;
+                    }
+
+                    const response = await fetch(url, config);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error(`API Error (${method} ${endpoint}):`, error);
+                    throw error;
+                }
+            }
+
+            async deleteContent(type, id) {
+                if (!confirm('Are you sure you want to delete this content?')) {
+                    return;
+                }
+
+                try {
+                    if (type === 'speeches') {
+                        await this.apiCall('DELETE', `/speeches/${id}`);
+                    } else {
+                        await this.apiCall('DELETE', `/political-content/${type}/${id}`);
+                    }
+
+                    this.showToast('Content deleted successfully', 'success');
+                    await this.refreshData();
+                } catch (error) {
+                    console.error('Delete failed:', error);
+                    this.showToast('Failed to delete content', 'error');
+                }
+            }
+
+            // Event handlers
+            setupEventListeners() {
+                document.getElementById('createForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createContent();
+                });
+            }
+
+            debounceFilter() {
+                clearTimeout(this.filterTimeout);
+                this.filterTimeout = setTimeout(() => {
+                    this.filterContent();
+                }, 300);
+            }
+
+            clearFilters() {
+                document.getElementById('searchInput').value = '';
+                document.getElementById('statusFilter').value = '';
+                document.getElementById('assignmentFilter').value = '';
+                document.getElementById('dateFilter').value = '';
+                this.filterContent();
+            }
+
+            async refreshData() {
+                try {
+                    document.getElementById('loadingState').style.display = 'block';
+                    await this.loadAllContent();
+                    this.updateCounts();
+                    this.filterContent();
+                    this.showToast('Data refreshed', 'success');
+                } finally {
+                    document.getElementById('loadingState').style.display = 'none';
+                }
+            }
+
+            previousPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderContent();
+                }
+            }
+
+            nextPage() {
+                const totalPages = Math.ceil(this.filteredContent.length / this.itemsPerPage);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderContent();
+                }
+            }
+
+            // Modal methods
+            showCreateModal() {
+                document.getElementById('createModal').classList.add('show');
+            }
+
+            hideCreateModal() {
+                document.getElementById('createModal').classList.remove('show');
+                document.getElementById('createForm').reset();
+                document.getElementById('dynamicFields').innerHTML = '';
+            }
+
+            updateCreateForm() {
+                const type = document.getElementById('createType').value;
+                const fieldsContainer = document.getElementById('dynamicFields');
+
+                if (!type) {
+                    fieldsContainer.innerHTML = '';
+                    return;
+                }
+
+                // Define required fields for each content type
+                const fieldConfigs = {
+                    speeches: [
+                        { name: 'title', label: 'Speech Title', type: 'text', required: true },
+                        { name: 'content', label: 'Speech Content', type: 'textarea', required: true }
+                    ],
+                    social_posts: [
+                        { name: 'platform', label: 'Platform', type: 'select', options: ['Twitter', 'Facebook', 'Instagram', 'LinkedIn'], required: true },
+                        { name: 'content', label: 'Post Content', type: 'textarea', required: true }
+                    ],
+                    policy_documents: [
+                        { name: 'title', label: 'Document Title', type: 'text', required: true },
+                        { name: 'type', label: 'Policy Type', type: 'text', required: true },
+                        { name: 'content', label: 'Document Content', type: 'textarea', required: true }
+                    ],
+                    press_releases: [
+                        { name: 'headline', label: 'Headline', type: 'text', required: true },
+                        { name: 'content', label: 'Press Release Content', type: 'textarea', required: true }
+                    ],
+                    campaign_materials: [
+                        { name: 'title', label: 'Material Title', type: 'text', required: true },
+                        { name: 'type', label: 'Material Type', type: 'select', options: ['Flyer', 'Brochure', 'Poster', 'Banner', 'Digital', 'Video'], required: true }
+                    ],
+                    event_content: [
+                        { name: 'event_name', label: 'Event Name', type: 'text', required: true },
+                        { name: 'event_type', label: 'Event Type', type: 'text', required: true },
+                        { name: 'date', label: 'Event Date', type: 'datetime-local', required: true }
+                    ],
+                    voter_outreach: [
+                        { name: 'campaign_name', label: 'Campaign Name', type: 'text', required: true },
+                        { name: 'message', label: 'Outreach Message', type: 'textarea', required: true }
+                    ]
+                };
+
+                const fields = fieldConfigs[type] || [];
+                fieldsContainer.innerHTML = fields.map(field => {
+                    if (field.type === 'select') {
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">${field.label}</label>
+                                <select name="${field.name}" class="form-select" ${field.required ? 'required' : ''}>
+                                    <option value="">Select ${field.label}</option>
+                                    ${field.options.map(option => `<option value="${option}">${option}</option>`).join('')}
+                                </select>
+                            </div>
+                        `;
+                    } else if (field.type === 'textarea') {
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">${field.label}</label>
+                                <textarea name="${field.name}" class="form-textarea" ${field.required ? 'required' : ''}></textarea>
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="form-group">
+                                <label class="form-label">${field.label}</label>
+                                <input type="${field.type}" name="${field.name}" class="form-input" ${field.required ? 'required' : ''}>
+                            </div>
+                        `;
+                    }
+                }).join('');
+            }
+
+            async createContent() {
+                const formData = new FormData(document.getElementById('createForm'));
+                const type = formData.get('createType');
+
+                if (!type) {
+                    this.showToast('Please select a content type', 'error');
+                    return;
+                }
+
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    if (key !== 'createType') {
+                        data[key] = value;
+                    }
+                }
+
+                try {
+                    let result;
+                    if (type === 'speeches') {
+                        result = await this.apiCall('POST', '/speeches', data);
+                    } else {
+                        result = await this.apiCall('POST', `/political-content/${type}`, data);
+                    }
+
+                    this.hideCreateModal();
+                    this.showToast('Content created successfully', 'success');
+                    await this.refreshData();
+
+                    // Navigate to edit page
+                    if (type === 'speeches') {
+                        window.location.href = `speech-editor-thin?id=${result.id}`;
+                    } else {
+                        window.location.href = `content-editor.html?type=${type}&id=${result.id}`;
+                    }
+                } catch (error) {
+                    console.error('Create failed:', error);
+                    this.showToast('Failed to create content', 'error');
+                }
+            }
+
+            // Utility methods
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        // Global functions for inline handlers
+        let dashboard;
+
+        function selectContentType(type) {
+            dashboard.selectContentType(type);
+        }
+
+        function filterContent() {
+            dashboard.filterContent();
+        }
+
+        function clearFilters() {
+            dashboard.clearFilters();
+        }
+
+        function refreshData() {
+            dashboard.refreshData();
+        }
+
+        function previousPage() {
+            dashboard.previousPage();
+        }
+
+        function nextPage() {
+            dashboard.nextPage();
+        }
+
+        function showCreateModal() {
+            dashboard.showCreateModal();
+        }
+
+        function hideCreateModal() {
+            dashboard.hideCreateModal();
+        }
+
+        function updateCreateForm() {
+            dashboard.updateCreateForm();
+        }
+
+        function sortBy(field) {
+            // TODO: Implement sorting
+            console.log('Sort by:', field);
+        }
+
+        function debounceFilter() {
+            dashboard.debounceFilter();
+        }
+
+        // Initialize dashboard when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new WritersDashboard();
+            dashboard.init();
+        });
+    </script>
+</body>
+</html>

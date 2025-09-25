@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Writer's Dashboard - Campaign AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .action-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .speeches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .speech-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .speech-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+
+        .speech-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .speech-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .speech-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .speech-date {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .speech-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-ready {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .speech-preview {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .speech-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+
+        .speech-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1f2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .action-bar {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .search-box {
+                max-width: none;
+            }
+
+            .speeches-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📝 Writer's Dashboard</h1>
+            <div class="header-stats">
+                <div class="stat">
+                    <span>📄 Total Speeches:</span>
+                    <span id="total-count">0</span>
+                </div>
+                <div class="stat">
+                    <span>⏱️ Total Writing Time:</span>
+                    <span id="total-time">0h 0m</span>
+                </div>
+                <div class="stat">
+                    <span>📝 Words Written:</span>
+                    <span id="total-words">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="action-bar">
+            <div class="search-box">
+                <div class="search-icon">🔍</div>
+                <input type="text" id="search-input" placeholder="Search speeches by title or content...">
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="showImportDialog()">📥 Import</button>
+                <button class="btn btn-primary" onclick="createNewSpeech()">✨ New Speech</button>
+            </div>
+        </div>
+
+        <div class="speeches-grid" id="speeches-grid">
+            <!-- Speech cards will be populated here -->
+        </div>
+
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <h2>🎤 Ready to Write Your First Speech?</h2>
+            <p>Create compelling speeches with AI-powered tools for structure, pacing, and delivery.</p>
+            <button class="btn btn-primary" onclick="createNewSpeech()">✨ Create Your First Speech</button>
+        </div>
+    </div>
+
+    <!-- Save Speech Modal -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💾 Save Current Speech</h3>
+                <button class="modal-close" onclick="closeSaveModal()">&times;</button>
+            </div>
+            <form onsubmit="saveSpeech(event)">
+                <div class="form-group">
+                    <label class="form-label">Speech Title</label>
+                    <input type="text" id="speech-title" class="form-input" placeholder="e.g., Healthcare Initiative Announcement" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Event/Occasion</label>
+                    <input type="text" id="speech-event" class="form-input" placeholder="e.g., Town Hall Meeting">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Audience</label>
+                    <input type="text" id="speech-audience" class="form-input" placeholder="e.g., Community Members">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea id="speech-notes" class="form-textarea" placeholder="Any additional notes about this speech..."></textarea>
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">💾 Save Speech</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Dialog Modal -->
+    <div class="modal" id="import-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📥 Import Speech Content</h3>
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
+            </div>
+
+            <div class="import-options" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="setImportMode('url')" id="url-tab">🌐 From URL / Google Drive</button>
+                <button type="button" class="btn btn-secondary" onclick="setImportMode('paste')" id="paste-tab">📋 Paste Text</button>
+                <button type="button" class="btn btn-secondary" onclick="setImportMode('file')" id="file-tab">📄 Upload File</button>
+            </div>
+
+            <!-- URL Import -->
+            <div id="url-import" class="import-section" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">URL or Google Drive Link</label>
+                    <input type="url" id="import-url" class="form-input" placeholder="https://docs.google.com/document/d/... or any webpage URL">
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">
+                        ✅ Google Docs (publicly shared)<br>
+                        ✅ Google Drive files (publicly shared)<br>
+                        ✅ Any webpage with text content<br>
+                        💡 For private Google Docs, make them "Anyone with link can view"
+                    </small>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="importFromUrl()">🔗 Import Content</button>
+            </div>
+
+            <!-- Paste Import -->
+            <div id="paste-import" class="import-section" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Paste Your Speech Content</label>
+                    <textarea id="import-paste" class="form-textarea" style="height: 200px;"
+                        placeholder="Paste speech text, transcript, or notes here...
+
+The system will automatically:
+• Clean up formatting
+• Identify speech structure
+• Extract key themes and messages
+• Optimize for teleprompter reading"></textarea>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="importFromPaste()">📝 Import Text</button>
+            </div>
+
+            <!-- File Import -->
+            <div id="file-import" class="import-section" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Select File to Upload</label>
+                    <input type="file" id="import-file" accept=".txt,.doc,.docx,.md,.html" style="width: 100%; padding: 10px; border: 2px dashed #e5e7eb; border-radius: 6px;">
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">Supported: TXT, DOC, DOCX, Markdown, HTML</small>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="importFromFile()">📤 Upload & Import</button>
+            </div>
+
+            <div class="import-preview" id="import-preview" style="display: none; margin-top: 20px;">
+                <h4>Preview:</h4>
+                <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; max-height: 150px; overflow-y: auto;">
+                    <div id="preview-content"></div>
+                </div>
+                <div style="margin-top: 12px;">
+                    <input type="text" id="imported-title" class="form-input" placeholder="Enter title for imported speech">
+                    <div style="margin-top: 8px;">
+                        <button class="btn btn-primary" onclick="confirmImport()">✨ Create Speech</button>
+                        <button class="btn btn-secondary" onclick="resetImportPreview()">↶ Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let speeches = [];
+        let currentSpeechId = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSpeeches();
+            updateStats();
+
+            // Setup search
+            document.getElementById('search-input').addEventListener('input', filterSpeeches);
+
+            // Check if we have a current speech to save
+            const currentSpeech = localStorage.getItem('speechDraft');
+            if (currentSpeech && currentSpeech.trim()) {
+                // Show option to save current work
+                showSaveCurrentWork();
+            }
+        });
+
+        function loadSpeeches() {
+            const saved = localStorage.getItem('speechLibrary');
+            if (saved) {
+                speeches = JSON.parse(saved);
+            }
+            renderSpeeches();
+        }
+
+        function saveSpeeches() {
+            localStorage.setItem('speechLibrary', JSON.stringify(speeches));
+        }
+
+        function renderSpeeches() {
+            const grid = document.getElementById('speeches-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            if (speeches.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            grid.innerHTML = speeches.map(speech => `
+                <div class="speech-card" data-id="${speech.id}">
+                    <div class="speech-meta">
+                        <div>
+                            <h3 class="speech-title">${escapeHtml(speech.title)}</h3>
+                            <div class="speech-date">${new Date(speech.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <div class="speech-status status-${speech.status || 'draft'}">${speech.status || 'draft'}</div>
+                    </div>
+                    <div class="speech-preview">${escapeHtml(speech.preview || 'No preview available')}</div>
+                    <div class="speech-stats">
+                        <span>📝 ${speech.wordCount || 0} words</span>
+                        <span>⏱️ ${Math.ceil((speech.wordCount || 0) / 150)} min</span>
+                        <span>🎭 ${speech.event || 'General'}</span>
+                    </div>
+                    <div class="speech-actions">
+                        <button class="btn btn-primary btn-sm" onclick="openSpeech('${speech.id}')">✏️ Edit</button>
+                        <button class="btn btn-secondary btn-sm" onclick="duplicateSpeech('${speech.id}')">📋 Copy</button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteSpeech('${speech.id}')">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalSpeeches = speeches.length;
+            const totalWords = speeches.reduce((sum, speech) => sum + (speech.wordCount || 0), 0);
+            const totalMinutes = Math.ceil(totalWords / 150);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+
+            document.getElementById('total-count').textContent = totalSpeeches;
+            document.getElementById('total-words').textContent = totalWords.toLocaleString();
+            document.getElementById('total-time').textContent = `${hours}h ${minutes}m`;
+        }
+
+        function filterSpeeches() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.speech-card');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.speech-title').textContent.toLowerCase();
+                const preview = card.querySelector('.speech-preview').textContent.toLowerCase();
+                const visible = title.includes(query) || preview.includes(query);
+                card.style.display = visible ? 'block' : 'none';
+            });
+        }
+
+        function createNewSpeech() {
+            const currentSpeech = localStorage.getItem('speechDraft');
+
+            if (currentSpeech && currentSpeech.trim()) {
+                if (confirm('You have unsaved work in the speech editor. Would you like to save it first?')) {
+                    showSaveModal(true); // true = then create new after saving
+                    return;
+                }
+            }
+
+            // Clear current work and open editor
+            localStorage.removeItem('speechDraft');
+            window.open('speech-editor.html', '_blank');
+        }
+
+        function showSaveCurrentWork() {
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                padding: 12px 20px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 999;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            banner.innerHTML = `
+                💡 You have unsaved work in progress.
+                <button onclick="showSaveModal()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 4px 12px; border-radius: 4px; margin: 0 8px; cursor: pointer;">Save It</button>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; font-size: 18px;">×</button>
+            `;
+            document.body.appendChild(banner);
+        }
+
+        function showSaveModal(createNewAfter = false) {
+            document.getElementById('save-modal').classList.add('show');
+
+            // Pre-fill with auto-generated title if possible
+            const currentSpeech = localStorage.getItem('speechDraft');
+            if (currentSpeech) {
+                const lines = currentSpeech.split('\n');
+                const firstLine = lines.find(line => line.trim().length > 10);
+                if (firstLine) {
+                    const title = firstLine.trim().substring(0, 50) + (firstLine.length > 50 ? '...' : '');
+                    document.getElementById('speech-title').value = title;
+                }
+            }
+
+            window.createNewAfterSave = createNewAfter;
+        }
+
+        function closeSaveModal() {
+            document.getElementById('save-modal').classList.remove('show');
+        }
+
+        function saveSpeech(event) {
+            event.preventDefault();
+
+            const currentSpeech = localStorage.getItem('speechDraft');
+            if (!currentSpeech || !currentSpeech.trim()) {
+                showToast('No speech content to save', 'error');
+                return;
+            }
+
+            const speech = {
+                id: Date.now().toString(),
+                title: document.getElementById('speech-title').value,
+                event: document.getElementById('speech-event').value,
+                audience: document.getElementById('speech-audience').value,
+                notes: document.getElementById('speech-notes').value,
+                content: currentSpeech,
+                preview: currentSpeech.substring(0, 150),
+                wordCount: currentSpeech.split(/\s+/).filter(word => word.length > 0).length,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                status: 'draft'
+            };
+
+            speeches.unshift(speech);
+            saveSpeeches();
+            renderSpeeches();
+            updateStats();
+            closeSaveModal();
+
+            // Remove unsaved work banner if present
+            const banner = document.querySelector('div[style*="position: fixed"][style*="top: 0"]');
+            if (banner) banner.remove();
+
+            showToast('Speech saved successfully!', 'success');
+
+            // Clear form
+            document.getElementById('speech-title').value = '';
+            document.getElementById('speech-event').value = '';
+            document.getElementById('speech-audience').value = '';
+            document.getElementById('speech-notes').value = '';
+
+            if (window.createNewAfterSave) {
+                localStorage.removeItem('speechDraft');
+                setTimeout(() => {
+                    window.open('speech-editor.html', '_blank');
+                }, 1000);
+            }
+        }
+
+        function openSpeech(id) {
+            const speech = speeches.find(s => s.id === id);
+            if (!speech) return;
+
+            // Save speech content to localStorage for the editor
+            localStorage.setItem('speechDraft', speech.content);
+            localStorage.setItem('currentSpeechId', id);
+
+            // Open editor
+            window.open('speech-editor.html', '_blank');
+        }
+
+        function duplicateSpeech(id) {
+            const speech = speeches.find(s => s.id === id);
+            if (!speech) return;
+
+            const duplicate = {
+                ...speech,
+                id: Date.now().toString(),
+                title: speech.title + ' (Copy)',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            speeches.unshift(duplicate);
+            saveSpeeches();
+            renderSpeeches();
+            updateStats();
+
+            showToast('Speech duplicated successfully!', 'success');
+        }
+
+        function deleteSpeech(id) {
+            const speech = speeches.find(s => s.id === id);
+            if (!speech) return;
+
+            if (!confirm(`Are you sure you want to delete "${speech.title}"? This cannot be undone.`)) {
+                return;
+            }
+
+            speeches = speeches.filter(s => s.id !== id);
+            saveSpeeches();
+            renderSpeeches();
+            updateStats();
+
+            showToast('Speech deleted', 'info');
+        }
+
+        let importedContent = '';
+
+        function showImportDialog() {
+            document.getElementById('import-modal').classList.add('show');
+            setImportMode('paste'); // Default to paste mode
+        }
+
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.remove('show');
+            resetImportPreview();
+        }
+
+        function setImportMode(mode) {
+            // Hide all sections
+            document.querySelectorAll('.import-section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Remove active states
+            document.querySelectorAll('#import-modal .btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+
+            // Show selected section and activate button
+            document.getElementById(`${mode}-import`).style.display = 'block';
+            const button = document.getElementById(`${mode}-tab`);
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-primary');
+
+            resetImportPreview();
+        }
+
+        function resetImportPreview() {
+            document.getElementById('import-preview').style.display = 'none';
+            document.getElementById('preview-content').innerHTML = '';
+            document.getElementById('imported-title').value = '';
+            importedContent = '';
+        }
+
+        function showImportPreview(content, suggestedTitle = '') {
+            importedContent = content;
+
+            // Parse the structured content
+            const structure = parseStructuredSpeech(content);
+
+            // Create a structured preview
+            let previewHTML = '';
+
+            if (structure.description) {
+                previewHTML += `<div style="margin-bottom: 12px;"><strong>Description:</strong><br>${structure.description}</div>`;
+            }
+
+            if (structure.dateline) {
+                previewHTML += `<div style="margin-bottom: 12px; color: #6b7280;"><strong>Dateline:</strong><br>${structure.dateline}</div>`;
+            }
+
+            if (structure.speaker) {
+                previewHTML += `<div style="margin-bottom: 12px; color: #374151;"><strong>Speaker:</strong><br>${structure.speaker}</div>`;
+            }
+
+            if (structure.speechContent) {
+                const speechPreview = structure.speechContent.length > 200 ?
+                    structure.speechContent.substring(0, 200) + '...' :
+                    structure.speechContent;
+                previewHTML += `<div style="margin-bottom: 12px;"><strong>Speech Content:</strong><br>${speechPreview.replace(/\n/g, '<br>')}</div>`;
+            }
+
+            if (structure.source) {
+                previewHTML += `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;"><strong>Source:</strong><br>${structure.source}</div>`;
+            }
+
+            // If no structured content found, show regular preview
+            if (!structure.description && !structure.dateline && !structure.speaker && !structure.speechContent) {
+                const cleanContent = cleanTextContent(content);
+                const preview = cleanContent.length > 300 ? cleanContent.substring(0, 300) + '...' : cleanContent;
+                previewHTML = preview.replace(/\n/g, '<br>');
+            }
+
+            document.getElementById('preview-content').innerHTML = previewHTML;
+
+            // Use structured title or fallback
+            const titleToUse = suggestedTitle ||
+                              structure.description ||
+                              generateTitleFromContent(structure.speechContent || content);
+
+            document.getElementById('imported-title').value = titleToUse;
+            document.getElementById('import-preview').style.display = 'block';
+        }
+
+        async function importFromUrl() {
+            const url = document.getElementById('import-url').value.trim();
+            if (!url) {
+                showToast('Please enter a URL', 'error');
+                return;
+            }
+
+            // Check if it's a Google Drive URL and handle specially
+            if (url.includes('drive.google.com') || url.includes('docs.google.com')) {
+                await importFromGoogleDrive(url);
+                return;
+            }
+
+            showToast('Fetching content from URL...', 'info');
+
+            try {
+                // Try multiple approaches for URL import
+                let content = '';
+                let title = '';
+
+                // Approach 1: Try direct fetch (works for same-origin or CORS-enabled sites)
+                try {
+                    const response = await fetch(url);
+                    const html = await response.text();
+
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    tempDiv.querySelectorAll('script, style, nav, footer, aside, .sidebar, .menu, .navigation').forEach(el => el.remove());
+
+                    content = tempDiv.textContent || tempDiv.innerText || '';
+                    content = content.replace(/\s+/g, ' ').trim();
+
+                    title = tempDiv.querySelector('title')?.textContent ||
+                           tempDiv.querySelector('h1')?.textContent ||
+                           'Imported from URL';
+
+                    if (content.length > 50) {
+                        showImportPreview(content, title);
+                        showToast('Content extracted successfully!', 'success');
+                        return;
+                    }
+                } catch (corsError) {
+                    // CORS error, try alternative approaches
+                }
+
+                // Approach 2: Use a CORS proxy service
+                try {
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl);
+                    const data = await response.json();
+
+                    if (data.contents) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.contents;
+                        tempDiv.querySelectorAll('script, style, nav, footer, aside, .sidebar, .menu, .navigation').forEach(el => el.remove());
+
+                        content = tempDiv.textContent || tempDiv.innerText || '';
+                        content = content.replace(/\s+/g, ' ').trim();
+
+                        title = tempDiv.querySelector('title')?.textContent ||
+                               tempDiv.querySelector('h1')?.textContent ||
+                               'Imported from URL';
+
+                        if (content.length > 50) {
+                            showImportPreview(content, title);
+                            showToast('Content extracted via proxy!', 'success');
+                            return;
+                        }
+                    }
+                } catch (proxyError) {
+                    console.log('Proxy approach failed:', proxyError);
+                }
+
+                // If all approaches fail, show helpful message
+                showToast('Could not fetch URL content due to CORS restrictions. Try copying the text directly or using Google Drive sharing.', 'error');
+
+            } catch (error) {
+                showToast('Error fetching URL content. Please try paste method instead.', 'error');
+                console.error('URL import error:', error);
+            }
+        }
+
+        async function importFromGoogleDrive(url) {
+            showToast('Importing from Google Drive...', 'info');
+
+            try {
+                // Convert Google Drive URLs to direct download links
+                let directUrl = url;
+
+                // Google Docs URL pattern
+                if (url.includes('docs.google.com/document')) {
+                    const docId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+                    if (docId) {
+                        // Export as plain text
+                        directUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+                    }
+                }
+                // Google Drive file sharing URL pattern
+                else if (url.includes('drive.google.com/file/d/')) {
+                    const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+                    if (fileId) {
+                        directUrl = `https://drive.google.com/uc?id=${fileId}&export=download`;
+                    }
+                }
+                // Google Drive open URL pattern
+                else if (url.includes('drive.google.com/open?id=')) {
+                    const fileId = url.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                    if (fileId) {
+                        directUrl = `https://drive.google.com/uc?id=${fileId}&export=download`;
+                    }
+                }
+
+                // Try to fetch the content
+                const response = await fetch(directUrl);
+                const content = await response.text();
+
+                if (content && content.length > 10 && !content.includes('<!DOCTYPE html')) {
+                    // Successfully got text content
+                    const cleanContent = cleanTextContent(content);
+                    const title = generateTitleFromContent(cleanContent) || 'Google Drive Document';
+
+                    showImportPreview(cleanContent, title);
+                    showToast('Google Drive content imported successfully!', 'success');
+                } else {
+                    // Probably requires authentication or isn't publicly accessible
+                    showToast('Google Drive document is not publicly accessible. Please:\n1. Make the document public, or\n2. Copy and paste the text directly', 'error');
+                }
+
+            } catch (error) {
+                console.error('Google Drive import error:', error);
+                showToast('Could not access Google Drive document. Please ensure it\'s publicly shareable or copy the text directly.', 'error');
+            }
+        }
+
+        function importFromPaste() {
+            const content = document.getElementById('import-paste').value.trim();
+            if (!content) {
+                showToast('Please paste some content first', 'error');
+                return;
+            }
+
+            showImportPreview(content);
+            showToast('Content ready for import!', 'success');
+        }
+
+        function importFromFile() {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('Please select a file first', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const title = file.name.replace(/\.[^/.]+$/, "");
+
+                showImportPreview(content, title);
+                showToast('File content loaded successfully!', 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        function confirmImport() {
+            const title = document.getElementById('imported-title').value.trim();
+            if (!title) {
+                showToast('Please enter a title for the speech', 'error');
+                return;
+            }
+
+            if (!importedContent) {
+                showToast('No content to import', 'error');
+                return;
+            }
+
+            // Parse structured content
+            const structure = parseStructuredSpeech(importedContent);
+
+            // Create new speech with structured content
+            const speech = {
+                id: Date.now().toString(),
+                title: title,
+                content: structure.speechContent || importedContent,
+                rawContent: importedContent,
+                description: structure.description || '',
+                dateline: structure.dateline || '',
+                speaker: structure.speaker || '',
+                source: structure.source || '',
+                preview: (structure.speechContent || importedContent).substring(0, 150) + ((structure.speechContent || importedContent).length > 150 ? '...' : ''),
+                wordCount: (structure.speechContent || importedContent).split(/\s+/).filter(word => word.length > 0).length,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                status: 'draft'
+            };
+
+            speeches.unshift(speech);
+            saveSpeeches();
+            renderSpeeches();
+            updateStats();
+
+            // Open in editor
+            localStorage.setItem('speechDraft', importedContent);
+            localStorage.setItem('currentSpeechId', speech.id);
+
+            closeImportModal();
+            showToast('Speech imported and opened in editor!', 'success');
+
+            setTimeout(() => {
+                window.open('speech-editor.html', '_blank');
+            }, 500);
+        }
+
+        function cleanTextContent(text) {
+            return text
+                .replace(/\r\n/g, '\n')           // Normalize line endings
+                .replace(/\n{3,}/g, '\n\n')       // Reduce multiple line breaks
+                .replace(/\t+/g, ' ')             // Replace tabs with spaces
+                .replace(/ {2,}/g, ' ')           // Reduce multiple spaces
+                .trim();
+        }
+
+        function parseStructuredSpeech(content) {
+            const lines = content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+            const structure = {
+                description: '',
+                dateline: '',
+                speaker: '',
+                speechContent: '',
+                source: '',
+                rawContent: content
+            };
+
+            let currentSection = 'description';
+            let speechStarted = false;
+            let sourceStarted = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const nextLine = i < lines.length - 1 ? lines[i + 1] : '';
+
+                // Detect source section (usually at the end)
+                if (line.toLowerCase().includes('source:') ||
+                    line.toLowerCase().startsWith('source -') ||
+                    line.toLowerCase().startsWith('via ') ||
+                    line.toLowerCase().includes('transcript from') ||
+                    (i > lines.length * 0.8 && (line.includes('http') || line.includes('www.')))) {
+                    sourceStarted = true;
+                    structure.source = line.replace(/^source:?\s*/i, '').trim();
+                    continue;
+                }
+
+                if (sourceStarted) {
+                    structure.source += ' ' + line;
+                    continue;
+                }
+
+                // Detect dateline patterns (location, date info)
+                if (!speechStarted && (
+                    /^[A-Z\s]+,\s*[A-Z]{2,}\s*[-–—]\s*/.test(line) || // "NEW YORK, NY - Sept 23"
+                    /^\w+\s+\d{1,2},?\s+\d{4}/.test(line) ||          // "September 23, 2024"
+                    /^\d{1,2}\/\d{1,2}\/\d{4}/.test(line) ||          // "9/23/2024"
+                    line.includes('Press Conference') ||
+                    line.includes('Town Hall') ||
+                    line.includes('Rally')
+                )) {
+                    if (structure.dateline) {
+                        structure.dateline += ' ' + line;
+                    } else {
+                        structure.dateline = line;
+                        currentSection = 'dateline';
+                    }
+                    continue;
+                }
+
+                // Detect speaker identification
+                if (!speechStarted && currentSection !== 'speech' && (
+                    line.includes('SPEAKER:') ||
+                    line.includes('Speaker:') ||
+                    /^[A-Z\s]{5,}:?\s*$/.test(line) ||                // "JOHN DOE:"
+                    (line.length < 100 && line.includes('said')) ||    // "John Doe said:"
+                    line.toLowerCase().includes('remarks by')
+                )) {
+                    structure.speaker = line.replace(/^(SPEAKER|Speaker|Remarks by):?\s*/i, '').replace(/:+$/, '').trim();
+                    currentSection = 'speaker';
+                    continue;
+                }
+
+                // Check if speech content is starting
+                if (!speechStarted) {
+                    // Look for typical speech openings
+                    if (line.toLowerCase().includes('thank you') ||
+                        line.toLowerCase().includes('good morning') ||
+                        line.toLowerCase().includes('good evening') ||
+                        line.toLowerCase().includes('my fellow') ||
+                        line.toLowerCase().includes('dear friends') ||
+                        line.toLowerCase().includes('ladies and gentlemen') ||
+                        (line.length > 50 && line.includes(' I ')) ||
+                        (currentSection === 'speaker' && line.length > 20)) {
+                        speechStarted = true;
+                        currentSection = 'speech';
+                    }
+                }
+
+                // Assign content to appropriate section
+                if (speechStarted) {
+                    if (structure.speechContent) {
+                        structure.speechContent += '\n\n' + line;
+                    } else {
+                        structure.speechContent = line;
+                    }
+                } else if (currentSection === 'description' && !structure.dateline && !structure.speaker) {
+                    if (structure.description) {
+                        structure.description += ' ' + line;
+                    } else {
+                        structure.description = line;
+                    }
+                } else if (currentSection === 'dateline') {
+                    structure.dateline += ' ' + line;
+                } else if (currentSection === 'speaker') {
+                    structure.speaker += ' ' + line;
+                }
+            }
+
+            // Clean up extracted content
+            structure.description = structure.description.trim();
+            structure.dateline = structure.dateline.trim();
+            structure.speaker = structure.speaker.trim();
+            structure.speechContent = structure.speechContent.trim();
+            structure.source = structure.source.trim();
+
+            return structure;
+        }
+
+        function generateTitleFromContent(content) {
+            const lines = content.split('\n');
+            const firstLine = lines.find(line => line.trim().length > 10);
+
+            if (firstLine) {
+                let title = firstLine.trim();
+                // Remove common prefixes
+                title = title.replace(/^(my fellow|dear|hello|good morning|good evening|ladies and gentlemen)/i, '').trim();
+                // Limit length
+                if (title.length > 50) {
+                    title = title.substring(0, 47) + '...';
+                }
+                return title || 'Imported Speech';
+            }
+
+            return 'Imported Speech';
+        }
+
+        function importSpeech() {
+            showImportDialog();
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+
+            if (type === 'success') {
+                toast.style.background = '#10b981';
+            } else if (type === 'error') {
+                toast.style.background = '#ef4444';
+            }
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Make functions globally accessible
+        window.createNewSpeech = createNewSpeech;
+        window.showSaveModal = showSaveModal;
+        window.closeSaveModal = closeSaveModal;
+        window.saveSpeech = saveSpeech;
+        window.openSpeech = openSpeech;
+        window.duplicateSpeech = duplicateSpeech;
+        window.deleteSpeech = deleteSpeech;
+        window.importSpeech = importSpeech;
+        window.showImportDialog = showImportDialog;
+        window.closeImportModal = closeImportModal;
+        window.setImportMode = setImportMode;
+        window.importFromUrl = importFromUrl;
+        window.importFromPaste = importFromPaste;
+        window.importFromFile = importFromFile;
+        window.confirmImport = confirmImport;
+        window.resetImportPreview = resetImportPreview;
+    </script>
+</body>
+</html>

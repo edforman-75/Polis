@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Editor - Thin Client</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .editor-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .speech-title-input {
+            font-size: 20px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: #1e293b;
+            width: 400px;
+        }
+
+        .speech-title-input:focus {
+            outline: none;
+            background: #f8fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-saved { background: #d1fae5; color: #059669; }
+        .status-saving { background: #fef3c7; color: #d97706; }
+        .status-error { background: #fee2e2; color: #dc2626; }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding-right: 12px;
+            margin-right: 12px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .toolbar-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toolbar-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .toolbar-btn:hover:not(.active) {
+            background: #f9fafb;
+        }
+
+        .editor-main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .speech-input {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 24px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .speech-input:focus {
+            outline: none;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e5e7eb;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .sidebar-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #64748b;
+        }
+
+        .stat-value {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .view-content {
+            padding: 24px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .view-content.teleprompter {
+            background: #000;
+            color: #fff;
+            font-size: 32px;
+            line-height: 1.4;
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .teleprompter-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .teleprompter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .teleprompter-btn:hover {
+            background: #2563eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+        .toast.info { background: #3b82f6; }
+
+        .publication-field {
+            margin-bottom: 12px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .field-input, .field-textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .field-input:focus, .field-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .field-textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Header -->
+        <div class="editor-header">
+            <div class="header-top">
+                <input type="text" id="speechTitle" class="speech-title-input" placeholder="Enter speech title...">
+                <div class="header-actions">
+                    <div class="toolbar-group">
+                        <button id="undoBtn" class="btn btn-secondary" onclick="performUndo()" disabled title="Undo (Ctrl+Z)">↶ Undo</button>
+                        <button id="redoBtn" class="btn btn-secondary" onclick="performRedo()" disabled title="Redo (Ctrl+Y)">↷ Redo</button>
+                    </div>
+                    <span id="statusIndicator" class="status-indicator status-saved">Saved</span>
+                    <button class="btn btn-secondary" onclick="window.location.href='/writers'">← Back to Dashboard</button>
+                    <button class="btn btn-primary" onclick="saveSpeech()">💾 Save</button>
+                    <button class="btn btn-secondary" onclick="exportSpeech()">📁 Export</button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn active" onclick="switchView('edit')" data-view="edit">✏️ Edit</button>
+                    <button class="toolbar-btn" onclick="switchView('preview')" data-view="preview">👁️ Preview</button>
+                    <button class="toolbar-btn" onclick="switchView('teleprompter')" data-view="teleprompter">📺 Teleprompter</button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="showAnalysis()">📊 Analysis</button>
+                    <button class="toolbar-btn" onclick="showVersions()">📜 Versions</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="editor-main">
+            <div class="editor-content">
+                <!-- Edit View -->
+                <div id="editView" class="view-content">
+                    <textarea id="speechContent" class="speech-input" placeholder="Start writing your speech here..."></textarea>
+                </div>
+
+                <!-- Preview View -->
+                <div id="previewView" class="view-content" style="display: none;">
+                    <div id="previewContent">
+                        <div class="loading">Loading preview...</div>
+                    </div>
+                </div>
+
+                <!-- Teleprompter View -->
+                <div id="teleprompterView" class="view-content teleprompter" style="display: none;">
+                    <div id="teleprompterContent">
+                        <div class="loading" style="color: white;">Loading teleprompter...</div>
+                    </div>
+                    <div class="teleprompter-controls" id="teleprompterControls" style="display: none;">
+                        <button class="teleprompter-btn" onclick="toggleTeleprompterPlay()">▶ Start</button>
+                        <button class="teleprompter-btn" onclick="adjustSpeed(-1)">🐌 Slower</button>
+                        <button class="teleprompter-btn" onclick="adjustSpeed(1)">🐰 Faster</button>
+                        <button class="teleprompter-btn" onclick="toggleTTS()">🔊 Listen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">📊 Speech Statistics</div>
+                    <div class="stat-item">
+                        <span class="stat-label">Word Count</span>
+                        <span class="stat-value" id="wordCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Estimated Duration</span>
+                        <span class="stat-value" id="duration">0 min</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Reading Level</span>
+                        <span class="stat-value" id="readingLevel">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Primary Tone</span>
+                        <span class="stat-value" id="primaryTone">-</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">🎯 Key Themes</div>
+                    <div id="themes">
+                        <div class="loading" style="font-size: 14px;">Analyzing content...</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">📝 Assignment Info</div>
+                    <div id="assignmentInfo">
+                        <div class="stat-item">
+                            <span class="stat-label">Assignment</span>
+                            <span class="stat-value" id="assignmentId">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Status</span>
+                            <span class="stat-value" id="assignmentStatus">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Due Date</span>
+                            <span class="stat-value" id="dueDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">🌐 Publication Details</div>
+                    <div id="publicationInfo">
+                        <div class="publication-field">
+                            <label class="field-label">Event Name</label>
+                            <input type="text" id="eventName" class="field-input" placeholder="e.g., Springfield Healthcare Town Hall">
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Event Date</label>
+                            <input type="date" id="eventDate" class="field-input">
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Event Time</label>
+                            <input type="time" id="eventTime" class="field-input">
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Venue</label>
+                            <input type="text" id="venue" class="field-input" placeholder="e.g., Springfield Civic Center">
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">City, State</label>
+                            <input type="text" id="location" class="field-input" placeholder="e.g., Springfield, Massachusetts">
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Status</label>
+                            <select id="documentStatus" class="field-input">
+                                <option value="prepared">Remarks as Prepared for Delivery</option>
+                                <option value="delivered">Remarks as Delivered</option>
+                                <option value="transcript">Speech Transcript</option>
+                            </select>
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Context Description</label>
+                            <textarea id="contextDescription" class="field-textarea" placeholder="Brief description of the event significance..." rows="3"></textarea>
+                        </div>
+                        <div class="publication-field">
+                            <label class="field-label">Expected Attendance</label>
+                            <input type="text" id="attendance" class="field-input" placeholder="e.g., over 500 community members">
+                        </div>
+                        <button id="generateWebVersion" class="btn btn-secondary" style="width: 100%; margin-top: 8px;">
+                            📄 Generate Web Version
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ThinSpeechEditor {
+            constructor() {
+                this.speechId = null;
+                this.assignmentId = null;
+                this.currentSpeech = null;
+                this.autoSaveTimer = null;
+                this.teleprompterTimer = null;
+                this.teleprompterPlaying = false;
+                this.speechSynthesis = null;
+                this.currentView = 'edit';
+
+                // Undo/Redo functionality
+                this.sessionId = this.generateSessionId();
+                this.undoRedoEnabled = true;
+                this.lastContent = '';
+
+                // Bind keyboard shortcuts
+                document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+
+                // Bind Generate Web Version button
+                document.getElementById('generateWebVersion').addEventListener('click', () => {
+                    this.generateWebVersion();
+                });
+
+                // Bind publication metadata change events for auto-save
+                this.bindPublicationMetadataEvents();
+            }
+
+            async init() {
+                try {
+                    // Get parameters from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.speechId = urlParams.get('id');
+                    this.assignmentId = urlParams.get('assignment');
+
+                    // Load speech data
+                    if (this.speechId) {
+                        await this.loadSpeech(this.speechId);
+                    } else if (this.assignmentId) {
+                        await this.loadAssignment(this.assignmentId);
+                    }
+
+                    this.setupEventListeners();
+                    this.startAutoSave();
+
+                    console.log('✅ Thin Speech Editor initialized');
+                } catch (error) {
+                    console.error('❌ Failed to initialize editor:', error);
+                    this.showToast('Failed to load speech editor', 'error');
+                }
+            }
+
+            async loadSpeech(id) {
+                try {
+                    this.currentSpeech = await this.apiCall('GET', `/speeches/${id}`);
+                    this.renderSpeech();
+                    this.updateStats();
+                } catch (error) {
+                    console.error('Failed to load speech:', error);
+                    this.showToast('Failed to load speech', 'error');
+                }
+            }
+
+            async loadAssignment(assignmentId) {
+                try {
+                    // Check if there's already a speech for this assignment
+                    const speeches = await this.apiCall('GET', `/speeches?assignment_id=${assignmentId}`);
+
+                    if (speeches.length > 0) {
+                        this.currentSpeech = speeches[0];
+                        this.speechId = speeches[0].id;
+                        this.renderSpeech();
+                    } else {
+                        // Create new speech for this assignment
+                        const assignment = await this.apiCall('GET', `/assignments/${assignmentId}`);
+                        this.currentSpeech = {
+                            title: assignment.title || 'New Speech',
+                            content: '',
+                            assignment_id: assignmentId,
+                            status: 'draft'
+                        };
+                        document.getElementById('speechTitle').value = this.currentSpeech.title;
+                    }
+
+                    // Load assignment info
+                    await this.loadAssignmentInfo(assignmentId);
+                } catch (error) {
+                    console.error('Failed to load assignment:', error);
+                    this.showToast('Failed to load assignment', 'error');
+                }
+            }
+
+            async loadAssignmentInfo(assignmentId) {
+                try {
+                    const assignment = await this.apiCall('GET', `/assignments/${assignmentId}`);
+
+                    document.getElementById('assignmentId').textContent = assignment.id;
+                    document.getElementById('assignmentStatus').textContent = assignment.status;
+                    if (assignment.due_date) {
+                        document.getElementById('dueDate').textContent = new Date(assignment.due_date).toLocaleDateString();
+                    }
+                } catch (error) {
+                    console.warn('Failed to load assignment info:', error);
+                }
+            }
+
+            renderSpeech() {
+                if (!this.currentSpeech) return;
+
+                document.getElementById('speechTitle').value = this.currentSpeech.title || '';
+                document.getElementById('speechContent').value = this.currentSpeech.content || '';
+
+                // Load publication metadata if available
+                if (this.currentSpeech.publication_metadata) {
+                    try {
+                        const metadata = JSON.parse(this.currentSpeech.publication_metadata);
+                        this.setPublicationMetadata(metadata);
+                    } catch (error) {
+                        console.error('Failed to parse publication metadata:', error);
+                    }
+                }
+
+                this.updateStats();
+            }
+
+            async updateStats() {
+                const content = document.getElementById('speechContent').value;
+                if (!content.trim()) {
+                    this.resetStats();
+                    return;
+                }
+
+                try {
+                    // Get processed metadata from server
+                    const processed = await this.apiCall('POST', '/speeches/process', { content });
+
+                    if (processed && processed.metadata) {
+                        const metadata = processed.metadata;
+
+                        document.getElementById('wordCount').textContent = metadata.wordCount || 0;
+                        document.getElementById('duration').textContent = `${metadata.duration || 0} min`;
+                        document.getElementById('readingLevel').textContent = metadata.readingLevel || '-';
+                        document.getElementById('primaryTone').textContent = metadata.tone?.primary || '-';
+
+                        // Update themes
+                        this.renderThemes(metadata.themes || []);
+                    }
+                } catch (error) {
+                    console.warn('Failed to update stats:', error);
+                    this.resetStats();
+                }
+            }
+
+            resetStats() {
+                document.getElementById('wordCount').textContent = '0';
+                document.getElementById('duration').textContent = '0 min';
+                document.getElementById('readingLevel').textContent = '-';
+                document.getElementById('primaryTone').textContent = '-';
+                document.getElementById('themes').innerHTML = '<div class="stat-item"><span class="stat-label">No content to analyze</span></div>';
+            }
+
+            renderThemes(themes) {
+                const container = document.getElementById('themes');
+                if (themes.length === 0) {
+                    container.innerHTML = '<div class="stat-item"><span class="stat-label">No themes detected</span></div>';
+                    return;
+                }
+
+                container.innerHTML = themes.slice(0, 5).map(theme => `
+                    <div class="stat-item">
+                        <span class="stat-label">${theme.name}</span>
+                        <span class="stat-value">${theme.frequency}</span>
+                    </div>
+                `).join('');
+            }
+
+            // View switching
+            switchView(viewName) {
+                this.currentView = viewName;
+
+                // Update toolbar
+                document.querySelectorAll('.toolbar-btn[data-view]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+
+                // Show/hide views
+                const views = ['editView', 'previewView', 'teleprompterView'];
+                views.forEach(view => {
+                    document.getElementById(view).style.display = 'none';
+                });
+
+                switch (viewName) {
+                    case 'edit':
+                        document.getElementById('editView').style.display = 'block';
+                        break;
+                    case 'preview':
+                        document.getElementById('previewView').style.display = 'block';
+                        this.renderPreview();
+                        break;
+                    case 'teleprompter':
+                        document.getElementById('teleprompterView').style.display = 'block';
+                        this.renderTeleprompter();
+                        break;
+                }
+            }
+
+            renderPreview() {
+                const content = document.getElementById('speechContent').value;
+                const container = document.getElementById('previewContent');
+
+                if (!content.trim()) {
+                    container.innerHTML = '<div class="loading">No content to preview</div>';
+                    return;
+                }
+
+                // Simple markdown-like rendering
+                const formatted = content
+                    .split('\n\n')
+                    .map(paragraph => `<p style="margin-bottom: 16px;">${paragraph.replace(/\n/g, '<br>')}</p>`)
+                    .join('');
+
+                container.innerHTML = formatted;
+            }
+
+            renderTeleprompter() {
+                const content = document.getElementById('speechContent').value;
+                const container = document.getElementById('teleprompterContent');
+                const controls = document.getElementById('teleprompterControls');
+
+                if (!content.trim()) {
+                    container.innerHTML = '<div class="loading" style="color: white;">No content for teleprompter</div>';
+                    controls.style.display = 'none';
+                    return;
+                }
+
+                // Clean content for teleprompter
+                const cleanContent = content
+                    .replace(/^source:.*$/gmi, '') // Remove source lines
+                    .replace(/^transcript:\s*/gmi, '') // Remove transcript prefix
+                    .split('\n')
+                    .filter(line => line.trim())
+                    .map(line => line.trim())
+                    .join('\n\n'); // Double spacing for readability
+
+                container.innerHTML = cleanContent.replace(/\n/g, '<br><br>');
+                controls.style.display = 'flex';
+            }
+
+            // Save functionality
+            async saveSpeech() {
+                try {
+                    this.setStatus('saving');
+
+                    const title = document.getElementById('speechTitle').value;
+                    const content = document.getElementById('speechContent').value;
+
+                    const speechData = {
+                        title: title || 'Untitled Speech',
+                        content: content,
+                        assignment_id: this.assignmentId
+                    };
+
+                    if (this.speechId) {
+                        // Update existing speech
+                        this.currentSpeech = await this.apiCall('PUT', `/speeches/${this.speechId}`, speechData);
+                    } else {
+                        // Create new speech
+                        this.currentSpeech = await this.apiCall('POST', '/speeches', speechData);
+                        this.speechId = this.currentSpeech.id;
+
+                        // Update URL
+                        const url = new URL(window.location);
+                        url.searchParams.set('id', this.speechId);
+                        history.replaceState(null, '', url);
+                    }
+
+                    this.setStatus('saved');
+                    this.showToast('Speech saved successfully', 'success');
+                } catch (error) {
+                    console.error('Save failed:', error);
+                    this.setStatus('error');
+                    this.showToast('Failed to save speech', 'error');
+                }
+            }
+
+            // Teleprompter controls
+            toggleTeleprompterPlay() {
+                // Simple implementation - in production would have more sophisticated scrolling
+                this.showToast('Teleprompter control coming soon', 'info');
+            }
+
+            adjustSpeed(direction) {
+                this.showToast(`Speed adjusted ${direction > 0 ? 'faster' : 'slower'}`, 'info');
+            }
+
+            toggleTTS() {
+                const content = document.getElementById('speechContent').value;
+                if (!content.trim()) {
+                    this.showToast('No content to read', 'error');
+                    return;
+                }
+
+                if ('speechSynthesis' in window) {
+                    if (this.speechSynthesis) {
+                        window.speechSynthesis.cancel();
+                        this.speechSynthesis = null;
+                        this.showToast('Speech stopped', 'info');
+                    } else {
+                        this.speechSynthesis = new SpeechSynthesisUtterance(content);
+                        this.speechSynthesis.rate = 0.8;
+                        this.speechSynthesis.pitch = 1;
+                        window.speechSynthesis.speak(this.speechSynthesis);
+                        this.showToast('Speech started', 'info');
+                    }
+                } else {
+                    this.showToast('Text-to-speech not supported', 'error');
+                }
+            }
+
+            // Export functionality
+            async exportSpeech() {
+                if (!this.speechId) {
+                    this.showToast('Please save the speech first', 'error');
+                    return;
+                }
+
+                try {
+                    const url = `/api/speeches/${this.speechId}/export/teleprompter`;
+                    window.open(url, '_blank');
+                } catch (error) {
+                    this.showToast('Export failed', 'error');
+                }
+            }
+
+            // Event handlers
+            setupEventListeners() {
+                const contentArea = document.getElementById('speechContent');
+                const titleInput = document.getElementById('speechTitle');
+
+                let debounceTimer;
+                const handleChange = () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        this.updateStats();
+                    }, 1000);
+                };
+
+                contentArea.addEventListener('input', handleChange);
+                titleInput.addEventListener('input', handleChange);
+
+                // Auto-save on content change
+                let autoSaveTimer;
+                contentArea.addEventListener('input', () => {
+                    clearTimeout(autoSaveTimer);
+                    autoSaveTimer = setTimeout(() => {
+                        this.saveSpeech();
+                    }, 3000); // Auto-save after 3 seconds of no typing
+                });
+            }
+
+            startAutoSave() {
+                this.autoSaveTimer = setInterval(() => {
+                    if (document.getElementById('speechContent').value.trim()) {
+                        this.saveSpeech();
+                    }
+                }, 30000); // Auto-save every 30 seconds
+            }
+
+            // Utility methods
+            async apiCall(method, endpoint, data = null) {
+                try {
+                    const config = {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    };
+
+                    if (data && (method === 'POST' || method === 'PUT')) {
+                        config.body = JSON.stringify(data);
+                    }
+
+                    const response = await fetch(`/api${endpoint}`, config);
+
+                    if (!response.ok) {
+                        const error = await response.json().catch(() => ({ error: 'Network error' }));
+                        throw new Error(error.error || `HTTP ${response.status}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error(`API Error (${method} ${endpoint}):`, error);
+                    throw error;
+                }
+            }
+
+            setStatus(status) {
+                const indicator = document.getElementById('statusIndicator');
+                indicator.className = `status-indicator status-${status}`;
+
+                const statusText = {
+                    saved: 'Saved',
+                    saving: 'Saving...',
+                    error: 'Error'
+                };
+
+                indicator.textContent = statusText[status] || status;
+            }
+
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            // Undo/Redo functionality
+            generateSessionId() {
+                return 'speech-editor-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            }
+
+            async performUndo() {
+                if (!this.undoRedoEnabled || !this.sessionId) {
+                    this.showToast('Undo not available', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('POST', '/undo-redo/undo', {
+                        sessionId: this.sessionId,
+                        operationCount: 1
+                    });
+
+                    if (response.success && response.undoSteps && response.undoSteps.length > 0) {
+                        const undoStep = response.undoSteps[0];
+                        await this.applyUndoRedoStep(undoStep);
+                        this.showToast('Undo applied', 'success');
+                        this.updateUndoRedoState(response.canUndo, response.canRedo);
+                    } else {
+                        this.showToast(response.message || 'Nothing to undo', 'info');
+                    }
+                } catch (error) {
+                    console.error('Undo error:', error);
+                    this.showToast('Undo failed', 'error');
+                }
+            }
+
+            async performRedo() {
+                if (!this.undoRedoEnabled || !this.sessionId) {
+                    this.showToast('Redo not available', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await this.apiCall('POST', '/undo-redo/redo', {
+                        sessionId: this.sessionId,
+                        operationCount: 1
+                    });
+
+                    if (response.success && response.redoSteps && response.redoSteps.length > 0) {
+                        const redoStep = response.redoSteps[0];
+                        await this.applyUndoRedoStep(redoStep);
+                        this.showToast('Redo applied', 'success');
+                        this.updateUndoRedoState(response.canUndo, response.canRedo);
+                    } else {
+                        this.showToast(response.message || 'Nothing to redo', 'info');
+                    }
+                } catch (error) {
+                    console.error('Redo error:', error);
+                    this.showToast('Redo failed', 'error');
+                }
+            }
+
+            async applyUndoRedoStep(step) {
+                const contentArea = document.getElementById('speechContent');
+                if (!contentArea) return;
+
+                switch (step.type) {
+                    case 'insert':
+                        const currentContent = contentArea.value;
+                        const newContent = currentContent.slice(0, step.position) + step.content + currentContent.slice(step.position);
+                        contentArea.value = newContent;
+                        contentArea.setSelectionRange(step.position + step.content.length, step.position + step.content.length);
+                        break;
+
+                    case 'delete':
+                        const content = contentArea.value;
+                        const beforeDelete = content.slice(0, step.position);
+                        const afterDelete = content.slice(step.position + step.length);
+                        contentArea.value = beforeDelete + afterDelete;
+                        contentArea.setSelectionRange(step.position, step.position);
+                        break;
+
+                    case 'replace':
+                        const replaceContent = contentArea.value;
+                        const beforeReplace = replaceContent.slice(0, step.position.start);
+                        const afterReplace = replaceContent.slice(step.position.end);
+                        contentArea.value = beforeReplace + step.content + afterReplace;
+                        contentArea.setSelectionRange(step.position.start + step.content.length, step.position.start + step.content.length);
+                        break;
+
+                    case 'restore':
+                    default:
+                        contentArea.value = step.content;
+                        break;
+                }
+
+                // Update stats and trigger auto-save
+                this.updateStats();
+            }
+
+            updateUndoRedoState(canUndo, canRedo) {
+                const undoBtn = document.getElementById('undoBtn');
+                const redoBtn = document.getElementById('redoBtn');
+
+                if (undoBtn) {
+                    undoBtn.disabled = !canUndo;
+                    undoBtn.style.opacity = canUndo ? '1' : '0.5';
+                }
+
+                if (redoBtn) {
+                    redoBtn.disabled = !canRedo;
+                    redoBtn.style.opacity = canRedo ? '1' : '0.5';
+                }
+            }
+
+            handleKeyboardShortcuts(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch (e.key) {
+                        case 'z':
+                            if (e.shiftKey) {
+                                e.preventDefault();
+                                this.performRedo();
+                            } else {
+                                e.preventDefault();
+                                this.performUndo();
+                            }
+                            break;
+                        case 'y':
+                            e.preventDefault();
+                            this.performRedo();
+                            break;
+                    }
+                }
+            }
+
+            // Publication metadata functionality
+            bindPublicationMetadataEvents() {
+                const metadataFields = [
+                    'eventName', 'eventDate', 'eventTime', 'venue',
+                    'location', 'documentStatus', 'contextDescription', 'attendance'
+                ];
+
+                metadataFields.forEach(fieldId => {
+                    const element = document.getElementById(fieldId);
+                    if (element) {
+                        element.addEventListener('change', () => this.savePublicationMetadata());
+                        element.addEventListener('input', () => this.savePublicationMetadata());
+                    }
+                });
+            }
+
+            getPublicationMetadata() {
+                return {
+                    eventName: document.getElementById('eventName')?.value || '',
+                    eventDate: document.getElementById('eventDate')?.value || '',
+                    eventTime: document.getElementById('eventTime')?.value || '',
+                    venue: document.getElementById('venue')?.value || '',
+                    location: document.getElementById('location')?.value || '',
+                    documentStatus: document.getElementById('documentStatus')?.value || 'prepared',
+                    contextDescription: document.getElementById('contextDescription')?.value || '',
+                    attendance: document.getElementById('attendance')?.value || ''
+                };
+            }
+
+            setPublicationMetadata(metadata) {
+                if (!metadata) return;
+
+                Object.keys(metadata).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && metadata[key]) {
+                        element.value = metadata[key];
+                    }
+                });
+            }
+
+            async savePublicationMetadata() {
+                if (!this.speechId) return;
+
+                try {
+                    const metadata = this.getPublicationMetadata();
+
+                    const response = await fetch(`/api/speeches/${this.speechId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            publication_metadata: JSON.stringify(metadata)
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('Publication metadata saved');
+                    }
+                } catch (error) {
+                    console.error('Failed to save publication metadata:', error);
+                }
+            }
+
+            async generateWebVersion() {
+                try {
+                    const speechTitle = document.getElementById('speechTitle')?.value || 'Untitled Speech';
+                    const speechContent = document.getElementById('speechContent')?.value || '';
+                    const metadata = this.getPublicationMetadata();
+
+                    if (!speechContent.trim()) {
+                        this.showToast('Please add speech content first', 'warning');
+                        return;
+                    }
+
+                    // Generate web version with LD-JSON
+                    const webVersion = this.formatWebVersion(speechTitle, speechContent, metadata);
+                    const ldJson = this.generateLDJSON(speechTitle, speechContent, metadata);
+
+                    // Open in new window
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>${this.escapeHtml(metadata.eventName || speechTitle)}</title>
+                            <script type="application/ld+json">
+                                ${JSON.stringify(ldJson, null, 2)}
+                            </script>
+                            <style>
+                                body { font-family: Times, serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+                                .header { border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                                .title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                                .subtitle { font-size: 18px; margin-bottom: 20px; }
+                                .event-details { background: #f5f5f5; padding: 15px; margin-bottom: 30px; font-size: 14px; }
+                                .content { white-space: pre-wrap; }
+                                .footer { border-top: 1px solid #ccc; padding-top: 20px; margin-top: 40px; font-size: 12px; color: #666; }
+                                @media print { body { margin: 0; padding: 15px; } }
+                            </style>
+                        </head>
+                        <body>
+                            ${webVersion}
+                        </body>
+                        </html>
+                    `);
+                    newWindow.document.close();
+
+                    this.showToast('Web version generated successfully', 'success');
+
+                } catch (error) {
+                    console.error('Error generating web version:', error);
+                    this.showToast('Failed to generate web version', 'error');
+                }
+            }
+
+            formatWebVersion(title, content, metadata) {
+                const statusMap = {
+                    'prepared': 'Remarks as Prepared for Delivery',
+                    'delivered': 'Remarks as Delivered',
+                    'transcript': 'Speech Transcript'
+                };
+
+                const eventDate = metadata.eventDate ? new Date(metadata.eventDate) : new Date();
+                const eventTime = metadata.eventTime || '';
+                const formattedDate = eventDate.toLocaleDateString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                let headerTitle = metadata.eventName ?
+                    `Remarks by [Candidate Name] at ${metadata.eventName}` :
+                    `Remarks by [Candidate Name]`;
+
+                return `
+                    <div class="header">
+                        <div class="title">${this.escapeHtml(headerTitle.toUpperCase())}</div>
+                        <div class="subtitle">${statusMap[metadata.documentStatus] || statusMap.prepared}</div>
+                    </div>
+
+                    <div class="event-details">
+                        <strong>Speaker:</strong> [Candidate Full Name]<br>
+                        ${metadata.eventName ? `<strong>Event:</strong> ${this.escapeHtml(metadata.eventName)}<br>` : ''}
+                        <strong>Date:</strong> ${formattedDate}${eventTime ? ` at ${eventTime}` : ''}<br>
+                        ${metadata.venue ? `<strong>Location:</strong> ${this.escapeHtml(metadata.venue)}${metadata.location ? `, ${this.escapeHtml(metadata.location)}` : ''}<br>` : ''}
+                    </div>
+
+                    ${metadata.contextDescription ? `<div class="context" style="margin-bottom: 30px; font-style: italic;">${this.escapeHtml(metadata.contextDescription)}</div>` : ''}
+
+                    <div class="content">${this.escapeHtml(content)}</div>
+
+                    <div class="footer">
+                        <hr>
+                        [End of remarks]<br><br>
+                        <strong>For media inquiries:</strong> [Press Secretary Name]<br>
+                        Email: press@[campaign].com<br>
+                        Phone: [Phone Number]<br><br>
+                        <strong>Campaign Information:</strong><br>
+                        Paid for by [Campaign Name]<br>
+                        www.[CampaignWebsite].com
+                    </div>
+                `;
+            }
+
+            generateLDJSON(title, content, metadata) {
+                const eventDate = metadata.eventDate ? new Date(metadata.eventDate) : new Date();
+
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "SpeechEvent",
+                    "name": metadata.eventName || title,
+                    "description": metadata.contextDescription || "Political campaign speech",
+                    "startDate": eventDate.toISOString(),
+                    "location": {
+                        "@type": "Place",
+                        "name": metadata.venue || "",
+                        "address": {
+                            "@type": "PostalAddress",
+                            "addressLocality": metadata.location || ""
+                        }
+                    },
+                    "performer": {
+                        "@type": "Person",
+                        "name": "[Candidate Name]",
+                        "jobTitle": "Political Candidate"
+                    },
+                    "audience": {
+                        "@type": "Audience",
+                        "audienceType": "Political supporters and community members",
+                        "expectedAudienceSize": metadata.attendance || ""
+                    },
+                    "recordedIn": {
+                        "@type": "CreativeWork",
+                        "name": title,
+                        "text": content,
+                        "author": {
+                            "@type": "Person",
+                            "name": "[Candidate Name]"
+                        },
+                        "datePublished": new Date().toISOString(),
+                        "inLanguage": "en-US",
+                        "keywords": "political speech, campaign, public remarks"
+                    }
+                };
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Global functions for inline handlers
+        let speechEditor;
+
+        function switchView(view) {
+            speechEditor.switchView(view);
+        }
+
+        function saveSpeech() {
+            speechEditor.saveSpeech();
+        }
+
+        function exportSpeech() {
+            speechEditor.exportSpeech();
+        }
+
+        function toggleTeleprompterPlay() {
+            speechEditor.toggleTeleprompterPlay();
+        }
+
+        function adjustSpeed(direction) {
+            speechEditor.adjustSpeed(direction);
+        }
+
+        function toggleTTS() {
+            speechEditor.toggleTTS();
+        }
+
+        function showAnalysis() {
+            speechEditor.updateStats();
+            speechEditor.showToast('Analysis updated', 'info');
+        }
+
+        function showVersions() {
+            speechEditor.showToast('Version history coming soon', 'info');
+        }
+
+        function performUndo() {
+            if (speechEditor && speechEditor.sessionId) {
+                speechEditor.performUndo();
+            }
+        }
+
+        function performRedo() {
+            if (speechEditor && speechEditor.sessionId) {
+                speechEditor.performRedo();
+            }
+        }
+
+        // Initialize editor
+        document.addEventListener('DOMContentLoaded', () => {
+            speechEditor = new ThinSpeechEditor();
+            speechEditor.init();
+        });
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (speechEditor.autoSaveTimer) {
+                clearInterval(speechEditor.autoSaveTimer);
+            }
+        });
+    </script>
+</body>
+</html>

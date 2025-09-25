@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign AI Editor - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1c1e21;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .demo-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .demo-controls h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-group button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .control-group button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .control-group button.active {
+            background: #764ba2;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .editor-main {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+
+        .ai-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .document-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .doc-type-btn {
+            padding: 8px 16px;
+            background: #f0f2f5;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .doc-type-btn:hover {
+            background: #e4e6eb;
+        }
+
+        .doc-type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .content-editor {
+            margin-bottom: 30px;
+        }
+
+        .content-editor h2 {
+            margin-bottom: 15px;
+            color: #1c1e21;
+        }
+
+        .editor-field {
+            margin-bottom: 20px;
+        }
+
+        .editor-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #65676b;
+            font-size: 14px;
+        }
+
+        .editor-field input,
+        .editor-field textarea,
+        .editor-field select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        .editor-field input:focus,
+        .editor-field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .editor-field textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .ai-coach-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .ai-coach-panel h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-score {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .score-item .score-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .score-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .ai-suggestions {
+            background: white;
+            color: #1c1e21;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .ai-suggestions h4 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .suggestion-item {
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .suggestion-item.warning {
+            border-left-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        .suggestion-item.error {
+            border-left-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .suggestion-item strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .suggestion-item p {
+            font-size: 13px;
+            color: #65676b;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-item button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .schema-preview {
+            background: #1c1e21;
+            color: #e4e6eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Monaco', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        .schema-preview h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .voice-analysis {
+            background: #f0f2f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .voice-analysis h4 {
+            color: #1c1e21;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .voice-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .voice-metric {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .voice-metric .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .voice-metric .label {
+            font-size: 12px;
+            color: #65676b;
+            margin-top: 5px;
+        }
+
+        .platform-scores {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .platform-score {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 2px solid #f0f2f5;
+        }
+
+        .platform-score.high {
+            border-color: #10b981;
+        }
+
+        .platform-score.medium {
+            border-color: #f59e0b;
+        }
+
+        .platform-score.low {
+            border-color: #ef4444;
+        }
+
+        .platform-score .platform-name {
+            font-size: 12px;
+            color: #65676b;
+            margin-bottom: 5px;
+        }
+
+        .platform-score .score {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .grammar-check {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #f59e0b;
+        }
+
+        .grammar-issue {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .floating-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .floating-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .floating-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .floating-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 968px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-sidebar {
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Campaign AI Editor</h1>
+        <p>AI-Optimized Content Creation for Political Campaigns</p>
+    </div>
+
+    <div class="container">
+        <div class="demo-controls">
+            <h3>Quick Demo Actions</h3>
+            <div class="control-group">
+                <button onclick="loadSampleContent('press-release')">📰 Load Press Release</button>
+                <button onclick="loadSampleContent('event')">📅 Load Event</button>
+                <button onclick="loadSampleContent('policy')">📋 Load Policy Paper</button>
+                <button onclick="analyzeContent()">🤖 Analyze for AI</button>
+                <button onclick="checkVoice()">🎤 Check Voice</button>
+                <button onclick="generateSchema()">🔧 Generate Schema</button>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-main">
+                <div class="document-type-selector">
+                    <button class="doc-type-btn active" data-type="press-release">Press Release</button>
+                    <button class="doc-type-btn" data-type="event">Event</button>
+                    <button class="doc-type-btn" data-type="policy">Policy Paper</button>
+                    <button class="doc-type-btn" data-type="speech">Speech</button>
+                    <button class="doc-type-btn" data-type="endorsement">Endorsement</button>
+                </div>
+
+                <div class="content-editor">
+                    <h2 id="doc-title">Press Release</h2>
+                    
+                    <div class="editor-field">
+                        <label>Headline (Optimized for AI extraction)</label>
+                        <input type="text" id="headline" placeholder="e.g., Smith Announces Healthcare Plan to Cut Prescription Costs by 50%">
+                        <small style="color: #65676b;">Keep under 60 characters for optimal AI snippets</small>
+                    </div>
+
+                    <div class="editor-field">
+                        <label>Subheadline</label>
+                        <input type="text" id="subheadline" placeholder="Supporting detail that expands on the main headline">
+                    </div>
+
+                    <div class="editor-field">
+                        <label>Location (Critical for local AI discovery)</label>
+                        <input type="text" id="location" placeholder="AUSTIN, TX">
+                    </div>
+
+                    <div class="editor-field">
+                        <label>Main Content</label>
+                        <textarea id="content" placeholder="Write your content here. The AI coach will help optimize it for search engines and AI platforms..."></textarea>
+                    </div>
+
+                    <div class="editor-field">
+                        <label>Key Points (For AI summarization)</label>
+                        <textarea id="keypoints" placeholder="• Point 1&#10;• Point 2&#10;• Point 3" rows="4"></textarea>
+                    </div>
+
+                    <div class="editor-field">
+                        <label>Quote (With Attribution)</label>
+                        <input type="text" id="quote" placeholder='"This plan will help every family in Texas..." - Jane Smith'>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-sidebar">
+                <div class="ai-coach-panel">
+                    <h3>🤖 AI Optimization Coach</h3>
+                    
+                    <div class="ai-score">
+                        <div class="score-item">
+                            <span class="score-label">Overall AI Score</span>
+                            <div class="score-bar">
+                                <div class="score-fill" id="overall-score" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">SEO Optimization</span>
+                            <div class="score-bar">
+                                <div class="score-fill" id="seo-score" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Voice Search Ready</span>
+                            <div class="score-bar">
+                                <div class="score-fill" id="voice-score" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">Schema Completeness</span>
+                            <div class="score-bar">
+                                <div class="score-fill" id="schema-score" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-suggestions">
+                    <h4>📝 AI Suggestions</h4>
+                    <div id="suggestions-list">
+                        <div class="suggestion-item">
+                            <strong>Add location keyword</strong>
+                            <p>Include "Austin" or "Texas" in headline for local discovery</p>
+                            <button onclick="applySuggestion('location')">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-scores">
+                    <div class="platform-score medium">
+                        <div class="platform-name">Google AI</div>
+                        <div class="score" id="google-score">75%</div>
+                    </div>
+                    <div class="platform-score high">
+                        <div class="platform-name">ChatGPT</div>
+                        <div class="score" id="chatgpt-score">82%</div>
+                    </div>
+                    <div class="platform-score medium">
+                        <div class="platform-name">Perplexity</div>
+                        <div class="score" id="perplexity-score">70%</div>
+                    </div>
+                    <div class="platform-score low">
+                        <div class="platform-name">Voice</div>
+                        <div class="score" id="voice-platform-score">65%</div>
+                    </div>
+                </div>
+
+                <div class="voice-analysis">
+                    <h4>Voice Consistency</h4>
+                    <div class="voice-metrics">
+                        <div class="voice-metric">
+                            <div class="value" id="consistency-score">85%</div>
+                            <div class="label">Consistency</div>
+                        </div>
+                        <div class="voice-metric">
+                            <div class="value" id="reading-level">8</div>
+                            <div class="label">Grade Level</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grammar-check" id="grammar-check" style="display: none;">
+                    <h4>⚠️ Grammar Issues</h4>
+                    <div id="grammar-issues"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="schema-preview" id="schema-preview" style="display: none;">
+            <h4>Generated LD-JSON Schema</h4>
+            <pre id="schema-code"></pre>
+        </div>
+    </div>
+
+    <div class="floating-actions">
+        <button class="floating-btn" onclick="checkGrammar()">✓ Check Grammar</button>
+        <button class="floating-btn primary pulse" onclick="optimizeAll()">🚀 Optimize for AI</button>
+    </div>
+
+    <script>
+        // Sample content for different document types
+        const sampleContent = {
+            'press-release': {
+                headline: 'Smith Announces $2 Billion Infrastructure Plan for Texas',
+                subheadline: 'Comprehensive proposal will create 50,000 jobs and modernize transportation',
+                location: 'AUSTIN, TX',
+                content: 'Democratic candidate Jane Smith today unveiled a comprehensive $2 billion infrastructure plan that will modernize Texas transportation systems and create an estimated 50,000 new jobs over the next five years.\n\nThe plan, announced at a press conference in Austin, focuses on three key areas: highway modernization, public transit expansion, and rural broadband infrastructure.',
+                keypoints: '• $2 billion investment in Texas infrastructure\n• 50,000 new jobs over 5 years\n• Focus on highways, transit, and broadband\n• Bipartisan support from local mayors',
+                quote: '"This plan will transform Texas infrastructure while creating good-paying jobs for hardworking families" - Jane Smith'
+            },
+            'event': {
+                headline: 'Town Hall on Healthcare Reform',
+                subheadline: 'Join us for an important discussion on healthcare policy',
+                location: 'Houston Community Center, Houston, TX',
+                content: 'Join Jane Smith for a town hall meeting to discuss healthcare reform and prescription drug costs. This event will feature a Q&A session where voters can ask questions directly to the candidate.',
+                keypoints: '• Date: March 15, 2024 at 6:00 PM\n• Free admission, open to all\n• ASL interpretation provided\n• Live streaming available',
+                quote: '"Healthcare is a right, not a privilege" - Jane Smith'
+            },
+            'policy': {
+                headline: 'Comprehensive Education Reform Policy',
+                subheadline: 'Investing in our children\'s future through education',
+                location: 'Campaign Headquarters',
+                content: 'Our education reform policy focuses on increasing teacher pay, reducing class sizes, and expanding access to pre-K education. This comprehensive approach will ensure every child in Texas has access to quality education.',
+                keypoints: '• Increase teacher pay by 20%\n• Cap class sizes at 20 students\n• Universal pre-K for all 4-year-olds\n• $500 million for school infrastructure',
+                quote: '"Education is the foundation of our democracy" - Jane Smith'
+            }
+        };
+
+        // Load sample content
+        function loadSampleContent(type) {
+            const content = sampleContent[type];
+            if (content) {
+                document.getElementById('headline').value = content.headline;
+                document.getElementById('subheadline').value = content.subheadline;
+                document.getElementById('location').value = content.location;
+                document.getElementById('content').value = content.content;
+                document.getElementById('keypoints').value = content.keypoints;
+                document.getElementById('quote').value = content.quote;
+                
+                // Update UI
+                document.querySelectorAll('.doc-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.type === type) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Auto-analyze
+                setTimeout(analyzeContent, 500);
+            }
+        }
+
+        // Analyze content for AI optimization
+        function analyzeContent() {
+            const headline = document.getElementById('headline').value;
+            const content = document.getElementById('content').value;
+            const location = document.getElementById('location').value;
+            
+            // Calculate scores
+            let overallScore = 0;
+            let seoScore = 0;
+            let voiceScore = 0;
+            let schemaScore = 0;
+            
+            // SEO checks
+            if (headline.length > 0 && headline.length <= 60) seoScore += 30;
+            if (location.includes('TX') || location.includes('Texas')) seoScore += 30;
+            if (content.length > 300) seoScore += 20;
+            if (headline.match(/\d+/)) seoScore += 20; // Contains numbers
+            
+            // Voice search checks
+            if (headline.toLowerCase().includes('announces') || headline.toLowerCase().includes('launches')) voiceScore += 40;
+            if (content.split('.').some(s => s.length < 30)) voiceScore += 30; // Short sentences
+            if (document.getElementById('keypoints').value.includes('•')) voiceScore += 30;
+            
+            // Schema checks
+            if (headline.length > 0) schemaScore += 25;
+            if (location.length > 0) schemaScore += 25;
+            if (document.getElementById('quote').value.length > 0) schemaScore += 25;
+            if (content.length > 100) schemaScore += 25;
+            
+            // Calculate overall
+            overallScore = Math.round((seoScore + voiceScore + schemaScore) / 3);
+            
+            // Update scores with animation
+            animateScore('overall-score', overallScore);
+            animateScore('seo-score', seoScore);
+            animateScore('voice-score', voiceScore);
+            animateScore('schema-score', schemaScore);
+            
+            // Update platform scores
+            updatePlatformScores();
+            
+            // Generate suggestions
+            generateSuggestions(headline, content, location);
+        }
+
+        // Animate score bars
+        function animateScore(elementId, targetScore) {
+            const element = document.getElementById(elementId);
+            let currentWidth = 0;
+            const interval = setInterval(() => {
+                if (currentWidth >= targetScore) {
+                    clearInterval(interval);
+                } else {
+                    currentWidth += 2;
+                    element.style.width = currentWidth + '%';
+                }
+            }, 20);
+        }
+
+        // Update platform-specific scores
+        function updatePlatformScores() {
+            const scores = {
+                'google-score': Math.floor(Math.random() * 20) + 70,
+                'chatgpt-score': Math.floor(Math.random() * 20) + 75,
+                'perplexity-score': Math.floor(Math.random() * 20) + 65,
+                'voice-platform-score': Math.floor(Math.random() * 20) + 60
+            };
+            
+            Object.entries(scores).forEach(([id, score]) => {
+                document.getElementById(id).textContent = score + '%';
+                
+                // Update color class
+                const parent = document.getElementById(id).parentElement;
+                parent.classList.remove('high', 'medium', 'low');
+                if (score >= 80) parent.classList.add('high');
+                else if (score >= 70) parent.classList.add('medium');
+                else parent.classList.add('low');
+            });
+        }
+
+        // Generate AI suggestions
+        function generateSuggestions(headline, content, location) {
+            const suggestions = [];
+            
+            if (!location.includes('TX') && !location.includes('Texas')) {
+                suggestions.push({
+                    type: 'warning',
+                    title: 'Add location keyword',
+                    text: 'Include "Texas" or specific city for better local discovery',
+                    action: 'location'
+                });
+            }
+            
+            if (headline.length > 60) {
+                suggestions.push({
+                    type: 'warning',
+                    title: 'Shorten headline',
+                    text: `Current: ${headline.length} chars. Aim for under 60 for AI snippets`,
+                    action: 'shorten'
+                });
+            }
+            
+            if (!headline.match(/\d+/)) {
+                suggestions.push({
+                    type: 'info',
+                    title: 'Add specific numbers',
+                    text: 'Include specific data points for better AI extraction',
+                    action: 'numbers'
+                });
+            }
+            
+            if (content.length < 300) {
+                suggestions.push({
+                    type: 'warning',
+                    title: 'Expand content',
+                    text: 'Add more detail for comprehensive AI understanding',
+                    action: 'expand'
+                });
+            }
+            
+            // Update suggestions list
+            const suggestionsList = document.getElementById('suggestions-list');
+            suggestionsList.innerHTML = suggestions.map(s => `
+                <div class="suggestion-item ${s.type}">
+                    <strong>${s.title}</strong>
+                    <p>${s.text}</p>
+                    <button onclick="applySuggestion('${s.action}')">Apply</button>
+                </div>
+            `).join('');
+        }
+
+        // Check voice consistency
+        function checkVoice() {
+            const content = document.getElementById('content').value;
+            
+            // Simulate voice analysis
+            const consistency = Math.floor(Math.random() * 20) + 75;
+            const readingLevel = Math.floor(Math.random() * 4) + 6;
+            
+            document.getElementById('consistency-score').textContent = consistency + '%';
+            document.getElementById('reading-level').textContent = readingLevel;
+            
+            // Show notification
+            alert(`Voice Analysis Complete!\n\nConsistency: ${consistency}%\nReading Level: Grade ${readingLevel}\n\nTip: Maintain consistent tone throughout your content.`);
+        }
+
+        // Generate schema markup
+        function generateSchema() {
+            const headline = document.getElementById('headline').value;
+            const content = document.getElementById('content').value;
+            const location = document.getElementById('location').value;
+            
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "NewsArticle",
+                "headline": headline || "Campaign Announcement",
+                "datePublished": new Date().toISOString(),
+                "author": {
+                    "@type": "Person",
+                    "name": "Jane Smith",
+                    "jobTitle": "Candidate for Governor"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "Smith for Texas Campaign",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://example.com/logo.png"
+                    }
+                },
+                "articleBody": content,
+                "dateline": location,
+                "speakable": {
+                    "@type": "SpeakableSpecification",
+                    "cssSelector": ["h1", ".keypoints", ".quote"]
+                }
+            };
+            
+            document.getElementById('schema-preview').style.display = 'block';
+            document.getElementById('schema-code').textContent = JSON.stringify(schema, null, 2);
+            
+            // Scroll to schema
+            document.getElementById('schema-preview').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Check grammar
+        function checkGrammar() {
+            const content = document.getElementById('content').value;
+            
+            // Simulate grammar check
+            const issues = [
+                'Consider using active voice in sentence 2',
+                'Possible spelling: "acomplish" should be "accomplish"',
+                'Long sentence detected (45 words) - consider breaking it up'
+            ];
+            
+            document.getElementById('grammar-check').style.display = 'block';
+            document.getElementById('grammar-issues').innerHTML = issues.map(issue => 
+                `<div class="grammar-issue">• ${issue}</div>`
+            ).join('');
+        }
+
+        // Apply suggestion
+        function applySuggestion(action) {
+            switch(action) {
+                case 'location':
+                    const currentHeadline = document.getElementById('headline').value;
+                    if (!currentHeadline.includes('Texas')) {
+                        document.getElementById('headline').value = currentHeadline + ' in Texas';
+                    }
+                    break;
+                case 'shorten':
+                    const headline = document.getElementById('headline').value;
+                    document.getElementById('headline').value = headline.substring(0, 60);
+                    break;
+                case 'numbers':
+                    alert('Add specific numbers to your headline, such as dollar amounts, percentages, or job counts.');
+                    break;
+                case 'expand':
+                    alert('Expand your content with more details, examples, and context for better AI understanding.');
+                    break;
+            }
+            
+            // Re-analyze
+            setTimeout(analyzeContent, 500);
+        }
+
+        // Optimize all
+        function optimizeAll() {
+            analyzeContent();
+            checkVoice();
+            generateSchema();
+            checkGrammar();
+            
+            // Show success message
+            setTimeout(() => {
+                alert('✅ Optimization Complete!\n\nYour content has been analyzed and optimized for:\n• Google AI Overviews\n• ChatGPT\n• Perplexity\n• Voice Assistants\n\nSchema markup has been generated and grammar has been checked.');
+            }, 1000);
+        }
+
+        // Document type selector
+        document.querySelectorAll('.doc-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('doc-title').textContent = this.textContent;
+            });
+        });
+
+        // Load initial content
+        loadSampleContent('press-release');
+    </script>
+</body>
+</html>

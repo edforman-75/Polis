@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communications Director Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        select, input[type="text"], input[type="date"] {
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+        }
+
+        /* Status workflow bar */
+        .status-workflow {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .workflow-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            gap: 6px;
+            justify-content: space-between;
+        }
+
+        .workflow-step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 0;
+        }
+
+        .workflow-step.summary-card {
+            cursor: default;
+            border: 1px solid #e2e8f0;
+        }
+
+        .workflow-step.summary-card:hover {
+            background: inherit;
+            transform: none;
+        }
+
+        .workflow-step:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .workflow-step.selected {
+            background: #e0f2fe;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Colorful status-specific workflow step styling */
+        .status-new { background: #f0f9ff; }
+        .status-in-progress { background: #fffbeb; }
+        .status-review { background: #faf5ff; }
+        .status-blocked { background: #fef2f2; }
+        .status-completed { background: #f0fdf4; }
+
+        .step-icon {
+            font-size: 16px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .step-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-label {
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .step-count {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1;
+        }
+
+        /* Assignments table */
+        .assignments-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .view-toggles {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 2px;
+            border-radius: 6px;
+        }
+
+        .view-toggle {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-toggle.active {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .assignments-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .assignments-table th {
+            background: #f8fafc;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .assignments-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+
+        .assignments-table tr:hover {
+            background: #f8fafc !important;
+        }
+
+        /* Priority row backgrounds - Red, Yellow, Green system */
+        .assignments-table tr.priority-urgent {
+            background: #fee2e2;
+        }
+
+        .assignments-table tr.priority-urgent:hover {
+            background: #fecaca !important;
+        }
+
+        .assignments-table tr.priority-high {
+            background: #fef3c7;
+        }
+
+        .assignments-table tr.priority-high:hover {
+            background: #fde68a !important;
+        }
+
+        .assignments-table tr.priority-normal {
+            background: #dcfce7;
+        }
+
+        .assignments-table tr.priority-normal:hover {
+            background: #bbf7d0 !important;
+        }
+
+        .assignments-table tr.priority-low {
+            background: #f0fdf4;
+        }
+
+        .assignments-table tr.priority-low:hover {
+            background: #dcfce7 !important;
+        }
+
+        .assignment-cell {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .assignment-info {
+            flex: 1;
+        }
+
+        .assignment-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .assignment-meta {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .meta-tag {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .assignment-description {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .assignor-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .assignor-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .assignor-name {
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .due-date {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .due-soon { color: #f59e0b; }
+        .overdue { color: #ef4444; }
+        .due-normal { color: #64748b; }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-in-progress { background: #fef3c7; color: #92400e; }
+        .status-under-review { background: #e9d5ff; color: #7c3aed; }
+        .status-blocked { background: #fecaca; color: #dc2626; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+
+        .dependencies-list {
+            font-size: 12px;
+        }
+
+        .dependency-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .dependency-icon {
+            font-size: 10px;
+            color: #f59e0b;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .bundle-indicator {
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Bundle management section */
+        .bundle-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .bundle-row {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .bundle-row .assignment-title {
+            color: #1e40af;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            margin: 40px auto;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* Brief tooltip styles */
+        .brief-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            cursor: help;
+        }
+
+        .brief-preview.expandable:hover {
+            background: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .brief-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1f2937;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            width: 400px;
+            font-size: 13px;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            white-space: normal;
+        }
+
+        .brief-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #1f2937;
+        }
+
+        .brief-preview:hover .brief-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .brief-short {
+            display: block;
+        }
+
+        .brief-full {
+            display: none;
+        }
+
+        /* Assignee and dependency styles */
+        .assignee-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .assignee-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .assignee-dropdown {
+            font-size: 12px;
+            padding: 2px 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .assignee-dropdown:hover {
+            border-color: #3b82f6;
+        }
+
+        .message-btn, .message-owner-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            cursor: pointer;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .message-btn:hover, .message-owner-btn:hover {
+            background: #e0f2fe;
+            color: #1e40af;
+        }
+
+        .dependency-item {
+            margin-bottom: 6px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dependency-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dependency-main {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dependency-text {
+            font-size: 12px;
+            color: #374151;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .dependency-owner-info {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 11px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            margin-top: 4px;
+        }
+
+        .dependency-owner-info::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid #1f2937;
+        }
+
+        .dependency-item:hover .dependency-owner-info {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .owner-name {
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .message-owner-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: background 0.2s;
+        }
+
+        .message-owner-btn:hover {
+            background: #2563eb;
+        }
+
+        .dependency-icon {
+            font-size: 12px;
+            color: #f59e0b;
+        }
+
+        /* Editable due date styles */
+        .due-date-editable {
+            cursor: pointer;
+            border: 1px solid transparent;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .due-date-editable:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .due-date-input {
+            font-size: 12px;
+            padding: 2px 4px;
+            border: 1px solid #3b82f6;
+            border-radius: 3px;
+            width: 120px;
+        }
+
+        .due-date-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .due-date-save, .due-date-cancel {
+            font-size: 10px;
+            padding: 2px 6px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .due-date-save {
+            background: #10b981;
+            color: white;
+        }
+
+        .due-date-save:hover {
+            background: #059669;
+        }
+
+        .due-date-cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .due-date-cancel:hover {
+            background: #4b5563;
+        }
+
+        /* Communications Briefs Grid */
+        .briefs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .brief-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .brief-card:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .brief-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .brief-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .brief-status {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+
+        .brief-status.draft {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .brief-status.in-progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .brief-status.completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .brief-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .brief-description {
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .brief-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .brief-btn {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: white;
+            color: #64748b;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .brief-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .brief-btn.primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .brief-btn.primary:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1>
+                    📊 Communications Director Dashboard
+                </h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">
+                        👤 Writer Dashboard
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/'">
+                        📝 Editor
+                    </button>
+                    <button class="btn btn-primary" onclick="showNewBundleModal()">
+                        📁 New Bundle
+                    </button>
+                    <button class="btn btn-success" onclick="showNewAssignmentModal()">
+                        ➕ New Assignment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="🔍 Search assignments..." id="searchInput" oninput="filterAssignments()">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status:</label>
+                    <select id="statusFilter" onchange="filterAssignments()">
+                        <option value="">All Status</option>
+                        <option value="new">New</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Assignee:</label>
+                    <select id="assigneeFilter" onchange="filterAssignments()">
+                        <option value="">All Assignees</option>
+                        <option value="sarah-writer">Sarah</option>
+                        <option value="mike-writer">Mike</option>
+                        <option value="jen-writer">Jennifer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Priority:</label>
+                    <select id="priorityFilter" onchange="filterAssignments()">
+                        <option value="">All Priority</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="high">High</option>
+                        <option value="normal">Normal</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Due:</label>
+                    <select id="dueFilter" onchange="filterAssignments()">
+                        <option value="">Any time</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="today">Today</option>
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="week">This week</option>
+                        <option value="month">This month</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="status-workflow">
+            <div class="workflow-title">Assignment Overview</div>
+            <div class="workflow-steps">
+                <div class="workflow-step summary-card" data-status="">
+                    <div class="step-icon">📊</div>
+                    <div class="step-info">
+                        <div class="step-label">Total</div>
+                        <div class="step-count" id="totalCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-new" data-status="new" onclick="filterByStatus('new')">
+                    <div class="step-icon">📥</div>
+                    <div class="step-info">
+                        <div class="step-label">New</div>
+                        <div class="step-count" id="newCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-in-progress" data-status="in_progress" onclick="filterByStatus('in_progress')">
+                    <div class="step-icon">✏️</div>
+                    <div class="step-info">
+                        <div class="step-label">In Progress</div>
+                        <div class="step-count" id="inProgressCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-review" data-status="under_review" onclick="filterByStatus('under_review')">
+                    <div class="step-icon">👁️</div>
+                    <div class="step-info">
+                        <div class="step-label">Under Review</div>
+                        <div class="step-count" id="underReviewCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-blocked" data-status="blocked" onclick="filterByStatus('blocked')">
+                    <div class="step-icon">⚠️</div>
+                    <div class="step-info">
+                        <div class="step-label">Blocked</div>
+                        <div class="step-count" id="blockedCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step status-completed" data-status="completed" onclick="filterByStatus('completed')">
+                    <div class="step-icon">✅</div>
+                    <div class="step-info">
+                        <div class="step-label">Completed</div>
+                        <div class="step-count" id="completedCount">0</div>
+                    </div>
+                </div>
+                <div class="workflow-step summary-card" data-status="">
+                    <div class="step-icon">🚨</div>
+                    <div class="step-info">
+                        <div class="step-label">Urgent</div>
+                        <div class="step-count" id="dueTodayCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communications Briefs Section -->
+        <div class="assignments-section" style="margin-bottom: 20px;">
+            <div class="section-header">
+                <div class="section-title">📋 Communications Briefs & Story Analysis</div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="createNewBrief()">✨ New Brief</button>
+                    <button class="btn btn-secondary" onclick="showBriefTemplates()">📄 Templates</button>
+                </div>
+            </div>
+
+            <div class="briefs-grid" id="briefsGrid">
+                <!-- Briefs will be populated here -->
+            </div>
+
+            <!-- Empty state for briefs -->
+            <div class="empty-briefs" id="emptyBriefs" style="display: none; padding: 40px 20px; text-align: center; color: #64748b;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                <h3 style="margin-bottom: 8px; color: #334155;">No Communications Briefs Yet</h3>
+                <p style="margin-bottom: 20px;">Create story analysis briefs to guide your speechwriters with key messages, themes, and narrative direction.</p>
+                <button class="btn btn-primary" onclick="createNewBrief()">✨ Create Your First Brief</button>
+            </div>
+        </div>
+
+        <!-- Assignments Table -->
+        <div class="assignments-section">
+            <div class="section-header">
+                <div class="section-title">All Department Assignments & Bundles</div>
+                <div class="view-toggles">
+                    <button class="view-toggle active" onclick="setView('all')">All Items</button>
+                    <button class="view-toggle" onclick="setView('assignments')">Assignments Only</button>
+                    <button class="view-toggle" onclick="setView('bundles')">Bundles Only</button>
+                </div>
+            </div>
+
+            <table class="assignments-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Assignment</th>
+                        <th style="width: 12%;">Assignee</th>
+                        <th style="width: 10%;">Due Date</th>
+                        <th style="width: 8%;">Status</th>
+                        <th style="width: 20%;">Dependencies</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="assignmentsTableBody">
+                    <!-- Dynamic content -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- New Assignment Modal -->
+    <div id="newAssignmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Assignment</h3>
+                <button class="close-btn" onclick="closeModal('newAssignmentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Assignment Title</label>
+                    <input type="text" class="form-control" id="assignmentTitle" placeholder="Enter assignment title">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brief Description</label>
+                    <textarea class="form-control" id="assignmentBrief" placeholder="Brief description of what needs to be done"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assign To</label>
+                    <select class="form-control" id="assignmentWriter">
+                        <option value="">Select a writer</option>
+                        <option value="sarah-writer">Sarah (Writer)</option>
+                        <option value="mike-writer">Mike (Writer)</option>
+                        <option value="jen-writer">Jennifer (Writer)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" id="assignmentPriority">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="datetime-local" class="form-control" id="assignmentDueDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bundle (Optional)</label>
+                    <select class="form-control" id="assignmentBundle">
+                        <option value="">No bundle</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dependencies (Optional)</label>
+                    <textarea class="form-control" id="assignmentDependencies" placeholder="List any dependencies or requirements"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newAssignmentModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createAssignment()">Create Assignment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Bundle Modal -->
+    <div id="newBundleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Bundle</h3>
+                <button class="close-btn" onclick="closeModal('newBundleModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Bundle Name</label>
+                    <input type="text" class="form-control" id="bundleName" placeholder="Enter bundle name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="bundleDescription" placeholder="Describe this bundle of related materials"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Event/Announcement Date</label>
+                    <input type="date" class="form-control" id="bundleDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bundle Type</label>
+                    <select class="form-control" id="bundleType">
+                        <option value="event">Event</option>
+                        <option value="announcement">Announcement</option>
+                        <option value="campaign">Campaign</option>
+                        <option value="policy">Policy</option>
+                        <option value="response">Response</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newBundleModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createBundle()">Create Bundle</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend-api.js"></script>
+    <script>
+        let assignments = [];
+        let bundles = {};
+        let filteredAssignments = [];
+        let currentView = 'all';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadData();
+            updateDisplay();
+        });
+
+        async function loadData() {
+            try {
+                // Try to load from API first
+                const assignmentsData = await campaignAPI.getAssignments();
+                assignments = assignmentsData.assignments || [];
+
+                // If no assignments from API, use sample data
+                if (assignments.length === 0) {
+                    assignments = getSampleAssignments();
+                }
+            } catch (error) {
+                console.error('Error loading data from API, using sample data:', error);
+                // Use sample data if API fails
+                assignments = getSampleAssignments();
+            }
+
+            // Always populate bundles with sample data for now
+            bundles = {
+                'VDB-2025': {
+                    id: 'VDB-2025',
+                    name: "Veteran's Day Bundle 2025",
+                    description: "Comprehensive Veteran's Day content package including speech, social media, and press materials",
+                    type: 'event',
+                    eventDate: '2025-11-11',
+                    created: '2025-09-23',
+                    status: 'created'
+                },
+                'VSM-2025': {
+                    id: 'VSM-2025',
+                    name: "Veterans Social Media Package",
+                    description: "Social media content series for Veterans Day outreach",
+                    type: 'event',
+                    eventDate: '2025-11-11',
+                    created: '2025-09-23',
+                    status: 'created'
+                }
+            };
+
+            populateFilters();
+        }
+
+        function getSampleAssignments() {
+            return [
+                {
+                    id: 'HCR-2025-001',
+                    title: 'Healthcare Rally Speech - District 7',
+                    brief: 'Opening speech for healthcare town hall focused on Medicare expansion and prescription drug costs. Should emphasize local impact on seniors, include statistics on prescription cost savings, and highlight bipartisan support. Target audience is primarily Medicare recipients and families dealing with high healthcare costs. Tone should be compassionate yet assertive.',
+                    assignee: 'sarah-writer',
+                    assignor: 'Michael Chen',
+                    assignorRole: 'Communications Director',
+                    priority: 'urgent',
+                    status: 'in_progress',
+                    created: '2025-01-15',
+                    dueDate: '2025-09-24T14:00:00',
+                    bundleId: null,
+                    dependencies: [
+                        { item: 'Policy team fact sheet', owner: 'Sarah Martinez (Policy Director)' },
+                        { item: 'CBO cost analysis', owner: 'Research Team' }
+                    ],
+                    tags: ['speech', 'healthcare']
+                },
+                {
+                    id: 'INF-2025-002',
+                    title: 'Infrastructure Bill Press Release',
+                    brief: 'Announce support for federal infrastructure bill with local impact details. Must include specific projects for our district: bridge repairs on Route 15, broadband expansion to rural areas, and water system upgrades. Include job creation numbers and timeline for implementation.',
+                    assignee: 'mike-writer',
+                    assignor: 'Jennifer Davis',
+                    assignorRole: 'Deputy Director',
+                    priority: 'high',
+                    status: 'under_review',
+                    created: '2025-01-15',
+                    dueDate: '2025-09-24T17:00:00',
+                    bundleId: null,
+                    dependencies: [
+                        { item: 'Engineering estimates from DOT', owner: 'Mark Thompson (Infrastructure Liaison)' }
+                    ],
+                    tags: ['press-release', 'infrastructure']
+                },
+                {
+                    id: 'VSM-2025-003',
+                    title: 'Veterans Day Social Media Series',
+                    brief: 'Create 5-post series honoring local veterans with personal stories. Each post should feature a different veteran from our district, include their photo, brief service summary, and current community involvement. Posts should be scheduled throughout Veterans Day week leading up to November 11th ceremony.',
+                    assignee: 'sarah-writer',
+                    assignor: 'David Park',
+                    assignorRole: 'Digital Director',
+                    priority: 'normal',
+                    status: 'blocked',
+                    created: '2025-01-15',
+                    dueDate: '2025-11-11T08:00:00',
+                    bundleId: 'VSM-2025',
+                    dependencies: [
+                        { item: 'Veteran interviews', owner: 'Lisa Chen (Field Coordinator)' },
+                        { item: 'Photos from field team', owner: 'Photography Team' },
+                        { item: 'Permission forms signed', owner: 'Legal Department' }
+                    ],
+                    tags: ['social-media', 'veterans']
+                },
+                {
+                    id: 'EDU-2025-004',
+                    title: 'Education Funding Op-Ed',
+                    brief: 'Opinion piece on state education budget for major newspaper. Should argue for increased per-pupil funding, highlight teacher shortage in our district, and propose specific solutions including teacher loan forgiveness and classroom resource grants. Target word count: 800-1000 words.',
+                    assignee: 'jen-writer',
+                    assignor: 'Jennifer Davis',
+                    assignorRole: 'Deputy Director',
+                    priority: 'high',
+                    status: 'in_progress',
+                    created: '2025-01-15',
+                    dueDate: '2025-09-21T09:00:00',
+                    bundleId: null,
+                    dependencies: [
+                        { item: 'Budget analysis', owner: 'Research Team' },
+                        { item: 'Teacher union quotes', owner: 'Amanda Rodriguez (Union Liaison)' }
+                    ],
+                    tags: ['op-ed', 'education']
+                },
+                {
+                    id: 'FND-2025-005',
+                    title: 'Weekly Donor Email Update',
+                    brief: 'Campaign progress update highlighting recent achievements and upcoming events. Include grassroots fundraising totals, volunteer recruitment numbers, and preview of next week\'s town halls. Should maintain positive, energetic tone while showing momentum.',
+                    assignee: 'sarah-writer',
+                    assignor: 'Michael Chen',
+                    assignorRole: 'Communications Director',
+                    priority: 'normal',
+                    status: 'new',
+                    created: '2025-01-15',
+                    dueDate: '2025-09-25T12:00:00',
+                    bundleId: null,
+                    dependencies: [
+                        { item: 'Finance report', owner: 'David Kim (Treasurer)' }
+                    ],
+                    tags: ['email', 'fundraising']
+                },
+                {
+                    id: 'VOL-2025-006',
+                    title: 'Volunteer Thank You Letters',
+                    brief: 'Personalized thank you templates for phone bank volunteers who participated in last week\'s GOTV effort. Create 3 templates: first-time volunteers, returning volunteers, and team leaders. Include specific impact numbers and invitation to upcoming events.',
+                    assignee: 'mike-writer',
+                    assignor: 'David Park',
+                    assignorRole: 'Digital Director',
+                    priority: 'normal',
+                    status: 'new',
+                    created: '2025-01-15',
+                    dueDate: '2025-09-26T16:00:00',
+                    bundleId: null,
+                    dependencies: [
+                        { item: 'Volunteer coordinator call logs', owner: 'Maria Santos (Volunteer Coordinator)' }
+                    ],
+                    tags: ['letters', 'volunteers']
+                },
+                {
+                    id: 'VDB-2025-007',
+                    title: 'Veterans Day Ceremony Speech',
+                    brief: 'Main address for Veterans Day ceremony at Memorial Park. 10-minute speech honoring service members, acknowledging local veterans organizations, and highlighting our commitment to veterans\' healthcare and benefits. Should be solemn yet inspiring.',
+                    assignee: 'jen-writer',
+                    assignor: 'Michael Chen',
+                    assignorRole: 'Communications Director',
+                    priority: 'high',
+                    status: 'new',
+                    created: '2025-09-20',
+                    dueDate: '2025-11-10T17:00:00',
+                    bundleId: 'VDB-2025',
+                    dependencies: [
+                        { item: 'VFW speaking order confirmation', owner: 'VFW Post 1234' },
+                        { item: 'Memorial details from city', owner: 'City Events Department' }
+                    ],
+                    tags: ['speech', 'veterans', 'ceremony']
+                },
+                {
+                    id: 'VDB-2025-008',
+                    title: 'Veterans Benefits Press Release',
+                    brief: 'Announce new veterans benefits legislation we\'re co-sponsoring. Focus on mental health services expansion, job training programs, and housing assistance. Include quotes from local veterans and service organizations.',
+                    assignee: 'mike-writer',
+                    assignor: 'Jennifer Davis',
+                    assignorRole: 'Deputy Director',
+                    priority: 'high',
+                    status: 'under_review',
+                    created: '2025-09-18',
+                    dueDate: '2025-11-08T12:00:00',
+                    bundleId: 'VDB-2025',
+                    dependencies: [
+                        { item: 'Final bill language', owner: 'Congressional Legislative Staff' }
+                    ],
+                    tags: ['press-release', 'veterans', 'legislation']
+                }
+            ];
+        }
+
+        function populateFilters() {
+            // Populate bundle filter in assignment modal
+            const bundleSelect = document.getElementById('assignmentBundle');
+            bundleSelect.innerHTML = '<option value="">No bundle</option>';
+            Object.values(bundles).forEach(bundle => {
+                bundleSelect.innerHTML += `<option value="${bundle.id}">${bundle.name}</option>`;
+            });
+        }
+
+        function updateDisplay() {
+            filteredAssignments = filterAssignmentsList();
+            filteredAssignments = sortAssignmentsByPriority(filteredAssignments);
+            renderAssignmentsTable();
+            updateStatusCounts();
+        }
+
+        function sortAssignmentsByPriority(assignmentsList) {
+            const priorityOrder = { 'urgent': 0, 'high': 1, 'normal': 2, 'low': 3 };
+
+            return assignmentsList.sort((a, b) => {
+                const aPriority = calculatePriority(a.dueDate);
+                const bPriority = calculatePriority(b.dueDate);
+
+                // Sort by priority first (urgent first)
+                const priorityDiff = priorityOrder[aPriority] - priorityOrder[bPriority];
+                if (priorityDiff !== 0) return priorityDiff;
+
+                // If same priority, sort by due date (earliest first)
+                const aDate = a.dueDate ? new Date(a.dueDate) : new Date('2099-12-31');
+                const bDate = b.dueDate ? new Date(b.dueDate) : new Date('2099-12-31');
+                return aDate - bDate;
+            });
+        }
+
+        function filterAssignmentsList() {
+            let filtered = [...assignments];
+
+            // Apply search filter
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(assignment =>
+                    assignment.title.toLowerCase().includes(searchTerm) ||
+                    assignment.brief.toLowerCase().includes(searchTerm) ||
+                    assignment.assignee.toLowerCase().includes(searchTerm) ||
+                    assignment.assignor.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Apply status filter
+            const statusFilter = document.getElementById('statusFilter').value;
+            if (statusFilter) {
+                filtered = filtered.filter(assignment => assignment.status === statusFilter);
+            }
+
+            // Apply assignee filter
+            const assigneeFilter = document.getElementById('assigneeFilter').value;
+            if (assigneeFilter) {
+                filtered = filtered.filter(assignment => assignment.assignee === assigneeFilter);
+            }
+
+            // Apply priority filter
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            if (priorityFilter) {
+                filtered = filtered.filter(assignment => assignment.priority === priorityFilter);
+            }
+
+            // Apply due date filter
+            const dueFilter = document.getElementById('dueFilter').value;
+            if (dueFilter) {
+                const now = new Date();
+                filtered = filtered.filter(assignment => {
+                    if (!assignment.dueDate) return false;
+                    const dueDate = new Date(assignment.dueDate);
+
+                    switch (dueFilter) {
+                        case 'overdue':
+                            return dueDate < now;
+                        case 'today':
+                            return dueDate.toDateString() === now.toDateString();
+                        case 'tomorrow':
+                            const tomorrow = new Date(now);
+                            tomorrow.setDate(tomorrow.getDate() + 1);
+                            return dueDate.toDateString() === tomorrow.toDateString();
+                        case 'week':
+                            const weekFromNow = new Date(now);
+                            weekFromNow.setDate(weekFromNow.getDate() + 7);
+                            return dueDate <= weekFromNow;
+                        case 'month':
+                            const monthFromNow = new Date(now);
+                            monthFromNow.setMonth(monthFromNow.getMonth() + 1);
+                            return dueDate <= monthFromNow;
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            // Apply view filter
+            if (currentView === 'bundles') {
+                // Show only assignments that are part of bundles
+                filtered = filtered.filter(assignment => assignment.bundleId);
+            } else if (currentView === 'assignments') {
+                // Show only standalone assignments
+                filtered = filtered.filter(assignment => !assignment.bundleId);
+            }
+
+            return filtered;
+        }
+
+        function renderAssignmentsTable() {
+            const tbody = document.getElementById('assignmentsTableBody');
+
+            if (filteredAssignments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                            No assignments match your current filters
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredAssignments.map(assignment => {
+                const bundle = assignment.bundleId ? bundles[assignment.bundleId] : null;
+                const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
+                const now = new Date();
+
+                let dueDateClass = 'due-normal';
+                let dueDateText = 'No due date';
+
+                if (dueDate) {
+                    const timeDiff = dueDate - now;
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+                    if (timeDiff < 0) {
+                        dueDateClass = 'overdue';
+                        dueDateText = `Overdue by ${Math.abs(daysDiff)} days`;
+                    } else if (daysDiff === 0) {
+                        dueDateClass = 'due-soon';
+                        dueDateText = 'Due today';
+                    } else if (daysDiff === 1) {
+                        dueDateClass = 'due-soon';
+                        dueDateText = 'Due tomorrow';
+                    } else if (daysDiff <= 7) {
+                        dueDateClass = 'due-soon';
+                        dueDateText = `Due in ${daysDiff} days`;
+                    } else {
+                        dueDateText = dueDate.toLocaleDateString();
+                    }
+                }
+
+                const statusClass = `status-${assignment.status.replace('_', '-')}`;
+                const calculatedPriority = calculatePriority(assignment.dueDate);
+                const priorityClass = `priority-${calculatedPriority}`;
+
+                const assignorInitials = assignment.assignor.split(' ').map(n => n[0]).join('');
+
+                return `
+                    <tr class="${bundle ? 'bundle-row' : ''} ${priorityClass}">
+                        <td>
+                            <div class="assignment-cell">
+                                <div class="assignment-info">
+                                    <div class="assignment-title">
+                                        ${assignment.title}
+                                        ${bundle ? `<span class="bundle-indicator">📦 ${bundle.name}</span>` : ''}
+                                    </div>
+                                    <div class="assignment-meta">
+                                        <span class="meta-tag">${assignment.id}</span>
+                                        ${assignment.tags ? assignment.tags.map(tag => `<span class="meta-tag">${tag}</span>`).join('') : ''}
+                                    </div>
+                                    <div class="brief-preview ${assignment.brief.length > 120 ? 'expandable' : ''}">
+                                        <span class="brief-short">${assignment.brief.length > 120 ? assignment.brief.substring(0, 120) + '...' : assignment.brief}</span>
+                                        ${assignment.brief.length > 120 ? `<div class="brief-tooltip">${assignment.brief}</div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="assignee-info">
+                                <div class="assignee-avatar" style="background: ${getAssigneeColor(assignment.assignee)}">${getAssigneeInitials(assignment.assignee)}</div>
+                                <div>
+                                    <div class="assignee-name">
+                                        <select class="assignee-dropdown" onchange="changeAssignee('${assignment.id}', this.value)">
+                                            <option value="sarah-writer" ${assignment.assignee === 'sarah-writer' ? 'selected' : ''}>Sarah (Writer)</option>
+                                            <option value="mike-writer" ${assignment.assignee === 'mike-writer' ? 'selected' : ''}>Mike (Writer)</option>
+                                            <option value="jen-writer" ${assignment.assignee === 'jen-writer' ? 'selected' : ''}>Jennifer (Writer)</option>
+                                        </select>
+                                    </div>
+                                    <div style="font-size: 11px; color: #64748b;">
+                                        <button class="message-btn" onclick="messageAssignee('${assignment.assignee}', '${assignment.id}')">📧 Message</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="due-date ${dueDateClass} due-date-editable" onclick="editDueDate('${assignment.id}', '${assignment.dueDate || ''}')" id="due-${assignment.id}">
+                                ${dueDateText}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="status-badge ${statusClass}">
+                                ${assignment.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="dependencies-list">
+                                ${assignment.dependencies && assignment.dependencies.length > 0
+                                    ? assignment.dependencies.map(dep => `
+                                        <div class="dependency-item">
+                                            <div class="dependency-main">
+                                                <span class="dependency-icon">⚠️</span>
+                                                <span class="dependency-text">${typeof dep === 'string' ? dep : dep.item}</span>
+                                            </div>
+                                            ${typeof dep === 'object' && dep.owner ? `
+                                                <div class="dependency-owner-info">
+                                                    <div class="owner-name">${dep.owner}</div>
+                                                    <button class="message-owner-btn" onclick="messageDependencyOwner('${dep.owner}', '${dep.item}', '${assignment.id}')">📧 Message</button>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `).join('')
+                                    : '<span style="color: #64748b;">None</span>'
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="action-btn" onclick="openAssignment('${assignment.id}')">Open</button>
+                                <button class="action-btn" onclick="editAssignment('${assignment.id}')">Edit</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStatusCounts() {
+            const statusCounts = {
+                total: assignments.length,
+                new: 0,
+                in_progress: 0,
+                under_review: 0,
+                blocked: 0,
+                completed: 0,
+                urgent: 0
+            };
+
+            assignments.forEach(assignment => {
+                statusCounts[assignment.status]++;
+
+                // Count urgent assignments (calculated priority)
+                const priority = calculatePriority(assignment.dueDate);
+                if (priority === 'urgent') {
+                    statusCounts.urgent++;
+                }
+            });
+
+            document.getElementById('totalCount').textContent = statusCounts.total;
+            document.getElementById('newCount').textContent = statusCounts.new;
+            document.getElementById('inProgressCount').textContent = statusCounts.in_progress;
+            document.getElementById('underReviewCount').textContent = statusCounts.under_review;
+            document.getElementById('blockedCount').textContent = statusCounts.blocked;
+            document.getElementById('completedCount').textContent = statusCounts.completed;
+            document.getElementById('dueTodayCount').textContent = statusCounts.urgent;
+        }
+
+        function filterAssignments() {
+            updateDisplay();
+        }
+
+        function filterByStatus(status) {
+            document.getElementById('statusFilter').value = status;
+
+            // Update selected step
+            document.querySelectorAll('.workflow-step').forEach(step => {
+                step.classList.remove('selected');
+            });
+            document.querySelector(`[data-status="${status}"]`).classList.add('selected');
+
+            updateDisplay();
+        }
+
+        function setView(view) {
+            currentView = view;
+
+            // Update active toggle
+            document.querySelectorAll('.view-toggle').forEach(toggle => {
+                toggle.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            updateDisplay();
+        }
+
+        // Modal functions
+        function showNewAssignmentModal() {
+            document.getElementById('newAssignmentModal').style.display = 'block';
+        }
+
+        function showNewBundleModal() {
+            document.getElementById('newBundleModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Assignment functions
+        function openAssignment(assignmentId) {
+            // Route to appropriate editor based on assignment type
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (!assignment) {
+                console.error('Assignment not found:', assignmentId);
+                return;
+            }
+
+            let editorUrl;
+            switch (assignment.type) {
+                case 'speech':
+                    editorUrl = `/speech-editor-thin?assignment=${assignmentId}`;
+                    break;
+                case 'press-release':
+                    editorUrl = `/?assignment=${assignmentId}`;
+                    break;
+                case 'social-media':
+                    editorUrl = `/social?assignment=${assignmentId}`;
+                    break;
+                case 'talking-points':
+                case 'daily-talking-points':
+                case 'crisis-response':
+                    editorUrl = `/?assignment=${assignmentId}`;
+                    break;
+                case 'press-advisory':
+                    editorUrl = `/?assignment=${assignmentId}`;
+                    break;
+                default:
+                    // Default to main editor
+                    editorUrl = `/?assignment=${assignmentId}`;
+            }
+
+            window.open(editorUrl, '_blank');
+        }
+
+        function editAssignment(assignmentId) {
+            // For now, just open the assignment
+            openAssignment(assignmentId);
+        }
+
+        async function createAssignment() {
+            const assignmentData = {
+                title: document.getElementById('assignmentTitle').value,
+                brief: document.getElementById('assignmentBrief').value,
+                assignee: document.getElementById('assignmentWriter').value,
+                priority: document.getElementById('assignmentPriority').value,
+                dueDate: document.getElementById('assignmentDueDate').value,
+                bundleId: document.getElementById('assignmentBundle').value || null,
+                dependencies: document.getElementById('assignmentDependencies').value.split('\n').filter(d => d.trim())
+            };
+
+            try {
+                await campaignAPI.createAssignment(assignmentData);
+                closeModal('newAssignmentModal');
+                await loadData();
+                updateDisplay();
+
+                // Clear form
+                document.getElementById('assignmentTitle').value = '';
+                document.getElementById('assignmentBrief').value = '';
+                document.getElementById('assignmentWriter').value = '';
+                document.getElementById('assignmentPriority').value = 'normal';
+                document.getElementById('assignmentDueDate').value = '';
+                document.getElementById('assignmentBundle').value = '';
+                document.getElementById('assignmentDependencies').value = '';
+            } catch (error) {
+                console.error('Error creating assignment:', error);
+                alert('Failed to create assignment');
+            }
+        }
+
+        async function createBundle() {
+            const bundleData = {
+                name: document.getElementById('bundleName').value,
+                description: document.getElementById('bundleDescription').value,
+                eventDate: document.getElementById('bundleDate').value,
+                type: document.getElementById('bundleType').value
+            };
+
+            try {
+                // For now, just add to local bundles (would need API endpoint)
+                const bundleId = 'bundle-' + Date.now();
+                bundles[bundleId] = {
+                    id: bundleId,
+                    ...bundleData,
+                    created: new Date().toISOString(),
+                    status: 'created'
+                };
+
+                closeModal('newBundleModal');
+                populateFilters();
+                updateDisplay();
+
+                // Clear form
+                document.getElementById('bundleName').value = '';
+                document.getElementById('bundleDescription').value = '';
+                document.getElementById('bundleDate').value = '';
+                document.getElementById('bundleType').value = 'event';
+            } catch (error) {
+                console.error('Error creating bundle:', error);
+                alert('Failed to create bundle');
+            }
+        }
+
+        // Calculate priority based on due date
+        function calculatePriority(dueDate) {
+            if (!dueDate) return 'low';
+
+            const now = new Date();
+            const due = new Date(dueDate);
+            const hoursDiff = (due - now) / (1000 * 60 * 60);
+
+            if (hoursDiff < 0) {
+                // Overdue = urgent
+                return 'urgent';
+            } else if (hoursDiff <= 24) {
+                // Due within 24 hours = urgent
+                return 'urgent';
+            } else if (hoursDiff <= 72) {
+                // Due within 3 days = high
+                return 'high';
+            } else if (hoursDiff <= 168) {
+                // Due within 1 week = normal
+                return 'normal';
+            } else {
+                // Due in more than 1 week = low
+                return 'low';
+            }
+        }
+
+        // Helper functions for assignee management
+        function getAssigneeInitials(assignee) {
+            const names = {
+                'sarah-writer': 'SW',
+                'mike-writer': 'MW',
+                'jen-writer': 'JW'
+            };
+            return names[assignee] || assignee.substring(0, 2).toUpperCase();
+        }
+
+        function getAssigneeColor(assignee) {
+            const colors = {
+                'sarah-writer': '#8b5cf6',
+                'mike-writer': '#06b6d4',
+                'jen-writer': '#10b981'
+            };
+            return colors[assignee] || '#3b82f6';
+        }
+
+        function changeAssignee(assignmentId, newAssignee) {
+            console.log(`Changing assignment ${assignmentId} to ${newAssignee}`);
+
+            // Update the assignment in our data
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (assignment) {
+                const oldAssignee = assignment.assignee;
+                assignment.assignee = newAssignee;
+                updateDisplay();
+
+                // Send notification to new assignee
+                sendAssignmentChangeNotification(assignmentId, 'assignee', oldAssignee, newAssignee);
+
+                // Show confirmation
+                alert(`Assignment ${assignmentId} has been reassigned to ${newAssignee.replace('-writer', '').replace('-', ' ')}`);
+
+                // Here you would also make an API call to save the change
+                // await campaignAPI.updateAssignment(assignmentId, { assignee: newAssignee });
+            }
+        }
+
+        function editDueDate(assignmentId, currentDueDate) {
+            const dueDateElement = document.getElementById(`due-${assignmentId}`);
+
+            // Create input field
+            const currentDate = currentDueDate ? new Date(currentDueDate) : new Date();
+            const formattedDate = currentDate.toISOString().slice(0, 16);
+
+            dueDateElement.innerHTML = `
+                <input type="datetime-local" class="due-date-input" value="${formattedDate}" id="due-input-${assignmentId}">
+                <div class="due-date-actions">
+                    <button class="due-date-save" onclick="saveDueDate('${assignmentId}')">Save</button>
+                    <button class="due-date-cancel" onclick="cancelDueDateEdit('${assignmentId}', '${currentDueDate || ''}')">Cancel</button>
+                </div>
+            `;
+
+            // Focus the input
+            document.getElementById(`due-input-${assignmentId}`).focus();
+        }
+
+        function saveDueDate(assignmentId) {
+            const newDueDate = document.getElementById(`due-input-${assignmentId}`).value;
+
+            if (!newDueDate) {
+                alert('Please select a due date');
+                return;
+            }
+
+            // Update the assignment in our data
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (assignment) {
+                const oldDueDate = assignment.dueDate;
+                assignment.dueDate = newDueDate;
+
+                // Send notification to assignee about due date change
+                sendAssignmentChangeNotification(assignmentId, 'dueDate', oldDueDate, newDueDate);
+
+                // Refresh the entire display to update priority and sorting
+                updateDisplay();
+
+                // Show confirmation
+                const formattedDate = new Date(newDueDate).toLocaleDateString();
+                alert(`Due date updated to ${formattedDate}`);
+
+                // Here you would also make an API call to save the change
+                // await campaignAPI.updateAssignment(assignmentId, { dueDate: newDueDate });
+            }
+        }
+
+        function cancelDueDateEdit(assignmentId, originalDueDate) {
+            // Restore original display
+            updateDisplay();
+        }
+
+        function sendAssignmentChangeNotification(assignmentId, changeType, oldValue, newValue) {
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (!assignment) return;
+
+            const assigneeName = assignment.assignee.replace('-writer', '').replace('-', ' ');
+
+            let subject, body;
+
+            if (changeType === 'assignee') {
+                const oldAssigneeName = oldValue.replace('-writer', '').replace('-', ' ');
+                const newAssigneeName = newValue.replace('-writer', '').replace('-', ' ');
+
+                subject = `Assignment Reassigned: ${assignment.title}`;
+                body = `Hi ${newAssigneeName},\n\nYou have been assigned to work on "${assignment.title}" (${assignmentId}).\n\nThis assignment was previously assigned to ${oldAssigneeName}.\n\nDue Date: ${assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'Not set'}\n\nAssignment Details: ${assignment.brief}\n\nPlease review the assignment and let me know if you have any questions.\n\nBest regards,\nCommunications Director`;
+            } else if (changeType === 'dueDate') {
+                const oldDate = oldValue ? new Date(oldValue).toLocaleDateString() : 'Not set';
+                const newDate = new Date(newValue).toLocaleDateString();
+
+                subject = `Due Date Changed: ${assignment.title}`;
+                body = `Hi ${assigneeName},\n\nThe due date for your assignment "${assignment.title}" (${assignmentId}) has been updated.\n\nOld Due Date: ${oldDate}\nNew Due Date: ${newDate}\n\nPlease adjust your schedule accordingly and let me know if this creates any conflicts.\n\nBest regards,\nCommunications Director`;
+            }
+
+            // Copy notification to clipboard
+            navigator.clipboard.writeText(`To: ${assigneeName}\nSubject: ${subject}\n\n${body}`).then(() => {
+                console.log(`Notification sent to ${assigneeName} about ${changeType} change`);
+            });
+        }
+
+        function messageAssignee(assignee, assignmentId) {
+            const assigneeName = assignee.replace('-writer', '').replace('-', ' ');
+            const assignment = assignments.find(a => a.id === assignmentId);
+
+            const subject = `Assignment Update: ${assignment ? assignment.title : assignmentId}`;
+            const body = `Hi ${assigneeName},\n\nI wanted to follow up on the assignment "${assignment ? assignment.title : assignmentId}".\n\n[Your message here]\n\nBest regards,\nCommunications Director`;
+
+            // For now, we'll copy to clipboard - in a real app this would open a compose window
+            navigator.clipboard.writeText(`To: ${assigneeName}\nSubject: ${subject}\n\n${body}`).then(() => {
+                alert(`Message template copied to clipboard for ${assigneeName}`);
+            });
+        }
+
+        function messageDependencyOwner(owner, dependencyItem, assignmentId) {
+            const assignment = assignments.find(a => a.id === assignmentId);
+
+            const subject = `Dependency Required: ${dependencyItem}`;
+            const body = `Hi ${owner},\n\nWe need your help with "${dependencyItem}" for the assignment "${assignment ? assignment.title : assignmentId}".\n\nThis is needed by ${assignment ? new Date(assignment.dueDate).toLocaleDateString() : 'the due date'}.\n\nPlease let me know the status and if you need any additional information.\n\nBest regards,\nCommunications Director`;
+
+            // For now, we'll copy to clipboard - in a real app this would open a compose window
+            navigator.clipboard.writeText(`To: ${owner}\nSubject: ${subject}\n\n${body}`).then(() => {
+                alert(`Message template copied to clipboard for ${owner}`);
+            });
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // ============ COMMUNICATIONS BRIEFS FUNCTIONALITY ============
+
+        let communicationsBriefs = [];
+
+        // Initialize briefs on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCommunicationsBriefs();
+            renderBriefsGrid();
+        });
+
+        function loadCommunicationsBriefs() {
+            const saved = localStorage.getItem('communicationsBriefs');
+            if (saved) {
+                communicationsBriefs = JSON.parse(saved);
+            }
+        }
+
+        function saveCommunicationsBriefs() {
+            localStorage.setItem('communicationsBriefs', JSON.stringify(communicationsBriefs));
+        }
+
+        function renderBriefsGrid() {
+            const grid = document.getElementById('briefsGrid');
+            const emptyState = document.getElementById('emptyBriefs');
+
+            if (communicationsBriefs.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            grid.style.display = 'grid';
+
+            grid.innerHTML = communicationsBriefs.map(brief => `
+                <div class="brief-card" onclick="editBrief('${brief.id}')">
+                    <div class="brief-header">
+                        <h4 class="brief-title">${escapeHtml(brief.title)}</h4>
+                        <span class="brief-status ${brief.status}">${brief.status.replace('-', ' ')}</span>
+                    </div>
+                    <div class="brief-meta">
+                        <span>👤 ${brief.assignee || 'Unassigned'}</span>
+                        <span>📅 ${formatDate(brief.dueDate)}</span>
+                    </div>
+                    <div class="brief-description">
+                        ${escapeHtml(brief.description || 'No description provided')}
+                    </div>
+                    <div class="brief-actions">
+                        <button class="brief-btn primary" onclick="event.stopPropagation(); sendToSpeechwriter('${brief.id}')">
+                            📝 Send to Writer
+                        </button>
+                        <button class="brief-btn" onclick="event.stopPropagation(); duplicateBrief('${brief.id}')">
+                            📋 Copy
+                        </button>
+                        <button class="brief-btn" onclick="event.stopPropagation(); deleteBrief('${brief.id}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createNewBrief() {
+            showBriefCreationModal();
+        }
+
+        function showBriefCreationModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px; width: 90%;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">📋 Create New Professional Brief</h3>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">Brief Title</label>
+                            <input type="text" class="form-control" id="newBriefTitle" placeholder="Enter brief title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Brief Type</label>
+                            <select class="form-control" id="newBriefType">
+                                <option value="general">General Communications Brief</option>
+                                <option value="healthcare-policy">🏥 Healthcare Policy Speech</option>
+                                <option value="crisis-response">🚨 Crisis Response</option>
+                                <option value="endorsement-announcement">🤝 Endorsement Announcement</option>
+                                <option value="debate-prep">⚡ Debate Preparation</option>
+                                <option value="press-conference">📺 Press Conference</option>
+                                <option value="town-hall">🏛️ Town Hall Meeting</option>
+                                <option value="policy-brief">📋 Policy Brief</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority Level</label>
+                            <select class="form-control" id="newBriefPriority">
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assignee</label>
+                            <input type="text" class="form-control" id="newBriefAssignee" placeholder="Writer name">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                        <button class="btn btn-primary" onclick="createBriefFromTemplate()">✨ Create Enhanced Brief</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('newBriefTitle').focus();
+        }
+
+        async function createBriefFromTemplate() {
+            const title = document.getElementById('newBriefTitle').value.trim();
+            const type = document.getElementById('newBriefType').value;
+            const priority = document.getElementById('newBriefPriority').value;
+            const assignee = document.getElementById('newBriefAssignee').value.trim();
+
+            if (!title) {
+                alert('Please enter a brief title');
+                return;
+            }
+
+            const brief = {
+                id: Date.now().toString(),
+                title: title,
+                type: type,
+                priority: priority,
+                description: '',
+                primaryMessage: '',
+                supportingMessages: ['', '', ''],
+                strategicPurpose: '',
+                audience: '',
+                tone: '',
+                keyPoints: '',
+                context: '',
+                eventContext: {
+                    what: '',
+                    when: '',
+                    where: '',
+                    audience: '',
+                    audienceSize: '',
+                    purpose: ''
+                },
+                contentRequirements: {
+                    mustInclude: {
+                        candidateElements: [],
+                        policyPositions: [],
+                        statistics: [],
+                        localConnections: [],
+                        defensivePoints: []
+                    },
+                    callToAction: {
+                        primary: '',
+                        secondary: []
+                    }
+                },
+                assignee: assignee,
+                dueDate: '',
+                status: 'draft',
+                qualityScore: 0,
+                aiEnhanced: false,
+                reviewStage: 'initial',
+                attachments: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            communicationsBriefs.unshift(brief);
+            saveCommunicationsBriefs();
+            renderBriefsGrid();
+
+            // Close modal and open editor
+            document.querySelector('.modal').remove();
+            editBrief(brief.id);
+
+            // Show success message
+            showToast(`Professional ${type} brief created successfully!`, 'success');
+        }
+
+        function editBrief(briefId) {
+            const brief = communicationsBriefs.find(b => b.id === briefId);
+            if (!brief) return;
+
+            // Create a simple brief editor modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px; width: 95%;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">📋 Edit Communications Brief</h3>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">Brief Title</label>
+                            <input type="text" class="form-control" id="briefTitle" value="${brief.title}">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label class="form-label">Assignee (Speechwriter)</label>
+                                <input type="text" class="form-control" id="briefAssignee" value="${brief.assignee || ''}" placeholder="Enter name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="briefDueDate" value="${brief.dueDate || ''}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Brief Description</label>
+                            <textarea class="form-control" id="briefDescription" rows="3" placeholder="What is this speech about?">${brief.description || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Target Audience</label>
+                            <input type="text" class="form-control" id="briefAudience" value="${brief.audience || ''}" placeholder="Who will be listening?">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Desired Tone & Style</label>
+                            <input type="text" class="form-control" id="briefTone" value="${brief.tone || ''}" placeholder="e.g., Inspirational, Professional, Conversational">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Key Messages & Themes</label>
+                            <textarea class="form-control" id="briefKeyPoints" rows="4" placeholder="What are the main points that must be covered?">${brief.keyPoints || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Context & Background</label>
+                            <textarea class="form-control" id="briefContext" rows="3" placeholder="Any important context or background information...">${brief.context || ''}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-control" id="briefStatus">
+                                <option value="draft" ${brief.status === 'draft' ? 'selected' : ''}>Draft</option>
+                                <option value="in-progress" ${brief.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="completed" ${brief.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                        <button class="btn btn-success" onclick="saveBriefChanges('${briefId}', this.closest('.modal'))">💾 Save Brief</button>
+                        <button class="btn btn-primary" onclick="sendToSpeechwriter('${briefId}'); this.closest('.modal').remove()">📝 Send to Writer</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function saveBriefChanges(briefId, modal) {
+            const brief = communicationsBriefs.find(b => b.id === briefId);
+            if (!brief) return;
+
+            brief.title = modal.querySelector('#briefTitle').value;
+            brief.assignee = modal.querySelector('#briefAssignee').value;
+            brief.dueDate = modal.querySelector('#briefDueDate').value;
+            brief.description = modal.querySelector('#briefDescription').value;
+            brief.audience = modal.querySelector('#briefAudience').value;
+            brief.tone = modal.querySelector('#briefTone').value;
+            brief.keyPoints = modal.querySelector('#briefKeyPoints').value;
+            brief.context = modal.querySelector('#briefContext').value;
+            brief.status = modal.querySelector('#briefStatus').value;
+            brief.updatedAt = new Date().toISOString();
+
+            saveCommunicationsBriefs();
+            renderBriefsGrid();
+            modal.remove();
+
+            // Show success message
+            showToast('Brief updated successfully!', 'success');
+        }
+
+        function sendToSpeechwriter(briefId) {
+            const brief = communicationsBriefs.find(b => b.id === briefId);
+            if (!brief) return;
+
+            // Create structured brief data that will be accessible in the speech editor
+            const briefData = {
+                id: brief.id,
+                title: brief.title,
+                description: brief.description,
+                audience: brief.audience,
+                tone: brief.tone,
+                keyPoints: brief.keyPoints,
+                context: brief.context,
+                assignee: brief.assignee,
+                dueDate: brief.dueDate,
+                createdBy: 'Communications Director',
+                createdAt: brief.createdAt
+            };
+
+            // Save brief data to localStorage for speech editor to access
+            localStorage.setItem('currentCommunicationsBrief', JSON.stringify(briefData));
+
+            // Update brief status
+            brief.status = 'in-progress';
+            saveCommunicationsBriefs();
+            renderBriefsGrid();
+
+            // Open speech editor with brief context
+            const speechEditorUrl = `/speech-editor-thin?brief=${encodeURIComponent(briefId)}`;
+            window.open(speechEditorUrl, '_blank');
+
+            showToast(`Brief sent to ${brief.assignee || 'speechwriter'}!`, 'success');
+        }
+
+        function duplicateBrief(briefId) {
+            const brief = communicationsBriefs.find(b => b.id === briefId);
+            if (!brief) return;
+
+            const duplicate = {
+                ...brief,
+                id: Date.now().toString(),
+                title: brief.title + ' (Copy)',
+                status: 'draft',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            communicationsBriefs.unshift(duplicate);
+            saveCommunicationsBriefs();
+            renderBriefsGrid();
+            showToast('Brief duplicated successfully!', 'success');
+        }
+
+        function deleteBrief(briefId) {
+            const brief = communicationsBriefs.find(b => b.id === briefId);
+            if (!brief) return;
+
+            if (!confirm(`Are you sure you want to delete "${brief.title}"? This cannot be undone.`)) {
+                return;
+            }
+
+            communicationsBriefs = communicationsBriefs.filter(b => b.id !== briefId);
+            saveCommunicationsBriefs();
+            renderBriefsGrid();
+            showToast('Brief deleted', 'info');
+        }
+
+        function showBriefTemplates() {
+            // This could show predefined brief templates
+            alert('Brief templates feature coming soon! For now, create a new brief and customize it.');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'No due date';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-size: 14px;
+                z-index: 10000;
+                opacity: 0;
+                transition: opacity 0.3s;
+            `;
+
+            if (type === 'success') {
+                toast.style.background = '#10b981';
+            } else if (type === 'error') {
+                toast.style.background = '#ef4444';
+            } else {
+                toast.style.background = '#3b82f6';
+            }
+
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.style.opacity = '1', 100);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Make functions globally available
+        window.createNewBrief = createNewBrief;
+        window.showBriefTemplates = showBriefTemplates;
+        window.editBrief = editBrief;
+        window.sendToSpeechwriter = sendToSpeechwriter;
+        window.duplicateBrief = duplicateBrief;
+        window.deleteBrief = deleteBrief;
+        window.saveBriefChanges = saveBriefChanges;
+    </script>
+</body>
+</html>

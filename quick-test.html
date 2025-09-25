@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Function Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .pass { background: #dcfce7; border: 1px solid #16a34a; }
+        .fail { background: #fef2f2; border: 1px solid #dc2626; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Quick Function Accessibility Test</h1>
+    <p>This will test if the functions are properly accessible on the page preview.</p>
+
+    <button onclick="runTest()">🚀 Test Functions</button>
+    <button onclick="openAndTest()">📝 Open Page & Test</button>
+
+    <div id="results"></div>
+
+    <script>
+        let testWindow = null;
+
+        function runTest() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Testing function accessibility...</h3>';
+
+            if (!testWindow || testWindow.closed) {
+                results.innerHTML += '<div class="fail">❌ No test window open. Use "Open Page & Test" first.</div>';
+                return;
+            }
+
+            const functions = ['switchViewMode', 'showPasteDialog', 'showSchemaTab', 'toggleSchemaPanel', 'copySchema'];
+
+            functions.forEach(funcName => {
+                try {
+                    const exists = testWindow.eval(`typeof ${funcName} === 'function'`);
+                    if (exists) {
+                        results.innerHTML += `<div class="pass">✅ ${funcName} - Function exists and accessible</div>`;
+                    } else {
+                        results.innerHTML += `<div class="fail">❌ ${funcName} - Function not found or not a function</div>`;
+                    }
+                } catch (error) {
+                    results.innerHTML += `<div class="fail">❌ ${funcName} - Error: ${error.message}</div>`;
+                }
+            });
+
+            // Test actual function calls
+            results.innerHTML += '<h3>Testing function execution...</h3>';
+
+            try {
+                testWindow.eval("switchViewMode('edit')");
+                results.innerHTML += '<div class="pass">✅ switchViewMode(\'edit\') - Executed successfully</div>';
+
+                const hasClass = testWindow.eval("document.getElementById('page-content').classList.contains('edit-view')");
+                if (hasClass) {
+                    results.innerHTML += '<div class="pass">✅ Edit view class applied correctly</div>';
+                } else {
+                    results.innerHTML += '<div class="fail">❌ Edit view class not applied</div>';
+                }
+            } catch (error) {
+                results.innerHTML += `<div class="fail">❌ switchViewMode execution failed: ${error.message}</div>`;
+            }
+        }
+
+        function openAndTest() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>Opening page preview...</h3>';
+
+            const url = 'http://localhost:3001/page-preview.html?title=Test Press Release&location=NEW YORK, NY - September 23, 2025&content=Testing function accessibility';
+            testWindow = window.open(url, 'functionTest', 'width=1000,height=700');
+
+            testWindow.onload = () => {
+                setTimeout(() => {
+                    results.innerHTML += '<div class="pass">✅ Page loaded successfully</div>';
+                    setTimeout(runTest, 1000);
+                }, 1500);
+            };
+        }
+    </script>
+</body>
+</html>

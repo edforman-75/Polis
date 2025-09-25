@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Media Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.urgent {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .badge.normal {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .badge.low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .work-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .work-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .work-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .work-item.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .work-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .work-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .work-type {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .work-meta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .work-progress {
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .next-actions {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .next-actions h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .action-list {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .action-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .action-status {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .action-status.pending {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .action-status.completed {
+            background: #10b981;
+            color: white;
+        }
+
+        .action-status.blocked {
+            background: #ef4444;
+            color: white;
+        }
+
+        .suggestions-panel {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .suggestion-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item.ai {
+            border-left: 4px solid #8b5cf6;
+            background: linear-gradient(90deg, #faf5ff 0%, #ffffff 100%);
+        }
+
+        .suggestion-item.grammar {
+            border-left: 4px solid #06b6d4;
+            background: linear-gradient(90deg, #f0fdff 0%, #ffffff 100%);
+        }
+
+        .suggestion-item.fact {
+            border-left: 4px solid #f59e0b;
+            background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .suggestion-type {
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .suggestion-priority {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .suggestion-priority.high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .suggestion-priority.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .suggestion-priority.low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .suggestion-content {
+            margin-bottom: 16px;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .suggestion-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .suggestion-example {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 13px;
+            border-left: 3px solid #e2e8f0;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab:hover {
+            color: #1e293b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-log {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.accepted {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .activity-icon.rejected {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .activity-icon.modified {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .activity-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .work-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📝 Campaign Media Dashboard</h1>
+            <div class="user-info">
+                <div class="user-avatar">AJ</div>
+                <div>
+                    <div style="font-weight: 500;">Alex Johnson</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Media Associate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="main-content">
+                <!-- Work Queue -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 My Work Queue</h2>
+                        <span class="badge normal">4 items assigned</span>
+                    </div>
+                    
+                    <div class="tabs">
+                        <button class="tab active" data-tab="assigned">Assigned to Me</button>
+                        <button class="tab" data-tab="review">Needs Review</button>
+                        <button class="tab" data-tab="completed">Completed</button>
+                    </div>
+
+                    <div class="work-queue" id="work-queue">
+                        <!-- Work items will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- AI Suggestions for Current Document -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🤖 Smart Suggestions</h2>
+                        <span id="suggestions-count" class="badge urgent">3 new</span>
+                    </div>
+                    
+                    <div class="suggestions-panel" id="suggestions-panel">
+                        <!-- Suggestions will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <!-- Today's Progress -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 Today's Progress</h3>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="completed-today">3</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="suggestions-accepted">7</div>
+                            <div class="stat-label">Suggestions Used</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                        <div class="progress-text">Daily goal: 75% complete</div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📈 Recent Activity</h3>
+                    </div>
+                    
+                    <div class="activity-log" id="activity-log">
+                        <!-- Activity items will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">⚡ Quick Actions</h3>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn btn-primary" onclick="createNewDocument()">
+                            ✍️ Start New Document
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewTemplates()">
+                            📄 Browse Templates
+                        </button>
+                        <button class="btn btn-outline" onclick="showHelp()">
+                            ❓ Get Help
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suggestion Details Modal -->
+    <div class="modal" id="suggestion-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Suggestion Details</h3>
+                <button class="close-btn" onclick="closeSuggestionModal()">&times;</button>
+            </div>
+            
+            <div id="modal-content">
+                <!-- Modal content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal" id="feedback-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Why didn't this help?</h3>
+                <button class="close-btn" onclick="closeFeedbackModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Help us improve suggestions:</label>
+                <textarea class="form-textarea" id="feedback-text" placeholder="Tell us what would have been more helpful..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-outline" onclick="closeFeedbackModal()">Skip</button>
+                <button class="btn btn-primary" onclick="submitFeedback()">Send Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Sample data
+        const workItems = [
+            {
+                id: 1,
+                title: "Healthcare Town Hall Press Release",
+                type: "Press Release",
+                priority: "urgent",
+                dueDate: "Today, 4:00 PM",
+                assignedBy: "Sarah Chen",
+                progress: 65,
+                status: "draft",
+                nextActions: [
+                    { text: "Add quote from Dr. Martinez", status: "pending" },
+                    { text: "Include attendance registration link", status: "pending" },
+                    { text: "Fact-check attendance capacity", status: "completed" }
+                ]
+            },
+            {
+                id: 2,
+                title: "Infrastructure Investment Policy Brief",
+                type: "Policy Paper",
+                priority: "normal",
+                dueDate: "Tomorrow, 10:00 AM",
+                assignedBy: "Mike Johnson",
+                progress: 30,
+                status: "research",
+                nextActions: [
+                    { text: "Research comparable state programs", status: "pending" },
+                    { text: "Get budget estimates from finance team", status: "pending" },
+                    { text: "Schedule interview with policy director", status: "completed" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Campaign Rally Event Page",
+                type: "Event",
+                priority: "normal",
+                dueDate: "Friday, 2:00 PM",
+                assignedBy: "Lisa Park",
+                progress: 85,
+                status: "review",
+                nextActions: [
+                    { text: "Final accessibility review", status: "pending" },
+                    { text: "Confirm security details with venue", status: "completed" },
+                    { text: "Upload venue photos", status: "completed" }
+                ]
+            }
+        ];
+
+        const suggestions = [
+            {
+                id: 1,
+                type: "ai",
+                priority: "high",
+                title: "Optimize headline for voice search",
+                description: "Your headline is 68 characters. Voice assistants prefer headlines under 60 characters for better discovery.",
+                currentText: "Local Healthcare Provider Announces Expanded Services for Rural Communities in District 7",
+                suggestedText: "Healthcare Expansion Announced for Rural District 7 Communities",
+                reason: "Shorter headlines perform 40% better in voice search results",
+                documentId: 1
+            },
+            {
+                id: 2,
+                type: "fact",
+                priority: "high",
+                title: "Verify attendance capacity claim",
+                description: "You mentioned \"500-seat venue\" but our records show the community center capacity is 350.",
+                currentText: "The event will be held at the community center's 500-seat auditorium",
+                suggestedText: "The event will be held at the community center's 350-seat auditorium",
+                reason: "Factual accuracy is critical for credibility",
+                source: "Venue contract from events team",
+                documentId: 1
+            },
+            {
+                id: 3,
+                type: "grammar",
+                priority: "medium",
+                title: "Consider more active voice",
+                description: "This sentence uses passive voice which can sound less engaging.",
+                currentText: "Healthcare improvements will be discussed by local experts",
+                suggestedText: "Local experts will discuss healthcare improvements",
+                reason: "Active voice is more engaging and easier to understand",
+                documentId: 1
+            }
+        ];
+
+        const activityLog = [
+            {
+                type: "accepted",
+                title: "Used AI suggestion",
+                description: "Applied keyword optimization for local SEO",
+                time: "10 minutes ago"
+            },
+            {
+                type: "rejected",
+                title: "Declined grammar suggestion",
+                description: "Kept original phrasing for candidate voice consistency",
+                time: "25 minutes ago"
+            },
+            {
+                type: "modified",
+                title: "Modified AI suggestion",
+                description: "Used suggested structure but kept original wording",
+                time: "45 minutes ago"
+            },
+            {
+                type: "accepted",
+                title: "Applied fact correction",
+                description: "Updated job creation numbers from 45K to 50K",
+                time: "1 hour ago"
+            }
+        ];
+
+        let selectedWorkItem = null;
+        let currentTab = 'assigned';
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            renderWorkQueue();
+            renderSuggestions();
+            renderActivityLog();
+            
+            // Auto-select first work item
+            if (workItems.length > 0) {
+                selectWorkItem(workItems[0].id);
+            }
+        });
+
+        function renderWorkQueue() {
+            const container = document.getElementById('work-queue');
+            const filteredItems = workItems.filter(item => {
+                switch(currentTab) {
+                    case 'assigned': return item.status !== 'completed';
+                    case 'review': return item.status === 'review';
+                    case 'completed': return item.status === 'completed';
+                    default: return true;
+                }
+            });
+
+            container.innerHTML = filteredItems.map(item => `
+                <div class="work-item ${selectedWorkItem === item.id ? 'selected' : ''}" 
+                     onclick="selectWorkItem(${item.id})">
+                    <div class="work-header">
+                        <div>
+                            <div class="work-title">${item.title}</div>
+                            <div class="work-type">${item.type}</div>
+                        </div>
+                        <span class="badge ${item.priority}">${item.priority}</span>
+                    </div>
+                    
+                    <div class="work-meta">
+                        <span>📅 Due: ${item.dueDate}</span>
+                        <span>👤 ${item.assignedBy}</span>
+                    </div>
+                    
+                    <div class="work-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${item.progress}%"></div>
+                        </div>
+                        <div class="progress-text">${item.progress}% complete</div>
+                    </div>
+                    
+                    <div class="next-actions">
+                        <h4>Next Actions:</h4>
+                        <ul class="action-list">
+                            ${item.nextActions.map(action => `
+                                <li>
+                                    <span class="action-status ${action.status}">
+                                        ${action.status === 'completed' ? '✓' : action.status === 'blocked' ? '!' : '○'}
+                                    </span>
+                                    ${action.text}
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div style="margin-top: 12px; display: flex; gap: 8px;">
+                            <button class="btn btn-primary btn-small" onclick="openInEditor(${item.id})">
+                                ✏️ Edit in Editor
+                            </button>
+                            <button class="btn btn-outline btn-small" onclick="previewDocument(${item.id})">
+                                👁 Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSuggestions() {
+            const container = document.getElementById('suggestions-panel');
+            const workItemSuggestions = selectedWorkItem ? 
+                suggestions.filter(s => s.documentId === selectedWorkItem) : suggestions;
+
+            if (workItemSuggestions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+                        <div style="font-weight: 500; margin-bottom: 8px;">All caught up!</div>
+                        <div style="font-size: 14px;">No suggestions for this document right now.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = workItemSuggestions.map(suggestion => `
+                <div class="suggestion-item ${suggestion.type}">
+                    <div class="suggestion-header">
+                        <span class="suggestion-type">${suggestion.type} suggestion</span>
+                        <span class="suggestion-priority ${suggestion.priority}">${suggestion.priority}</span>
+                    </div>
+                    
+                    <div class="suggestion-content">
+                        <div class="suggestion-title">${suggestion.title}</div>
+                        <div class="suggestion-description">${suggestion.description}</div>
+                        
+                        ${suggestion.currentText ? `
+                            <div style="margin-bottom: 12px;">
+                                <strong>Current:</strong>
+                                <div class="suggestion-example">${suggestion.currentText}</div>
+                            </div>
+                        ` : ''}
+                        
+                        ${suggestion.suggestedText ? `
+                            <div style="margin-bottom: 12px;">
+                                <strong>Suggested:</strong>
+                                <div class="suggestion-example">${suggestion.suggestedText}</div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="font-size: 12px; color: #64748b; font-style: italic;">
+                            💡 ${suggestion.reason}
+                        </div>
+                    </div>
+                    
+                    <div class="suggestion-actions">
+                        <button class="btn btn-primary btn-small" onclick="acceptSuggestion(${suggestion.id})">
+                            ✅ Apply This
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="modifySuggestion(${suggestion.id})">
+                            ✏️ Modify
+                        </button>
+                        <button class="btn btn-outline btn-small" onclick="rejectSuggestion(${suggestion.id})">
+                            ❌ Not Helpful
+                        </button>
+                        <button class="btn btn-outline btn-small" onclick="showSuggestionDetails(${suggestion.id})">
+                            ℹ️ Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update suggestions count
+            document.getElementById('suggestions-count').textContent = `${workItemSuggestions.length} new`;
+        }
+
+        function renderActivityLog() {
+            const container = document.getElementById('activity-log');
+            container.innerHTML = activityLog.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon ${activity.type}">
+                        ${activity.type === 'accepted' ? '✓' : activity.type === 'rejected' ? '✗' : '✏️'}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-description">${activity.description}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectWorkItem(id) {
+            selectedWorkItem = id;
+            renderWorkQueue();
+            renderSuggestions();
+        }
+
+        function acceptSuggestion(id) {
+            const suggestion = suggestions.find(s => s.id === id);
+            showNotification(`✅ Applied suggestion: ${suggestion.title}`);
+            
+            // Add to activity log
+            activityLog.unshift({
+                type: "accepted",
+                title: "Applied AI suggestion",
+                description: suggestion.title,
+                time: "Just now"
+            });
+            
+            // Remove from suggestions list
+            const index = suggestions.findIndex(s => s.id === id);
+            if (index > -1) {
+                suggestions.splice(index, 1);
+            }
+            
+            // Update displays
+            renderSuggestions();
+            renderActivityLog();
+            updateStats();
+        }
+
+        function rejectSuggestion(id) {
+            document.getElementById('feedback-modal').classList.add('show');
+            
+            // Store the rejected suggestion ID for feedback
+            window.rejectedSuggestionId = id;
+        }
+
+        function modifySuggestion(id) {
+            const suggestion = suggestions.find(s => s.id === id);
+            const userText = prompt(`Modify this suggestion:\n\nOriginal: ${suggestion.suggestedText}\n\nYour version:`, suggestion.suggestedText);
+            
+            if (userText && userText !== suggestion.suggestedText) {
+                showNotification(`✏️ Modified and applied suggestion: ${suggestion.title}`);
+                
+                // Add to activity log
+                activityLog.unshift({
+                    type: "modified",
+                    title: "Modified AI suggestion",
+                    description: suggestion.title,
+                    time: "Just now"
+                });
+                
+                // Remove from suggestions list
+                const index = suggestions.findIndex(s => s.id === id);
+                if (index > -1) {
+                    suggestions.splice(index, 1);
+                }
+                
+                renderSuggestions();
+                renderActivityLog();
+                updateStats();
+            }
+        }
+
+        function showSuggestionDetails(id) {
+            const suggestion = suggestions.find(s => s.id === id);
+            document.getElementById('modal-title').textContent = `${suggestion.title} - Details`;
+            
+            document.getElementById('modal-content').innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <strong>Why this matters:</strong>
+                    <p style="margin-top: 8px; color: #64748b;">${suggestion.reason}</p>
+                </div>
+                
+                ${suggestion.source ? `
+                    <div style="margin-bottom: 16px;">
+                        <strong>Source:</strong>
+                        <p style="margin-top: 8px; color: #64748b;">${suggestion.source}</p>
+                    </div>
+                ` : ''}
+                
+                <div style="margin-bottom: 16px;">
+                    <strong>Impact:</strong>
+                    <p style="margin-top: 8px; color: #64748b;">
+                        ${suggestion.type === 'ai' ? 'Improves discoverability by AI systems and search engines' : 
+                          suggestion.type === 'fact' ? 'Ensures accuracy and builds credibility' : 
+                          'Improves readability and engagement'}
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;">
+                    <button class="btn btn-outline" onclick="closeSuggestionModal()">Close</button>
+                    <button class="btn btn-primary" onclick="acceptSuggestion(${id}); closeSuggestionModal();">Apply This</button>
+                </div>
+            `;
+            
+            document.getElementById('suggestion-modal').classList.add('show');
+        }
+
+        function closeSuggestionModal() {
+            document.getElementById('suggestion-modal').classList.remove('show');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').classList.remove('show');
+        }
+
+        function submitFeedback() {
+            const feedback = document.getElementById('feedback-text').value;
+            const suggestionId = window.rejectedSuggestionId;
+            
+            if (suggestionId) {
+                // Log the rejection
+                const suggestion = suggestions.find(s => s.id === suggestionId);
+                activityLog.unshift({
+                    type: "rejected",
+                    title: "Declined suggestion",
+                    description: suggestion.title,
+                    time: "Just now"
+                });
+                
+                // Remove from suggestions list
+                const index = suggestions.findIndex(s => s.id === suggestionId);
+                if (index > -1) {
+                    suggestions.splice(index, 1);
+                }
+                
+                renderSuggestions();
+                renderActivityLog();
+            }
+            
+            showNotification(feedback.trim() ? "Thank you for your feedback!" : "Suggestion dismissed");
+            closeFeedbackModal();
+            
+            // Clear feedback
+            document.getElementById('feedback-text').value = '';
+            window.rejectedSuggestionId = null;
+        }
+
+        function updateStats() {
+            const acceptedCount = parseInt(document.getElementById('suggestions-accepted').textContent);
+            document.getElementById('suggestions-accepted').textContent = acceptedCount + 1;
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentTab = this.dataset.tab;
+                renderWorkQueue();
+            });
+        });
+
+        // Quick actions
+        function createNewDocument() {
+            showNotification("Opening document templates...");
+        }
+
+        function viewTemplates() {
+            showNotification("Loading template library...");
+        }
+
+        function showHelp() {
+            alert("Help features:\n\n• Click suggestions to see detailed explanations\n• Use the 'Details' button to understand why a suggestion matters\n• Provide feedback when suggestions aren't helpful\n• Check your activity log to see your progress");
+        }
+
+        // Navigation functions
+        function openInEditor(workItemId) {
+            // Store the work item ID for the editor to load
+            localStorage.setItem('currentWorkItem', workItemId);
+            
+            // Open editor in same window
+            window.location.href = 'integrated-editor.html?item=' + workItemId;
+        }
+
+        function previewDocument(workItemId) {
+            // Store the work item ID for preview
+            localStorage.setItem('previewWorkItem', workItemId);
+            
+            // Open preview in new window
+            window.open('page-preview.html?item=' + workItemId, '_blank');
+        }
+    </script>
+</body>
+</html>

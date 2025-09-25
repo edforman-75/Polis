@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Smart Block Editor - Campaign Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.5;
+        }
+
+        .app-header {
+            background: white;
+            border-bottom: 1px solid #e9e9e7;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .app-title {
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            background: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+            border-color: #d1d5db;
+        }
+
+        .btn-primary {
+            background: #2eaadc;
+            color: white;
+            border-color: #2eaadc;
+        }
+
+        .btn-primary:hover {
+            background: #1e90b8;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .editor-side {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 80vh;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9e9e7;
+            font-weight: 600;
+            font-size: 14px;
+            color: #37352f;
+        }
+
+        .panel-content {
+            padding: 16px;
+        }
+
+        .smart-block {
+            border: 2px solid #e9e9e7;
+            border-radius: 8px;
+            margin: 20px 0;
+            transition: all 0.2s ease;
+            position: relative;
+            background: white;
+        }
+
+        .smart-block:hover {
+            border-color: #2eaadc;
+            box-shadow: 0 2px 8px rgba(46, 170, 220, 0.1);
+        }
+
+        .smart-block.active {
+            border-color: #2eaadc;
+            box-shadow: 0 4px 12px rgba(46, 170, 220, 0.15);
+        }
+
+        .block-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9e9e7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .block-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .block-type {
+            background: #2eaadc;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .block-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .block-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            background: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .block-btn:hover {
+            background: rgba(46, 170, 220, 0.1);
+            color: #2eaadc;
+        }
+
+        .block-content {
+            padding: 16px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .field-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .field-btn {
+            padding: 2px 6px;
+            border: none;
+            border-radius: 3px;
+            background: #f3f4f6;
+            font-size: 10px;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .field-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #2eaadc;
+            box-shadow: 0 0 0 3px rgba(46, 170, 220, 0.1);
+        }
+
+        .field-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .field-with-research {
+            position: relative;
+        }
+
+        .research-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 10;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .research-results.active {
+            display: block;
+        }
+
+        .research-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .research-item:hover {
+            background: #f8f9fa;
+        }
+
+        .research-source {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .validation-status {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .validation-status.valid {
+            background: #10b981;
+        }
+
+        .validation-status.partial {
+            background: #f59e0b;
+        }
+
+        .comments-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .comment {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .comment-author {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .comment-time {
+            font-size: 11px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .comment-text {
+            color: #4b5563;
+        }
+
+        .add-comment {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .workflow-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3b82f6;
+        }
+
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .preview-modal.active {
+            display: flex;
+        }
+
+        .preview-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .preview-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .preview-tab {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .preview-tab.active {
+            border-bottom-color: #2eaadc;
+            color: #2eaadc;
+            font-weight: 500;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+        }
+
+        .history-action {
+            color: #6b7280;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .workflow-pipeline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pipeline-step {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .pipeline-step.completed {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .pipeline-step.current {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pipeline-step.pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .pipeline-arrow {
+            color: #d1d5db;
+        }
+
+        .mention-popup {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 20;
+            min-width: 200px;
+            display: none;
+        }
+
+        .mention-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .mention-item:hover {
+            background: #f8f9fa;
+        }
+
+        .mention-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <div class="app-title">📝 Campaign Content Editor - Veterans Day Series</div>
+        <div class="header-actions">
+            <button class="btn" onclick="undo()" id="undoBtn">↶ Undo</button>
+            <button class="btn" onclick="redo()" id="redoBtn">↷ Redo</button>
+            <button class="btn" onclick="openPreview()">👁️ Preview</button>
+            <button class="btn btn-warning" onclick="saveDraft()">💾 Save Draft</button>
+            <button class="btn btn-success" onclick="pushToWorkflow()">🚀 Submit for Review</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="editor-side">
+            <div class="workflow-status">
+                <div class="status-indicator"></div>
+                <span><strong>Assignment A-2024-003:</strong> Veterans Day Social Media Series</span>
+            </div>
+
+            <div class="workflow-pipeline">
+                <div class="pipeline-step completed">Draft</div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step current">Content Review</div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step pending">Fact Check</div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step pending">Approval</div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step pending">Published</div>
+            </div>
+
+            <div id="blocks-container">
+                <!-- Blocks will be added here -->
+            </div>
+
+            <div class="add-block-menu" style="margin: 20px 0; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 2px dashed #e9e9e7;">
+                <div style="font-weight: 600; margin-bottom: 12px; color: #37352f;">Add Smart Block:</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                    <div class="block-option" onclick="addBlock('event')" style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">
+                        <span>📅</span>
+                        <span style="font-size: 13px;">Event</span>
+                    </div>
+                    <div class="block-option" onclick="addBlock('quote')" style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">
+                        <span>💬</span>
+                        <span style="font-size: 13px;">Quote</span>
+                    </div>
+                    <div class="block-option" onclick="addBlock('policy')" style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">
+                        <span>📋</span>
+                        <span style="font-size: 13px;">Policy</span>
+                    </div>
+                    <div class="block-option" onclick="addBlock('person')" style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; cursor: pointer;">
+                        <span>👤</span>
+                        <span style="font-size: 13px;">Person</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-panel">
+                <div class="panel-header">💬 Team Messages</div>
+                <div class="panel-content">
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-author">Sarah Chen</span>
+                            <span class="comment-time">2 hours ago</span>
+                        </div>
+                        <div class="comment-text">Need veteran interview quotes by EOD for the social media series</div>
+                    </div>
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-author">Mike Rodriguez</span>
+                            <span class="comment-time">45 mins ago</span>
+                        </div>
+                        <div class="comment-text">Photo team has 3 veteran portraits ready. Uploading to shared folder.</div>
+                    </div>
+                    <div class="add-comment">
+                        <input type="text" class="comment-input" placeholder="Type @ to mention someone..." onkeydown="handleMentions(event)">
+                        <button class="btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-panel">
+                <div class="panel-header">📊 Schema Status</div>
+                <div class="panel-content">
+                    <div style="font-size: 13px; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Valid Schemas:</span>
+                            <span id="schemaCount">0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>SEO Ready:</span>
+                            <span style="color: #10b981;">✓</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; font-size: 12px;" onclick="exportSchemas()">📤 Export LD-JSON</button>
+                </div>
+            </div>
+
+            <div class="sidebar-panel">
+                <div class="panel-header">📋 Recent Changes</div>
+                <div class="panel-content" id="historyPanel">
+                    <div class="history-item">
+                        <span class="history-action">Added quote block</span>
+                        <span class="history-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Content Preview</h2>
+                <button class="btn" onclick="closePreview()">✕ Close</button>
+            </div>
+
+            <div class="preview-tabs">
+                <button class="preview-tab active" onclick="showPreviewTab('social')">📱 Social Media</button>
+                <button class="preview-tab" onclick="showPreviewTab('web')">🌐 Web Article</button>
+                <button class="preview-tab" onclick="showPreviewTab('schema')">📊 Schema</button>
+                <button class="preview-tab" onclick="showPreviewTab('seo')">🔍 SEO</button>
+            </div>
+
+            <div id="previewContent">
+                <div id="socialPreview">Loading social media preview...</div>
+                <div id="webPreview" style="display: none;">Loading web preview...</div>
+                <div id="schemaPreview" style="display: none;">Loading schema preview...</div>
+                <div id="seoPreview" style="display: none;">Loading SEO preview...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mention Popup -->
+    <div class="mention-popup" id="mentionPopup">
+        <div class="mention-item" onclick="insertMention('sarah')">
+            <div class="mention-avatar">SC</div>
+            <div>
+                <div>Sarah Chen</div>
+                <div style="font-size: 11px; color: #6b7280;">Content Editor</div>
+            </div>
+        </div>
+        <div class="mention-item" onclick="insertMention('mike')">
+            <div class="mention-avatar">MR</div>
+            <div>
+                <div>Mike Rodriguez</div>
+                <div style="font-size: 11px; color: #6b7280;">Field Operations</div>
+            </div>
+        </div>
+        <div class="mention-item" onclick="insertMention('jessica')">
+            <div class="mention-avatar">JL</div>
+            <div>
+                <div>Jessica Liu</div>
+                <div style="font-size: 11px; color: #6b7280;">Fact Checker</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let blockCounter = 0;
+        let allBlocks = [];
+        let undoStack = [];
+        let redoStack = [];
+        let currentMentionInput = null;
+
+        // Sample research data
+        const researchDatabase = {
+            venue: [
+                { text: "Austin Community Center", source: "City of Austin", detail: "Capacity: 350 seats" },
+                { text: "Veterans Memorial Hall", source: "Veterans Affairs", detail: "Capacity: 200 seats" },
+                { text: "State Capitol Auditorium", source: "Texas.gov", detail: "Capacity: 500 seats" }
+            ],
+            date: [
+                { text: "November 11, 2024", source: "Veterans Day", detail: "Federal Holiday" },
+                { text: "November 9, 2024", source: "Calendar", detail: "Saturday before Veterans Day" },
+                { text: "November 15, 2024", source: "Calendar", detail: "Following Friday" }
+            ],
+            statistics: [
+                { text: "22,000 veterans in District 7", source: "VA Database", detail: "2023 Census" },
+                { text: "15% veteran unemployment rate", source: "Bureau of Labor", detail: "Local statistics" },
+                { text: "$45,000 average veteran income", source: "Economic Survey", detail: "2023 data" }
+            ]
+        };
+
+        function saveState() {
+            undoStack.push(JSON.parse(JSON.stringify(allBlocks)));
+            redoStack = []; // Clear redo stack when new action is made
+            if (undoStack.length > 50) {
+                undoStack.shift(); // Keep only last 50 states
+            }
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                redoStack.push(JSON.parse(JSON.stringify(allBlocks)));
+                allBlocks = undoStack.pop();
+                rerenderAllBlocks();
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                undoStack.push(JSON.parse(JSON.stringify(allBlocks)));
+                allBlocks = redoStack.pop();
+                rerenderAllBlocks();
+                updateUndoRedoButtons();
+            }
+        }
+
+        function updateUndoRedoButtons() {
+            document.getElementById('undoBtn').disabled = undoStack.length === 0;
+            document.getElementById('redoBtn').disabled = redoStack.length === 0;
+        }
+
+        function addBlock(type) {
+            saveState();
+
+            const blockId = `block-${++blockCounter}`;
+            const block = {
+                id: blockId,
+                type: type,
+                data: JSON.parse(JSON.stringify(getSchemaTemplate(type))),
+                valid: false,
+                comments: [],
+                status: 'draft'
+            };
+
+            allBlocks.push(block);
+            renderBlock(block);
+            addToHistory(`Added ${type} block`);
+        }
+
+        function getSchemaTemplate(type) {
+            const templates = {
+                event: {
+                    "@context": "https://schema.org",
+                    "@type": "Event",
+                    "name": "",
+                    "startDate": "",
+                    "location": { "@type": "Place", "name": "", "address": "" },
+                    "description": "",
+                    "organizer": { "@type": "Person", "name": "" }
+                },
+                quote: {
+                    "@context": "https://schema.org",
+                    "@type": "Quotation",
+                    "text": "",
+                    "spokenByCharacter": { "@type": "Person", "name": "", "jobTitle": "" },
+                    "dateCreated": "",
+                    "about": ""
+                },
+                policy: {
+                    "@context": "https://schema.org",
+                    "@type": "GovernmentService",
+                    "name": "",
+                    "description": "",
+                    "serviceType": "",
+                    "provider": { "@type": "GovernmentOrganization", "name": "" }
+                },
+                person: {
+                    "@context": "https://schema.org",
+                    "@type": "Person",
+                    "name": "",
+                    "jobTitle": "",
+                    "affiliation": { "@type": "Organization", "name": "" }
+                }
+            };
+            return templates[type] || {};
+        }
+
+        function renderBlock(block) {
+            const container = document.getElementById('blocks-container');
+            const blockElement = document.createElement('div');
+            blockElement.className = 'smart-block';
+            blockElement.id = block.id;
+
+            let fieldsHtml = '';
+            if (block.type === 'event') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label class="field-label">Event Name *</label>
+                            <div class="field-actions">
+                                <button class="field-btn" onclick="research('${block.id}', 'name', 'event')">🔍 Research</button>
+                                <button class="field-btn" onclick="requestInfo('${block.id}', 'name')">💬 Ask Team</button>
+                            </div>
+                        </div>
+                        <div class="field-with-research">
+                            <input type="text" class="field-input" placeholder="Veterans Day Town Hall"
+                                   onchange="updateBlockData('${block.id}', 'name', this.value)"
+                                   onfocus="showResearchResults('${block.id}', 'name')">
+                            <div class="research-results" id="research-${block.id}-name"></div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label class="field-label">Date & Time *</label>
+                            <div class="field-actions">
+                                <button class="field-btn" onclick="research('${block.id}', 'startDate', 'date')">📅 Suggest</button>
+                            </div>
+                        </div>
+                        <input type="datetime-local" class="field-input"
+                               onchange="updateBlockData('${block.id}', 'startDate', this.value)">
+                    </div>
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label class="field-label">Venue Name *</label>
+                            <div class="field-actions">
+                                <button class="field-btn" onclick="research('${block.id}', 'location.name', 'venue')">🏢 Find Venues</button>
+                            </div>
+                        </div>
+                        <div class="field-with-research">
+                            <input type="text" class="field-input" placeholder="Austin Community Center"
+                                   onchange="updateBlockData('${block.id}', 'location.name', this.value)"
+                                   onfocus="showResearchResults('${block.id}', 'location.name')">
+                            <div class="research-results" id="research-${block.id}-location.name"></div>
+                        </div>
+                    </div>
+                `;
+            } else if (block.type === 'quote') {
+                fieldsHtml = `
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label class="field-label">Quote Text *</label>
+                            <div class="field-actions">
+                                <button class="field-btn" onclick="requestInfo('${block.id}', 'text')">💬 Request Quote</button>
+                            </div>
+                        </div>
+                        <textarea class="field-input field-textarea" placeholder="We have a sacred duty to those who served our country"
+                                  onchange="updateBlockData('${block.id}', 'text', this.value)"></textarea>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-header">
+                            <label class="field-label">Speaker Name *</label>
+                            <div class="field-actions">
+                                <button class="field-btn" onclick="research('${block.id}', 'spokenByCharacter.name', 'person')">👤 People</button>
+                            </div>
+                        </div>
+                        <input type="text" class="field-input" placeholder="Jane Smith"
+                               onchange="updateBlockData('${block.id}', 'spokenByCharacter.name', this.value)">
+                    </div>
+                `;
+            }
+
+            blockElement.innerHTML = `
+                <div class="validation-status" id="status-${block.id}"></div>
+                <div class="block-header">
+                    <div class="block-title">
+                        <span class="block-type">${block.type}</span>
+                        <span>${getBlockTitle(block.type)}</span>
+                    </div>
+                    <div class="block-actions">
+                        <button class="block-btn" onclick="duplicateBlock('${block.id}')" title="Duplicate">📋</button>
+                        <button class="block-btn" onclick="deleteBlock('${block.id}')" title="Delete">🗑️</button>
+                    </div>
+                </div>
+                <div class="block-content">
+                    ${fieldsHtml}
+                    <div class="comments-section">
+                        <div style="font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 8px;">Comments:</div>
+                        <div id="comments-${block.id}"></div>
+                        <div class="add-comment">
+                            <input type="text" class="comment-input" placeholder="Add comment or @mention team member..."
+                                   onkeydown="handleCommentMentions(event, '${block.id}')">
+                            <button class="btn" onclick="addComment('${block.id}')">💬</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(blockElement);
+            validateBlock(block.id);
+        }
+
+        function research(blockId, fieldPath, category) {
+            const results = researchDatabase[category] || [];
+            const resultsContainer = document.getElementById(`research-${blockId}-${fieldPath}`);
+
+            if (results.length === 0) {
+                // Simulate web search
+                resultsContainer.innerHTML = `
+                    <div class="research-item">
+                        <div>🔍 Searching web for ${category}...</div>
+                        <div class="research-source">Please wait</div>
+                    </div>
+                `;
+                resultsContainer.classList.add('active');
+
+                setTimeout(() => {
+                    resultsContainer.innerHTML = `
+                        <div class="research-item" onclick="selectResearch('${blockId}', '${fieldPath}', 'No specific results found')">
+                            <div>No specific results found for "${category}"</div>
+                            <div class="research-source">Web search</div>
+                        </div>
+                    `;
+                }, 1500);
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map(item => `
+                <div class="research-item" onclick="selectResearch('${blockId}', '${fieldPath}', '${item.text}')">
+                    <div>${item.text}</div>
+                    <div class="research-source">${item.source} - ${item.detail}</div>
+                </div>
+            `).join('');
+
+            resultsContainer.classList.add('active');
+        }
+
+        function selectResearch(blockId, fieldPath, value) {
+            updateBlockData(blockId, fieldPath, value);
+
+            // Find the input field and update it
+            const input = document.querySelector(`#${blockId} input[onchange*="${fieldPath}"]`);
+            if (input) {
+                input.value = value;
+            }
+
+            // Hide research results
+            document.getElementById(`research-${blockId}-${fieldPath}`).classList.remove('active');
+
+            addToHistory(`Applied research to ${fieldPath}`);
+        }
+
+        function requestInfo(blockId, fieldPath) {
+            const message = prompt(`What information do you need for ${fieldPath}? This will be sent to the team.`);
+            if (message) {
+                // Add to comments
+                const block = allBlocks.find(b => b.id === blockId);
+                if (block) {
+                    block.comments.push({
+                        author: 'You',
+                        text: `📝 Info needed for ${fieldPath}: ${message}`,
+                        time: new Date().toISOString(),
+                        type: 'request'
+                    });
+                    renderComments(blockId);
+                }
+
+                // Add to team messages (simulate)
+                addToHistory(`Requested info: ${message}`);
+                alert('Request sent to team members');
+            }
+        }
+
+        function updateBlockData(blockId, path, value) {
+            saveState();
+
+            const block = allBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            const pathParts = path.split('.');
+            let target = block.data;
+
+            for (let i = 0; i < pathParts.length - 1; i++) {
+                if (!target[pathParts[i]]) {
+                    target[pathParts[i]] = {};
+                }
+                target = target[pathParts[i]];
+            }
+
+            target[pathParts[pathParts.length - 1]] = value;
+            validateBlock(blockId);
+            updateSchemaCount();
+        }
+
+        function validateBlock(blockId) {
+            const block = allBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            const errors = [];
+            if (block.type === 'event') {
+                if (!block.data.name) errors.push('Event name required');
+                if (!block.data.startDate) errors.push('Date required');
+                if (!block.data.location?.name) errors.push('Venue required');
+            } else if (block.type === 'quote') {
+                if (!block.data.text) errors.push('Quote text required');
+                if (!block.data.spokenByCharacter?.name) errors.push('Speaker required');
+            }
+
+            block.valid = errors.length === 0;
+
+            const statusElement = document.getElementById(`status-${blockId}`);
+            if (statusElement) {
+                statusElement.className = `validation-status ${block.valid ? 'valid' : ''}`;
+            }
+        }
+
+        function addComment(blockId) {
+            const input = document.querySelector(`#${blockId} .comment-input`);
+            const text = input.value.trim();
+
+            if (text) {
+                const block = allBlocks.find(b => b.id === blockId);
+                if (block) {
+                    block.comments.push({
+                        author: 'You',
+                        text: text,
+                        time: new Date().toISOString(),
+                        type: 'comment'
+                    });
+                    renderComments(blockId);
+                    input.value = '';
+                }
+            }
+        }
+
+        function renderComments(blockId) {
+            const block = allBlocks.find(b => b.id === blockId);
+            const container = document.getElementById(`comments-${blockId}`);
+
+            if (block && container) {
+                container.innerHTML = block.comments.map(comment => `
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-author">${comment.author}</span>
+                            <span class="comment-time">${new Date(comment.time).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="comment-text">${comment.text}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function handleMentions(event) {
+            const input = event.target;
+            const value = input.value;
+            const cursorPos = input.selectionStart;
+
+            if (event.key === '@' || (value[cursorPos - 1] === '@')) {
+                showMentionPopup(input);
+            } else {
+                hideMentionPopup();
+            }
+        }
+
+        function handleCommentMentions(event, blockId) {
+            currentMentionInput = event.target;
+            handleMentions(event);
+
+            if (event.key === 'Enter') {
+                addComment(blockId);
+            }
+        }
+
+        function showMentionPopup(input) {
+            const popup = document.getElementById('mentionPopup');
+            const rect = input.getBoundingClientRect();
+
+            popup.style.display = 'block';
+            popup.style.left = rect.left + 'px';
+            popup.style.top = rect.bottom + 5 + 'px';
+        }
+
+        function hideMentionPopup() {
+            document.getElementById('mentionPopup').style.display = 'none';
+        }
+
+        function insertMention(userId) {
+            const names = {
+                sarah: 'Sarah Chen',
+                mike: 'Mike Rodriguez',
+                jessica: 'Jessica Liu'
+            };
+
+            if (currentMentionInput) {
+                const value = currentMentionInput.value;
+                const atIndex = value.lastIndexOf('@');
+                const newValue = value.substring(0, atIndex) + `@${names[userId]} `;
+                currentMentionInput.value = newValue;
+                currentMentionInput.focus();
+            }
+
+            hideMentionPopup();
+        }
+
+        function getBlockTitle(type) {
+            const titles = {
+                event: 'Campaign Event',
+                quote: 'Quote Attribution',
+                policy: 'Government Service',
+                person: 'Person Profile'
+            };
+            return titles[type] || type;
+        }
+
+        function updateSchemaCount() {
+            const validCount = allBlocks.filter(b => b.valid).length;
+            document.getElementById('schemaCount').textContent = `${validCount}/${allBlocks.length}`;
+        }
+
+        function addToHistory(action) {
+            const historyPanel = document.getElementById('historyPanel');
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <span class="history-action">${action}</span>
+                <span class="history-time">${new Date().toLocaleTimeString()}</span>
+            `;
+            historyPanel.insertBefore(historyItem, historyPanel.firstChild);
+
+            // Keep only last 10 items
+            const items = historyPanel.querySelectorAll('.history-item');
+            if (items.length > 10) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        function openPreview() {
+            document.getElementById('previewModal').classList.add('active');
+            generatePreviews();
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        function showPreviewTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show content
+            document.querySelectorAll('[id$="Preview"]').forEach(p => p.style.display = 'none');
+            document.getElementById(tab + 'Preview').style.display = 'block';
+        }
+
+        function generatePreviews() {
+            const validBlocks = allBlocks.filter(b => b.valid);
+
+            // Social Media Preview
+            const socialPreview = validBlocks.map(block => {
+                if (block.type === 'event') {
+                    return `📅 <strong>${block.data.name}</strong><br>
+                            📍 ${block.data.location?.name}<br>
+                            🕒 ${new Date(block.data.startDate).toLocaleDateString()}`;
+                } else if (block.type === 'quote') {
+                    return `💬 "${block.data.text}"<br>
+                            — ${block.data.spokenByCharacter?.name}`;
+                }
+                return '';
+            }).filter(Boolean).join('<br><br>');
+
+            document.getElementById('socialPreview').innerHTML = socialPreview || 'No content ready for preview';
+
+            // Schema Preview
+            const schemas = validBlocks.map(b => b.data);
+            document.getElementById('schemaPreview').innerHTML = `<pre>${JSON.stringify(schemas, null, 2)}</pre>`;
+        }
+
+        function saveDraft() {
+            localStorage.setItem('campaign-draft', JSON.stringify({
+                blocks: allBlocks,
+                timestamp: new Date().toISOString()
+            }));
+
+            addToHistory('Draft saved');
+            alert('Draft saved successfully!');
+        }
+
+        function pushToWorkflow() {
+            const validBlocks = allBlocks.filter(b => b.valid);
+            if (validBlocks.length === 0) {
+                alert('Please complete at least one block before submitting.');
+                return;
+            }
+
+            if (confirm('Submit content for review? This will notify the review team.')) {
+                addToHistory('Submitted for review');
+                alert('Content submitted for review! Sarah Chen has been notified.');
+            }
+        }
+
+        function exportSchemas() {
+            const validBlocks = allBlocks.filter(b => b.valid);
+            const schemas = validBlocks.map(b => b.data);
+
+            const exportData = {
+                "@context": "https://schema.org",
+                "@graph": schemas,
+                "exported": new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'veterans-day-schemas.json';
+            a.click();
+        }
+
+        function rerenderAllBlocks() {
+            const container = document.getElementById('blocks-container');
+            container.innerHTML = '';
+            allBlocks.forEach(block => renderBlock(block));
+            updateSchemaCount();
+        }
+
+        function deleteBlock(blockId) {
+            if (confirm('Delete this block?')) {
+                saveState();
+                allBlocks = allBlocks.filter(b => b.id !== blockId);
+                document.getElementById(blockId).remove();
+                updateSchemaCount();
+                addToHistory('Deleted block');
+            }
+        }
+
+        function duplicateBlock(blockId) {
+            const sourceBlock = allBlocks.find(b => b.id === blockId);
+            if (sourceBlock) {
+                saveState();
+                const newBlock = {
+                    ...JSON.parse(JSON.stringify(sourceBlock)),
+                    id: `block-${++blockCounter}`
+                };
+                allBlocks.push(newBlock);
+                renderBlock(newBlock);
+                addToHistory('Duplicated block');
+            }
+        }
+
+        // Hide research results when clicking elsewhere
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.field-with-research')) {
+                document.querySelectorAll('.research-results').forEach(r => r.classList.remove('active'));
+            }
+            if (!event.target.closest('.mention-popup') && !event.target.closest('input')) {
+                hideMentionPopup();
+            }
+        });
+
+        // Initialize
+        updateUndoRedoButtons();
+        addToHistory('Started new document');
+    </script>
+</body>
+</html>

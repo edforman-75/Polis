@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion-Style Block Editor Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.5;
+        }
+
+        .editor-container {
+            max-width: 750px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: white;
+            min-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .editor-header {
+            padding: 40px 0 20px;
+            border-bottom: 1px solid #e9e9e7;
+            margin-bottom: 20px;
+        }
+
+        .assignment-info {
+            background: #f7f6f3;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2eaadc;
+        }
+
+        .assignment-title {
+            font-weight: 600;
+            color: #37352f;
+            margin-bottom: 8px;
+        }
+
+        .assignment-meta {
+            font-size: 14px;
+            color: #787774;
+        }
+
+        .editor-content {
+            padding: 20px 0;
+            min-height: 500px;
+        }
+
+        .block {
+            position: relative;
+            margin: 4px 0;
+            padding: 3px 0;
+            border-radius: 3px;
+            transition: all 0.1s ease;
+        }
+
+        .block:hover {
+            background: #f8f8f7;
+        }
+
+        .block:hover .block-handle {
+            opacity: 1;
+        }
+
+        .block-handle {
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            cursor: grab;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            background: #e9e9e7;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #787774;
+        }
+
+        .block-content {
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            resize: none;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #37352f;
+            padding: 8px 0;
+        }
+
+        .block-content::placeholder {
+            color: #9b9a97;
+        }
+
+        .block-text .block-content {
+            min-height: 24px;
+        }
+
+        .block-heading .block-content {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 16px 0 8px 0;
+        }
+
+        .block-heading2 .block-content {
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin: 12px 0 6px 0;
+        }
+
+        .block-quote {
+            border-left: 4px solid #e9e9e7;
+            padding-left: 20px;
+            margin: 16px 0;
+        }
+
+        .block-quote .block-content {
+            font-size: 18px;
+            font-style: italic;
+            color: #787774;
+        }
+
+        .block-callout {
+            background: #fff7e6;
+            border: 1px solid #ffa500;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .block-callout-icon {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .block-callout .block-content {
+            font-size: 15px;
+            background: transparent;
+        }
+
+        .slash-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1000;
+            padding: 8px 0;
+            min-width: 200px;
+            display: none;
+        }
+
+        .slash-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .slash-menu-item:hover {
+            background: #f1f1ef;
+        }
+
+        .slash-menu-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .slash-menu-text {
+            flex: 1;
+        }
+
+        .slash-menu-desc {
+            font-size: 12px;
+            color: #787774;
+        }
+
+        .add-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            color: #9b9a97;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .add-block:hover {
+            color: #787774;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            background: #37352f;
+            border-radius: 6px;
+            padding: 4px;
+            display: none;
+            gap: 2px;
+            z-index: 1000;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .toolbar-btn {
+            padding: 6px 8px;
+            background: none;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .ai-suggestions {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 16px;
+            font-size: 14px;
+        }
+
+        .ai-suggestion {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #2eaadc;
+            background: #f8f9fa;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #37352f;
+        }
+
+        .suggestion-desc {
+            color: #787774;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <div class="assignment-info">
+                <div class="assignment-title">⚠️ Assignment A-2024-003: Veterans Day Social Media Series</div>
+                <div class="assignment-meta">Assigned by: David Park • Status: BLOCKED • Due: 9/23/2025</div>
+            </div>
+        </div>
+
+        <div class="editor-content" id="editor">
+            <div class="block block-text" data-block-id="1">
+                <div class="block-handle">⋮⋮</div>
+                <textarea class="block-content" placeholder="Start writing, or type '/' for commands..." data-placeholder="Start writing, or type '/' for commands..."></textarea>
+            </div>
+        </div>
+
+        <div class="add-block" onclick="addNewBlock()">
+            <span>+</span>
+            <span>Click to add new block, or type '/' for commands</span>
+        </div>
+    </div>
+
+    <div class="slash-menu" id="slashMenu">
+        <div class="slash-menu-item" onclick="convertBlock('heading')">
+            <div class="slash-menu-icon">H1</div>
+            <div>
+                <div class="slash-menu-text">Heading 1</div>
+                <div class="slash-menu-desc">Big section heading</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" onclick="convertBlock('heading2')">
+            <div class="slash-menu-icon">H2</div>
+            <div>
+                <div class="slash-menu-text">Heading 2</div>
+                <div class="slash-menu-desc">Medium section heading</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" onclick="convertBlock('quote')">
+            <div class="slash-menu-icon">💬</div>
+            <div>
+                <div class="slash-menu-text">Quote</div>
+                <div class="slash-menu-desc">Capture a quote or statement</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" onclick="convertBlock('callout')">
+            <div class="slash-menu-icon">💡</div>
+            <div>
+                <div class="slash-menu-text">Callout</div>
+                <div class="slash-menu-desc">Important info that stands out</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-toolbar" id="floatingToolbar">
+        <button class="toolbar-btn" onclick="formatText('bold')">B</button>
+        <button class="toolbar-btn" onclick="formatText('italic')">I</button>
+        <button class="toolbar-btn" onclick="formatText('link')">🔗</button>
+    </div>
+
+    <div class="ai-suggestions">
+        <div class="suggestion-title">💡 AI Suggestions</div>
+        <div class="ai-suggestion">
+            <div class="suggestion-title">Add structure</div>
+            <div class="suggestion-desc">Consider adding headings to organize your content</div>
+        </div>
+        <div class="ai-suggestion">
+            <div class="suggestion-title">Quote suggestion</div>
+            <div class="suggestion-desc">That statement could work well as a highlighted quote block</div>
+        </div>
+    </div>
+
+    <script>
+        let currentBlock = null;
+        let blockCounter = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setupBlockEvents();
+        });
+
+        function setupBlockEvents() {
+            const blocks = document.querySelectorAll('.block');
+            blocks.forEach(block => {
+                const textarea = block.querySelector('.block-content');
+
+                textarea.addEventListener('input', function(e) {
+                    autoResize(this);
+                    handleSlashCommand(e);
+                });
+
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        createNewBlock(block);
+                    }
+                    if (e.key === 'Backspace' && this.value === '') {
+                        e.preventDefault();
+                        deleteBlock(block);
+                    }
+                });
+
+                textarea.addEventListener('focus', function() {
+                    currentBlock = block;
+                });
+            });
+        }
+
+        function handleSlashCommand(e) {
+            const textarea = e.target;
+            const value = textarea.value;
+
+            if (value === '/') {
+                showSlashMenu(textarea);
+            } else if (!value.startsWith('/')) {
+                hideSlashMenu();
+            }
+        }
+
+        function showSlashMenu(textarea) {
+            const menu = document.getElementById('slashMenu');
+            const rect = textarea.getBoundingClientRect();
+
+            menu.style.display = 'block';
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 5) + 'px';
+        }
+
+        function hideSlashMenu() {
+            document.getElementById('slashMenu').style.display = 'none';
+        }
+
+        function convertBlock(type) {
+            if (!currentBlock) return;
+
+            const textarea = currentBlock.querySelector('.block-content');
+            const currentText = textarea.value.replace('/', ''); // Remove slash
+
+            // Remove existing type classes
+            currentBlock.classList.remove('block-text', 'block-heading', 'block-heading2', 'block-quote', 'block-callout');
+
+            // Add new type class
+            currentBlock.classList.add('block-' + type);
+
+            // Update content
+            textarea.value = currentText;
+
+            // Handle callout special case
+            if (type === 'callout') {
+                if (!currentBlock.querySelector('.block-callout-icon')) {
+                    const icon = document.createElement('div');
+                    icon.className = 'block-callout-icon';
+                    icon.textContent = '💡';
+                    currentBlock.querySelector('.block-content').parentNode.insertBefore(icon, currentBlock.querySelector('.block-content'));
+                }
+            }
+
+            autoResize(textarea);
+            hideSlashMenu();
+            textarea.focus();
+        }
+
+        function createNewBlock(afterBlock) {
+            const newBlock = document.createElement('div');
+            newBlock.className = 'block block-text';
+            newBlock.setAttribute('data-block-id', ++blockCounter);
+
+            newBlock.innerHTML = `
+                <div class="block-handle">⋮⋮</div>
+                <textarea class="block-content" placeholder="Type '/' for commands"></textarea>
+            `;
+
+            afterBlock.parentNode.insertBefore(newBlock, afterBlock.nextSibling);
+
+            // Setup events for new block
+            const textarea = newBlock.querySelector('.block-content');
+            setupBlockEvents();
+            textarea.focus();
+        }
+
+        function deleteBlock(block) {
+            const blocks = document.querySelectorAll('.block');
+            if (blocks.length <= 1) return; // Keep at least one block
+
+            const prevBlock = block.previousElementSibling;
+            block.remove();
+
+            if (prevBlock && prevBlock.classList.contains('block')) {
+                const prevTextarea = prevBlock.querySelector('.block-content');
+                prevTextarea.focus();
+                prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+            }
+        }
+
+        function addNewBlock() {
+            const lastBlock = document.querySelector('.block:last-child');
+            createNewBlock(lastBlock);
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        function formatText(format) {
+            // Basic formatting implementation
+            const selection = window.getSelection();
+            if (format === 'bold') {
+                document.execCommand('bold', false, null);
+            } else if (format === 'italic') {
+                document.execCommand('italic', false, null);
+            }
+        }
+
+        // Handle text selection for floating toolbar
+        document.addEventListener('mouseup', function() {
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                const toolbar = document.getElementById('floatingToolbar');
+                toolbar.style.display = 'flex';
+                toolbar.style.left = rect.left + (rect.width / 2) - 50 + 'px';
+                toolbar.style.top = rect.top - 40 + 'px';
+            } else {
+                document.getElementById('floatingToolbar').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
