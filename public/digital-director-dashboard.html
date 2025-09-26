@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Director Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .dashboard {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-digital {
+            background: #8b5cf6;
+            color: white;
+            border: 2px solid #7c3aed;
+            animation: pulse-digital 3s infinite;
+        }
+
+        .btn-digital:hover {
+            background: #7c3aed;
+            border-color: #6d28d9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        @keyframes pulse-digital {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            50% { box-shadow: 0 0 0 6px rgba(139, 92, 246, 0); }
+        }
+
+        .header-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .social-post {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .social-post:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .platform-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .platform-twitter { background: #1da1f2; }
+        .platform-facebook { background: #4267b2; }
+        .platform-instagram { background: #e4405f; }
+        .platform-linkedin { background: #0077b5; }
+        .platform-tiktok { background: #000; }
+
+        .post-content {
+            flex: 1;
+        }
+
+        .post-text {
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .performance-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .performance-metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        .trend-neutral { color: #64748b; }
+
+        .strategy-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 15px;
+        }
+
+        .strategy-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .strategy-desc {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .strategy-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 4px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .calendar-widget {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .calendar-event {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            min-width: 60px;
+        }
+
+        .event-title {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .analytics-chart {
+            height: 200px;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .action-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1>
+                    📱 Digital Director Dashboard
+                </h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.location.href='/social'">
+                        📝 Social Editor
+                    </button>
+                    <button class="btn btn-digital" onclick="accessAdvancedDigitalTools()" title="Access advanced digital strategy tools">
+                        🚀 Digital Command
+                    </button>
+                    <button class="btn btn-primary" onclick="showAnalytics()">
+                        📊 Analytics
+                    </button>
+                    <button class="btn btn-success" onclick="launchCampaign()">
+                        🎯 Launch Campaign
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Metrics -->
+            <div class="header-metrics">
+                <div class="metric-card">
+                    <div class="metric-number">2.4M</div>
+                    <div class="metric-label">Total Reach</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">156K</div>
+                    <div class="metric-label">Engagements</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">4.8%</div>
+                    <div class="metric-label">Engagement Rate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">89%</div>
+                    <div class="metric-label">Positive Sentiment</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number">23</div>
+                    <div class="metric-label">Active Campaigns</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="quick-action" onclick="createSocialPost()">
+                <div class="action-icon">📝</div>
+                <div class="action-title">Create Post</div>
+                <div class="action-desc">Multi-platform content</div>
+            </div>
+            <div class="quick-action" onclick="scheduleContent()">
+                <div class="action-icon">📅</div>
+                <div class="action-title">Schedule Content</div>
+                <div class="action-desc">Plan ahead</div>
+            </div>
+            <div class="quick-action" onclick="analyzePerformance()">
+                <div class="action-icon">📈</div>
+                <div class="action-title">Performance Report</div>
+                <div class="action-desc">Weekly insights</div>
+            </div>
+            <div class="quick-action" onclick="manageInfluencers()">
+                <div class="action-icon">👥</div>
+                <div class="action-title">Influencer Network</div>
+                <div class="action-desc">Partner management</div>
+            </div>
+            <div class="quick-action" onclick="monitorMentions()">
+                <div class="action-icon">👂</div>
+                <div class="action-title">Social Listening</div>
+                <div class="action-desc">Brand monitoring</div>
+            </div>
+            <div class="quick-action" onclick="adManagement()">
+                <div class="action-icon">🎯</div>
+                <div class="action-title">Ad Campaigns</div>
+                <div class="action-desc">Targeted advertising</div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Recent Posts -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">📱 Recent Social Posts</h2>
+                    <button class="btn btn-primary" onclick="viewAllPosts()">View All</button>
+                </div>
+                <div class="panel-content">
+                    <div class="social-post">
+                        <div class="platform-icon platform-twitter">𝕏</div>
+                        <div class="post-content">
+                            <div class="post-text">🚀 Excited to announce our new infrastructure plan that will create 50,000 jobs and rebuild America's future! #BuildBackBetter</div>
+                            <div class="post-meta">
+                                <span>⏰ 2 hours ago</span>
+                                <span class="trend-up">👍 1.2K likes</span>
+                                <span class="trend-up">🔄 450 shares</span>
+                                <span>💬 89 comments</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="social-post">
+                        <div class="platform-icon platform-facebook">f</div>
+                        <div class="post-content">
+                            <div class="post-text">Join us tomorrow at the town hall meeting to discuss healthcare reform. Your voice matters! 📍 Community Center, 7 PM</div>
+                            <div class="post-meta">
+                                <span>⏰ 4 hours ago</span>
+                                <span class="trend-up">👍 892 likes</span>
+                                <span class="trend-up">🔄 234 shares</span>
+                                <span>💬 67 comments</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="social-post">
+                        <div class="platform-icon platform-instagram">📷</div>
+                        <div class="post-content">
+                            <div class="post-text">Behind the scenes at today's education roundtable. Working together to ensure every child has access to quality education. 📚✨</div>
+                            <div class="post-meta">
+                                <span>⏰ 6 hours ago</span>
+                                <span class="trend-up">❤️ 2.3K likes</span>
+                                <span>💬 156 comments</span>
+                                <span>📤 45 shares</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="social-post">
+                        <div class="platform-icon platform-linkedin">in</div>
+                        <div class="post-content">
+                            <div class="post-text">Productive meeting with local business leaders discussing economic recovery initiatives. Proud to support our entrepreneurs! 💼</div>
+                            <div class="post-meta">
+                                <span>⏰ 8 hours ago</span>
+                                <span class="trend-up">👍 567 likes</span>
+                                <span class="trend-up">🔄 123 shares</span>
+                                <span>💬 34 comments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Analytics -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">📊 Performance Analytics</h2>
+                    <button class="btn btn-secondary" onclick="exportAnalytics()">Export</button>
+                </div>
+                <div class="panel-content">
+                    <div class="analytics-chart">
+                        📈 Interactive Chart Widget<br>
+                        <small>Engagement trends over past 30 days</small>
+                    </div>
+
+                    <div class="performance-metric">
+                        <span class="metric-name">Follower Growth</span>
+                        <span class="metric-value trend-up">+2.3% ↗</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Engagement Rate</span>
+                        <span class="metric-value trend-up">+0.8% ↗</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Reach</span>
+                        <span class="metric-value trend-up">+15.2% ↗</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Click-through Rate</span>
+                        <span class="metric-value trend-neutral">3.4% →</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Video Views</span>
+                        <span class="metric-value trend-up">+28.7% ↗</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Share Rate</span>
+                        <span class="metric-value trend-up">+5.1% ↗</span>
+                    </div>
+                    <div class="performance-metric">
+                        <span class="metric-name">Sentiment Score</span>
+                        <span class="metric-value trend-up">89% Positive ↗</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategy & Calendar -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Digital Strategy -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🎯 Digital Strategy</h2>
+                        <button class="btn btn-secondary" onclick="editStrategy()">Edit</button>
+                    </div>
+                    <div class="panel-content">
+                        <div class="strategy-item">
+                            <div class="strategy-title">Healthcare Awareness Campaign</div>
+                            <div class="strategy-desc">Multi-platform push for healthcare reform messaging</div>
+                            <div class="strategy-actions">
+                                <div class="action-btn" onclick="launchStrategy('healthcare')">Launch</div>
+                                <div class="action-btn" onclick="pauseStrategy('healthcare')">Pause</div>
+                            </div>
+                        </div>
+
+                        <div class="strategy-item">
+                            <div class="strategy-title">Youth Engagement Initiative</div>
+                            <div class="strategy-desc">TikTok and Instagram focus for 18-25 demographic</div>
+                            <div class="strategy-actions">
+                                <div class="action-btn" onclick="launchStrategy('youth')">Launch</div>
+                                <div class="action-btn" onclick="editStrategy('youth')">Edit</div>
+                            </div>
+                        </div>
+
+                        <div class="strategy-item">
+                            <div class="strategy-title">Crisis Response Protocol</div>
+                            <div class="strategy-desc">Rapid response framework for negative events</div>
+                            <div class="strategy-actions">
+                                <div class="action-btn" onclick="activateCrisis()">Activate</div>
+                                <div class="action-btn" onclick="reviewCrisis()">Review</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Calendar -->
+                <div class="calendar-widget">
+                    <div class="calendar-header">
+                        <h3 class="calendar-title">📅 Content Calendar</h3>
+                        <div class="calendar-nav">
+                            <button class="nav-btn" onclick="previousWeek()">← Prev</button>
+                            <button class="nav-btn" onclick="nextWeek()">Next →</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-event">
+                        <div class="event-time">10:00</div>
+                        <div class="event-title">Healthcare Town Hall Live Stream</div>
+                    </div>
+                    <div class="calendar-event">
+                        <div class="event-time">14:30</div>
+                        <div class="event-title">Instagram Story Series Launch</div>
+                    </div>
+                    <div class="calendar-event">
+                        <div class="event-time">16:00</div>
+                        <div class="event-title">Twitter Spaces on Education</div>
+                    </div>
+                    <div class="calendar-event">
+                        <div class="event-time">19:00</div>
+                        <div class="event-title">Facebook Live Q&A Session</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend-api.js"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupRealTimeUpdates();
+        });
+
+        // Load dashboard data
+        function loadDashboardData() {
+            // Simulate loading real-time social media data
+            console.log('Loading digital director dashboard data...');
+        }
+
+        // Setup real-time updates
+        function setupRealTimeUpdates() {
+            // Simulate real-time social media monitoring
+            setInterval(() => {
+                updateMetrics();
+            }, 30000); // Update every 30 seconds
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            // Simulate real-time metric updates
+            console.log('Updating social media metrics...');
+        }
+
+        // Advanced digital tools access
+        function accessAdvancedDigitalTools() {
+            const confirmed = confirm(
+                '🚀 DIGITAL COMMAND CENTER\n\n' +
+                'Access advanced digital strategy tools:\n' +
+                '• Multi-platform campaign management\n' +
+                '• Real-time sentiment analysis\n' +
+                '• Influencer network coordination\n' +
+                '• Crisis response automation\n' +
+                '• Advanced analytics dashboard\n\n' +
+                'Continue to Digital Command Center?'
+            );
+
+            if (confirmed) {
+                window.location.href = '/social?mode=director&tools=advanced&role=digital_director';
+            }
+        }
+
+        // Quick action functions
+        function createSocialPost() {
+            window.location.href = '/social?action=create&role=digital_director';
+        }
+
+        function scheduleContent() {
+            alert('📅 Content Scheduler\n\nOpening advanced content scheduling interface...');
+        }
+
+        function analyzePerformance() {
+            alert('📈 Performance Analytics\n\nGenerating comprehensive performance report...');
+        }
+
+        function manageInfluencers() {
+            alert('👥 Influencer Network\n\nAccessing influencer relationship management system...');
+        }
+
+        function monitorMentions() {
+            alert('👂 Social Listening\n\nActivating real-time brand mention monitoring...');
+        }
+
+        function adManagement() {
+            alert('🎯 Ad Campaign Manager\n\nOpening targeted advertising management console...');
+        }
+
+        // Panel functions
+        function viewAllPosts() {
+            window.location.href = '/social?view=all&role=digital_director';
+        }
+
+        function exportAnalytics() {
+            alert('📊 Exporting Analytics\n\nGenerating comprehensive analytics report...');
+        }
+
+        function showAnalytics() {
+            alert('📊 Advanced Analytics\n\nOpening detailed analytics dashboard...');
+        }
+
+        function launchCampaign() {
+            const confirmed = confirm(
+                '🎯 LAUNCH NEW CAMPAIGN\n\n' +
+                'Ready to launch a new digital campaign?\n\n' +
+                'This will:\n' +
+                '• Create campaign framework\n' +
+                '• Set up tracking metrics\n' +
+                '• Coordinate cross-platform content\n' +
+                '• Initialize monitoring systems\n\n' +
+                'Continue?'
+            );
+
+            if (confirmed) {
+                alert('🚀 Campaign Launch Initiated\n\nSetting up new digital campaign...');
+            }
+        }
+
+        // Strategy functions
+        function editStrategy() {
+            alert('🎯 Strategy Editor\n\nOpening digital strategy management interface...');
+        }
+
+        function launchStrategy(strategyType) {
+            alert(`🚀 Launching ${strategyType} strategy\n\nActivating campaign elements...`);
+        }
+
+        function pauseStrategy(strategyType) {
+            alert(`⏸️ Pausing ${strategyType} strategy\n\nSuspending active campaign elements...`);
+        }
+
+        function activateCrisis() {
+            const confirmed = confirm(
+                '🚨 CRISIS RESPONSE ACTIVATION\n\n' +
+                'This will activate emergency digital response protocols:\n' +
+                '• Suspend scheduled content\n' +
+                '• Enable rapid response mode\n' +
+                '• Alert team members\n' +
+                '• Prepare crisis messaging\n\n' +
+                'Are you sure you want to activate crisis mode?'
+            );
+
+            if (confirmed) {
+                alert('🚨 Crisis Response Activated\n\nEmergency protocols are now active.');
+            }
+        }
+
+        function reviewCrisis() {
+            alert('🔍 Crisis Protocol Review\n\nOpening crisis response framework for review...');
+        }
+
+        // Calendar functions
+        function previousWeek() {
+            alert('📅 Loading previous week\'s content calendar...');
+        }
+
+        function nextWeek() {
+            alert('📅 Loading next week\'s content calendar...');
+        }
+    </script>
+</body>
+</html>

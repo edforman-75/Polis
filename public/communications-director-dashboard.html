@@ -91,6 +91,26 @@
             background: #059669;
         }
 
+        .btn-emergency {
+            background: #dc2626;
+            color: white;
+            border: 2px solid #b91c1c;
+            font-weight: 600;
+            animation: pulse-emergency 2s infinite;
+        }
+
+        .btn-emergency:hover {
+            background: #b91c1c;
+            border-color: #991b1b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+
+        @keyframes pulse-emergency {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0); }
+        }
+
         .filters-bar {
             display: flex;
             gap: 12px;
@@ -934,6 +954,9 @@
                     </button>
                     <button class="btn btn-secondary" onclick="window.location.href='/'">
                         📝 Editor
+                    </button>
+                    <button class="btn btn-emergency" onclick="showEmergencyCanvasAccess()" title="Emergency editorial access for crisis situations">
+                        🚨 Emergency Canvas
                     </button>
                     <button class="btn btn-primary" onclick="showNewBundleModal()">
                         📁 New Bundle
@@ -1800,6 +1823,27 @@
 
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Emergency canvas access function
+        function showEmergencyCanvasAccess() {
+            const confirmed = confirm(
+                '🚨 EMERGENCY EDITORIAL ACCESS 🚨\n\n' +
+                'This grants immediate access to the editorial canvas for crisis situations.\n\n' +
+                'As Communications Director, you have override authority to:\n' +
+                '• Access editorial canvas for urgent content creation\n' +
+                '• Bypass workflow approvals in crisis situations\n' +
+                '• Take direct editorial control when needed\n\n' +
+                'Continue to Emergency Canvas?'
+            );
+
+            if (confirmed) {
+                // Log the emergency access
+                console.log('🚨 Emergency Canvas Access - Communications Director:', new Date().toISOString());
+
+                // Redirect to editorial canvas with emergency parameters
+                window.location.href = '/editor?emergency=true&role=communications_director&source=dashboard';
+            }
         }
 
         // Assignment functions

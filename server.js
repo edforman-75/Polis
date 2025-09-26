@@ -228,6 +228,56 @@ if (process.env.NODE_ENV === 'development') {
         res.sendFile(path.join(__dirname, 'public', 'talking-points-editor.html'));
     });
 
+    // Serve the research director dashboard
+    app.get('/research', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'research-director-dashboard.html'));
+    });
+
+    // Serve the press secretary dashboard
+    app.get('/press-secretary', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'press-secretary-dashboard.html'));
+    });
+
+    // Serve the editorial canvas
+    app.get('/editor', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'editorial-canvas.html'));
+    });
+
+    // Serve the senior writer dashboard
+    app.get('/senior-writer', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'senior-writer-dashboard.html'));
+    });
+
+    // Serve the digital director dashboard
+    app.get('/digital-director', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'digital-director-dashboard.html'));
+    });
+
     // Handle direct assignment URLs and redirect to appropriate editor
     app.get('/assignment-:assignmentId', (req, res) => {
         const assignmentId = req.params.assignmentId;
@@ -273,10 +323,21 @@ app.use((err, req, res, next) => {
 db.initialize().then(() => {
     app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📝 Editor available at http://localhost:${PORT}/`);
-        console.log(`📊 Dashboard available at http://localhost:${PORT}/dashboard`);
-        console.log(`📱 Social Media Editor at http://localhost:${PORT}/social`);
+        console.log(`📝 Main Editor available at http://localhost:${PORT}/`);
+        console.log(`📊 Assignment Dashboard at http://localhost:${PORT}/dashboard`);
+        console.log(`👥 Writers Dashboard at http://localhost:${PORT}/writers`);
+        console.log(`📺 Communications Director at http://localhost:${PORT}/director`);
+        console.log(`📰 Press Secretary at http://localhost:${PORT}/press-secretary`);
+        console.log(`🔬 Research Director at http://localhost:${PORT}/research`);
+        console.log(`🏆 Campaign Manager at http://localhost:${PORT}/campaign-manager`);
+        console.log(`✍️ Senior Writer at http://localhost:${PORT}/senior-writer`);
+        console.log(`📱 Digital Director at http://localhost:${PORT}/digital-director`);
+        console.log(`🎨 Editorial Canvas at http://localhost:${PORT}/editor`);
         console.log(`📰 Op-Ed Editor at http://localhost:${PORT}/op-ed`);
+        console.log(`📄 Press Release Editor at http://localhost:${PORT}/press-release`);
+        console.log(`🎤 Speech Editor at http://localhost:${PORT}/speech-editor-thin`);
+        console.log(`📱 Social Media Editor at http://localhost:${PORT}/social`);
+        console.log(`💬 Talking Points Editor at http://localhost:${PORT}/talking-points`);
         console.log(`📸 Photo Library at http://localhost:${PORT}/photos`);
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
     });

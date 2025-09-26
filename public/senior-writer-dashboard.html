@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Writer Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-advanced {
+            background: #7c3aed;
+            color: white;
+            border: 2px solid #6d28d9;
+            font-weight: 600;
+        }
+
+        .btn-advanced:hover {
+            background: #6d28d9;
+            border-color: #5b21b6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .writer-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .assignments-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .assignment-card {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .assignment-card:hover {
+            background: #f8fafc;
+        }
+
+        .assignment-card:last-child {
+            border-bottom: none;
+        }
+
+        .assignment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .assignment-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .assignment-id {
+            font-size: 12px;
+            color: #64748b;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+        }
+
+        .assignment-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .priority-critical {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .priority-urgent {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .priority-high {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .priority-medium {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .priority-low {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-in_progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-review {
+            background: #e0e7ff;
+            color: #6366f1;
+        }
+
+        .status-revision {
+            background: #fed7d7;
+            color: #e53e3e;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tools-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-button:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .tool-button:last-child {
+            margin-bottom: 0;
+        }
+
+        .tool-icon {
+            font-size: 18px;
+        }
+
+        .tool-text {
+            flex: 1;
+        }
+
+        .tool-name {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+
+        .tool-desc {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .progress-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .progress-value {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+
+        .filters-bar {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        select, input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+        }
+
+        .achievements-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .achievement-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 5px 5px 5px 0;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .writer-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="header-top">
+                <h1>
+                    ✍️ Senior Writer Dashboard
+                </h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="window.location.href='/writers'">
+                        👥 Writer Pool
+                    </button>
+                    <button class="btn btn-advanced" onclick="accessAdvancedCanvas()" title="Access enhanced editing tools for senior writers">
+                        🚀 Advanced Canvas
+                    </button>
+                    <button class="btn btn-primary" onclick="showResourcesPanel()">
+                        📚 Resources
+                    </button>
+                    <button class="btn btn-success" onclick="requestMentorship()">
+                        🎯 Mentor Request
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Writer Statistics -->
+        <div class="writer-stats">
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-number" id="totalAssignments">12</div>
+                <div class="stat-label">Total Assignments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="completedThisWeek">8</div>
+                <div class="stat-label">Completed This Week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-number" id="avgRating">4.8</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-number" id="onTimeDelivery">95%</div>
+                <div class="stat-label">On-Time Delivery</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number" id="wordsWritten">15.2K</div>
+                <div class="stat-label">Words This Month</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Assignments List -->
+            <div class="assignments-section">
+                <div class="section-header">
+                    <h2 class="section-title">My Assignments</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="refreshAssignments()">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="🔍 Search assignments..." id="searchInput" oninput="filterAssignments()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status:</label>
+                        <select id="statusFilter" onchange="filterAssignments()">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Under Review</option>
+                            <option value="revision">Needs Revision</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Priority:</label>
+                        <select id="priorityFilter" onchange="filterAssignments()">
+                            <option value="">All Priority</option>
+                            <option value="critical">Critical</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Type:</label>
+                        <select id="typeFilter" onchange="filterAssignments()">
+                            <option value="">All Types</option>
+                            <option value="press-release">Press Release</option>
+                            <option value="op-ed">Op-Ed</option>
+                            <option value="speech">Speech</option>
+                            <option value="social-media">Social Media</option>
+                            <option value="letter">Letter</option>
+                            <option value="email">Email/Newsletter</option>
+                            <option value="talking-points">Talking Points</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Assignments List -->
+                <div id="assignmentsList">
+                    <!-- Assignments will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Advanced Writing Tools -->
+                <div class="tools-panel">
+                    <h3 class="panel-title">🚀 Advanced Tools</h3>
+                    <div class="tool-button" onclick="openAdvancedResearch()">
+                        <div class="tool-icon">🔬</div>
+                        <div class="tool-text">
+                            <div class="tool-name">Advanced Research</div>
+                            <div class="tool-desc">AI-powered fact checking</div>
+                        </div>
+                    </div>
+                    <div class="tool-button" onclick="openStyleAnalyzer()">
+                        <div class="tool-icon">📊</div>
+                        <div class="tool-text">
+                            <div class="tool-name">Style Analyzer</div>
+                            <div class="tool-desc">Tone and voice optimization</div>
+                        </div>
+                    </div>
+                    <div class="tool-button" onclick="openCollaborativeEditor()">
+                        <div class="tool-icon">👥</div>
+                        <div class="tool-text">
+                            <div class="tool-name">Team Collaboration</div>
+                            <div class="tool-desc">Real-time editing with peers</div>
+                        </div>
+                    </div>
+                    <div class="tool-button" onclick="openTemplateLibrary()">
+                        <div class="tool-icon">📄</div>
+                        <div class="tool-text">
+                            <div class="tool-name">Template Library</div>
+                            <div class="tool-desc">Advanced writing templates</div>
+                        </div>
+                    </div>
+                    <div class="tool-button" onclick="openWorkflowManager()">
+                        <div class="tool-icon">⚡</div>
+                        <div class="tool-text">
+                            <div class="tool-name">Workflow Manager</div>
+                            <div class="tool-desc">Automate repetitive tasks</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="progress-panel">
+                    <h3 class="panel-title">📈 Performance</h3>
+                    <div class="progress-item">
+                        <div class="progress-label">Words Per Hour</div>
+                        <div class="progress-value">450</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Revision Rate</div>
+                        <div class="progress-value">15%</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Quality Score</div>
+                        <div class="progress-value">9.2/10</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Client Satisfaction</div>
+                        <div class="progress-value">4.8/5</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label">Deadline Success</div>
+                        <div class="progress-value">98%</div>
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="achievements-panel">
+                    <h3 class="panel-title">🏆 Achievements</h3>
+                    <div class="achievement-badge">✍️ Master Writer</div>
+                    <div class="achievement-badge">⚡ Speed Demon</div>
+                    <div class="achievement-badge">🎯 Deadline Hero</div>
+                    <div class="achievement-badge">⭐ Quality Champion</div>
+                    <div class="achievement-badge">🔥 Hot Streak (15 days)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="frontend-api.js"></script>
+    <script>
+        // Sample assignments data for senior writer
+        let assignments = [
+            {
+                id: 'EDU-2025-012',
+                title: 'Education Reform Op-Ed for Washington Post',
+                type: 'op-ed',
+                status: 'in_progress',
+                priority: 'high',
+                assignee: 'Senior Writer',
+                due_date: '2025-01-15',
+                progress: 75,
+                word_count: 850,
+                target_words: 1200
+            },
+            {
+                id: 'SPE-2025-008',
+                title: 'Healthcare Town Hall Speech',
+                type: 'speech',
+                status: 'review',
+                priority: 'urgent',
+                assignee: 'Senior Writer',
+                due_date: '2025-01-12',
+                progress: 100,
+                word_count: 2200,
+                target_words: 2200
+            },
+            {
+                id: 'INF-2025-015',
+                title: 'Infrastructure Investment Press Release',
+                type: 'press-release',
+                status: 'revision',
+                priority: 'medium',
+                assignee: 'Senior Writer',
+                due_date: '2025-01-18',
+                progress: 85,
+                word_count: 650,
+                target_words: 800
+            }
+        ];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssignments();
+            updateStats();
+        });
+
+        // Load assignments
+        function loadAssignments() {
+            const assignmentsList = document.getElementById('assignmentsList');
+            assignmentsList.innerHTML = '';
+
+            assignments.forEach(assignment => {
+                const assignmentCard = createAssignmentCard(assignment);
+                assignmentsList.appendChild(assignmentCard);
+            });
+        }
+
+        // Create assignment card
+        function createAssignmentCard(assignment) {
+            const card = document.createElement('div');
+            card.className = 'assignment-card';
+            card.onclick = () => openAssignment(assignment.id);
+
+            const priorityClass = `priority-${assignment.priority}`;
+            const statusClass = `status-${assignment.status}`;
+
+            card.innerHTML = `
+                <div class="assignment-header">
+                    <div>
+                        <div class="assignment-title">${assignment.title}</div>
+                        <div class="assignment-id">${assignment.id}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="priority-badge ${priorityClass}">${assignment.priority.toUpperCase()}</div>
+                        <div class="status-badge ${statusClass}" style="margin-top: 5px;">${assignment.status.replace('_', ' ').toUpperCase()}</div>
+                    </div>
+                </div>
+                <div class="assignment-meta">
+                    <span>📅 Due: ${assignment.due_date}</span>
+                    <span>📝 ${assignment.word_count}/${assignment.target_words} words</span>
+                    <span>📊 ${assignment.progress}% complete</span>
+                    <span>📑 ${assignment.type}</span>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Update statistics
+        function updateStats() {
+            // These would be calculated from actual data
+            document.getElementById('totalAssignments').textContent = assignments.length;
+            document.getElementById('completedThisWeek').textContent = assignments.filter(a => a.status === 'completed').length;
+        }
+
+        // Filter assignments
+        function filterAssignments() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            const filteredAssignments = assignments.filter(assignment => {
+                const matchesSearch = assignment.title.toLowerCase().includes(searchTerm) ||
+                                    assignment.id.toLowerCase().includes(searchTerm);
+                const matchesStatus = !statusFilter || assignment.status === statusFilter;
+                const matchesPriority = !priorityFilter || assignment.priority === priorityFilter;
+                const matchesType = !typeFilter || assignment.type === typeFilter;
+
+                return matchesSearch && matchesStatus && matchesPriority && matchesType;
+            });
+
+            const assignmentsList = document.getElementById('assignmentsList');
+            assignmentsList.innerHTML = '';
+
+            filteredAssignments.forEach(assignment => {
+                const assignmentCard = createAssignmentCard(assignment);
+                assignmentsList.appendChild(assignmentCard);
+            });
+        }
+
+        // Open assignment
+        function openAssignment(assignmentId) {
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (!assignment) return;
+
+            // Route to appropriate editor with senior writer context
+            let editorUrl;
+
+            if (assignment.type === 'op-ed') {
+                editorUrl = `/op-ed?assignment=${assignmentId}&mode=senior`;
+            } else if (assignment.type === 'press-release') {
+                editorUrl = `/press-release?assignment=${assignmentId}&mode=senior`;
+            } else if (assignment.type === 'speech') {
+                editorUrl = `/speech-editor-thin?assignment=${assignmentId}&mode=senior`;
+            } else if (assignment.type === 'social-media') {
+                editorUrl = `/social?assignment=${assignmentId}&mode=senior`;
+            } else if (assignment.type === 'talking-points') {
+                editorUrl = `/talking-points?assignment=${assignmentId}&mode=senior`;
+            } else {
+                editorUrl = `/?assignment=${assignmentId}&mode=senior`;
+            }
+
+            window.location.href = editorUrl;
+        }
+
+        // Advanced functions
+        function accessAdvancedCanvas() {
+            const confirmed = confirm(
+                '🚀 ADVANCED CANVAS ACCESS\n\n' +
+                'Access the enhanced senior writer canvas with:\n' +
+                '• Advanced AI writing assistance\n' +
+                '• Real-time collaboration tools\n' +
+                '• Enhanced quality checking\n' +
+                '• Senior writer privileges\n\n' +
+                'Continue to Advanced Canvas?'
+            );
+
+            if (confirmed) {
+                window.location.href = '/editor?mode=senior&tools=advanced&role=senior_writer';
+            }
+        }
+
+        function showResourcesPanel() {
+            alert('📚 Resources Panel\n\nAccess to:\n• AP Style Guide\n• Campaign Message Bank\n• Research Database\n• Writing Templates\n• Best Practices Library');
+        }
+
+        function requestMentorship() {
+            alert('🎯 Mentorship Request\n\nConnect with:\n• Communications Director\n• Senior Editorial Staff\n• Subject Matter Experts\n• Peer Review Network');
+        }
+
+        function refreshAssignments() {
+            // Simulate refresh
+            loadAssignments();
+            alert('✅ Assignments refreshed');
+        }
+
+        // Advanced tool functions
+        function openAdvancedResearch() {
+            window.open('/research?mode=advanced&role=senior_writer', '_blank');
+        }
+
+        function openStyleAnalyzer() {
+            alert('📊 Style Analyzer\n\nAnalyzing writing patterns and providing optimization suggestions...');
+        }
+
+        function openCollaborativeEditor() {
+            window.open('/editor?mode=collaborative&role=senior_writer', '_blank');
+        }
+
+        function openTemplateLibrary() {
+            alert('📄 Template Library\n\nAccessing advanced writing templates for senior writers...');
+        }
+
+        function openWorkflowManager() {
+            alert('⚡ Workflow Manager\n\nAutomating repetitive tasks and optimizing writing workflow...');
+        }
+    </script>
+</body>
+</html>

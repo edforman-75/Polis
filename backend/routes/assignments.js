@@ -208,4 +208,117 @@ router.post('/', requireAuth, async (req, res) => {
     }
 });
 
+// Return assignment to writer for revision
+router.post('/:id/return-to-writer', requireAuth, requirePermission('assignments.return_to_writer'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { feedback, revision_type, deadline_extension } = req.body;
+
+        if (!feedback) {
+            return res.status(400).json({ error: 'Feedback is required when returning assignment' });
+        }
+
+        // Update assignment status and add feedback
+        await db.run(`
+            UPDATE assignments
+            SET status = 'revision_requested',
+                feedback = ?,
+                revision_type = ?,
+                returned_by = ?,
+                returned_at = CURRENT_TIMESTAMP,
+                due_date = CASE
+                    WHEN ? IS NOT NULL THEN datetime(due_date, '+' || ? || ' hours')
+                    ELSE due_date
+                END,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, [feedback, revision_type || 'content_revision', req.user.id, deadline_extension, deadline_extension, id]);
+
+        res.json({
+            success: true,
+            message: 'Assignment returned to writer for revision',
+            feedback: feedback,
+            revision_type: revision_type || 'content_revision'
+        });
+
+    } catch (error) {
+        console.error('Error returning assignment to writer:', error);
+        res.status(500).json({ error: 'Failed to return assignment' });
+    }
+});
+
+// Return assignment to Communications Director for clarification
+router.post('/:id/return-to-comms', requireAuth, requirePermission('assignments.return_to_comms'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { clarification_request, specific_questions } = req.body;
+
+        if (!clarification_request) {
+            return res.status(400).json({ error: 'Clarification request is required' });
+        }
+
+        // Update assignment status and add clarification request
+        await db.run(`
+            UPDATE assignments
+            SET status = 'clarification_needed',
+                clarification_request = ?,
+                specific_questions = ?,
+                clarification_requested_by = ?,
+                clarification_requested_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, [clarification_request, specific_questions ? JSON.stringify(specific_questions) : null, req.user.id, id]);
+
+        res.json({
+            success: true,
+            message: 'Clarification requested from Communications Director',
+            clarification_request: clarification_request,
+            specific_questions: specific_questions
+        });
+
+    } catch (error) {
+        console.error('Error requesting clarification:', error);
+        res.status(500).json({ error: 'Failed to request clarification' });
+    }
+});
+
+// Provide clarification (Communications Director responds to writer request)
+router.post('/:id/provide-clarification', requireAuth, requirePermission('assignments.update.assigned'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { clarification_response, updated_brief, deadline_extension } = req.body;
+
+        if (!clarification_response) {
+            return res.status(400).json({ error: 'Clarification response is required' });
+        }
+
+        // Update assignment with clarification and reset status
+        await db.run(`
+            UPDATE assignments
+            SET status = 'in_progress',
+                clarification_response = ?,
+                brief = COALESCE(?, brief),
+                clarification_provided_by = ?,
+                clarification_provided_at = CURRENT_TIMESTAMP,
+                due_date = CASE
+                    WHEN ? IS NOT NULL THEN datetime(due_date, '+' || ? || ' hours')
+                    ELSE due_date
+                END,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `, [clarification_response, updated_brief, req.user.id, deadline_extension, deadline_extension, id]);
+
+        res.json({
+            success: true,
+            message: 'Clarification provided, assignment returned to writer',
+            clarification_response: clarification_response,
+            updated_brief: updated_brief
+        });
+
+    } catch (error) {
+        console.error('Error providing clarification:', error);
+        res.status(500).json({ error: 'Failed to provide clarification' });
+    }
+});
+
 module.exports = router;

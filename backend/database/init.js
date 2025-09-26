@@ -63,8 +63,24 @@ class Database {
                 assignment_type TEXT DEFAULT 'press-release',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                completed_at DATETIME,
+                feedback TEXT,
+                revision_type TEXT,
+                returned_by INTEGER,
+                returned_at DATETIME,
+                clarification_request TEXT,
+                clarification_requested_by INTEGER,
+                clarification_requested_at DATETIME,
+                clarification_response TEXT,
+                clarification_provided_by INTEGER,
+                clarification_provided_at DATETIME,
+                specific_questions TEXT,
+                notes TEXT,
                 FOREIGN KEY (assignor_id) REFERENCES users(id),
-                FOREIGN KEY (assignee_id) REFERENCES users(id)
+                FOREIGN KEY (assignee_id) REFERENCES users(id),
+                FOREIGN KEY (returned_by) REFERENCES users(id),
+                FOREIGN KEY (clarification_requested_by) REFERENCES users(id),
+                FOREIGN KEY (clarification_provided_by) REFERENCES users(id)
             )`,
 
             // Content blocks table
@@ -397,6 +413,46 @@ class Database {
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )`,
 
+            // Fact-checking table
+            `CREATE TABLE IF NOT EXISTS fact_checks (
+                id TEXT PRIMARY KEY,
+                assignment_id TEXT,
+                source_assignment_id TEXT,
+                content TEXT NOT NULL,
+                claims_to_verify TEXT,
+                verified_claims TEXT,
+                disputed_claims TEXT,
+                sources TEXT,
+                overall_rating TEXT,
+                status TEXT DEFAULT 'pending',
+                assigned_to INTEGER,
+                created_by INTEGER,
+                completed_by INTEGER,
+                fact_checker_notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                completed_at DATETIME,
+                FOREIGN KEY (assignment_id) REFERENCES assignments(id),
+                FOREIGN KEY (source_assignment_id) REFERENCES assignments(id),
+                FOREIGN KEY (assigned_to) REFERENCES users(id),
+                FOREIGN KEY (created_by) REFERENCES users(id),
+                FOREIGN KEY (completed_by) REFERENCES users(id)
+            )`,
+
+            // Research tracking table
+            `CREATE TABLE IF NOT EXISTS research_tracking (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                assignment_id TEXT,
+                user_id INTEGER,
+                status TEXT,
+                milestone TEXT,
+                notes TEXT,
+                time_estimate INTEGER,
+                resources_needed TEXT,
+                logged_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (assignment_id) REFERENCES assignments(id),
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )`,
+
             // Access control tables
 
             // Role permissions table
@@ -560,6 +616,39 @@ class Database {
         if (!hasAssignmentType) {
             await this.run(`ALTER TABLE assignments ADD COLUMN assignment_type TEXT DEFAULT 'press-release'`);
             console.log('📊 Added assignment_type column to assignments table');
+        }
+
+        // Migration: Add research workflow columns to assignments table
+        const workflowColumns = [
+            { name: 'completed_at', type: 'DATETIME', default: null },
+            { name: 'feedback', type: 'TEXT', default: null },
+            { name: 'revision_type', type: 'TEXT', default: null },
+            { name: 'returned_by', type: 'INTEGER', default: null },
+            { name: 'returned_at', type: 'DATETIME', default: null },
+            { name: 'clarification_request', type: 'TEXT', default: null },
+            { name: 'clarification_requested_by', type: 'INTEGER', default: null },
+            { name: 'clarification_requested_at', type: 'DATETIME', default: null },
+            { name: 'clarification_response', type: 'TEXT', default: null },
+            { name: 'clarification_provided_by', type: 'INTEGER', default: null },
+            { name: 'clarification_provided_at', type: 'DATETIME', default: null },
+            { name: 'specific_questions', type: 'TEXT', default: null },
+            { name: 'notes', type: 'TEXT', default: null }
+        ];
+
+        for (const column of workflowColumns) {
+            const hasColumn = await this.columnExists('assignments', column.name);
+            if (!hasColumn) {
+                const defaultClause = column.default ? ` DEFAULT ${column.default}` : '';
+                await this.run(`ALTER TABLE assignments ADD COLUMN ${column.name} ${column.type}${defaultClause}`);
+                console.log(`🔄 Added ${column.name} column to assignments table`);
+            }
+        }
+
+        // Migration: Add verification_notes column to opposition_research table
+        const hasVerificationNotes = await this.columnExists('opposition_research', 'verification_notes');
+        if (!hasVerificationNotes) {
+            await this.run(`ALTER TABLE opposition_research ADD COLUMN verification_notes TEXT`);
+            console.log('🔍 Added verification_notes column to opposition_research table');
         }
 
         // Migration: Add structured_data (LD-JSON) columns to all content tables

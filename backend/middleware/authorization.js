@@ -130,8 +130,11 @@ const PERMISSIONS = {
     'assignments.update.assigned': ['communications_director', 'deputy_communications_director', 'press_secretary'],
     'assignments.update.own': ['senior_writer', 'writer'],
     'assignments.delete': ['admin', 'campaign_manager'],
-    'assignments.approve': ['communications_director', 'campaign_manager', 'admin'],
+    'assignments.approve': ['press_secretary', 'communications_director', 'campaign_manager', 'admin'],
     'assignments.assign': ['admin', 'campaign_manager', 'deputy_campaign_manager', 'communications_director', 'deputy_communications_director'],
+    'assignments.return_to_writer': ['press_secretary', 'communications_director', 'deputy_communications_director'],
+    'assignments.return_to_comms': ['senior_writer', 'writer'],
+    'assignments.request_clarification': ['senior_writer', 'writer', 'press_secretary'],
 
     // Editorial Content Operations - Medium Campaign Workflow
     'content.create': ['admin', 'campaign_manager', 'deputy_campaign_manager', 'communications_director', 'deputy_communications_director', 'press_secretary', 'senior_writer', 'writer', 'digital_coordinator'],
@@ -173,8 +176,12 @@ const PERMISSIONS = {
     'research.access': ['admin', 'campaign_manager', 'deputy_campaign_manager', 'communications_director', 'deputy_communications_director', 'research_director', 'senior_writer', 'press_secretary', 'writer'],
     'research.sensitive': ['admin', 'campaign_manager', 'communications_director', 'research_director'],
     'research.fact_check': ['research_director', 'communications_director', 'deputy_communications_director', 'press_secretary', 'senior_writer'],
+    'research.fact_check.complete': ['research_director', 'researcher'],
+    'research.track': ['research_director', 'researcher'],
+    'research.emergency': ['research_director', 'communications_director', 'campaign_manager', 'admin'],
     'opposition_research.read': ['admin', 'campaign_manager', 'communications_director', 'deputy_communications_director', 'research_director', 'senior_writer'],
     'opposition_research.create': ['research_director', 'researcher', 'communications_director'],
+    'opposition_research.verify': ['research_director', 'communications_director'],
     'voter_data.access': ['admin', 'campaign_manager', 'field_director', 'communications_director'],
 
     // AI and Editorial Tools
