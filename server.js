@@ -24,6 +24,7 @@ const briefQuestionnaireRoutes = require('./backend/routes/brief-questionnaires'
 const qualityCheckerRoutes = require('./backend/routes/quality-checker');
 const authorizationRoutes = require('./backend/routes/authorization');
 const editorialCommentsRoutes = require('./backend/routes/editorial-comments');
+const editorialAIRoutes = require('./backend/routes/editorial-ai');
 
 // Import database
 const db = require('./backend/database/init');
@@ -100,6 +101,7 @@ app.use('/api/brief-questionnaires', briefQuestionnaireRoutes);
 app.use('/api/quality-checker', qualityCheckerRoutes);
 app.use('/api/authorization', authorizationRoutes);
 app.use('/api/editorial-comments', editorialCommentsRoutes);
+app.use('/api/editorial-ai', editorialAIRoutes);
 
 // Serve static files in development
 if (process.env.NODE_ENV === 'development') {
