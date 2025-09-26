@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/init');
 const { requireAuth } = require('../middleware/auth');
+const { requirePermission, filterByPermissions } = require('../middleware/authorization');
 const draftGenerator = require('../services/draft-generator');
 
-// Get all assignments
-router.get('/', requireAuth, async (req, res) => {
+// Get all assignments (filtered by permissions)
+router.get('/', requireAuth, requirePermission('assignments.read.assigned'), filterByPermissions(), async (req, res) => {
     try {
         const { status, assignee } = req.query;
         let query = `
@@ -30,7 +31,11 @@ router.get('/', requireAuth, async (req, res) => {
         query += ' ORDER BY a.due_date ASC';
 
         const assignments = await db.all(query, params);
-        res.json(assignments);
+
+        // Filter assignments based on user permissions
+        const filteredAssignments = req.filterResults ? req.filterResults(assignments, 'assignment') : assignments;
+
+        res.json(filteredAssignments);
 
     } catch (error) {
         console.error('Error fetching assignments:', error);
@@ -38,8 +43,8 @@ router.get('/', requireAuth, async (req, res) => {
     }
 });
 
-// Get single assignment
-router.get('/:id', requireAuth, async (req, res) => {
+// Get single assignment (with resource-based access control)
+router.get('/:id', requireAuth, requirePermission('assignments.read.assigned', { resourceCheck: true, resourceType: 'assignment' }), async (req, res) => {
     try {
         const assignment = await db.get(`
             SELECT a.*, u1.name as assignor_name, u2.name as assignee_name

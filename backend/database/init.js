@@ -28,15 +28,25 @@ class Database {
 
     async createTables() {
         const queries = [
-            // Users table
+            // Users table with enhanced role support
             `CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 name TEXT NOT NULL,
                 role TEXT DEFAULT 'writer',
+                department TEXT,
+                supervisor_id INTEGER,
+                security_clearance TEXT DEFAULT 'internal',
+                access_restrictions TEXT,
+                is_active BOOLEAN DEFAULT TRUE,
+                last_password_change DATETIME DEFAULT CURRENT_TIMESTAMP,
+                failed_login_attempts INTEGER DEFAULT 0,
+                locked_until DATETIME,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                last_login DATETIME
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                last_login DATETIME,
+                FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )`,
 
             // Assignments table
@@ -385,6 +395,159 @@ class Database {
                 selection_end INTEGER DEFAULT 0,
                 FOREIGN KEY (assignment_id) REFERENCES assignments(id),
                 FOREIGN KEY (user_id) REFERENCES users(id)
+            )`,
+
+            // Access control tables
+
+            // Role permissions table
+            `CREATE TABLE IF NOT EXISTS role_permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role TEXT NOT NULL,
+                permission TEXT NOT NULL,
+                granted_by INTEGER,
+                granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (granted_by) REFERENCES users(id),
+                UNIQUE(role, permission)
+            )`,
+
+            // User permissions table (for individual overrides)
+            `CREATE TABLE IF NOT EXISTS user_permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                permission TEXT NOT NULL,
+                granted_by INTEGER,
+                granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (granted_by) REFERENCES users(id),
+                UNIQUE(user_id, permission)
+            )`,
+
+            // Resource access table (for specific resource permissions)
+            `CREATE TABLE IF NOT EXISTS resource_access (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                permission_type TEXT NOT NULL,
+                granted_by INTEGER,
+                granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                expires_at DATETIME,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (granted_by) REFERENCES users(id)
+            )`,
+
+            // Access logs table
+            `CREATE TABLE IF NOT EXISTS access_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                action TEXT NOT NULL,
+                resource_type TEXT,
+                resource_id TEXT,
+                ip_address TEXT,
+                user_agent TEXT,
+                success BOOLEAN DEFAULT TRUE,
+                error_message TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )`,
+
+            // Team memberships table
+            `CREATE TABLE IF NOT EXISTS team_memberships (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                team_name TEXT NOT NULL,
+                role_in_team TEXT DEFAULT 'member',
+                added_by INTEGER,
+                added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (added_by) REFERENCES users(id)
+            )`,
+
+            // Content sensitivity table
+            `CREATE TABLE IF NOT EXISTS content_sensitivity (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                sensitivity_level TEXT DEFAULT 'internal',
+                classification_reason TEXT,
+                classified_by INTEGER,
+                classified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                review_date DATETIME,
+                FOREIGN KEY (classified_by) REFERENCES users(id)
+            )`,
+
+            // Editorial Comment System
+            `CREATE TABLE IF NOT EXISTS editorial_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                parent_comment_id INTEGER,
+                user_id INTEGER NOT NULL,
+                comment_text TEXT NOT NULL,
+                comment_type TEXT DEFAULT 'general',
+                selection_start INTEGER,
+                selection_end INTEGER,
+                selected_text TEXT,
+                status TEXT DEFAULT 'active',
+                priority TEXT DEFAULT 'normal',
+                resolved_at DATETIME,
+                resolved_by INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (parent_comment_id) REFERENCES editorial_comments(id),
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (resolved_by) REFERENCES users(id)
+            )`,
+
+            // Comment reactions/votes
+            `CREATE TABLE IF NOT EXISTS comment_reactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                comment_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                reaction_type TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (comment_id) REFERENCES editorial_comments(id),
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                UNIQUE(comment_id, user_id, reaction_type)
+            )`,
+
+            // Editorial review history
+            `CREATE TABLE IF NOT EXISTS editorial_reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                reviewer_id INTEGER NOT NULL,
+                review_stage TEXT NOT NULL,
+                review_status TEXT NOT NULL,
+                review_notes TEXT,
+                issues_found INTEGER DEFAULT 0,
+                time_spent_minutes INTEGER,
+                next_reviewer_id INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                completed_at DATETIME,
+                FOREIGN KEY (reviewer_id) REFERENCES users(id),
+                FOREIGN KEY (next_reviewer_id) REFERENCES users(id)
+            )`,
+
+            // Style and grammar check results
+            `CREATE TABLE IF NOT EXISTS style_check_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                check_type TEXT NOT NULL,
+                overall_score INTEGER,
+                violations_count INTEGER DEFAULT 0,
+                suggestions_count INTEGER DEFAULT 0,
+                detailed_results TEXT,
+                checked_by INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (checked_by) REFERENCES users(id)
             )`
         ];
 
@@ -414,6 +577,38 @@ class Database {
             }
         }
 
+        // Migration: Add enhanced user table columns
+        const userColumns = [
+            { name: 'department', type: 'TEXT', default: null },
+            { name: 'supervisor_id', type: 'INTEGER', default: null },
+            { name: 'security_clearance', type: 'TEXT', default: "'internal'" },
+            { name: 'access_restrictions', type: 'TEXT', default: null },
+            { name: 'is_active', type: 'BOOLEAN', default: 'TRUE' },
+            { name: 'last_password_change', type: 'DATETIME', default: null },
+            { name: 'failed_login_attempts', type: 'INTEGER', default: '0' },
+            { name: 'locked_until', type: 'DATETIME', default: null },
+            { name: 'updated_at', type: 'DATETIME', default: null }
+        ];
+
+        for (const column of userColumns) {
+            const hasColumn = await this.columnExists('users', column.name);
+            if (!hasColumn) {
+                const defaultClause = column.default ? ` DEFAULT ${column.default}` : '';
+                await this.run(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}${defaultClause}`);
+                console.log(`🔐 Added ${column.name} column to users table`);
+            }
+        }
+
+        // Migration: Add team_members column to assignments and content tables
+        const teamTables = ['assignments', ...contentTables];
+        for (const table of teamTables) {
+            const hasTeamMembers = await this.columnExists(table, 'team_members');
+            if (!hasTeamMembers) {
+                await this.run(`ALTER TABLE ${table} ADD COLUMN team_members TEXT`);
+                console.log(`👥 Added team_members column to ${table} table`);
+            }
+        }
+
         console.log('✅ Database tables created');
     }
 
@@ -428,19 +623,123 @@ class Database {
         // Create demo users
         const hashedPassword = await bcrypt.hash('demo123', 10);
 
+        // Senior Leadership Team
         await this.run(
-            'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
-            ['david@campaign.com', hashedPassword, 'David Park', 'manager']
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            ['admin@campaign.com', hashedPassword, 'System Admin', 'admin', 'Technology', 'top_secret', true]
         );
 
         await this.run(
-            'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
-            ['writer@campaign.com', hashedPassword, 'Alex Writer', 'writer']
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            ['manager@campaign.com', hashedPassword, 'Sarah Rodriguez', 'campaign_manager', 'Leadership', 'top_secret', true]
         );
 
         await this.run(
-            'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
-            ['reviewer@campaign.com', hashedPassword, 'Sam Reviewer', 'reviewer']
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['deputy@campaign.com', hashedPassword, 'Michael Chen', 'deputy_campaign_manager', 'Leadership', 'restricted', true, 2]
+        );
+
+        // Communications Leadership
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['comms@campaign.com', hashedPassword, 'Jennifer Martinez', 'communications_director', 'Communications', 'restricted', true, 2]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['deputy-comms@campaign.com', hashedPassword, 'David Park', 'deputy_communications_director', 'Communications', 'confidential', true, 4]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['press@campaign.com', hashedPassword, 'Amanda Thompson', 'press_secretary', 'Communications', 'confidential', true, 4]
+        );
+
+        // Content Creation Team
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['senior-writer@campaign.com', hashedPassword, 'Robert Kim', 'senior_writer', 'Communications', 'confidential', true, 4]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['writer1@campaign.com', hashedPassword, 'Alex Johnson', 'writer', 'Communications', 'internal', true, 4]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['writer2@campaign.com', hashedPassword, 'Emily Davis', 'writer', 'Communications', 'internal', true, 4]
+        );
+
+        // Research Team
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['research@campaign.com', hashedPassword, 'Dr. James Wilson', 'research_director', 'Research', 'restricted', true, 2]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['researcher@campaign.com', hashedPassword, 'Lisa Zhang', 'researcher', 'Research', 'confidential', true, 10]
+        );
+
+        // Digital Team
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['digital@campaign.com', hashedPassword, 'Carlos Rivera', 'digital_director', 'Digital', 'confidential', true, 2]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['social@campaign.com', hashedPassword, 'Maya Patel', 'digital_coordinator', 'Digital', 'internal', true, 12]
+        );
+
+        // Field Operations
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['field@campaign.com', hashedPassword, 'Kevin O\'Connor', 'field_director', 'Field', 'confidential', true, 2]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['organizer@campaign.com', hashedPassword, 'Samantha Lee', 'field_organizer', 'Field', 'internal', true, 14]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['volunteer-coord@campaign.com', hashedPassword, 'Marcus Brown', 'volunteer_coordinator', 'Field', 'internal', true, 14]
+        );
+
+        // Finance Team
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['finance@campaign.com', hashedPassword, 'Rachel Green', 'finance_director', 'Finance', 'restricted', true, 2]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['finance-coord@campaign.com', hashedPassword, 'Tony Garcia', 'finance_coordinator', 'Finance', 'confidential', true, 17]
+        );
+
+        // Support Staff
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ['assistant@campaign.com', hashedPassword, 'Jessica White', 'staff_assistant', 'Operations', 'internal', true, 3]
+        );
+
+        // Volunteers and Interns
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, access_restrictions, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ['volunteer1@campaign.com', hashedPassword, 'Tom Anderson', 'volunteer', 'Field', 'public', true, JSON.stringify({hours: '9-17', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']}), 16]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, access_restrictions, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ['intern1@campaign.com', hashedPassword, 'Sophie Miller', 'intern', 'Communications', 'public', true, JSON.stringify({hours: '9-17', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], supervision_required: true}), 5]
+        );
+
+        await this.run(
+            'INSERT INTO users (email, password, name, role, department, security_clearance, is_active, access_restrictions, supervisor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            ['intern2@campaign.com', hashedPassword, 'Jake Torres', 'intern', 'Research', 'public', true, JSON.stringify({hours: '9-17', days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], supervision_required: true}), 10]
         );
 
         // Create demo assignments
@@ -504,7 +803,139 @@ class Database {
             ['Policy Brief Template', 'policy', '{"blocks": [{"type": "heading1", "content": "Policy Brief"}, {"type": "policy", "content": "Policy details here"}]}', 1]
         );
 
-        console.log('🌱 Database seeded with demo data');
+        // Seed role permissions
+        await this.seedRolePermissions();
+
+        // Seed team memberships
+        await this.seedTeamMemberships();
+
+        console.log('🌱 Database seeded with demo data and permissions');
+    }
+
+    async seedRolePermissions() {
+        const rolePermissions = [
+            // Admin permissions
+            { role: 'admin', permission: 'system.admin' },
+            { role: 'admin', permission: 'users.create' },
+            { role: 'admin', permission: 'users.update' },
+            { role: 'admin', permission: 'users.delete' },
+
+            // Campaign manager permissions
+            { role: 'campaign_manager', permission: 'assignments.create' },
+            { role: 'campaign_manager', permission: 'assignments.read.all' },
+            { role: 'campaign_manager', permission: 'assignments.assign' },
+            { role: 'campaign_manager', permission: 'content.publish' },
+
+            // Communications director permissions
+            { role: 'communications_director', permission: 'assignments.create' },
+            { role: 'communications_director', permission: 'assignments.approve' },
+            { role: 'communications_director', permission: 'press.approve' },
+            { role: 'communications_director', permission: 'social.schedule' },
+
+            // Senior writer permissions
+            { role: 'senior_writer', permission: 'content.create' },
+            { role: 'senior_writer', permission: 'speeches.create' },
+            { role: 'senior_writer', permission: 'ai.use_advanced' },
+
+            // Writer permissions
+            { role: 'writer', permission: 'content.create' },
+            { role: 'writer', permission: 'ai.use_basic' },
+            { role: 'writer', permission: 'quality.run_checks' },
+
+            // Reviewer permissions
+            { role: 'reviewer', permission: 'content.read.assigned' },
+            { role: 'reviewer', permission: 'quality.run_checks' },
+
+            // Viewer permissions
+            { role: 'viewer', permission: 'content.read.own' },
+
+            // Volunteer permissions
+            { role: 'volunteer', permission: 'content.read.own' },
+            { role: 'volunteer', permission: 'templates.use' },
+
+            // Intern permissions
+            { role: 'intern', permission: 'content.read.own' }
+        ];
+
+        for (const rp of rolePermissions) {
+            try {
+                await this.run(
+                    'INSERT OR IGNORE INTO role_permissions (role, permission, granted_by) VALUES (?, ?, ?)',
+                    [rp.role, rp.permission, 1] // Admin grants initial permissions
+                );
+            } catch (error) {
+                console.error('Error seeding role permission:', rp, error);
+            }
+        }
+
+        console.log('🔐 Seeded role permissions');
+    }
+
+    async seedTeamMemberships() {
+        const teamMemberships = [
+            // Senior Leadership Team
+            { user_id: 1, team_name: 'senior_leadership', role_in_team: 'admin', added_by: 1 },
+            { user_id: 2, team_name: 'senior_leadership', role_in_team: 'campaign_manager', added_by: 1 },
+            { user_id: 3, team_name: 'senior_leadership', role_in_team: 'deputy_manager', added_by: 1 },
+            { user_id: 4, team_name: 'senior_leadership', role_in_team: 'communications_director', added_by: 2 },
+            { user_id: 14, team_name: 'senior_leadership', role_in_team: 'field_director', added_by: 2 },
+            { user_id: 17, team_name: 'senior_leadership', role_in_team: 'finance_director', added_by: 2 },
+
+            // Communications Team - Editorial Workflow
+            { user_id: 4, team_name: 'communications', role_in_team: 'director', added_by: 2 },
+            { user_id: 5, team_name: 'communications', role_in_team: 'deputy_director', added_by: 4 },
+            { user_id: 6, team_name: 'communications', role_in_team: 'press_secretary', added_by: 4 },
+            { user_id: 7, team_name: 'communications', role_in_team: 'senior_writer', added_by: 4 },
+            { user_id: 8, team_name: 'communications', role_in_team: 'writer', added_by: 4 },
+            { user_id: 9, team_name: 'communications', role_in_team: 'writer', added_by: 4 },
+            { user_id: 21, team_name: 'communications', role_in_team: 'intern', added_by: 5 },
+
+            // Research Team
+            { user_id: 10, team_name: 'research', role_in_team: 'director', added_by: 2 },
+            { user_id: 11, team_name: 'research', role_in_team: 'researcher', added_by: 10 },
+            { user_id: 22, team_name: 'research', role_in_team: 'intern', added_by: 10 },
+
+            // Digital Team
+            { user_id: 12, team_name: 'digital', role_in_team: 'director', added_by: 2 },
+            { user_id: 13, team_name: 'digital', role_in_team: 'coordinator', added_by: 12 },
+
+            // Field Operations Team
+            { user_id: 14, team_name: 'field', role_in_team: 'director', added_by: 2 },
+            { user_id: 15, team_name: 'field', role_in_team: 'organizer', added_by: 14 },
+            { user_id: 16, team_name: 'field', role_in_team: 'volunteer_coordinator', added_by: 14 },
+            { user_id: 20, team_name: 'field', role_in_team: 'volunteer', added_by: 16 },
+
+            // Finance Team
+            { user_id: 17, team_name: 'finance', role_in_team: 'director', added_by: 2 },
+            { user_id: 18, team_name: 'finance', role_in_team: 'coordinator', added_by: 17 },
+
+            // Editorial Review Team (Cross-functional for content approval)
+            { user_id: 4, team_name: 'editorial_review', role_in_team: 'final_approver', added_by: 2 },
+            { user_id: 5, team_name: 'editorial_review', role_in_team: 'strategic_editor', added_by: 4 },
+            { user_id: 6, team_name: 'editorial_review', role_in_team: 'line_editor', added_by: 4 },
+            { user_id: 7, team_name: 'editorial_review', role_in_team: 'peer_reviewer', added_by: 5 },
+            { user_id: 10, team_name: 'editorial_review', role_in_team: 'fact_checker', added_by: 4 },
+
+            // Crisis Response Team
+            { user_id: 2, team_name: 'crisis_response', role_in_team: 'lead', added_by: 1 },
+            { user_id: 4, team_name: 'crisis_response', role_in_team: 'communications_lead', added_by: 2 },
+            { user_id: 5, team_name: 'crisis_response', role_in_team: 'rapid_response', added_by: 2 },
+            { user_id: 6, team_name: 'crisis_response', role_in_team: 'media_contact', added_by: 4 },
+            { user_id: 10, team_name: 'crisis_response', role_in_team: 'research_support', added_by: 4 }
+        ];
+
+        for (const tm of teamMemberships) {
+            try {
+                await this.run(
+                    'INSERT OR IGNORE INTO team_memberships (user_id, team_name, role_in_team, added_by) VALUES (?, ?, ?, ?)',
+                    [tm.user_id, tm.team_name, tm.role_in_team, tm.added_by]
+                );
+            } catch (error) {
+                console.error('Error seeding team membership:', tm, error);
+            }
+        }
+
+        console.log('👥 Seeded team memberships');
     }
 
     // Helper methods

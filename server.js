@@ -22,6 +22,8 @@ const talkingPointsToneRoutes = require('./backend/routes/talking-points-tone');
 const briefEnhancementRoutes = require('./backend/routes/brief-enhancement');
 const briefQuestionnaireRoutes = require('./backend/routes/brief-questionnaires');
 const qualityCheckerRoutes = require('./backend/routes/quality-checker');
+const authorizationRoutes = require('./backend/routes/authorization');
+const editorialCommentsRoutes = require('./backend/routes/editorial-comments');
 
 // Import database
 const db = require('./backend/database/init');
@@ -96,6 +98,8 @@ app.use('/api/talking-points-tone', talkingPointsToneRoutes);
 app.use('/api/brief-enhancement', briefEnhancementRoutes);
 app.use('/api/brief-questionnaires', briefQuestionnaireRoutes);
 app.use('/api/quality-checker', qualityCheckerRoutes);
+app.use('/api/authorization', authorizationRoutes);
+app.use('/api/editorial-comments', editorialCommentsRoutes);
 
 // Serve static files in development
 if (process.env.NODE_ENV === 'development') {
