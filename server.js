@@ -25,9 +25,13 @@ const qualityCheckerRoutes = require('./backend/routes/quality-checker');
 const authorizationRoutes = require('./backend/routes/authorization');
 const editorialCommentsRoutes = require('./backend/routes/editorial-comments');
 const editorialAIRoutes = require('./backend/routes/editorial-ai');
+const collaborationRoutes = require('./backend/routes/collaboration');
 
 // Import database
 const db = require('./backend/database/init');
+
+// Import collaboration manager
+const collaborationManager = require('./backend/collaboration/manager');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -102,6 +106,7 @@ app.use('/api/quality-checker', qualityCheckerRoutes);
 app.use('/api/authorization', authorizationRoutes);
 app.use('/api/editorial-comments', editorialCommentsRoutes);
 app.use('/api/editorial-ai', editorialAIRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 
 // Serve static files in development
 if (process.env.NODE_ENV === 'development') {
@@ -321,7 +326,7 @@ app.use((err, req, res, next) => {
 
 // Initialize database and start server
 db.initialize().then(() => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
         console.log(`📝 Main Editor available at http://localhost:${PORT}/`);
         console.log(`📊 Assignment Dashboard at http://localhost:${PORT}/dashboard`);
@@ -340,6 +345,10 @@ db.initialize().then(() => {
         console.log(`💬 Talking Points Editor at http://localhost:${PORT}/talking-points`);
         console.log(`📸 Photo Library at http://localhost:${PORT}/photos`);
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+        // Initialize collaboration manager
+        collaborationManager.initialize(server);
+        console.log(`🔗 Collaborative editing available on WebSocket port 8080`);
     });
 }).catch(err => {
     console.error('Failed to initialize database:', err);
