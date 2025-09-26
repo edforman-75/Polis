@@ -361,6 +361,7 @@ router.get('/:id/export/:format', async (req, res) => {
     try {
         const { id, format } = req.params;
         const userId = req.session.user?.id || 1;
+        const options = req.query; // Get formatting options from query parameters
 
         const speech = await db.get(
             'SELECT * FROM speeches WHERE id = ? AND created_by = ?',
@@ -376,22 +377,43 @@ router.get('/:id/export/:format', async (req, res) => {
             metadata: JSON.parse(speech.metadata || '{}')
         };
 
-        const exportedContent = speechProcessor.generateExports(speechData, format);
+        // Pass options to the export generator
+        const exportedContent = speechProcessor.generateExports(speechData, format, options);
 
         // Set appropriate headers based on format
+        let contentType, fileExtension;
         switch (format.toLowerCase()) {
+            case 'txt':
+                contentType = 'text/plain';
+                fileExtension = 'txt';
+                break;
+            case 'rtf':
+                contentType = 'application/rtf';
+                fileExtension = 'rtf';
+                break;
+            case 'docx':
+                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                fileExtension = 'docx';
+                break;
+            case 'pdf':
+                contentType = 'application/pdf';
+                fileExtension = 'pdf';
+                break;
             case 'teleprompter':
-            case 'text':
-                res.setHeader('Content-Type', 'text/plain');
+                contentType = 'text/plain';
+                fileExtension = 'txt';
                 break;
             case 'json':
-                res.setHeader('Content-Type', 'application/json');
+                contentType = 'application/json';
+                fileExtension = 'json';
                 break;
             default:
-                res.setHeader('Content-Type', 'application/octet-stream');
+                contentType = 'application/octet-stream';
+                fileExtension = format;
         }
 
-        res.setHeader('Content-Disposition', `attachment; filename="speech_${id}.${format}"`);
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="speech_${id}.${fileExtension}"`);
 
         if (typeof exportedContent === 'object') {
             res.json(exportedContent);

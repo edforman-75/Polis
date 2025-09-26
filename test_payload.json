@@ -1,0 +1,22 @@
+{
+  "content": "I will coordinate with union leaders to defeat the corporate tax breaks. According to recent studies, 78% of working families support this initiative. We need to vote for change and support our foreign allies who contribute to this effort.",
+  "assignmentType": "statement",
+  "additionalCheckers": [
+    {
+      "type": "voice_consistency",
+      "name": "voice_checker"
+    },
+    {
+      "type": "fact_sourcing",
+      "name": "fact_checker"
+    },
+    {
+      "type": "fec_compliance",
+      "name": "fec_checker"
+    },
+    {
+      "type": "ldjs_markup",
+      "name": "markup_checker"
+    }
+  ]
+}

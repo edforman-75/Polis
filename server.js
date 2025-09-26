@@ -20,6 +20,8 @@ const politicalContentRoutes = require('./backend/routes/political-content');
 const undoRedoRoutes = require('./backend/routes/undo-redo');
 const talkingPointsToneRoutes = require('./backend/routes/talking-points-tone');
 const briefEnhancementRoutes = require('./backend/routes/brief-enhancement');
+const briefQuestionnaireRoutes = require('./backend/routes/brief-questionnaires');
+const qualityCheckerRoutes = require('./backend/routes/quality-checker');
 
 // Import database
 const db = require('./backend/database/init');
@@ -92,6 +94,8 @@ app.use('/api/political-content', politicalContentRoutes);
 app.use('/api/undo-redo', undoRedoRoutes);
 app.use('/api/talking-points-tone', talkingPointsToneRoutes);
 app.use('/api/brief-enhancement', briefEnhancementRoutes);
+app.use('/api/brief-questionnaires', briefQuestionnaireRoutes);
+app.use('/api/quality-checker', qualityCheckerRoutes);
 
 // Serve static files in development
 if (process.env.NODE_ENV === 'development') {
@@ -106,7 +110,7 @@ if (process.env.NODE_ENV === 'development') {
         next();
     });
 
-    app.use(express.static(path.join(__dirname)));
+    app.use(express.static(path.join(__dirname, 'public')));
 
     // Serve the main editor with no-cache headers
     app.get('/', (req, res) => {
@@ -115,7 +119,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'notion-style-campaign-editor.html'));
+        res.sendFile(path.join(__dirname, 'public', 'notion-style-campaign-editor.html'));
     });
 
     // Serve the dashboard with no-cache headers
@@ -125,7 +129,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'assignment-dashboard.html'));
+        res.sendFile(path.join(__dirname, 'public', 'assignment-dashboard.html'));
     });
 
     // Serve the writers dashboard (thin client)
@@ -135,7 +139,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'writers-dashboard-thin.html'));
+        res.sendFile(path.join(__dirname, 'public', 'writers-dashboard-thin.html'));
     });
 
     // Serve the communications director dashboard
@@ -145,7 +149,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'communications-director-dashboard.html'));
+        res.sendFile(path.join(__dirname, 'public', 'communications-director-dashboard.html'));
     });
 
     // Serve the communications director dashboard (thin client)
@@ -155,7 +159,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'communications-director-thin.html'));
+        res.sendFile(path.join(__dirname, 'public', 'communications-director-thin.html'));
     });
 
     // Serve the social media editor
@@ -165,7 +169,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'social-media-editor.html'));
+        res.sendFile(path.join(__dirname, 'public', 'social-media-editor.html'));
     });
 
     // Serve the photo library
@@ -175,7 +179,7 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'photo-library.html'));
+        res.sendFile(path.join(__dirname, 'public', 'photo-library.html'));
     });
 
     // Serve the thin speech editor
@@ -185,7 +189,58 @@ if (process.env.NODE_ENV === 'development') {
             'Pragma': 'no-cache',
             'Expires': '0'
         });
-        res.sendFile(path.join(__dirname, 'speech-editor-thin.html'));
+        res.sendFile(path.join(__dirname, 'public', 'speech-editor-thin.html'));
+    });
+
+    // Serve the op-ed editor
+    app.get('/op-ed', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'op-ed-editor.html'));
+    });
+
+    // Serve the press release editor
+    app.get('/press-release', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'press-release-editor.html'));
+    });
+
+    // Serve the talking points editor
+    app.get('/talking-points', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'talking-points-editor.html'));
+    });
+
+    // Handle direct assignment URLs and redirect to appropriate editor
+    app.get('/assignment-:assignmentId', (req, res) => {
+        const assignmentId = req.params.assignmentId;
+
+        // Route based on assignment ID patterns
+        if (assignmentId.startsWith('EDU') || assignmentId.includes('op-ed') || assignmentId.includes('opinion')) {
+            res.redirect(`/op-ed?assignment=${assignmentId}`);
+        } else if (assignmentId.startsWith('INF') || assignmentId.startsWith('VDB-2025-008') || assignmentId.includes('press-release')) {
+            res.redirect(`/press-release?assignment=${assignmentId}`);
+        } else if (assignmentId.startsWith('VSM') || assignmentId.startsWith('SOC') || assignmentId.includes('social')) {
+            res.redirect(`/social?assignment=${assignmentId}`);
+        } else if (assignmentId.startsWith('HCS') || assignmentId.startsWith('VDB-2025-007') || assignmentId.startsWith('SPE') || assignmentId.includes('speech')) {
+            res.redirect(`/speech-editor-thin?assignment=${assignmentId}`);
+        } else if (assignmentId.startsWith('TP') || assignmentId.startsWith('TKP') || assignmentId.includes('talking-points')) {
+            res.redirect(`/talking-points?assignment=${assignmentId}`);
+        } else {
+            // Default to main editor for letters, emails, etc.
+            res.redirect(`/?assignment=${assignmentId}`);
+        }
     });
 }
 
@@ -215,6 +270,7 @@ db.initialize().then(() => {
         console.log(`📝 Editor available at http://localhost:${PORT}/`);
         console.log(`📊 Dashboard available at http://localhost:${PORT}/dashboard`);
         console.log(`📱 Social Media Editor at http://localhost:${PORT}/social`);
+        console.log(`📰 Op-Ed Editor at http://localhost:${PORT}/op-ed`);
         console.log(`📸 Photo Library at http://localhost:${PORT}/photos`);
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
     });

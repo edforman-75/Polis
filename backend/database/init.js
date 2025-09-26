@@ -393,14 +393,10 @@ class Database {
         }
 
         // Migration: Add assignment_type column if it doesn't exist
-        try {
+        const hasAssignmentType = await this.columnExists('assignments', 'assignment_type');
+        if (!hasAssignmentType) {
             await this.run(`ALTER TABLE assignments ADD COLUMN assignment_type TEXT DEFAULT 'press-release'`);
             console.log('📊 Added assignment_type column to assignments table');
-        } catch (error) {
-            if (error.message && !error.message.includes('duplicate column name')) {
-                console.warn('Migration warning:', error.message);
-            }
-            // Column already exists, which is fine
         }
 
         // Migration: Add structured_data (LD-JSON) columns to all content tables
@@ -411,14 +407,10 @@ class Database {
         ];
 
         for (const table of contentTables) {
-            try {
+            const hasStructuredData = await this.columnExists(table, 'structured_data');
+            if (!hasStructuredData) {
                 await this.run(`ALTER TABLE ${table} ADD COLUMN structured_data TEXT`);
                 console.log(`📋 Added structured_data (LD-JSON) column to ${table} table`);
-            } catch (error) {
-                if (error.message && !error.message.includes('duplicate column name')) {
-                    console.warn(`Migration warning for ${table}:`, error.message);
-                }
-                // Column already exists, which is fine
             }
         }
 
@@ -516,6 +508,17 @@ class Database {
     }
 
     // Helper methods
+    async columnExists(tableName, columnName) {
+        try {
+            const result = await this.get(`PRAGMA table_info(${tableName})`);
+            const columns = await this.all(`PRAGMA table_info(${tableName})`);
+            return columns.some(col => col.name === columnName);
+        } catch (error) {
+            console.error(`Error checking column existence: ${tableName}.${columnName}`, error);
+            return false;
+        }
+    }
+
     run(query, params = []) {
         return new Promise((resolve, reject) => {
             this.db.run(query, params, function(err) {

@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Talking Points Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h3 {
+            font-size: 16px;
+            color: #0f172a;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .template-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .template-option {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .template-option:hover {
+            border-color: #3b82f6;
+            background: #f1f5f9;
+        }
+
+        .template-option.active {
+            border-color: #3b82f6;
+            background: #dbeafe;
+        }
+
+        .template-option h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .template-option p {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .urgency-indicator {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .urgency-level {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .urgency-level.standard {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .urgency-level.expedited {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .urgency-level.critical {
+            background: #fecaca;
+            color: #dc2626;
+        }
+
+        .urgency-level.active {
+            border-color: currentColor;
+            transform: scale(1.05);
+        }
+
+        .editor-area {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .document-info {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .classification-header {
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .classification-header.confidential {
+            background: #dc2626;
+        }
+
+        .classification-header.restricted {
+            background: #ea580c;
+        }
+
+        .classification-header.internal {
+            background: #7c3aed;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-control.small {
+            width: auto;
+            min-width: 150px;
+        }
+
+        .editor-content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .section h3 {
+            font-size: 16px;
+            color: #0f172a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            font-size: 18px;
+        }
+
+        .motd-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border-color: #3b82f6;
+        }
+
+        .priorities-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+        }
+
+        .quick-hitters-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+        }
+
+        .response-section {
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            border-color: #ef4444;
+        }
+
+        .priority-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .priority-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .priority-number {
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .quick-hitter {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .bullet-point {
+            color: #10b981;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .detailed-points {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .topic-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #3b82f6;
+            background: #f8fafc;
+        }
+
+        .topic-section h4 {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .avoid-list {
+            background: #fef2f2;
+            border: 1px solid #f87171;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .avoid-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #fee2e2;
+        }
+
+        .avoid-item:last-child {
+            border-bottom: none;
+        }
+
+        .warning-icon {
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        .approval-workflow {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 20px;
+            min-width: 300px;
+            z-index: 1000;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .workflow-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .step-status.pending {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .step-status.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .step-status.approved {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-status.rejected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .surrogate-tiers {
+            margin-top: 20px;
+        }
+
+        .tier-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tier-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tier-badge.tier-1 {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #3b82f6;
+        }
+
+        .tier-badge.tier-2 {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #22c55e;
+        }
+
+        .tier-badge.tier-3 {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .tier-badge.tier-4 {
+            background: #ede9fe;
+            color: #6b21a8;
+            border: 1px solid #8b5cf6;
+        }
+
+        .tier-badge.selected {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .distribution-status {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #0f172a;
+        }
+
+        .quality-checklist {
+            list-style: none;
+        }
+
+        .quality-checklist li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .quality-checklist input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Campaign Talking Points Manager</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="loadRecentTalkingPoints()">
+                    📂 Recent
+                </button>
+                <button class="btn btn-secondary" onclick="showQualityChecklist()">
+                    ✅ Quality Check
+                </button>
+                <button class="btn btn-primary" onclick="saveTalkingPoints()">
+                    💾 Save Draft
+                </button>
+                <button class="btn btn-success" onclick="submitForApproval()">
+                    🔄 Submit for Approval
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>📝 Document Type</h3>
+                <div class="template-selector">
+                    <div class="template-option active" data-template="daily" onclick="selectTemplate('daily')">
+                        <h4>📅 Daily Standard</h4>
+                        <p>Regular daily talking points with full structure</p>
+                    </div>
+                    <div class="template-option" data-template="crisis" onclick="selectTemplate('crisis')">
+                        <h4>🚨 Crisis Response</h4>
+                        <p>Urgent reactive messaging for breaking news</p>
+                    </div>
+                    <div class="template-option" data-template="event" onclick="selectTemplate('event')">
+                        <h4>📍 Event-Specific</h4>
+                        <p>Tailored for specific events or appearances</p>
+                    </div>
+                </div>
+
+                <h3>⚡ Urgency Level</h3>
+                <div class="urgency-indicator">
+                    <div class="urgency-level standard active" data-urgency="standard" onclick="setUrgency('standard')">
+                        Standard
+                    </div>
+                    <div class="urgency-level expedited" data-urgency="expedited" onclick="setUrgency('expedited')">
+                        Expedited
+                    </div>
+                    <div class="urgency-level critical" data-urgency="critical" onclick="setUrgency('critical')">
+                        Critical
+                    </div>
+                </div>
+
+                <div class="surrogate-tiers">
+                    <h3>👥 Distribution Tiers</h3>
+                    <div class="tier-selector">
+                        <div class="tier-badge tier-1 selected" data-tier="1" onclick="toggleTier(1)">
+                            Tier 1: Principal
+                        </div>
+                        <div class="tier-badge tier-2 selected" data-tier="2" onclick="toggleTier(2)">
+                            Tier 2: Official
+                        </div>
+                        <div class="tier-badge tier-3" data-tier="3" onclick="toggleTier(3)">
+                            Tier 3: Volunteer
+                        </div>
+                        <div class="tier-badge tier-4" data-tier="4" onclick="toggleTier(4)">
+                            Tier 4: Allied
+                        </div>
+                    </div>
+                    <div class="distribution-status">
+                        <div class="status-item">
+                            <span>Expected Recipients:</span>
+                            <strong id="recipientCount">24</strong>
+                        </div>
+                        <div class="status-item">
+                            <span>Distribution Time:</span>
+                            <strong id="distributionTime">10:00 AM</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="editor-area">
+                <div class="classification-header confidential" id="classificationHeader">
+                    CONFIDENTIAL - CAMPAIGN TALKING POINTS
+                </div>
+
+                <div class="editor-header">
+                    <div class="document-info">
+                        <div>
+                            <div class="form-group">
+                                <label for="documentTitle">Document Title</label>
+                                <input type="text" id="documentTitle" class="form-control"
+                                       placeholder="Daily Talking Points - [Date]">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px;">
+                            <div class="form-group">
+                                <label for="validDate">Valid Date</label>
+                                <input type="date" id="validDate" class="form-control small">
+                            </div>
+                            <div class="form-group">
+                                <label for="updateTime">Update Time</label>
+                                <input type="time" id="updateTime" class="form-control small">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="editor-content">
+                    <!-- Message of the Day -->
+                    <div class="section motd-section">
+                        <h3><span class="section-icon">🎯</span>Message of the Day (MOTD)</h3>
+                        <div class="form-group">
+                            <textarea class="form-control" id="messageOfDay" rows="2"
+                                      placeholder="Single sentence capturing main campaign message - what every spokesperson should reinforce today"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Priority Messages -->
+                    <div class="section priorities-section">
+                        <h3><span class="section-icon">📌</span>Today's Priority Messages</h3>
+                        <div id="priorityMessages">
+                            <div class="priority-item">
+                                <div class="priority-header">
+                                    <div class="priority-number">1</div>
+                                    <input type="text" class="form-control" placeholder="Primary Focus - Main story or initiative to push">
+                                </div>
+                                <textarea class="form-control" rows="3" placeholder="Detailed explanation and key supporting points..."></textarea>
+                            </div>
+                            <div class="priority-item">
+                                <div class="priority-header">
+                                    <div class="priority-number">2</div>
+                                    <input type="text" class="form-control" placeholder="Secondary Message - Supporting theme or policy area">
+                                </div>
+                                <textarea class="form-control" rows="3" placeholder="Detailed explanation and key supporting points..."></textarea>
+                            </div>
+                            <div class="priority-item">
+                                <div class="priority-header">
+                                    <div class="priority-number">3</div>
+                                    <input type="text" class="form-control" placeholder="Defensive Position - Response to opposition attacks (if applicable)">
+                                </div>
+                                <textarea class="form-control" rows="3" placeholder="Detailed explanation and key supporting points..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Hitters -->
+                    <div class="section quick-hitters-section">
+                        <h3><span class="section-icon">⚡</span>Quick Hitters (5-7 Sound Bites)</h3>
+                        <div id="quickHitters">
+                            <div class="quick-hitter">
+                                <span class="bullet-point">•</span>
+                                <input type="text" class="form-control" placeholder="One-sentence sound bite perfect for social media or quick interviews">
+                            </div>
+                            <div class="quick-hitter">
+                                <span class="bullet-point">•</span>
+                                <input type="text" class="form-control" placeholder="Each tied to priority messages and written in conversational language">
+                            </div>
+                            <div class="quick-hitter">
+                                <span class="bullet-point">•</span>
+                                <input type="text" class="form-control" placeholder="Statistics and examples ready for longer discussions">
+                            </div>
+                            <div class="quick-hitter">
+                                <span class="bullet-point">•</span>
+                                <input type="text" class="form-control" placeholder="Local angles and voter impact emphasized">
+                            </div>
+                            <div class="quick-hitter">
+                                <span class="bullet-point">•</span>
+                                <input type="text" class="form-control" placeholder="Perfect for TV, radio, social media, or casual conversations">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="addQuickHitter()" style="margin-top: 10px;">
+                            ➕ Add Quick Hitter
+                        </button>
+                    </div>
+
+                    <!-- Detailed Talking Points -->
+                    <div class="section">
+                        <h3><span class="section-icon">📖</span>Detailed Talking Points by Topic</h3>
+                        <div class="detailed-points">
+                            <div class="topic-section">
+                                <h4>Policy Topic #1</h4>
+                                <textarea class="form-control" rows="4"
+                                          placeholder="2-3 paragraphs with statistics, examples, local angles, and voter impact..."></textarea>
+                            </div>
+                            <div class="topic-section">
+                                <h4>Policy Topic #2</h4>
+                                <textarea class="form-control" rows="4"
+                                          placeholder="2-3 paragraphs with statistics, examples, local angles, and voter impact..."></textarea>
+                            </div>
+                            <button class="btn btn-secondary" onclick="addTopicSection()">
+                                ➕ Add Topic Section
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Opposition Response -->
+                    <div class="section response-section">
+                        <h3><span class="section-icon">🛡️</span>Opposition Response Guide</h3>
+                        <div class="form-group">
+                            <label>Likely attacks and how to deflect/respond:</label>
+                            <textarea class="form-control" rows="3" id="likelyAttacks"
+                                      placeholder="If asked about [opponent claim], respond with..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Pivot strategies to return to positive message:</label>
+                            <textarea class="form-control" rows="3" id="pivotStrategies"
+                                      placeholder="When discussion goes negative, redirect by saying..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Do Not Say -->
+                    <div class="section">
+                        <h3><span class="section-icon">⚠️</span>Do Not Say / Avoid</h3>
+                        <div class="avoid-list">
+                            <div class="avoid-item">
+                                <span class="warning-icon">⚠️</span>
+                                <input type="text" class="form-control" placeholder="Words, phrases, or topics to avoid">
+                            </div>
+                            <div class="avoid-item">
+                                <span class="warning-icon">⚠️</span>
+                                <input type="text" class="form-control" placeholder="Potential gaffes or sensitive areas">
+                            </div>
+                            <div class="avoid-item">
+                                <span class="warning-icon">⚠️</span>
+                                <input type="text" class="form-control" placeholder="Legal or strategic restrictions">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="addAvoidItem()" style="margin-top: 10px;">
+                            ➕ Add Restriction
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Workflow Panel -->
+        <div class="approval-workflow" id="approvalWorkflow">
+            <h3>📋 Approval Status</h3>
+            <div class="workflow-step">
+                <div class="step-status active">1</div>
+                <span>Content Creation (Deputy Comms)</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-status pending">2</div>
+                <span>Strategic Review (Comms Director)</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-status pending">3</div>
+                <span>Final Approval (Campaign Manager)</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-status pending">4</div>
+                <span>Distribution to Surrogates</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Control Modal -->
+    <div class="modal" id="qualityModal">
+        <div class="modal-content">
+            <h3>📋 Quality Control Checklist</h3>
+            <ul class="quality-checklist">
+                <li><input type="checkbox" id="check1"> <label for="check1">Message of the day is memorable and repeatable</label></li>
+                <li><input type="checkbox" id="check2"> <label for="check2">All points support main campaign narrative</label></li>
+                <li><input type="checkbox" id="check3"> <label for="check3">Language is conversational and authentic</label></li>
+                <li><input type="checkbox" id="check4"> <label for="check4">Statistics are accurate and from credible sources</label></li>
+                <li><input type="checkbox" id="check5"> <label for="check5">Points advance positive campaign positioning</label></li>
+                <li><input type="checkbox" id="check6"> <label for="check6">Opposition responses prepare for likely attacks</label></li>
+                <li><input type="checkbox" id="check7"> <label for="check7">Timing coordinates with daily campaign activities</label></li>
+                <li><input type="checkbox" id="check8"> <label for="check8">Local customization reflects community priorities</label></li>
+                <li><input type="checkbox" id="check9"> <label for="check9">All facts verified within past 24 hours</label></li>
+                <li><input type="checkbox" id="check10"> <label for="check10">Legal compliance review completed</label></li>
+            </ul>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-secondary" onclick="closeQualityModal()">Close</button>
+                <button class="btn btn-success" onclick="passQualityCheck()">Pass Quality Check</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 'daily';
+        let currentUrgency = 'standard';
+        let selectedTiers = [1, 2];
+        let currentApprovalStep = 1;
+
+        // Initialize with current date/time
+        document.getElementById('validDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('updateTime').value = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+
+        function selectTemplate(template) {
+            currentTemplate = template;
+
+            // Update active template
+            document.querySelectorAll('.template-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-template="${template}"]`).classList.add('active');
+
+            // Update UI based on template
+            updateTemplateUI();
+        }
+
+        function updateTemplateUI() {
+            const classificationHeader = document.getElementById('classificationHeader');
+            const approvalWorkflow = document.getElementById('approvalWorkflow');
+
+            switch(currentTemplate) {
+                case 'daily':
+                    classificationHeader.textContent = 'CONFIDENTIAL - CAMPAIGN TALKING POINTS';
+                    classificationHeader.className = 'classification-header confidential';
+                    document.getElementById('documentTitle').placeholder = 'Daily Talking Points - [Date]';
+                    break;
+                case 'crisis':
+                    classificationHeader.textContent = 'URGENT TALKING POINTS UPDATE - CRISIS RESPONSE';
+                    classificationHeader.className = 'classification-header confidential';
+                    document.getElementById('documentTitle').placeholder = 'URGENT: Response to [Breaking News/Attack]';
+                    break;
+                case 'event':
+                    classificationHeader.textContent = 'EVENT TALKING POINTS - CONFIDENTIAL';
+                    classificationHeader.className = 'classification-header internal';
+                    document.getElementById('documentTitle').placeholder = 'Event Talking Points: [Event Name/Location]';
+                    break;
+            }
+        }
+
+        function setUrgency(urgency) {
+            currentUrgency = urgency;
+
+            // Update active urgency
+            document.querySelectorAll('.urgency-level').forEach(level => {
+                level.classList.remove('active');
+            });
+            document.querySelector(`[data-urgency="${urgency}"]`).classList.add('active');
+
+            // Update distribution time based on urgency
+            updateDistributionTime();
+        }
+
+        function updateDistributionTime() {
+            const distributionTimeEl = document.getElementById('distributionTime');
+            const now = new Date();
+
+            switch(currentUrgency) {
+                case 'standard':
+                    distributionTimeEl.textContent = '10:00 AM';
+                    break;
+                case 'expedited':
+                    const expeditedTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // +2 hours
+                    distributionTimeEl.textContent = expeditedTime.toLocaleTimeString('en-US', {hour12: true, hour: 'numeric', minute: '2-digit'});
+                    break;
+                case 'critical':
+                    const criticalTime = new Date(now.getTime() + 30 * 60 * 1000); // +30 minutes
+                    distributionTimeEl.textContent = criticalTime.toLocaleTimeString('en-US', {hour12: true, hour: 'numeric', minute: '2-digit'});
+                    break;
+            }
+        }
+
+        function toggleTier(tier) {
+            const tierBadge = document.querySelector(`[data-tier="${tier}"]`);
+
+            if (selectedTiers.includes(tier)) {
+                selectedTiers = selectedTiers.filter(t => t !== tier);
+                tierBadge.classList.remove('selected');
+            } else {
+                selectedTiers.push(tier);
+                tierBadge.classList.add('selected');
+            }
+
+            updateRecipientCount();
+        }
+
+        function updateRecipientCount() {
+            let count = 0;
+            selectedTiers.forEach(tier => {
+                switch(tier) {
+                    case 1: count += 8; break;  // Principal surrogates
+                    case 2: count += 24; break; // Official surrogates
+                    case 3: count += 150; break; // Volunteer surrogates
+                    case 4: count += 45; break;  // Allied organizations
+                }
+            });
+
+            document.getElementById('recipientCount').textContent = count;
+        }
+
+        function addQuickHitter() {
+            const quickHittersContainer = document.getElementById('quickHitters');
+            const newHitter = document.createElement('div');
+            newHitter.className = 'quick-hitter';
+            newHitter.innerHTML = `
+                <span class="bullet-point">•</span>
+                <input type="text" class="form-control" placeholder="New sound bite for social media or quick interviews">
+            `;
+            quickHittersContainer.insertBefore(newHitter, quickHittersContainer.lastElementChild);
+        }
+
+        function addTopicSection() {
+            const detailedPoints = document.querySelector('.detailed-points');
+            const newTopic = document.createElement('div');
+            newTopic.className = 'topic-section';
+            newTopic.innerHTML = `
+                <h4>Policy Topic #${detailedPoints.children.length}</h4>
+                <textarea class="form-control" rows="4"
+                          placeholder="2-3 paragraphs with statistics, examples, local angles, and voter impact..."></textarea>
+            `;
+            detailedPoints.insertBefore(newTopic, detailedPoints.lastElementChild);
+        }
+
+        function addAvoidItem() {
+            const avoidList = document.querySelector('.avoid-list');
+            const newItem = document.createElement('div');
+            newItem.className = 'avoid-item';
+            newItem.innerHTML = `
+                <span class="warning-icon">⚠️</span>
+                <input type="text" class="form-control" placeholder="Additional restriction or sensitive area">
+            `;
+            avoidList.appendChild(newItem);
+        }
+
+        function showQualityChecklist() {
+            document.getElementById('qualityModal').classList.add('active');
+        }
+
+        function closeQualityModal() {
+            document.getElementById('qualityModal').classList.remove('active');
+        }
+
+        function passQualityCheck() {
+            // Check if all items are checked
+            const checkboxes = document.querySelectorAll('#qualityModal input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            if (allChecked) {
+                alert('✅ Quality check passed! Document is ready for approval workflow.');
+                closeQualityModal();
+            } else {
+                alert('⚠️ Please complete all quality check items before proceeding.');
+            }
+        }
+
+        async function saveTalkingPoints() {
+            const talkingPointsData = collectFormData();
+
+            try {
+                // Simulate save to backend
+                console.log('Saving talking points:', talkingPointsData);
+                alert('💾 Talking points saved successfully!');
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('❌ Failed to save talking points. Please try again.');
+            }
+        }
+
+        async function submitForApproval() {
+            const talkingPointsData = collectFormData();
+
+            try {
+                // Move to next approval step
+                currentApprovalStep = 2;
+                updateApprovalWorkflow();
+
+                console.log('Submitting for approval:', talkingPointsData);
+                alert('🔄 Talking points submitted for strategic review!');
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('❌ Failed to submit for approval. Please try again.');
+            }
+        }
+
+        function updateApprovalWorkflow() {
+            const steps = document.querySelectorAll('.step-status');
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'approved', 'pending');
+
+                if (index < currentApprovalStep - 1) {
+                    step.classList.add('approved');
+                    step.textContent = '✓';
+                } else if (index === currentApprovalStep - 1) {
+                    step.classList.add('active');
+                    step.textContent = index + 1;
+                } else {
+                    step.classList.add('pending');
+                    step.textContent = index + 1;
+                }
+            });
+        }
+
+        function collectFormData() {
+            const data = {
+                template: currentTemplate,
+                urgency: currentUrgency,
+                distributionTiers: selectedTiers,
+                documentTitle: document.getElementById('documentTitle').value,
+                validDate: document.getElementById('validDate').value,
+                updateTime: document.getElementById('updateTime').value,
+                messageOfDay: document.getElementById('messageOfDay').value,
+                priorityMessages: [],
+                quickHitters: [],
+                detailedPoints: [],
+                oppositionResponse: {
+                    likelyAttacks: document.getElementById('likelyAttacks').value,
+                    pivotStrategies: document.getElementById('pivotStrategies').value
+                },
+                avoidItems: []
+            };
+
+            // Collect priority messages
+            document.querySelectorAll('.priority-item').forEach(item => {
+                const title = item.querySelector('input').value;
+                const content = item.querySelector('textarea').value;
+                if (title || content) {
+                    data.priorityMessages.push({ title, content });
+                }
+            });
+
+            // Collect quick hitters
+            document.querySelectorAll('.quick-hitter input').forEach(input => {
+                if (input.value.trim()) {
+                    data.quickHitters.push(input.value);
+                }
+            });
+
+            // Collect detailed points
+            document.querySelectorAll('.topic-section').forEach(section => {
+                const title = section.querySelector('h4').textContent;
+                const content = section.querySelector('textarea').value;
+                if (content.trim()) {
+                    data.detailedPoints.push({ title, content });
+                }
+            });
+
+            // Collect avoid items
+            document.querySelectorAll('.avoid-item input').forEach(input => {
+                if (input.value.trim()) {
+                    data.avoidItems.push(input.value);
+                }
+            });
+
+            return data;
+        }
+
+        function loadRecentTalkingPoints() {
+            // Simulate loading recent talking points
+            alert('📂 Loading recent talking points... (Feature coming soon)');
+        }
+
+        // Initialize page
+        updateTemplateUI();
+        updateDistributionTime();
+        updateRecipientCount();
+    </script>
+</body>
+</html>

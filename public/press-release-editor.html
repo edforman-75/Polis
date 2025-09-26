@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .assignment-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .assignment-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .assignment-meta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .meta-tag {
+            padding: 4px 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .editor-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .press-release-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .release-type {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #ef4444;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .headline-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: 700;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subheadline-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            font-style: italic;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .dateline-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dateline-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .press-release-body {
+            margin-bottom: 30px;
+        }
+
+        .body-section {
+            margin-bottom: 20px;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-hint {
+            font-size: 11px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+
+        .paragraph-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: vertical;
+        }
+
+        .quote-block {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .quote-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            font-style: italic;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .quote-attribution {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .contact-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .contact-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .contact-input {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .ai-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ai-btn {
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ai-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .template-guide {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .guide-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .guide-item:last-child {
+            border-bottom: none;
+        }
+
+        .guide-title {
+            font-weight: 600;
+            color: #475569;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .guide-text {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .word-count {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .count-label {
+            color: #64748b;
+        }
+
+        .count-value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .boilerplate-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .boilerplate-text {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="assignment-info">
+                <div class="assignment-title" id="assignmentTitle">Press Release</div>
+                <div class="assignment-meta">
+                    <span class="meta-tag" id="assignmentId">NEW</span>
+                    <span class="meta-tag" id="assignmentStatus">Draft</span>
+                    <span class="meta-tag" id="workflowPhase">Planning</span>
+                    <span class="meta-tag" id="wordCount">0 words</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="editor-section">
+                <div class="press-release-header">
+                    <div style="text-align: center; font-size: 11px; color: #64748b; margin-bottom: 15px; font-weight: 600; letter-spacing: 0.5px;">
+                        PAID FOR BY <input type="text" id="campaignCommittee" placeholder="[Campaign Committee Name]" style="border: none; border-bottom: 1px solid #e2e8f0; width: 250px; text-align: center; font-size: 11px; font-weight: 600;">
+                    </div>
+                    <div class="release-type" contenteditable="true" onclick="toggleReleaseType(this)">FOR IMMEDIATE RELEASE</div>
+                    <input type="text" class="headline-input" placeholder="[Candidate Name] Announces [Policy/Position] to [Benefit] [Constituency]" id="headline">
+                    <input type="text" class="subheadline-input" placeholder="Location-specific relevance or endorsement information" id="subheadline">
+                </div>
+
+                <div class="dateline-section">
+                    <input type="text" class="dateline-input" placeholder="CITY, State" id="location">
+                    <input type="date" class="dateline-input" id="releaseDate">
+                </div>
+
+                <div class="press-release-body">
+                    <div class="body-section">
+                        <div class="section-label">
+                            Lead Paragraph
+                            <span class="section-hint">(Who, What, When, Where, Why)</span>
+                        </div>
+                        <textarea class="paragraph-input" id="leadParagraph"
+                            placeholder="[City, State, Date] – [Candidate Full Name], [current title if applicable] and candidate for [office], today announced [specific policy/position/endorsement] that will [direct benefit to voters]. The [initiative/position] addresses [specific problem] facing [geographic area/demographic] by [solution method]."></textarea>
+                    </div>
+
+                    <div class="body-section">
+                        <div class="section-label">
+                            Supporting Details
+                            <span class="section-hint">(Context and Background)</span>
+                        </div>
+                        <textarea class="paragraph-input" id="supportingDetails"
+                            placeholder="Policy details, proposal specifics, or position explanation. Include local relevance and specific community references."></textarea>
+                    </div>
+
+                    <div class="quote-block">
+                        <input type="text" class="quote-input" id="quote1"
+                            placeholder="'As [office], I will [specific action] because [local community/voters] deserve [outcome],' said [Candidate Name].">
+                        <input type="text" class="quote-attribution" id="quoteAttribution1"
+                            placeholder="- Name, Title">
+                    </div>
+
+                    <div class="body-section">
+                        <div class="section-label">
+                            Additional Information
+                            <span class="section-hint">(Statistics, Impact, Call to Action)</span>
+                        </div>
+                        <textarea class="paragraph-input" id="additionalInfo"
+                            placeholder="Include relevant statistics, expected impact, and any call to action."></textarea>
+                    </div>
+
+                    <div class="quote-block">
+                        <input type="text" class="quote-input" id="quote2"
+                            placeholder="Optional second quote from a stakeholder or supporter...">
+                        <input type="text" class="quote-attribution" id="quoteAttribution2"
+                            placeholder="- Name, Title">
+                    </div>
+                </div>
+
+                <div class="boilerplate-section">
+                    <div class="section-label">Boilerplate</div>
+                    <div class="boilerplate-text" contenteditable="true" id="boilerplate">
+                        About [Candidate Name] for [Office]: [Standard boilerplate text about the candidate's background, key campaign themes, and vision for the office. This section remains consistent across all press releases.]
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px; font-size: 18px; font-weight: 700; color: #1a202c;">
+                    ###
+                </div>
+
+                <div class="contact-section">
+                    <div class="contact-title">Media Contact Information</div>
+                    <div class="contact-grid">
+                        <input type="text" class="contact-input" placeholder="Contact Name" id="contactName">
+                        <input type="text" class="contact-input" placeholder="Title" id="contactTitle">
+                        <input type="email" class="contact-input" placeholder="Email" id="contactEmail">
+                        <input type="tel" class="contact-input" placeholder="Phone" id="contactPhone">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="saveRelease()">Save Draft</button>
+                    <button class="btn btn-secondary" onclick="previewRelease()">Preview</button>
+                    <button class="btn btn-secondary" onclick="exportRelease()">Export</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <div class="section-title">AI Assistant</div>
+                    <div class="ai-buttons">
+                        <button class="ai-btn" onclick="generateHeadline()">Generate Campaign Headline</button>
+                        <button class="ai-btn" onclick="improveLeadParagraph()">Strengthen Lead (5 W's)</button>
+                        <button class="ai-btn" onclick="generateQuote()">Generate Candidate Quote</button>
+                        <button class="ai-btn" onclick="checkMessaging()">Check Message Discipline</button>
+                        <button class="ai-btn" onclick="oppositionCheck()">Opposition Vulnerability Check</button>
+                        <button class="ai-btn" onclick="checkAPStyle()">Check AP Style</button>
+                        <button class="ai-btn" onclick="suggestDistribution()">Media Distribution Strategy</button>
+                        <button class="ai-btn" onclick="generateSurrogateQuote()">Generate Endorser Quote</button>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Press Release Guide</div>
+                    <div class="template-guide">
+                        <div class="guide-item">
+                            <div class="guide-title">1. Headline</div>
+                            <div class="guide-text">Clear, compelling, under 10 words. Use active voice.</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-title">2. Lead Paragraph</div>
+                            <div class="guide-text">Answer Who, What, When, Where, Why in first 2 sentences.</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-title">3. Body</div>
+                            <div class="guide-text">Inverted pyramid structure. Most important info first.</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-title">4. Quotes</div>
+                            <div class="guide-text">Add human element. Should advance the story, not repeat.</div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-title">5. Boilerplate</div>
+                            <div class="guide-text">Standard "About" section. Keep consistent across releases.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Document Stats</div>
+                    <div class="word-count">
+                        <span class="count-label">Words:</span>
+                        <span class="count-value" id="totalWords">0</span>
+                    </div>
+                    <div class="word-count">
+                        <span class="count-label">Characters:</span>
+                        <span class="count-value" id="totalChars">0</span>
+                    </div>
+                    <div class="word-count">
+                        <span class="count-label">Target:</span>
+                        <span class="count-value">400-600 words</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="section-title">Assignment Brief</div>
+                    <div class="template-guide">
+                        <div id="assignmentBrief" style="font-size: 13px; color: #475569; line-height: 1.5;">
+                            Loading assignment details...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load assignment data if provided
+        const urlParams = new URLSearchParams(window.location.search);
+        const assignmentId = urlParams.get('assignment');
+
+        if (assignmentId) {
+            loadAssignment(assignmentId);
+        }
+
+        async function loadAssignment(id) {
+            try {
+                const response = await fetch(`/api/assignments/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const assignment = await response.json();
+                    document.getElementById('assignmentTitle').textContent = assignment.title || 'Press Release';
+                    document.getElementById('assignmentId').textContent = assignment.id || 'NEW';
+                    document.getElementById('assignmentStatus').textContent = assignment.status || 'draft';
+                    document.getElementById('assignmentBrief').textContent = assignment.brief || 'No brief provided';
+
+                    // Load any existing content
+                    if (assignment.blocks && assignment.blocks.length > 0) {
+                        // Load content from blocks
+                        assignment.blocks.forEach(block => {
+                            if (block.type === 'headline') {
+                                document.getElementById('headline').value = block.data.text || '';
+                            } else if (block.type === 'lead') {
+                                document.getElementById('leadParagraph').value = block.data.text || '';
+                            }
+                            // Add more block type handling as needed
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading assignment:', error);
+            }
+        }
+
+        // Update word count
+        function updateWordCount() {
+            const elements = ['headline', 'subheadline', 'leadParagraph', 'supportingDetails',
+                             'additionalInfo', 'quote1', 'quote2'];
+
+            let totalText = '';
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    totalText += element.value + ' ';
+                }
+            });
+
+            const words = totalText.trim().split(/\s+/).filter(word => word.length > 0).length;
+            const chars = totalText.length;
+
+            document.getElementById('totalWords').textContent = words;
+            document.getElementById('totalChars').textContent = chars;
+            document.getElementById('wordCount').textContent = `${words} words`;
+        }
+
+        // Add event listeners for word count
+        document.querySelectorAll('input, textarea').forEach(element => {
+            element.addEventListener('input', updateWordCount);
+        });
+
+        // AI Assistant functions (placeholders)
+        async function generateHeadline() {
+            alert('AI headline generation would be implemented here');
+        }
+
+        async function improveLeadParagraph() {
+            alert('AI lead improvement would be implemented here');
+        }
+
+        async function generateQuote() {
+            alert('AI quote generation would be implemented here');
+        }
+
+        async function checkAPStyle() {
+            alert('AP style checking would be implemented here');
+        }
+
+        async function suggestDistribution() {
+            alert('Distribution strategy suggestions would be implemented here');
+        }
+
+        // Action buttons
+        async function saveRelease() {
+            alert('Saving press release...');
+        }
+
+        function previewRelease() {
+            alert('Preview functionality would be implemented here');
+        }
+
+        function exportRelease() {
+            alert('Export functionality would be implemented here');
+        }
+
+        // Initialize
+        updateWordCount();
+    </script>
+</body>
+</html>

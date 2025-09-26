@@ -953,9 +953,9 @@
                     <label class="filter-label">Status:</label>
                     <select id="statusFilter" onchange="filterAssignments()">
                         <option value="">All Status</option>
-                        <option value="new">New</option>
+                        <option value="pending">Pending</option>
                         <option value="in_progress">In Progress</option>
-                        <option value="under_review">Under Review</option>
+                        <option value="review">Under Review</option>
                         <option value="blocked">Blocked</option>
                         <option value="completed">Completed</option>
                     </select>
@@ -964,19 +964,34 @@
                     <label class="filter-label">Assignee:</label>
                     <select id="assigneeFilter" onchange="filterAssignments()">
                         <option value="">All Assignees</option>
-                        <option value="sarah-writer">Sarah</option>
-                        <option value="mike-writer">Mike</option>
-                        <option value="jen-writer">Jennifer</option>
+                        <option value="1">David Park</option>
+                        <option value="2">Alex Writer</option>
+                        <option value="3">Sam Reviewer</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Priority:</label>
                     <select id="priorityFilter" onchange="filterAssignments()">
                         <option value="">All Priority</option>
+                        <option value="critical">Critical</option>
                         <option value="urgent">Urgent</option>
                         <option value="high">High</option>
-                        <option value="normal">Normal</option>
+                        <option value="medium">Medium</option>
                         <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Type:</label>
+                    <select id="typeFilter" onchange="filterAssignments()">
+                        <option value="">All Types</option>
+                        <option value="press-release">Press Release</option>
+                        <option value="op-ed">Op-Ed</option>
+                        <option value="speech">Speech</option>
+                        <option value="social-media">Social Media</option>
+                        <option value="letter">Letter</option>
+                        <option value="email">Email/Newsletter</option>
+                        <option value="talking-points">Talking Points</option>
+                        <option value="statement">Statement</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -1086,11 +1101,12 @@
             <table class="assignments-table">
                 <thead>
                     <tr>
-                        <th style="width: 35%;">Assignment</th>
+                        <th style="width: 30%;">Assignment</th>
                         <th style="width: 12%;">Assignee</th>
                         <th style="width: 10%;">Due Date</th>
                         <th style="width: 8%;">Status</th>
-                        <th style="width: 20%;">Dependencies</th>
+                        <th style="width: 10%;">Workflow Stage</th>
+                        <th style="width: 15%;">Dependencies</th>
                         <th style="width: 15%;">Actions</th>
                     </tr>
                 </thead>
@@ -1110,28 +1126,47 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
+                    <label class="form-label">Assignment Type</label>
+                    <select class="form-control" id="assignmentType" onchange="showBriefBuilder()">
+                        <option value="">Select assignment type</option>
+                        <option value="press-release">Press Release</option>
+                        <option value="op-ed">Op-Ed</option>
+                        <option value="speech">Speech</option>
+                        <option value="social-media">Social Media Post</option>
+                        <option value="letter">Letter</option>
+                        <option value="email">Email/Newsletter</option>
+                        <option value="talking-points">Talking Points</option>
+                        <option value="statement">Statement</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Assignment Title</label>
                     <input type="text" class="form-control" id="assignmentTitle" placeholder="Enter assignment title">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Brief Description</label>
-                    <textarea class="form-control" id="assignmentBrief" placeholder="Brief description of what needs to be done"></textarea>
+
+                <!-- Brief builders will be shown here based on assignment type -->
+                <div id="briefBuilderContainer">
+                    <div class="form-group">
+                        <label class="form-label">Brief Description</label>
+                        <textarea class="form-control" id="assignmentBrief" placeholder="Select an assignment type to show structured brief form"></textarea>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Assign To</label>
                     <select class="form-control" id="assignmentWriter">
                         <option value="">Select a writer</option>
-                        <option value="sarah-writer">Sarah (Writer)</option>
-                        <option value="mike-writer">Mike (Writer)</option>
-                        <option value="jen-writer">Jennifer (Writer)</option>
+                        <option value="1">David Park</option>
+                        <option value="2">Alex Writer</option>
+                        <option value="3">Sam Reviewer</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Priority</label>
                     <select class="form-control" id="assignmentPriority">
-                        <option value="normal">Normal</option>
+                        <option value="medium">Medium</option>
                         <option value="high">High</option>
                         <option value="urgent">Urgent</option>
+                        <option value="critical">Critical</option>
                         <option value="low">Low</option>
                     </select>
                 </div>
@@ -1195,6 +1230,42 @@
         </div>
     </div>
 
+    <!-- Assignment Brief Modal -->
+    <div id="briefModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Assignment Brief</h3>
+                <button class="close-btn" onclick="closeModal('briefModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="brief-info">
+                    <div class="brief-meta">
+                        <h4 id="briefModalTitle">Assignment Title</h4>
+                        <p style="color: #64748b; font-size: 14px; margin: 5px 0;">ID: <span id="briefModalId">Assignment ID</span></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Brief Description</label>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; white-space: pre-wrap; line-height: 1.6;" id="briefModalContent">
+                            Assignment brief content will appear here...
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Dependencies</label>
+                        <ul style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 0;" id="briefModalDependencies">
+                            <li>No dependencies</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('briefModal')">Close</button>
+                <button class="btn btn-primary" onclick="openAssignment(document.getElementById('briefModalId').textContent)">📝 Open Assignment</button>
+            </div>
+        </div>
+    </div>
+
     <script src="frontend-api.js"></script>
     <script>
         let assignments = [];
@@ -1213,6 +1284,12 @@
                 // Try to load from API first
                 const assignmentsData = await campaignAPI.getAssignments();
                 assignments = assignmentsData.assignments || [];
+
+                // Map assignment_type from API to type field for consistency
+                assignments = assignments.map(assignment => ({
+                    ...assignment,
+                    type: assignment.assignment_type || assignment.type || 'press-release'
+                }));
 
                 // If no assignments from API, use sample data
                 if (assignments.length === 0) {
@@ -1254,6 +1331,7 @@
                 {
                     id: 'HCR-2025-001',
                     title: 'Healthcare Rally Speech - District 7',
+                    type: 'speech',
                     brief: 'Opening speech for healthcare town hall focused on Medicare expansion and prescription drug costs. Should emphasize local impact on seniors, include statistics on prescription cost savings, and highlight bipartisan support. Target audience is primarily Medicare recipients and families dealing with high healthcare costs. Tone should be compassionate yet assertive.',
                     assignee: 'sarah-writer',
                     assignor: 'Michael Chen',
@@ -1272,6 +1350,7 @@
                 {
                     id: 'INF-2025-002',
                     title: 'Infrastructure Bill Press Release',
+                    type: 'press-release',
                     brief: 'Announce support for federal infrastructure bill with local impact details. Must include specific projects for our district: bridge repairs on Route 15, broadband expansion to rural areas, and water system upgrades. Include job creation numbers and timeline for implementation.',
                     assignee: 'mike-writer',
                     assignor: 'Jennifer Davis',
@@ -1289,6 +1368,7 @@
                 {
                     id: 'VSM-2025-003',
                     title: 'Veterans Day Social Media Series',
+                    type: 'social-media',
                     brief: 'Create 5-post series honoring local veterans with personal stories. Each post should feature a different veteran from our district, include their photo, brief service summary, and current community involvement. Posts should be scheduled throughout Veterans Day week leading up to November 11th ceremony.',
                     assignee: 'sarah-writer',
                     assignor: 'David Park',
@@ -1308,6 +1388,7 @@
                 {
                     id: 'EDU-2025-004',
                     title: 'Education Funding Op-Ed',
+                    type: 'op-ed',
                     brief: 'Opinion piece on state education budget for major newspaper. Should argue for increased per-pupil funding, highlight teacher shortage in our district, and propose specific solutions including teacher loan forgiveness and classroom resource grants. Target word count: 800-1000 words.',
                     assignee: 'jen-writer',
                     assignor: 'Jennifer Davis',
@@ -1326,6 +1407,7 @@
                 {
                     id: 'FND-2025-005',
                     title: 'Weekly Donor Email Update',
+                    type: 'email',
                     brief: 'Campaign progress update highlighting recent achievements and upcoming events. Include grassroots fundraising totals, volunteer recruitment numbers, and preview of next week\'s town halls. Should maintain positive, energetic tone while showing momentum.',
                     assignee: 'sarah-writer',
                     assignor: 'Michael Chen',
@@ -1343,6 +1425,7 @@
                 {
                     id: 'VOL-2025-006',
                     title: 'Volunteer Thank You Letters',
+                    type: 'letter',
                     brief: 'Personalized thank you templates for phone bank volunteers who participated in last week\'s GOTV effort. Create 3 templates: first-time volunteers, returning volunteers, and team leaders. Include specific impact numbers and invitation to upcoming events.',
                     assignee: 'mike-writer',
                     assignor: 'David Park',
@@ -1360,6 +1443,7 @@
                 {
                     id: 'VDB-2025-007',
                     title: 'Veterans Day Ceremony Speech',
+                    type: 'speech',
                     brief: 'Main address for Veterans Day ceremony at Memorial Park. 10-minute speech honoring service members, acknowledging local veterans organizations, and highlighting our commitment to veterans\' healthcare and benefits. Should be solemn yet inspiring.',
                     assignee: 'jen-writer',
                     assignor: 'Michael Chen',
@@ -1378,6 +1462,7 @@
                 {
                     id: 'VDB-2025-008',
                     title: 'Veterans Benefits Press Release',
+                    type: 'press-release',
                     brief: 'Announce new veterans benefits legislation we\'re co-sponsoring. Focus on mental health services expansion, job training programs, and housing assistance. Include quotes from local veterans and service organizations.',
                     assignee: 'mike-writer',
                     assignor: 'Jennifer Davis',
@@ -1461,6 +1546,12 @@
                 filtered = filtered.filter(assignment => assignment.priority === priorityFilter);
             }
 
+            // Apply assignment type filter
+            const typeFilter = document.getElementById('typeFilter').value;
+            if (typeFilter) {
+                filtered = filtered.filter(assignment => assignment.type === typeFilter);
+            }
+
             // Apply due date filter
             const dueFilter = document.getElementById('dueFilter').value;
             if (dueFilter) {
@@ -1510,7 +1601,7 @@
             if (filteredAssignments.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #64748b;">
                             No assignments match your current filters
                         </td>
                     </tr>
@@ -1550,6 +1641,7 @@
                 const statusClass = `status-${assignment.status.replace('_', '-')}`;
                 const calculatedPriority = calculatePriority(assignment.dueDate);
                 const priorityClass = `priority-${calculatedPriority}`;
+                const workflowStage = getWorkflowStage(assignment);
 
                 const assignorInitials = assignment.assignor.split(' ').map(n => n[0]).join('');
 
@@ -1601,6 +1693,12 @@
                             </div>
                         </td>
                         <td>
+                            <div class="workflow-stage" style="display: flex; align-items: center; gap: 6px; color: ${workflowStage.color};">
+                                <span style="font-size: 14px;">${workflowStage.icon}</span>
+                                <span style="font-size: 12px; font-weight: 500;">${workflowStage.stage}</span>
+                            </div>
+                        </td>
+                        <td>
                             <div class="dependencies-list">
                                 ${assignment.dependencies && assignment.dependencies.length > 0
                                     ? assignment.dependencies.map(dep => `
@@ -1623,8 +1721,9 @@
                         </td>
                         <td>
                             <div class="actions-cell">
-                                <button class="action-btn" onclick="openAssignment('${assignment.id}')">Open</button>
-                                <button class="action-btn" onclick="editAssignment('${assignment.id}')">Edit</button>
+                                <button class="action-btn" onclick="viewBrief('${assignment.id}')">📋 Brief</button>
+                                <button class="action-btn" onclick="openAssignment('${assignment.id}')">📝 Latest</button>
+                                <button class="action-btn" onclick="editAssignment('${assignment.id}')">✏️ Edit</button>
                             </div>
                         </td>
                     </tr>
@@ -1705,37 +1804,57 @@
 
         // Assignment functions
         function openAssignment(assignmentId) {
-            // Route to appropriate editor based on assignment type
+            // Route to appropriate editor based on assignment type and content
             const assignment = assignments.find(a => a.id === assignmentId);
             if (!assignment) {
                 console.error('Assignment not found:', assignmentId);
                 return;
             }
 
+            const title = assignment.title.toLowerCase();
+            const type = assignment.type;
             let editorUrl;
-            switch (assignment.type) {
-                case 'speech':
-                    editorUrl = `/speech-editor-thin?assignment=${assignmentId}`;
-                    break;
-                case 'press-release':
+
+            // Enhanced routing logic with better type detection
+            if (type === 'speech' || title.includes('speech') || title.includes('address') || title.includes('remarks')) {
+                editorUrl = `/speech-editor-thin?assignment=${assignmentId}`;
+            } else if (type === 'social-media' || title.includes('social media') || title.includes('tweet') || title.includes('facebook') || title.includes('instagram')) {
+                editorUrl = `/social?assignment=${assignmentId}`;
+            } else if (type === 'op-ed' || type === 'opinion' || title.includes('op-ed') || title.includes('opinion') ||
+                      title.includes('editorial') || assignmentId.startsWith('EDU') || title.includes('letter to editor')) {
+                editorUrl = `/op-ed?assignment=${assignmentId}`;
+            } else if (type === 'press-release' || title.includes('press release') || title.includes('media advisory')) {
+                // Check if it's actually an op-ed disguised as press release
+                if (title.includes('op-ed') || title.includes('opinion') || title.includes('editorial')) {
+                    editorUrl = `/op-ed?assignment=${assignmentId}`;
+                } else {
+                    editorUrl = `/press-release?assignment=${assignmentId}`;
+                }
+            } else if (type === 'letter' || title.includes('letter') || title.includes('correspondence')) {
+                // Letters could be op-eds or regular content
+                if (title.includes('op-ed') || title.includes('opinion') || title.includes('editor')) {
+                    editorUrl = `/op-ed?assignment=${assignmentId}`;
+                } else {
                     editorUrl = `/?assignment=${assignmentId}`;
-                    break;
-                case 'social-media':
-                    editorUrl = `/social?assignment=${assignmentId}`;
-                    break;
-                case 'talking-points':
-                case 'daily-talking-points':
-                case 'crisis-response':
-                    editorUrl = `/?assignment=${assignmentId}`;
-                    break;
-                case 'press-advisory':
-                    editorUrl = `/?assignment=${assignmentId}`;
-                    break;
-                default:
+                }
+            } else if (type === 'email' || title.includes('email') || title.includes('newsletter')) {
+                editorUrl = `/?assignment=${assignmentId}`;
+            } else if (type === 'talking-points' || title.includes('talking points') || title.includes('briefing')) {
+                editorUrl = `/?assignment=${assignmentId}`;
+            } else if (type === 'statement' || title.includes('statement') || title.includes('response')) {
+                editorUrl = `/?assignment=${assignmentId}`;
+            } else {
+                // Final fallback - check for op-ed indicators one more time
+                if (title.includes('op-ed') || title.includes('opinion') || title.includes('editorial') ||
+                    assignmentId.startsWith('EDU') || title.includes('letter to editor')) {
+                    editorUrl = `/op-ed?assignment=${assignmentId}`;
+                } else {
                     // Default to main editor
                     editorUrl = `/?assignment=${assignmentId}`;
+                }
             }
 
+            console.log(`Routing assignment ${assignmentId} (${assignment.title}) to ${editorUrl}`);
             window.open(editorUrl, '_blank');
         }
 
@@ -1744,10 +1863,532 @@
             openAssignment(assignmentId);
         }
 
+        function viewBrief(assignmentId) {
+            const assignment = assignments.find(a => a.id === assignmentId);
+            if (!assignment) {
+                console.error('Assignment not found:', assignmentId);
+                return;
+            }
+
+            // Populate the brief modal
+            document.getElementById('briefModalTitle').textContent = assignment.title;
+            document.getElementById('briefModalId').textContent = assignment.id;
+            document.getElementById('briefModalContent').textContent = assignment.brief;
+
+            // Show dependencies if any
+            const depsList = document.getElementById('briefModalDependencies');
+            if (assignment.dependencies && assignment.dependencies.length > 0) {
+                depsList.innerHTML = assignment.dependencies.map(dep =>
+                    `<li><strong>${typeof dep === 'string' ? dep : dep.item}</strong>${typeof dep === 'object' && dep.owner ? ` (Owner: ${dep.owner})` : ''}</li>`
+                ).join('');
+            } else {
+                depsList.innerHTML = '<li>None</li>';
+            }
+
+            // Show the modal
+            document.getElementById('briefModal').style.display = 'flex';
+        }
+
+        function showBriefBuilder() {
+            const assignmentType = document.getElementById('assignmentType').value;
+            const container = document.getElementById('briefBuilderContainer');
+
+            if (!assignmentType) {
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label class="form-label">Brief Description</label>
+                        <textarea class="form-control" id="assignmentBrief" placeholder="Select an assignment type to show structured brief form"></textarea>
+                    </div>
+                `;
+                return;
+            }
+
+            let briefForm = '';
+
+            switch (assignmentType) {
+                case 'press-release':
+                    briefForm = getPressReleaseBriefForm();
+                    break;
+                case 'op-ed':
+                    briefForm = getOpEdBriefForm();
+                    break;
+                case 'speech':
+                    briefForm = getSpeechBriefForm();
+                    break;
+                case 'social-media':
+                    briefForm = getSocialMediaBriefForm();
+                    break;
+                case 'letter':
+                    briefForm = getLetterBriefForm();
+                    break;
+                case 'email':
+                    briefForm = getEmailBriefForm();
+                    break;
+                case 'talking-points':
+                    briefForm = getTalkingPointsBriefForm();
+                    break;
+                case 'statement':
+                    briefForm = getStatementBriefForm();
+                    break;
+                default:
+                    briefForm = `
+                        <div class="form-group">
+                            <label class="form-label">Brief Description</label>
+                            <textarea class="form-control" id="assignmentBrief" placeholder="Brief description of what needs to be done"></textarea>
+                        </div>
+                    `;
+            }
+
+            container.innerHTML = briefForm;
+        }
+
+        function getPressReleaseBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Announcement Type</label>
+                    <select class="form-control" id="prAnnouncementType">
+                        <option value="">Select announcement type</option>
+                        <option value="policy">Policy Position</option>
+                        <option value="legislation">Legislation Support/Opposition</option>
+                        <option value="event">Event Announcement</option>
+                        <option value="endorsement">Endorsement</option>
+                        <option value="statement">Statement/Response</option>
+                        <option value="achievement">Achievement/Award</option>
+                        <option value="funding">Funding/Grant Announcement</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Message/Headline</label>
+                    <input type="text" class="form-control" id="prKeyMessage" placeholder="Main message or intended headline">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Local Impact Details</label>
+                    <textarea class="form-control" id="prLocalImpact" placeholder="How this affects our district/community specifically"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Audience</label>
+                    <input type="text" class="form-control" id="prTargetAudience" placeholder="Primary audience (e.g., voters, media, stakeholders)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Required Quotes</label>
+                    <textarea class="form-control" id="prRequiredQuotes" placeholder="Who should be quoted and what key points should they make?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statistics/Data to Include</label>
+                    <textarea class="form-control" id="prStatistics" placeholder="Any numbers, percentages, or data points to include"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Timeline/Embargo</label>
+                    <input type="text" class="form-control" id="prTimeline" placeholder="When should this be released? Any embargo?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Distribution Targets</label>
+                    <textarea class="form-control" id="prDistribution" placeholder="Which media outlets, reporters, or channels should receive this?"></textarea>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getOpEdBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Publication Target</label>
+                    <input type="text" class="form-control" id="opedTarget" placeholder="Which newspaper/publication?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Central Argument</label>
+                    <textarea class="form-control" id="opedArgument" placeholder="What is the main argument or thesis?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Word Count</label>
+                    <select class="form-control" id="opedWordCount">
+                        <option value="600-800">600-800 words</option>
+                        <option value="800-1000">800-1000 words</option>
+                        <option value="1000-1200">1000-1200 words</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Supporting Evidence</label>
+                    <textarea class="form-control" id="opedEvidence" placeholder="What data, examples, or evidence should be included?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Call to Action</label>
+                    <textarea class="form-control" id="opedCallToAction" placeholder="What should readers do after reading this?"></textarea>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getSpeechBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Event Details</label>
+                    <textarea class="form-control" id="speechEvent" placeholder="Where, when, what type of event?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Speech Length</label>
+                    <select class="form-control" id="speechLength">
+                        <option value="5">5 minutes</option>
+                        <option value="10">10 minutes</option>
+                        <option value="15">15 minutes</option>
+                        <option value="20">20 minutes</option>
+                        <option value="30">30 minutes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Audience</label>
+                    <textarea class="form-control" id="speechAudience" placeholder="Who will be in attendance? What are their interests/concerns?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Messages</label>
+                    <textarea class="form-control" id="speechMessages" placeholder="What are the 3-5 main points to convey?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <select class="form-control" id="speechTone">
+                        <option value="inspirational">Inspirational</option>
+                        <option value="serious">Serious</option>
+                        <option value="celebratory">Celebratory</option>
+                        <option value="solemn">Solemn</option>
+                        <option value="conversational">Conversational</option>
+                    </select>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getSocialMediaBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Platform(s)</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <label><input type="checkbox" id="smFacebook" value="facebook"> Facebook</label>
+                        <label><input type="checkbox" id="smTwitter" value="twitter"> Twitter/X</label>
+                        <label><input type="checkbox" id="smInstagram" value="instagram"> Instagram</label>
+                        <label><input type="checkbox" id="smLinkedIn" value="linkedin"> LinkedIn</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Campaign/Theme</label>
+                    <input type="text" class="form-control" id="smTheme" placeholder="What campaign or theme does this support?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Messages</label>
+                    <textarea class="form-control" id="smMessages" placeholder="What are the main messages to communicate?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Visual Requirements</label>
+                    <textarea class="form-control" id="smVisuals" placeholder="What photos, graphics, or videos are needed?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Call to Action</label>
+                    <input type="text" class="form-control" id="smCallToAction" placeholder="What should followers do? (share, visit, call, etc.)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hashtags/Tags</label>
+                    <input type="text" class="form-control" id="smHashtags" placeholder="Relevant hashtags or people to tag">
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getLetterBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Letter Type</label>
+                    <select class="form-control" id="letterType">
+                        <option value="">Select letter type</option>
+                        <option value="thank-you">Thank You Letter</option>
+                        <option value="invitation">Invitation Letter</option>
+                        <option value="endorsement-request">Endorsement Request</option>
+                        <option value="constituent-response">Constituent Response</option>
+                        <option value="official-correspondence">Official Correspondence</option>
+                        <option value="letter-to-editor">Letter to Editor</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Recipient(s)</label>
+                    <input type="text" class="form-control" id="letterRecipient" placeholder="Who is receiving this letter?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purpose/Objective</label>
+                    <textarea class="form-control" id="letterPurpose" placeholder="What is the goal of this letter?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Points to Address</label>
+                    <textarea class="form-control" id="letterKeyPoints" placeholder="Main points that must be covered"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <select class="form-control" id="letterTone">
+                        <option value="formal">Formal</option>
+                        <option value="warm">Warm</option>
+                        <option value="appreciative">Appreciative</option>
+                        <option value="persuasive">Persuasive</option>
+                        <option value="professional">Professional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Special Instructions</label>
+                    <textarea class="form-control" id="letterInstructions" placeholder="Any specific formatting, signatures, or delivery requirements"></textarea>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getEmailBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Email Type</label>
+                    <select class="form-control" id="emailType">
+                        <option value="">Select email type</option>
+                        <option value="newsletter">Newsletter</option>
+                        <option value="fundraising">Fundraising</option>
+                        <option value="event-announcement">Event Announcement</option>
+                        <option value="volunteer-recruitment">Volunteer Recruitment</option>
+                        <option value="policy-update">Policy Update</option>
+                        <option value="thank-you">Thank You</option>
+                        <option value="survey-request">Survey Request</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Audience</label>
+                    <select class="form-control" id="emailAudience">
+                        <option value="all-supporters">All Supporters</option>
+                        <option value="donors">Donors</option>
+                        <option value="volunteers">Volunteers</option>
+                        <option value="constituents">Constituents</option>
+                        <option value="media">Media</option>
+                        <option value="stakeholders">Stakeholders</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject Line Goal</label>
+                    <input type="text" class="form-control" id="emailSubjectGoal" placeholder="What should the subject line convey?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Main Message</label>
+                    <textarea class="form-control" id="emailMainMessage" placeholder="What is the primary message or announcement?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Call to Action</label>
+                    <input type="text" class="form-control" id="emailCallToAction" placeholder="What do you want recipients to do?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Links/Resources</label>
+                    <textarea class="form-control" id="emailLinks" placeholder="Any specific links, attachments, or resources to include"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Send Date/Timing</label>
+                    <input type="text" class="form-control" id="emailTiming" placeholder="When should this be sent?">
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getTalkingPointsBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Topic/Issue</label>
+                    <input type="text" class="form-control" id="tpTopic" placeholder="What topic or issue do these talking points address?">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Audience/Context</label>
+                    <select class="form-control" id="tpAudience">
+                        <option value="media-interview">Media Interview</option>
+                        <option value="town-hall">Town Hall</option>
+                        <option value="debate-prep">Debate Prep</option>
+                        <option value="staff-briefing">Staff Briefing</option>
+                        <option value="donor-meeting">Donor Meeting</option>
+                        <option value="coalition-meeting">Coalition Meeting</option>
+                        <option value="crisis-response">Crisis Response</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Position/Stance</label>
+                    <textarea class="form-control" id="tpPosition" placeholder="What is our position on this issue?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Supporting Facts/Data</label>
+                    <textarea class="form-control" id="tpFacts" placeholder="Key statistics, studies, or facts to support our position"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Anticipated Questions/Challenges</label>
+                    <textarea class="form-control" id="tpQuestions" placeholder="What questions or pushback might we face?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Local Angle</label>
+                    <textarea class="form-control" id="tpLocalAngle" placeholder="How does this relate to our district/community?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avoid/Do Not Say</label>
+                    <textarea class="form-control" id="tpAvoid" placeholder="Any phrases, topics, or positions to avoid"></textarea>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function getStatementBriefForm() {
+            return `
+                <div class="form-group">
+                    <label class="form-label">Statement Type</label>
+                    <select class="form-control" id="statementType">
+                        <option value="">Select statement type</option>
+                        <option value="breaking-news-response">Breaking News Response</option>
+                        <option value="policy-position">Policy Position</option>
+                        <option value="event-response">Event Response</option>
+                        <option value="crisis-statement">Crisis Statement</option>
+                        <option value="endorsement">Endorsement</option>
+                        <option value="condolences">Condolences</option>
+                        <option value="congratulations">Congratulations</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Context/Background</label>
+                    <textarea class="form-control" id="statementContext" placeholder="What is the situation or event this statement addresses?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Our Position/Response</label>
+                    <textarea class="form-control" id="statementPosition" placeholder="What is our stance or response?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Key Messages</label>
+                    <textarea class="form-control" id="statementMessages" placeholder="What are the 2-3 main points to communicate?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tone</label>
+                    <select class="form-control" id="statementTone">
+                        <option value="measured">Measured</option>
+                        <option value="strong">Strong</option>
+                        <option value="supportive">Supportive</option>
+                        <option value="concerned">Concerned</option>
+                        <option value="celebratory">Celebratory</option>
+                        <option value="somber">Somber</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Urgency/Timeline</label>
+                    <select class="form-control" id="statementUrgency">
+                        <option value="immediate">Immediate (within 1 hour)</option>
+                        <option value="same-day">Same Day</option>
+                        <option value="next-day">Next Day</option>
+                        <option value="flexible">Flexible</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Distribution</label>
+                    <textarea class="form-control" id="statementDistribution" placeholder="Who should receive this statement? (media, social media, website, etc.)"></textarea>
+                </div>
+                <input type="hidden" id="assignmentBrief" value="">
+            `;
+        }
+
+        function collectStructuredBriefData(assignmentType) {
+            if (!assignmentType) return '';
+
+            switch (assignmentType) {
+                case 'press-release':
+                    return {
+                        type: 'PRESS RELEASE',
+                        announcementType: document.getElementById('prAnnouncementType')?.value || '',
+                        keyMessage: document.getElementById('prKeyMessage')?.value || '',
+                        localImpact: document.getElementById('prLocalImpact')?.value || '',
+                        targetAudience: document.getElementById('prTargetAudience')?.value || '',
+                        requiredQuotes: document.getElementById('prRequiredQuotes')?.value || '',
+                        statistics: document.getElementById('prStatistics')?.value || '',
+                        timeline: document.getElementById('prTimeline')?.value || '',
+                        distribution: document.getElementById('prDistribution')?.value || ''
+                    };
+                case 'op-ed':
+                    return {
+                        type: 'OP-ED',
+                        target: document.getElementById('opedTarget')?.value || '',
+                        argument: document.getElementById('opedArgument')?.value || '',
+                        wordCount: document.getElementById('opedWordCount')?.value || '',
+                        evidence: document.getElementById('opedEvidence')?.value || '',
+                        callToAction: document.getElementById('opedCallToAction')?.value || ''
+                    };
+                case 'speech':
+                    return {
+                        type: 'SPEECH',
+                        eventDetails: document.getElementById('speechEvent')?.value || '',
+                        length: document.getElementById('speechLength')?.value || '',
+                        audience: document.getElementById('speechAudience')?.value || '',
+                        keyMessages: document.getElementById('speechMessages')?.value || '',
+                        tone: document.getElementById('speechTone')?.value || ''
+                    };
+                case 'social-media':
+                    const platforms = [];
+                    if (document.getElementById('smFacebook')?.checked) platforms.push('Facebook');
+                    if (document.getElementById('smTwitter')?.checked) platforms.push('Twitter/X');
+                    if (document.getElementById('smInstagram')?.checked) platforms.push('Instagram');
+                    if (document.getElementById('smLinkedIn')?.checked) platforms.push('LinkedIn');
+
+                    return {
+                        type: 'SOCIAL MEDIA POST',
+                        platforms: platforms.join(', '),
+                        theme: document.getElementById('smTheme')?.value || '',
+                        keyMessages: document.getElementById('smMessages')?.value || '',
+                        visualRequirements: document.getElementById('smVisuals')?.value || '',
+                        callToAction: document.getElementById('smCallToAction')?.value || '',
+                        hashtags: document.getElementById('smHashtags')?.value || ''
+                    };
+                case 'letter':
+                    return {
+                        type: 'LETTER',
+                        letterType: document.getElementById('letterType')?.value || '',
+                        recipient: document.getElementById('letterRecipient')?.value || '',
+                        purpose: document.getElementById('letterPurpose')?.value || '',
+                        keyPoints: document.getElementById('letterKeyPoints')?.value || '',
+                        tone: document.getElementById('letterTone')?.value || '',
+                        length: document.getElementById('letterLength')?.value || ''
+                    };
+                case 'email':
+                    return {
+                        type: 'EMAIL',
+                        emailType: document.getElementById('emailType')?.value || '',
+                        audience: document.getElementById('emailAudience')?.value || '',
+                        subjectGoal: document.getElementById('emailSubject')?.value || '',
+                        keyMessages: document.getElementById('emailMessages')?.value || '',
+                        callToAction: document.getElementById('emailCTA')?.value || '',
+                        tone: document.getElementById('emailTone')?.value || '',
+                        length: document.getElementById('emailLength')?.value || ''
+                    };
+                case 'talking-points':
+                    return {
+                        type: 'TALKING POINTS',
+                        topic: document.getElementById('tpTopic')?.value || '',
+                        context: document.getElementById('tpContext')?.value || '',
+                        position: document.getElementById('tpPosition')?.value || '',
+                        keyArguments: document.getElementById('tpArguments')?.value || '',
+                        anticipatedQuestions: document.getElementById('tpQuestions')?.value || '',
+                        supportingFacts: document.getElementById('tpFacts')?.value || '',
+                        audience: document.getElementById('tpAudience')?.value || ''
+                    };
+                case 'statement':
+                    return {
+                        type: 'STATEMENT',
+                        statementType: document.getElementById('statementType')?.value || '',
+                        context: document.getElementById('statementContext')?.value || '',
+                        position: document.getElementById('statementPosition')?.value || '',
+                        keyMessages: document.getElementById('statementMessages')?.value || '',
+                        tone: document.getElementById('statementTone')?.value || '',
+                        length: document.getElementById('statementLength')?.value || '',
+                        distribution: document.getElementById('statementDistribution')?.value || ''
+                    };
+                default:
+                    return document.getElementById('assignmentBrief')?.value || '';
+            }
+        }
+
         async function createAssignment() {
+            const assignmentType = document.getElementById('assignmentType').value;
+            const structuredBrief = collectStructuredBriefData(assignmentType);
+
             const assignmentData = {
                 title: document.getElementById('assignmentTitle').value,
-                brief: document.getElementById('assignmentBrief').value,
+                type: assignmentType,
+                brief: structuredBrief,
                 assignee: document.getElementById('assignmentWriter').value,
                 priority: document.getElementById('assignmentPriority').value,
                 dueDate: document.getElementById('assignmentDueDate').value,
@@ -1765,7 +2406,7 @@
                 document.getElementById('assignmentTitle').value = '';
                 document.getElementById('assignmentBrief').value = '';
                 document.getElementById('assignmentWriter').value = '';
-                document.getElementById('assignmentPriority').value = 'normal';
+                document.getElementById('assignmentPriority').value = 'medium';
                 document.getElementById('assignmentDueDate').value = '';
                 document.getElementById('assignmentBundle').value = '';
                 document.getElementById('assignmentDependencies').value = '';
@@ -1831,6 +2472,34 @@
             } else {
                 // Due in more than 1 week = low
                 return 'low';
+            }
+        }
+
+        function getWorkflowStage(assignment) {
+            // Determine workflow stage based on status and type
+            const status = assignment.status;
+            const type = assignment.type;
+
+            switch (status) {
+                case 'new':
+                    return { stage: 'Planning', phase: 1, icon: '📝', color: '#3b82f6' };
+                case 'in_progress':
+                    if (type === 'op-ed' || assignment.title.toLowerCase().includes('op-ed')) {
+                        return { stage: 'Writing', phase: 2, icon: '✍️', color: '#f59e0b' };
+                    } else if (type === 'speech') {
+                        return { stage: 'Drafting', phase: 2, icon: '🎤', color: '#f59e0b' };
+                    } else if (type === 'social-media') {
+                        return { stage: 'Creating', phase: 2, icon: '📱', color: '#f59e0b' };
+                    }
+                    return { stage: 'Writing', phase: 2, icon: '✍️', color: '#f59e0b' };
+                case 'under_review':
+                    return { stage: 'Revision', phase: 3, icon: '🔍', color: '#8b5cf6' };
+                case 'blocked':
+                    return { stage: 'Blocked', phase: 0, icon: '🚫', color: '#ef4444' };
+                case 'completed':
+                    return { stage: 'Completed', phase: 4, icon: '✅', color: '#10b981' };
+                default:
+                    return { stage: 'Unknown', phase: 0, icon: '❓', color: '#6b7280' };
             }
         }
 
@@ -2073,7 +2742,6 @@
                             <select class="form-control" id="newBriefType">
                                 <option value="general">General Communications Brief</option>
                                 <option value="healthcare-policy">🏥 Healthcare Policy Speech</option>
-                                <option value="crisis-response">🚨 Crisis Response</option>
                                 <option value="endorsement-announcement">🤝 Endorsement Announcement</option>
                                 <option value="debate-prep">⚡ Debate Preparation</option>
                                 <option value="press-conference">📺 Press Conference</option>

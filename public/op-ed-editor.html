@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Op-Ed Editor - Campaign AI Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            border-bottom: 1px solid #e9e9e7;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .app-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #37352f;
+        }
+
+        .op-ed-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: 1px solid #e9e9e7;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #37352f;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+        }
+
+        .editor-pane {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .sidebar-pane {
+            width: 320px;
+            border-left: 1px solid #e9e9e7;
+            background: #fafafa;
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            resize: none;
+            min-height: 40px;
+        }
+
+        .page-title::placeholder {
+            color: #9ca3af;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            outline: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            resize: none;
+            font-style: italic;
+        }
+
+        .page-subtitle::placeholder {
+            color: #9ca3af;
+        }
+
+        .op-ed-structure {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .structure-item {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .structure-item h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .structure-item p {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .writing-area {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            min-height: 600px;
+            font-size: 16px;
+            line-height: 1.8;
+            outline: none;
+            resize: none;
+            width: 100%;
+        }
+
+        .writing-area::placeholder {
+            color: #9ca3af;
+        }
+
+        .word-count {
+            text-align: right;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .guidelines {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .guidelines ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .guidelines li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .guidelines li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .assignment-info {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .info-item {
+            margin-bottom: 12px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        .ai-assistance {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .ai-assistance h3 {
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .ai-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .ai-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .workflow-phase {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f9fafb;
+            margin-bottom: 12px;
+        }
+
+        .phase-item.active {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .phase-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .phase-info h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .phase-info p {
+            font-size: 11px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .workflow-btn {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .workflow-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #fef3c7;
+            color: #d97706;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-indicator.draft {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-indicator.in-progress {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-indicator.review {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .close-btn:hover {
+            color: #374151;
+        }
+
+        .workflow-section {
+            margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .workflow-step {
+            margin-bottom: 16px;
+        }
+
+        .workflow-step h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .workflow-step ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .workflow-step li {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">Op-Ed Editor</h1>
+                <span class="op-ed-badge">Opinion Editorial</span>
+                <span class="status-indicator draft">
+                    <span style="width: 8px; height: 8px; background: currentColor; border-radius: 50%; display: block;"></span>
+                    Draft
+                </span>
+            </div>
+            <div class="header-actions">
+                <button class="btn" onclick="showHelp()">❓ Help</button>
+                <button class="btn" onclick="saveOpEd()">💾 Save</button>
+                <button class="btn" onclick="previewOpEd()">👁️ Preview</button>
+                <button class="btn btn-primary" onclick="submitForReview()">📝 Submit for Review</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="editor-pane">
+                <textarea
+                    id="pageTitle"
+                    class="page-title"
+                    placeholder="Your Op-Ed Headline..."
+                    oninput="updateWordCount()"
+                ></textarea>
+
+                <textarea
+                    id="pageSubtitle"
+                    class="page-subtitle"
+                    placeholder="Subtitle or lead-in (optional)..."
+                ></textarea>
+
+                <textarea
+                    id="writingArea"
+                    class="writing-area"
+                    placeholder="Start writing your op-ed here...
+
+Remember the key elements:
+• Strong opening hook
+• Clear thesis statement
+• 2-3 supporting arguments with evidence
+• Address counterarguments
+• Compelling call to action
+
+Aim for 600-800 words for most publications."
+                    oninput="updateWordCount()"
+                ></textarea>
+
+                <div class="word-count" id="wordCount">
+                    Words: 0 | Characters: 0
+                </div>
+            </div>
+
+            <div class="sidebar-pane">
+                <div class="assignment-info">
+                    <div class="section-title">Assignment Details</div>
+                    <div class="info-item">
+                        <div class="info-label">Assignment ID</div>
+                        <div class="info-value" id="assignmentId">EDU-2025-004</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Due Date</div>
+                        <div class="info-value" id="dueDate">Not specified</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Target Publication</div>
+                        <div class="info-value" id="targetPub">Local newspaper</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Word Count Target</div>
+                        <div class="info-value" id="targetWords">600-800 words</div>
+                    </div>
+                </div>
+
+                <div class="op-ed-structure">
+                    <div class="section-title">Op-Ed Structure</div>
+
+                    <div class="structure-item">
+                        <h4>1. Hook & Context</h4>
+                        <p>Start with a compelling anecdote, statistic, or question that draws readers in and establishes the issue's importance.</p>
+                    </div>
+
+                    <div class="structure-item">
+                        <h4>2. Thesis Statement</h4>
+                        <p>Clearly state your main argument or position. What specific action or change are you advocating for?</p>
+                    </div>
+
+                    <div class="structure-item">
+                        <h4>3. Supporting Evidence</h4>
+                        <p>Present 2-3 key arguments with facts, data, expert opinions, or personal experience to support your thesis.</p>
+                    </div>
+
+                    <div class="structure-item">
+                        <h4>4. Address Opposition</h4>
+                        <p>Acknowledge counterarguments and explain why your position is stronger or more compelling.</p>
+                    </div>
+
+                    <div class="structure-item">
+                        <h4>5. Call to Action</h4>
+                        <p>End with specific steps readers can take or a clear vision of what success looks like.</p>
+                    </div>
+                </div>
+
+                <div class="guidelines">
+                    <div class="section-title">Quick Quality Checklist</div>
+                    <ul>
+                        <li>Clear, arguable thesis statement</li>
+                        <li>Compelling opening hook</li>
+                        <li>3+ pieces of supporting evidence</li>
+                        <li>At least one counterargument addressed</li>
+                        <li>Specific call to action</li>
+                        <li>Personal credibility/stake established</li>
+                        <li>Proper word count (600-800 words)</li>
+                        <li>Error-free writing and formatting</li>
+                    </ul>
+                </div>
+
+                <div class="workflow-phase">
+                    <div class="section-title">Current Phase: Writing</div>
+                    <div class="phase-item active">
+                        <div class="phase-number">2</div>
+                        <div class="phase-info">
+                            <h4>Writing Phase (1-2 days)</h4>
+                            <p>Structure development and draft creation</p>
+                        </div>
+                    </div>
+                    <button class="workflow-btn" onclick="showWorkflowGuide()">📋 View Full Workflow</button>
+                </div>
+
+                <div class="ai-assistance">
+                    <h3>🤖 AI Writing Assistant</h3>
+                    <button class="ai-btn" onclick="generateOutline()">Generate Outline</button>
+                    <button class="ai-btn" onclick="suggestHook()">Suggest Opening Hook</button>
+                    <button class="ai-btn" onclick="findEvidence()">Find Supporting Evidence</button>
+                    <button class="ai-btn" onclick="improveClarity()">Improve Clarity</button>
+                    <button class="ai-btn" onclick="checkTone()">Check Tone</button>
+                    <button class="ai-btn" onclick="strengthenArgument()">Strengthen Arguments</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Op-Ed Writing Tips</h3>
+                <button class="close-btn" onclick="closeModal('helpModal')">&times;</button>
+            </div>
+            <div>
+                <h4>What Makes a Great Op-Ed?</h4>
+                <ul style="margin: 16px 0; padding-left: 20px;">
+                    <li><strong>Timely:</strong> Responds to current events or issues</li>
+                    <li><strong>Personal:</strong> Includes your unique perspective or experience</li>
+                    <li><strong>Specific:</strong> Proposes concrete solutions or actions</li>
+                    <li><strong>Accessible:</strong> Written for a general audience</li>
+                    <li><strong>Persuasive:</strong> Uses evidence and emotion effectively</li>
+                </ul>
+
+                <h4>Common Mistakes to Avoid</h4>
+                <ul style="margin: 16px 0; padding-left: 20px;">
+                    <li>Starting with background everyone knows</li>
+                    <li>Making too many different arguments</li>
+                    <li>Using overly academic or technical language</li>
+                    <li>Failing to address obvious counterarguments</li>
+                    <li>Ending without a clear call to action</li>
+                </ul>
+
+                <h4>Submission Tips</h4>
+                <ul style="margin: 16px 0; padding-left: 20px;">
+                    <li>Research the publication's op-ed guidelines</li>
+                    <li>Include a brief bio highlighting relevant credentials</li>
+                    <li>Suggest a headline (editors may change it)</li>
+                    <li>Be prepared to make revisions quickly</li>
+                    <li>Follow up professionally if you don't hear back</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Guide Modal -->
+    <div id="workflowModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 Professional Op-Ed Creation Workflow</h3>
+                <button class="close-btn" onclick="closeModal('workflowModal')">&times;</button>
+            </div>
+            <div style="padding: 0 24px 24px;">
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #475569; font-size: 14px;">
+                        <strong>Total Timeline:</strong> 4-6 days for comprehensive op-ed creation and submission
+                    </p>
+                </div>
+
+                <div class="workflow-section">
+                    <h4 style="color: #1e40af; margin-bottom: 12px;">📋 Phase 1: Planning & Research (1-2 days)</h4>
+
+                    <div class="workflow-step">
+                        <h5>Step 1: Topic Selection & Angle</h5>
+                        <ul>
+                            <li>Identify your unique perspective and expertise</li>
+                            <li>Choose timely relevance to current events</li>
+                            <li>Define one clear, defensible position</li>
+                            <li>Check for topic oversaturation in recent coverage</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 2: Audience & Publication Research</h5>
+                        <ul>
+                            <li>Read recent op-eds from target outlets</li>
+                            <li>Understand each publication's editorial stance</li>
+                            <li>Note word count requirements (usually 600-800 words)</li>
+                            <li>Review specific submission guidelines</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 3: Evidence Gathering</h5>
+                        <ul>
+                            <li>Collect supporting statistics, studies, expert quotes</li>
+                            <li>Document all sources for citations</li>
+                            <li>Identify likely counterarguments and prepare responses</li>
+                            <li>Gather relevant personal anecdotes and examples</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-section">
+                    <h4 style="color: #059669; margin-bottom: 12px;">✍️ Phase 2: Writing (1-2 days)</h4>
+
+                    <div class="workflow-step">
+                        <h5>Step 4: Structure Development</h5>
+                        <ul>
+                            <li><strong>Opening Hook:</strong> Compelling anecdote, statistic, or question</li>
+                            <li><strong>Thesis Statement:</strong> Clear, specific argument with preview</li>
+                            <li><strong>Body (3-4 paragraphs):</strong> One main point per paragraph, strongest first</li>
+                            <li><strong>Call to Action:</strong> Specific steps and broader implications</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 5: Draft Creation</h5>
+                        <ul>
+                            <li>Focus on getting ideas down, don't self-edit initially</li>
+                            <li>Stay within target word count range</li>
+                            <li>Keep paragraphs short for readability</li>
+                            <li>Use active voice and write with conviction</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-section">
+                    <h4 style="color: #dc2626; margin-bottom: 12px;">🔍 Phase 3: Revision & Polish (1-2 days)</h4>
+
+                    <div class="workflow-step">
+                        <h5>Step 6: Content Review</h5>
+                        <ul>
+                            <li>Ensure each paragraph advances your thesis</li>
+                            <li>Verify all sources are credible and current</li>
+                            <li>Check logical flow between ideas</li>
+                            <li>Confirm counterarguments are addressed</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 7: Style & Voice</h5>
+                        <ul>
+                            <li>Strike conversational authority balance</li>
+                            <li>Eliminate jargon, define technical terms</li>
+                            <li>Mix sentence lengths for rhythm</li>
+                            <li>Include relevant personal connection</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 8: Technical Polish</h5>
+                        <ul>
+                            <li>Fact-check all statistics and claims</li>
+                            <li>Format citations per publication style</li>
+                            <li>Read aloud to catch awkward phrasing</li>
+                            <li>Trim or expand to meet word requirements</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-section">
+                    <h4 style="color: #7c2d12; margin-bottom: 12px;">📤 Phase 4: Submission & Follow-up (Ongoing)</h4>
+
+                    <div class="workflow-step">
+                        <h5>Step 9: Submission Strategy</h5>
+                        <ul>
+                            <li>Submit to most preferred publication first</li>
+                            <li>Only submit to one outlet at a time</li>
+                            <li>Write brief, compelling pitch email (2-3 sentences)</li>
+                            <li>Prepare 1-2 sentence author bio with credentials</li>
+                        </ul>
+                    </div>
+
+                    <div class="workflow-step">
+                        <h5>Step 10: Timeline Management</h5>
+                        <ul>
+                            <li>Most publications respond within 1-2 weeks</li>
+                            <li>One polite follow-up after stated timeframe</li>
+                            <li>Have 2-3 alternative publications ready</li>
+                            <li>Be prepared to move quickly for time-sensitive topics</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; margin-top: 24px;">
+                    <h4 style="color: #92400e; margin-bottom: 8px;">⚠️ Common Pitfalls to Avoid</h4>
+                    <ul style="margin: 0; color: #92400e;">
+                        <li>Preaching to the choir instead of persuading</li>
+                        <li>Using academic tone for general readers</li>
+                        <li>Weak conclusions that only summarize</li>
+                        <li>Burying your strongest point</li>
+                        <li>Reactive criticism without solutions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let assignmentData = {};
+        let isDirty = false;
+
+        // Initialize the editor
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssignmentData();
+            setupAutoSave();
+            loadDraftFromStorage();
+        });
+
+        // Load assignment data from URL parameters or defaults
+        function loadAssignmentData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('assignment') || 'OP-ED-NEW';
+
+            document.getElementById('assignmentId').textContent = assignmentId;
+
+            // Set default data
+            assignmentData = {
+                id: assignmentId,
+                title: '',
+                content: '',
+                status: 'draft',
+                created: new Date().toISOString(),
+                lastModified: new Date().toISOString()
+            };
+
+            // Update page title based on assignment
+            if (assignmentId.startsWith('EDU')) {
+                document.getElementById('pageTitle').placeholder = "Education Funding: A Critical Investment in Our Future";
+            }
+        }
+
+        // Auto-save functionality
+        function setupAutoSave() {
+            setInterval(() => {
+                if (isDirty) {
+                    saveToLocalStorage();
+                    isDirty = false;
+                }
+            }, 30000); // Save every 30 seconds
+        }
+
+        // Update word count
+        function updateWordCount() {
+            const title = document.getElementById('pageTitle').value;
+            const content = document.getElementById('writingArea').value;
+            const allText = title + ' ' + content;
+
+            const words = allText.trim().split(/\s+/).filter(word => word.length > 0).length;
+            const characters = allText.length;
+
+            document.getElementById('wordCount').textContent = `Words: ${words} | Characters: ${characters}`;
+
+            isDirty = true;
+        }
+
+        // Save to localStorage
+        function saveToLocalStorage() {
+            const data = {
+                ...assignmentData,
+                title: document.getElementById('pageTitle').value,
+                subtitle: document.getElementById('pageSubtitle').value,
+                content: document.getElementById('writingArea').value,
+                lastModified: new Date().toISOString()
+            };
+
+            localStorage.setItem(`op-ed-draft-${assignmentData.id}`, JSON.stringify(data));
+        }
+
+        // Load draft from localStorage
+        function loadDraftFromStorage() {
+            const saved = localStorage.getItem(`op-ed-draft-${assignmentData.id}`);
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('pageTitle').value = data.title || '';
+                document.getElementById('pageSubtitle').value = data.subtitle || '';
+                document.getElementById('writingArea').value = data.content || '';
+                updateWordCount();
+            }
+        }
+
+        // Save op-ed
+        function saveOpEd() {
+            saveToLocalStorage();
+            showNotification('Op-Ed saved successfully!', 'success');
+            isDirty = false;
+        }
+
+        // Preview op-ed
+        function previewOpEd() {
+            const title = document.getElementById('pageTitle').value;
+            const subtitle = document.getElementById('pageSubtitle').value;
+            const content = document.getElementById('writingArea').value;
+
+            if (!title.trim() || !content.trim()) {
+                showNotification('Please add a title and content before previewing.', 'warning');
+                return;
+            }
+
+            // Open preview in new window
+            const previewWindow = window.open('', '_blank');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; padding: 20px; line-height: 1.8; }
+                        h1 { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+                        .subtitle { font-size: 18px; color: #666; font-style: italic; margin-bottom: 30px; }
+                        .content { font-size: 16px; white-space: pre-wrap; }
+                        .byline { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 14px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
+                    <div class="content">${content}</div>
+                    <div class="byline">Op-Ed Preview - Campaign AI Editor</div>
+                </body>
+                </html>
+            `);
+        }
+
+        // Submit for review
+        function submitForReview() {
+            const title = document.getElementById('pageTitle').value;
+            const content = document.getElementById('writingArea').value;
+
+            if (!title.trim() || !content.trim()) {
+                showNotification('Please complete your op-ed before submitting for review.', 'warning');
+                return;
+            }
+
+            const wordCount = content.trim().split(/\s+/).length;
+            if (wordCount < 400) {
+                if (!confirm('Your op-ed is quite short (' + wordCount + ' words). Most publications prefer 600-800 words. Submit anyway?')) {
+                    return;
+                }
+            }
+
+            saveOpEd();
+            showNotification('Op-Ed submitted for review!', 'success');
+
+            // Update status
+            document.querySelector('.status-indicator').textContent = 'Under Review';
+            document.querySelector('.status-indicator').className = 'status-indicator review';
+        }
+
+        // AI assistance functions
+        function generateOutline() {
+            showNotification('AI outline generation coming soon!', 'info');
+        }
+
+        function suggestHook() {
+            const hooks = [
+                "Every day, thousands of students...",
+                "When I visited our local schools last month...",
+                "The statistics are stark: our education system...",
+                "Imagine a classroom where every student...",
+                "Last week, a teacher asked me a simple question..."
+            ];
+
+            const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
+            const writingArea = document.getElementById('writingArea');
+            if (!writingArea.value.trim()) {
+                writingArea.value = randomHook + '\n\n';
+                updateWordCount();
+            } else {
+                showNotification(`Suggested hook: "${randomHook}"`, 'info');
+            }
+        }
+
+        function findEvidence() {
+            showNotification('AI evidence research coming soon!', 'info');
+        }
+
+        function improveClarity() {
+            showNotification('AI clarity checker coming soon!', 'info');
+        }
+
+        function checkTone() {
+            showNotification('AI tone analysis coming soon!', 'info');
+        }
+
+        function strengthenArgument() {
+            showNotification('AI argument enhancement coming soon!', 'info');
+        }
+
+        // Show help modal
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+
+        // Show workflow guide modal
+        function showWorkflowGuide() {
+            document.getElementById('workflowModal').style.display = 'flex';
+        }
+
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 6px;
+                color: white;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 1001;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+            `;
+
+            switch (type) {
+                case 'success':
+                    notification.style.background = '#10b981';
+                    break;
+                case 'warning':
+                    notification.style.background = '#f59e0b';
+                    break;
+                case 'error':
+                    notification.style.background = '#ef4444';
+                    break;
+                default:
+                    notification.style.background = '#3b82f6';
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Handle beforeunload to warn about unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Track changes
+        document.getElementById('pageTitle').addEventListener('input', () => isDirty = true);
+        document.getElementById('pageSubtitle').addEventListener('input', () => isDirty = true);
+        document.getElementById('writingArea').addEventListener('input', () => isDirty = true);
+    </script>
+</body>
+</html>

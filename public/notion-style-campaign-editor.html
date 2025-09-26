@@ -1923,8 +1923,11 @@
                 try {
                     const response = await fetch(url, config);
                     if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.error || `HTTP error! status: ${response.status}`);
+                        const error = await response.json().catch(() => ({}));
+                        const customError = new Error(error.error || `HTTP error! status: ${response.status}`);
+                        customError.status = response.status;
+                        customError.statusText = response.statusText;
+                        throw customError;
                     }
                     return await response.json();
                 } catch (error) {
@@ -3178,6 +3181,17 @@
 
                 document.getElementById('pageTitle').textContent = assignment.title;
 
+                // Update assignment brief section
+                const briefContent = document.getElementById('assignmentBrief');
+                if (briefContent) {
+                    briefContent.innerHTML = `
+                        <p><strong>Type:</strong> <span class="assignment-type-badge">${assignment.type || 'Op-Ed'}</span></p>
+                        <p><strong>Description:</strong> ${assignment.description || assignment.brief || 'No description available'}</p>
+                        <p><strong>Audience:</strong> ${assignment.audience || 'General public'}</p>
+                        <p><strong>Due Date:</strong> ${assignment.due_date || 'Not specified'}</p>
+                    `;
+                }
+
                 // Load existing blocks if available
                 if (assignment.blocks && assignment.blocks.length > 0) {
                     blocks = assignment.blocks;
@@ -3197,8 +3211,56 @@
 
             } catch (error) {
                 console.error('Failed to load assignment:', error);
-                showNotification('Could not load assignment data', 'warning');
+
+                // Create a blank template for non-existent assignments
+                if (error.status === 404 || error.message.includes('not found') || error.message.includes('Assignment not found')) {
+                    // Create a default assignment template based on the assignment ID
+                    const assignmentType = currentAssignmentId.startsWith('EDU') ? 'Op-Ed' : 'Article';
+                    const assignmentTitle = getAssignmentTitleFromId(currentAssignmentId);
+
+                    // Update UI with template info
+                    document.querySelector('.assignment-meta').textContent =
+                        `📋 Assignment ${currentAssignmentId}: ${assignmentTitle}`;
+
+                    document.getElementById('pageTitle').textContent = assignmentTitle;
+
+                    // Update assignment brief section with template
+                    const briefContent = document.getElementById('assignmentBrief');
+                    if (briefContent) {
+                        briefContent.innerHTML = `
+                            <p><strong>Type:</strong> <span class="assignment-type-badge">${assignmentType}</span></p>
+                            <p><strong>Description:</strong> New assignment - please begin writing</p>
+                            <p><strong>Audience:</strong> General public</p>
+                            <p><strong>Due Date:</strong> Not specified</p>
+                            <p><strong>Status:</strong> <em>Template created for new assignment</em></p>
+                        `;
+                    }
+
+                    // Create initial blank template block
+                    blocks = [{
+                        id: 'block-1',
+                        type: 'text',
+                        content: `# ${assignmentTitle}\n\nStart writing your ${assignmentType.toLowerCase()} here...`,
+                        data: {}
+                    }];
+                    rerenderBlocks();
+
+                    showNotification(`Created new ${assignmentType} template for ${currentAssignmentId}`, 'info');
+                } else {
+                    showNotification('Could not load assignment data', 'warning');
+                }
             }
+        }
+
+        // Helper function to get assignment title from ID
+        function getAssignmentTitleFromId(assignmentId) {
+            // Map known assignment IDs to titles
+            const titleMap = {
+                'EDU-2025-004': 'Education Funding Op-Ed',
+                'A-2024-003': 'Veterans Day Social Media Series'
+            };
+
+            return titleMap[assignmentId] || `Assignment ${assignmentId}`;
         }
 
         // Initialize the editor

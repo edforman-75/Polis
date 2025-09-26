@@ -99,6 +99,86 @@
             background: #f8fafc;
         }
 
+        /* Export Dropdown Styles */
+        .export-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .export-menu.show {
+            display: block;
+        }
+
+        .export-section {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .export-section:last-child {
+            border-bottom: none;
+        }
+
+        .export-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .export-option {
+            display: block;
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 12px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .export-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .export-option:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .export-option strong {
+            display: block;
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .export-option small {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
         .toolbar {
             display: flex;
             gap: 8px;
@@ -313,7 +393,52 @@
                     <span id="statusIndicator" class="status-indicator status-saved">Saved</span>
                     <button class="btn btn-secondary" onclick="window.location.href='/writers'">← Back to Dashboard</button>
                     <button class="btn btn-primary" onclick="saveSpeech()">💾 Save</button>
-                    <button class="btn btn-secondary" onclick="exportSpeech()">📁 Export</button>
+                    <div class="export-dropdown">
+                        <button class="btn btn-secondary" onclick="toggleExportMenu()">📁 Export ▼</button>
+                        <div class="export-menu" id="exportMenu">
+                            <div class="export-section">
+                                <h4>📄 File Format</h4>
+                                <button onclick="exportSpeech('txt')" class="export-option">
+                                    <strong>.TXT</strong> - Plain Text (Recommended)
+                                    <small>Universal compatibility, zero formatting issues</small>
+                                </button>
+                                <button onclick="exportSpeech('rtf')" class="export-option">
+                                    <strong>.RTF</strong> - Rich Text Format
+                                    <small>Basic formatting while maintaining compatibility</small>
+                                </button>
+                                <button onclick="exportSpeech('docx')" class="export-option">
+                                    <strong>.DOCX</strong> - Microsoft Word
+                                    <small>Full formatting, collaboration features</small>
+                                </button>
+                                <button onclick="exportSpeech('pdf')" class="export-option">
+                                    <strong>.PDF</strong> - Portable Document
+                                    <small>Fixed formatting, professional appearance</small>
+                                </button>
+                            </div>
+                            <div class="export-section">
+                                <h4>🎯 Teleprompter Format</h4>
+                                <button onclick="exportTeleprompter('standard')" class="export-option">
+                                    <strong>Standard Political Speech</strong>
+                                    <small>General purpose format with pauses and cues</small>
+                                </button>
+                                <button onclick="exportTeleprompter('rally')" class="export-option">
+                                    <strong>Rally/High-Energy</strong>
+                                    <small>Interactive format for crowd engagement</small>
+                                </button>
+                                <button onclick="exportTeleprompter('formal')" class="export-option">
+                                    <strong>Formal Address</strong>
+                                    <small>Professional format for official speeches</small>
+                                </button>
+                            </div>
+                            <div class="export-section">
+                                <h4>⚙️ Formatting Options</h4>
+                                <button onclick="showFormatDialog()" class="export-option">
+                                    <strong>Custom Formatting</strong>
+                                    <small>Font size, spacing, cue preferences</small>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -777,17 +902,53 @@
             }
 
             // Export functionality
-            async exportSpeech() {
+            async exportSpeech(format = 'txt') {
                 if (!this.speechId) {
                     this.showToast('Please save the speech first', 'error');
                     return;
                 }
 
                 try {
-                    const url = `/api/speeches/${this.speechId}/export/teleprompter`;
+                    const url = `/api/speeches/${this.speechId}/export/${format}`;
                     window.open(url, '_blank');
+                    this.hideExportMenu();
+                    this.showToast(`Exporting as ${format.toUpperCase()}...`, 'success');
                 } catch (error) {
                     this.showToast('Export failed', 'error');
+                }
+            }
+
+            async exportTeleprompter(template = 'standard') {
+                if (!this.speechId) {
+                    this.showToast('Please save the speech first', 'error');
+                    return;
+                }
+
+                try {
+                    const url = `/api/speeches/${this.speechId}/export/teleprompter?template=${template}`;
+                    window.open(url, '_blank');
+                    this.hideExportMenu();
+                    this.showToast(`Exporting ${template} teleprompter format...`, 'success');
+                } catch (error) {
+                    this.showToast('Export failed', 'error');
+                }
+            }
+
+            showExportMenu() {
+                document.getElementById('exportMenu').classList.add('show');
+                document.addEventListener('click', this.handleClickOutside.bind(this));
+            }
+
+            hideExportMenu() {
+                document.getElementById('exportMenu').classList.remove('show');
+                document.removeEventListener('click', this.handleClickOutside.bind(this));
+            }
+
+            handleClickOutside(event) {
+                const menu = document.getElementById('exportMenu');
+                const button = event.target.closest('.export-dropdown');
+                if (!button && menu.classList.contains('show')) {
+                    this.hideExportMenu();
                 }
             }
 
@@ -1232,8 +1393,139 @@
             speechEditor.saveSpeech();
         }
 
-        function exportSpeech() {
-            speechEditor.exportSpeech();
+        function exportSpeech(format) {
+            speechEditor.exportSpeech(format);
+        }
+
+        function exportTeleprompter(template) {
+            speechEditor.exportTeleprompter(template);
+        }
+
+        function toggleExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            if (menu.classList.contains('show')) {
+                speechEditor.hideExportMenu();
+            } else {
+                speechEditor.showExportMenu();
+            }
+        }
+
+        function showFormatDialog() {
+            speechEditor.hideExportMenu();
+
+            // Create custom formatting modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px; width: 95%;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">🎛️ Teleprompter Formatting Options</h3>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <h4>📝 Text Format</h4>
+                                <div class="form-group">
+                                    <label>Font Family:</label>
+                                    <select id="fontFamily" class="form-control">
+                                        <option value="Arial">Arial (Recommended)</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="system">System Default</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Font Size:</label>
+                                    <select id="fontSize" class="form-control">
+                                        <option value="24">24pt (Minimum)</option>
+                                        <option value="36" selected>36pt (Recommended)</option>
+                                        <option value="48">48pt (Large)</option>
+                                        <option value="60">60pt (Very Large)</option>
+                                        <option value="72">72pt (Maximum)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Line Spacing:</label>
+                                    <select id="lineSpacing" class="form-control">
+                                        <option value="2.0" selected>Double (2.0)</option>
+                                        <option value="2.5">2.5x</option>
+                                        <option value="3.0">Triple (3.0)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <h4>🎭 Speech Cues</h4>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includeApplauseCues" checked>
+                                        Applause Cues ([APPLAUSE])
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includePauseCues" checked>
+                                        Pause Indicators ([PAUSE])
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includeEmphasisCues" checked>
+                                        Emphasis Marks (**BOLD**)
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includeTimingCues" checked>
+                                        Timing Cues ([SLOW DOWN])
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="includeSectionBreaks" checked>
+                                        Section Breaks (/// END ///)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <h4>📱 Output Format</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                <button onclick="exportWithCustomFormat('txt')" class="btn btn-primary">Export as TXT</button>
+                                <button onclick="exportWithCustomFormat('rtf')" class="btn btn-primary">Export as RTF</button>
+                                <button onclick="exportWithCustomFormat('docx')" class="btn btn-primary">Export as DOCX</button>
+                                <button onclick="exportWithCustomFormat('pdf')" class="btn btn-primary">Export as PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        }
+
+        function exportWithCustomFormat(format) {
+            // Collect custom formatting options
+            const options = {
+                fontFamily: document.getElementById('fontFamily').value,
+                fontSize: document.getElementById('fontSize').value,
+                lineSpacing: document.getElementById('lineSpacing').value,
+                includeApplauseCues: document.getElementById('includeApplauseCues').checked,
+                includePauseCues: document.getElementById('includePauseCues').checked,
+                includeEmphasisCues: document.getElementById('includeEmphasisCues').checked,
+                includeTimingCues: document.getElementById('includeTimingCues').checked,
+                includeSectionBreaks: document.getElementById('includeSectionBreaks').checked
+            };
+
+            // Create URL with options
+            const params = new URLSearchParams(options);
+            const url = `/api/speeches/${speechEditor.speechId}/export/${format}?${params}`;
+
+            window.open(url, '_blank');
+            document.querySelector('.modal').remove();
+            speechEditor.showToast(`Exporting with custom formatting...`, 'success');
         }
 
         function toggleTeleprompterPlay() {
