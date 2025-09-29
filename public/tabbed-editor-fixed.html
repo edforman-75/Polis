@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabbed Multi-Surface Editor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .tab-navigation {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-header {
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .nav-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-subtitle {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .tab-list {
+            flex: 1;
+            padding: 1rem 0;
+        }
+
+        .tab-button {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .tab-button:hover {
+            background: #f7fafc;
+        }
+
+        .tab-button.active {
+            background: #ebf8ff;
+            color: #3182ce;
+            border-right: 3px solid #3182ce;
+        }
+
+        .tab-icon {
+            font-size: 1.1rem;
+        }
+
+        .tab-content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .content-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .content-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .content-description {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .analysis-workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .editor-header {
+            padding: 1rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .text-editor {
+            flex: 1;
+            padding: 2rem;
+            border: none;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            background: white;
+            color: #2d3748;
+            overflow-y: auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .text-editor:focus {
+            outline: none;
+        }
+
+        .recommendations-panel {
+            width: 350px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .recommendations-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .recommendations-header h3 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendations-summary {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .recommendations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .recommendation {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .recommendation:last-child { margin-bottom: 0; }
+
+        .recommendation-type {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-severity {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .recommendation-severity.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .recommendation-severity.medium {
+            background: #fef5e7;
+            color: #dd6b20;
+        }
+
+        .recommendation-severity.low {
+            background: #e6fffa;
+            color: #2c7a7b;
+        }
+
+        .recommendation-text {
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .recommendation-action {
+            font-size: 0.8rem;
+            color: #4299e1;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .recommendation-action:hover {
+            background: #ebf8ff;
+            text-decoration: underline;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #48bb78;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .sync-indicator.show {
+            opacity: 1;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem;
+            border: 1px solid #feb2b2;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #718096;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-badge.ready {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .status-badge.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .analyze-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .analyze-button:hover {
+            background: #3182ce;
+        }
+
+        .analyze-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎯 Tabbed Multi-Surface Editor</h1>
+                <div class="header-subtitle">Synchronized analysis across specialized editorial surfaces</div>
+            </div>
+            <div class="header-controls">
+                <button onclick="loadSampleContent()" class="analyze-button">📄 Load Sample</button>
+                <button onclick="analyzeAllSurfaces()" class="analyze-button">⚡ Analyze All Surfaces</button>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Server connected</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="tab-navigation">
+                <div class="nav-header">
+                    <div class="nav-title">Analysis Surfaces</div>
+                    <div class="nav-subtitle">Specialized views for different content aspects</div>
+                </div>
+
+                <div class="tab-list">
+                    <button class="tab-button active" onclick="switchTab('tone')" data-tab="tone">
+                        <span class="tab-icon">🎭</span>
+                        <div>
+                            <div>Style & Tone</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">Communication style</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+
+                    <button class="tab-button" onclick="switchTab('grammar')" data-tab="grammar">
+                        <span class="tab-icon">📝</span>
+                        <div>
+                            <div>Grammar & Style</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">Language mechanics</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+
+                    <button class="tab-button" onclick="switchTab('narrative')" data-tab="narrative">
+                        <span class="tab-icon">📖</span>
+                        <div>
+                            <div>Story & Flow</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">Narrative structure</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+
+                    <button class="tab-button" onclick="switchTab('legal')" data-tab="legal">
+                        <span class="tab-icon">⚖️</span>
+                        <div>
+                            <div>Legal & Policy</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">Compliance checks</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+
+                    <button class="tab-button" onclick="switchTab('facts')" data-tab="facts">
+                        <span class="tab-icon">🔍</span>
+                        <div>
+                            <div>Facts & Sources</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">Fact verification</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+
+                    <button class="tab-button" onclick="switchTab('ai')" data-tab="ai">
+                        <span class="tab-icon">🤖</span>
+                        <div>
+                            <div>AI Enhancement</div>
+                            <div style="font-size: 0.7rem; color: #a0aec0;">AI optimization</div>
+                        </div>
+                        <span class="status-badge ready">Ready</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-content-area">
+                <!-- Tone Analysis Tab -->
+                <div class="tab-content active" id="tone-tab">
+                    <div class="content-header">
+                        <div class="content-title">🎭 Tone Analysis</div>
+                        <div class="content-description">Communication style, emotional resonance, and audience alignment</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('tone')" class="analyze-button">🎭 Analyze</button>
+                            </div>
+                            <textarea id="tone-editor" class="text-editor" placeholder="Paste your campaign content here for tone analysis..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>💡 Recommendations</h3>
+                                <div class="recommendations-summary" id="tone-summary">Analysis failed - please try again</div>
+                            </div>
+                            <div class="recommendations-list" id="tone-recommendations">
+                                <div class="loading-indicator">Click "Analyze" to assess communication style and emotional resonance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grammar Analysis Tab -->
+                <div class="tab-content" id="grammar-tab">
+                    <div class="content-header">
+                        <div class="content-title">📝 Grammar Analysis</div>
+                        <div class="content-description">Grammar, readability, and writing style improvements</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('grammar')" class="analyze-button">📝 Analyze</button>
+                            </div>
+                            <textarea id="grammar-editor" class="text-editor" placeholder="Paste your campaign content here for grammar analysis..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>✅ Grammar Results</h3>
+                                <div class="recommendations-summary" id="grammar-summary">Click "Analyze" to check grammar and style</div>
+                            </div>
+                            <div class="recommendations-list" id="grammar-recommendations">
+                                <div class="loading-indicator">Click "Analyze" to check grammar, readability, and writing style</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Narrative Analysis Tab -->
+                <div class="tab-content" id="narrative-tab">
+                    <div class="content-header">
+                        <div class="content-title">📖 Narrative Analysis</div>
+                        <div class="content-description">Story structure, flow, and narrative coherence</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('narrative')" class="analyze-button">📖 Analyze</button>
+                            </div>
+                            <textarea id="narrative-editor" class="text-editor" placeholder="Paste your campaign content here for narrative analysis..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>📚 Story Structure</h3>
+                                <div class="recommendations-summary" id="narrative-summary">Click "Analyze" to assess narrative flow</div>
+                            </div>
+                            <div class="recommendations-list" id="narrative-recommendations">
+                                <div class="loading-indicator">Click "Analyze" to assess story structure and narrative flow</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legal Analysis Tab -->
+                <div class="tab-content" id="legal-tab">
+                    <div class="content-header">
+                        <div class="content-title">⚖️ Legal & Compliance</div>
+                        <div class="content-description">Campaign law compliance and policy adherence</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('compliance')" class="analyze-button">⚖️ Analyze</button>
+                            </div>
+                            <textarea id="legal-editor" class="text-editor" placeholder="Paste your campaign content here for compliance analysis..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>⚖️ Compliance Check</h3>
+                                <div class="recommendations-summary" id="legal-summary">Click "Analyze" to check compliance</div>
+                            </div>
+                            <div class="recommendations-list" id="legal-recommendations">
+                                <div class="loading-indicator">Click "Analyze" to check campaign law compliance and policy adherence</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Facts Analysis Tab -->
+                <div class="tab-content" id="facts-tab">
+                    <div class="content-header">
+                        <div class="content-title">🔍 Facts & Sources</div>
+                        <div class="content-description">Fact verification and source credibility</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('fact-checking')" class="analyze-button">🔍 Analyze</button>
+                            </div>
+                            <textarea id="facts-editor" class="text-editor" placeholder="Paste your campaign content here for fact checking..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>🔍 Fact Check</h3>
+                                <div class="recommendations-summary" id="facts-summary">Click "Analyze" to verify facts</div>
+                            </div>
+                            <div class="recommendations-list" id="facts-recommendations">
+                                <div class="loading-indicator">Click "Analyze" to verify facts and check source credibility</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Enhancement Tab -->
+                <div class="tab-content" id="ai-tab">
+                    <div class="content-header">
+                        <div class="content-title">🤖 AI Enhancement</div>
+                        <div class="content-description">AI-powered optimization and improvement suggestions</div>
+                    </div>
+
+                    <div class="analysis-workspace">
+                        <div class="editor-panel">
+                            <div class="editor-header">
+                                <h3>Content Editor</h3>
+                                <button onclick="runAnalysis('ai-optimization')" class="analyze-button">🤖 Analyze</button>
+                            </div>
+                            <textarea id="ai-editor" class="text-editor" placeholder="Paste your campaign content here for AI optimization..."></textarea>
+                        </div>
+
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>🤖 AI Insights</h3>
+                                <div class="recommendations-summary" id="ai-summary">Click "Analyze" for AI insights</div>
+                            </div>
+                            <div class="recommendations-list" id="ai-recommendations">
+                                <div class="loading-indicator">Click "Analyze" for AI-powered optimization and improvement suggestions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sync-indicator" class="sync-indicator">✅ Content synchronized across all surfaces</div>
+
+    <script>
+        // Global state
+        let activeTab = 'tone';
+        let analysisCache = {};
+
+        // Tab management
+        function switchTab(tabName) {
+            // Update navigation
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            activeTab = tabName;
+            synchronizeContent();
+        }
+
+        // Content synchronization across all surfaces
+        function synchronizeContent() {
+            const activeEditor = document.getElementById(`${activeTab}-editor`);
+            const currentText = activeEditor.value;
+
+            // Sync to all other editors
+            document.querySelectorAll('.text-editor').forEach(editor => {
+                if (editor !== activeEditor) {
+                    editor.value = currentText;
+                }
+            });
+
+            showSyncIndicator();
+        }
+
+        // Show sync indicator
+        function showSyncIndicator() {
+            const indicator = document.getElementById('sync-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Analysis configuration
+        const analysisConfig = {
+            'tone': {
+                endpoint: '/api/analyze/tone',
+                displayFunction: displayToneResults,
+                buttonText: '🎭 Analyze',
+                summary: 'tone-summary',
+                recommendations: 'tone-recommendations'
+            },
+            'grammar': {
+                endpoint: '/api/analyze/grammar',
+                displayFunction: displayGrammarResults,
+                buttonText: '📝 Analyze',
+                summary: 'grammar-summary',
+                recommendations: 'grammar-recommendations'
+            },
+            'narrative': {
+                endpoint: '/api/analyze/narrative',
+                displayFunction: displayNarrativeResults,
+                buttonText: '📖 Analyze',
+                summary: 'narrative-summary',
+                recommendations: 'narrative-recommendations'
+            },
+            'compliance': {
+                endpoint: '/api/analyze/compliance',
+                displayFunction: displayComplianceResults,
+                buttonText: '⚖️ Analyze',
+                summary: 'legal-summary',
+                recommendations: 'legal-recommendations'
+            },
+            'fact-checking': {
+                endpoint: '/api/analyze/fact-checking',
+                displayFunction: displayFactCheckResults,
+                buttonText: '🔍 Analyze',
+                summary: 'facts-summary',
+                recommendations: 'facts-recommendations'
+            },
+            'ai-optimization': {
+                endpoint: '/api/analyze/ai-optimization',
+                displayFunction: displayAIResults,
+                buttonText: '🤖 Analyze',
+                summary: 'ai-summary',
+                recommendations: 'ai-recommendations'
+            }
+        };
+
+        // Generic analysis runner
+        async function runAnalysis(type) {
+            const config = analysisConfig[type];
+            if (!config) return;
+
+            const textToAnalyze = document.getElementById(`${type === 'compliance' ? 'legal' : type === 'fact-checking' ? 'facts' : type === 'ai-optimization' ? 'ai' : type}-editor`).value;
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+
+            // Update UI to show loading
+            const summaryElement = document.getElementById(config.summary);
+            const recommendationsElement = document.getElementById(config.recommendations);
+
+            summaryElement.textContent = `Analyzing ${type}...`;
+            recommendationsElement.innerHTML = '<div class="loading-indicator">🔄 Analysis in progress...</div>';
+
+            try {
+                const response = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textToAnalyze })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || `${type} analysis failed`);
+                }
+
+                // Cache the result
+                analysisCache[type] = result.analysis;
+
+                // Display the results
+                config.displayFunction(result.analysis, config.summary, config.recommendations);
+
+            } catch (error) {
+                console.error(`${type} analysis error:`, error);
+                summaryElement.textContent = `Analysis failed - ${error.message}`;
+                recommendationsElement.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ ${type.charAt(0).toUpperCase() + type.slice(1)} Analysis Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Helper function to safely extract text from recommendation objects
+        function getRecommendationText(rec) {
+            if (typeof rec === 'string') return rec;
+            return rec.suggestion || rec.message || rec.description || JSON.stringify(rec);
+        }
+
+        // Helper function to get recommendation priority
+        function getRecommendationPriority(rec) {
+            if (typeof rec === 'object' && rec.priority) return rec.priority;
+            return 'medium';
+        }
+
+        // Display functions for each analysis type
+        function displayToneResults(analysis, summaryId, recommendationsId) {
+            const summaryElement = document.getElementById(summaryId);
+            const recommendationsElement = document.getElementById(recommendationsId);
+
+            // Update summary
+            const overallScore = analysis.overall_score?.score || analysis.overall_score || 'N/A';
+            const overallTone = analysis.overall_tone || 'Neutral';
+            summaryElement.textContent = `Overall Score: ${overallScore}% | Tone: ${overallTone}`;
+
+            // Process recommendations
+            const recommendations = analysis.recommendations || [];
+            let html = '';
+
+            if (recommendations.length === 0) {
+                html = '<div class="loading-indicator">No specific recommendations at this time</div>';
+            } else {
+                recommendations.forEach((rec, index) => {
+                    const recText = getRecommendationText(rec);
+                    const priority = getRecommendationPriority(rec);
+                    const recType = (typeof rec === 'object' && rec.type) ? rec.type : 'General';
+                    const locationInfo = (typeof rec === 'object' && rec.line) ? `Line ${rec.line}, Column ${rec.column}` : 'General suggestion';
+
+                    html += `
+                        <div class="recommendation">
+                            <div class="recommendation-type">
+                                ${recType}
+                                <span class="recommendation-severity ${priority}">${priority.toUpperCase()}</span>
+                            </div>
+                            <div class="recommendation-text">${recText}</div>
+                            <div style="font-size: 0.8rem; color: #718096; margin-bottom: 0.5rem;">📍 ${locationInfo}</div>
+                            <div class="recommendation-actions">
+                                <span class="recommendation-action" onclick="scrollToIssue(${index})">🔍 Jump to Location</span>
+                                <span class="recommendation-action" onclick="scrollToText('${recText.substring(0, 30)}')">📍 Scroll to Text</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            recommendationsElement.innerHTML = html;
+        }
+
+        function displayGrammarResults(analysis, summaryId, recommendationsId) {
+            const summaryElement = document.getElementById(summaryId);
+            const recommendationsElement = document.getElementById(recommendationsId);
+
+            const overallScore = analysis.overall_score || 'N/A';
+            const issuesCount = (analysis.grammar_issues || []).length;
+            summaryElement.textContent = `Grammar Score: ${overallScore}% | Issues Found: ${issuesCount}`;
+
+            const issues = analysis.grammar_issues || [];
+            const recommendations = analysis.recommendations || [];
+            let html = '';
+
+            if (issues.length === 0 && recommendations.length === 0) {
+                html = '<div class="loading-indicator">No grammar issues found! ✅</div>';
+            } else {
+                // Display grammar issues
+                issues.forEach((issue, index) => {
+                    const issueText = getRecommendationText(issue);
+                    html += `
+                        <div class="recommendation">
+                            <div class="recommendation-type">
+                                Grammar Issue
+                                <span class="recommendation-severity high">HIGH</span>
+                            </div>
+                            <div class="recommendation-text">${issueText}</div>
+                            <div class="recommendation-actions">
+                                <span class="recommendation-action" onclick="scrollToIssue(${index})">🔧 Fix Issue</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Display general recommendations
+                recommendations.forEach((rec, index) => {
+                    const recText = getRecommendationText(rec);
+                    const priority = getRecommendationPriority(rec);
+                    html += `
+                        <div class="recommendation">
+                            <div class="recommendation-type">
+                                Style Suggestion
+                                <span class="recommendation-severity ${priority}">${priority.toUpperCase()}</span>
+                            </div>
+                            <div class="recommendation-text">${recText}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            recommendationsElement.innerHTML = html;
+        }
+
+        function displayNarrativeResults(analysis, summaryId, recommendationsId) {
+            displayGenericResults(analysis, summaryId, recommendationsId, 'Narrative', '📖');
+        }
+
+        function displayComplianceResults(analysis, summaryId, recommendationsId) {
+            displayGenericResults(analysis, summaryId, recommendationsId, 'Compliance', '⚖️');
+        }
+
+        function displayFactCheckResults(analysis, summaryId, recommendationsId) {
+            displayGenericResults(analysis, summaryId, recommendationsId, 'Fact Check', '🔍');
+        }
+
+        function displayAIResults(analysis, summaryId, recommendationsId) {
+            displayGenericResults(analysis, summaryId, recommendationsId, 'AI Enhancement', '🤖');
+        }
+
+        function displayGenericResults(analysis, summaryId, recommendationsId, type, icon) {
+            const summaryElement = document.getElementById(summaryId);
+            const recommendationsElement = document.getElementById(recommendationsId);
+
+            const overallScore = analysis.overall_score || analysis.score || 'N/A';
+            summaryElement.textContent = `${type} Score: ${overallScore}%`;
+
+            const recommendations = analysis.recommendations || [];
+            let html = '';
+
+            if (recommendations.length === 0) {
+                html = `<div class="loading-indicator">No ${type.toLowerCase()} recommendations at this time</div>`;
+            } else {
+                recommendations.forEach((rec, index) => {
+                    const recText = getRecommendationText(rec);
+                    const priority = getRecommendationPriority(rec);
+                    html += `
+                        <div class="recommendation">
+                            <div class="recommendation-type">
+                                ${icon} ${type} Suggestion
+                                <span class="recommendation-severity ${priority}">${priority.toUpperCase()}</span>
+                            </div>
+                            <div class="recommendation-text">${recText}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            recommendationsElement.innerHTML = html;
+        }
+
+        // Utility functions
+        function scrollToIssue(index) {
+            // Simple implementation - scroll to a percentage of the document
+            const editor = document.getElementById(`${activeTab}-editor`);
+            const percentage = (index + 1) / 10; // Rough estimate
+            const scrollPosition = editor.scrollHeight * percentage;
+            editor.scrollTop = scrollPosition;
+        }
+
+        function scrollToText(searchText) {
+            const editor = document.getElementById(`${activeTab}-editor`);
+            const text = editor.value;
+            const position = text.toLowerCase().indexOf(searchText.toLowerCase());
+
+            if (position !== -1) {
+                editor.focus();
+                editor.setSelectionRange(position, position + searchText.length);
+
+                // Scroll to make the selection visible
+                const lineHeight = parseInt(getComputedStyle(editor).lineHeight);
+                const lines = text.substring(0, position).split('\n').length;
+                editor.scrollTop = Math.max(0, (lines - 5) * lineHeight);
+            }
+        }
+
+        function loadSampleContent() {
+            const sampleText = `PRESS RELEASE
+November 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+
+            // Set content in all editors
+            document.querySelectorAll('.text-editor').forEach(editor => {
+                editor.value = sampleText;
+            });
+
+            showSyncIndicator();
+        }
+
+        function analyzeAllSurfaces() {
+            const analysisTypes = ['tone', 'grammar', 'narrative', 'compliance', 'fact-checking', 'ai-optimization'];
+
+            analysisTypes.forEach(type => {
+                setTimeout(() => runAnalysis(type), Math.random() * 2000);
+            });
+        }
+
+        // Event listeners for content synchronization
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.text-editor').forEach(editor => {
+                editor.addEventListener('input', synchronizeContent);
+            });
+
+            // Test server connection
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Server connection successful:', data);
+                })
+                .catch(error => {
+                    console.log('❌ Server connection failed:', error);
+                    document.querySelector('.status-indicator span').textContent = 'Server connection failed';
+                    document.querySelector('.status-dot').style.background = '#e53e3e';
+                });
+        });
+    </script>
+</body>
+</html>

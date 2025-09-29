@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Content Editor - Complete Analysis Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .btn-group h4 {
+            margin: 0 0 0.5rem 0;
+            color: #374151;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button {
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .utility-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        .utility-btn:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .analysis-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .analysis-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .analysis-content {
+            padding: 2rem;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 1rem;
+        }
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .placeholder {
+            color: #64748b;
+            text-align: center;
+            padding: 3rem;
+            font-style: italic;
+        }
+        .server-status {
+            background: rgba(241, 245, 249, 0.9);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .status-connected { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+        .status-disconnected { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .metric-card {
+            background: rgba(248, 250, 252, 0.8);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .metric-label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        details {
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+        summary {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        ul {
+            padding-left: 1.5rem;
+        }
+        li {
+            margin: 0.5rem 0;
+        }
+        @media (max-width: 768px) {
+            .analysis-grid { grid-template-columns: 1fr; }
+            .controls { grid-template-columns: 1fr; }
+            .metric-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Campaign Content Editor</h1>
+            <p>Complete AI-powered editorial analysis suite for campaign content</p>
+            <div class="server-status" id="server-status">
+                <span class="status-indicator" id="status-dot"></span>
+                <span id="status-text">Checking server connection...</span>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>📝 Content Input</h2>
+            <textarea id="paste-input" placeholder="Paste your campaign content here for comprehensive analysis...">PRESS RELEASES
+Nov 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.</textarea>
+
+            <div class="controls">
+                <div class="btn-group">
+                    <h4>Core Analysis</h4>
+                    <button onclick="runAnalysis('tone')" id="tone-btn">🎭 Analyze Tone</button>
+                    <button onclick="runAnalysis('grammar')" id="grammar-btn">📝 Analyze Grammar</button>
+                </div>
+                <div class="btn-group">
+                    <h4>Content Structure</h4>
+                    <button onclick="runAnalysis('narrative')" id="narrative-btn">📖 Analyze Narrative</button>
+                    <button onclick="runAnalysis('content-fields')" id="fields-btn">🏷️ Analyze Content Fields</button>
+                </div>
+                <div class="btn-group">
+                    <h4>Optimization</h4>
+                    <button onclick="runAnalysis('ai-optimization')" id="ai-btn">🤖 AI Optimization</button>
+                    <button onclick="runAnalysis('recommendations')" id="rec-btn">💡 Get Recommendations</button>
+                </div>
+                <div class="btn-group">
+                    <h4>Compliance</h4>
+                    <button onclick="runAnalysis('compliance')" id="compliance-btn">⚖️ Check Compliance</button>
+                    <button onclick="runAnalysis('fact-checking')" id="fact-btn">🔍 Fact Check</button>
+                </div>
+                <div class="btn-group">
+                    <h4>Utilities</h4>
+                    <button onclick="runAllAnalyses()" id="all-btn" class="utility-btn">🚀 Run All Analyses</button>
+                    <button onclick="clearAll()" id="clear-btn" class="utility-btn">🧹 Clear All</button>
+                    <button onclick="loadSample()" id="sample-btn" class="utility-btn">📄 Load Sample</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-grid">
+            <div class="analysis-section">
+                <div class="analysis-header">🎭 Tone Analysis</div>
+                <div class="analysis-content" id="tone-content">
+                    <div class="placeholder">Click "Analyze Tone" to assess communication style and emotional resonance</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">📝 Grammar Analysis</div>
+                <div class="analysis-content" id="grammar-content">
+                    <div class="placeholder">Click "Analyze Grammar" to check grammar, readability, and writing style</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">📖 Narrative Analysis</div>
+                <div class="analysis-content" id="narrative-content">
+                    <div class="placeholder">Click "Analyze Narrative" to examine story structure and flow</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">🏷️ Content Fields</div>
+                <div class="analysis-content" id="fields-content">
+                    <div class="placeholder">Click "Analyze Content Fields" to identify key content components</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">🤖 AI Optimization</div>
+                <div class="analysis-content" id="ai-content">
+                    <div class="placeholder">Click "AI Optimization" to get AI-specific content recommendations</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">⚖️ Compliance Check</div>
+                <div class="analysis-content" id="compliance-content">
+                    <div class="placeholder">Click "Check Compliance" to verify legal and regulatory compliance</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">🔍 Fact Checking</div>
+                <div class="analysis-content" id="fact-content">
+                    <div class="placeholder">Click "Fact Check" to identify claims requiring verification</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">💡 Unified Recommendations</div>
+                <div class="analysis-content" id="recommendations-content">
+                    <div class="placeholder">Click "Get Recommendations" for comprehensive improvement suggestions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let isServerConnected = false;
+        let runningAnalyses = new Set();
+
+        // Analysis configuration
+        const analysisConfig = {
+            tone: {
+                endpoint: '/api/analyze/tone',
+                displayFunction: displayToneResults,
+                buttonId: 'tone-btn',
+                contentId: 'tone-content',
+                icon: '🎭',
+                name: 'Tone Analysis'
+            },
+            grammar: {
+                endpoint: '/api/analyze/grammar',
+                displayFunction: displayGrammarResults,
+                buttonId: 'grammar-btn',
+                contentId: 'grammar-content',
+                icon: '📝',
+                name: 'Grammar Analysis'
+            },
+            narrative: {
+                endpoint: '/api/analyze/narrative',
+                displayFunction: displayNarrativeResults,
+                buttonId: 'narrative-btn',
+                contentId: 'narrative-content',
+                icon: '📖',
+                name: 'Narrative Analysis'
+            },
+            'content-fields': {
+                endpoint: '/api/analyze/content-fields',
+                displayFunction: displayContentFieldsResults,
+                buttonId: 'fields-btn',
+                contentId: 'fields-content',
+                icon: '🏷️',
+                name: 'Content Fields Analysis'
+            },
+            'ai-optimization': {
+                endpoint: '/api/analyze/ai-optimization',
+                displayFunction: displayAIOptimizationResults,
+                buttonId: 'ai-btn',
+                contentId: 'ai-content',
+                icon: '🤖',
+                name: 'AI Optimization Analysis'
+            },
+            compliance: {
+                endpoint: '/api/analyze/compliance',
+                displayFunction: displayComplianceResults,
+                buttonId: 'compliance-btn',
+                contentId: 'compliance-content',
+                icon: '⚖️',
+                name: 'Compliance Analysis'
+            },
+            'fact-checking': {
+                endpoint: '/api/analyze/fact-checking',
+                displayFunction: displayFactCheckingResults,
+                buttonId: 'fact-btn',
+                contentId: 'fact-content',
+                icon: '🔍',
+                name: 'Fact Checking Analysis'
+            },
+            recommendations: {
+                endpoint: '/api/analyze/recommendations',
+                displayFunction: displayRecommendationsResults,
+                buttonId: 'rec-btn',
+                contentId: 'recommendations-content',
+                icon: '💡',
+                name: 'Unified Recommendations'
+            }
+        };
+
+        // Check server health
+        async function checkServerHealth() {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    isServerConnected = true;
+                    statusDot.className = 'status-indicator status-connected';
+                    statusText.textContent = 'Server connected ✓';
+                    console.log('✅ Server health check passed:', data);
+                } else {
+                    throw new Error('Invalid server response');
+                }
+            } catch (error) {
+                isServerConnected = false;
+                statusDot.className = 'status-indicator status-disconnected';
+                statusText.textContent = 'Server connection failed ❌';
+                console.error('❌ Server health check failed:', error);
+            }
+        }
+
+        // Generic analysis runner
+        async function runAnalysis(analysisType) {
+            const config = analysisConfig[analysisType];
+            if (!config) {
+                console.error(`Unknown analysis type: ${analysisType}`);
+                return;
+            }
+
+            const textToAnalyze = document.getElementById('paste-input').value;
+            const contentDiv = document.getElementById(config.contentId);
+            const button = document.getElementById(config.buttonId);
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please paste some text to analyze');
+                return;
+            }
+
+            if (!isServerConnected) {
+                contentDiv.innerHTML = '<div class="error"><h3>❌ Server Connection Required</h3><p>Please ensure the server is running on localhost:3002</p></div>';
+                return;
+            }
+
+            if (runningAnalyses.has(analysisType)) {
+                console.log(`${analysisType} analysis already running`);
+                return;
+            }
+
+            // UI feedback
+            runningAnalyses.add(analysisType);
+            contentDiv.innerHTML = `<div class="loading">${config.icon} Running ${config.name}...</div>`;
+            button.disabled = true;
+            button.textContent = `${config.icon} Analyzing...`;
+
+            try {
+                console.log(`📤 Starting ${analysisType} analysis...`);
+
+                const requestBody = analysisType === 'tone'
+                    ? { text: textToAnalyze, campaignProfile: null }
+                    : { text: textToAnalyze };
+
+                const response = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log(`📥 ${analysisType} response:`, response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log(`✅ ${analysisType} result:`, result);
+
+                if (!result.success) {
+                    throw new Error(result.error || `${config.name} failed`);
+                }
+
+                // Display results
+                config.displayFunction(result.analysis || result.recommendations || result);
+
+            } catch (error) {
+                console.error(`❌ ${analysisType} error:`, error);
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ ${config.name} Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Check browser console for details.</p>
+                    </div>
+                `;
+            } finally {
+                runningAnalyses.delete(analysisType);
+                button.disabled = false;
+                button.textContent = `${config.icon} ${config.name.replace(' Analysis', '')}`;
+            }
+        }
+
+        // Run all analyses sequentially
+        async function runAllAnalyses() {
+            const textToAnalyze = document.getElementById('paste-input').value;
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please paste some text to analyze');
+                return;
+            }
+
+            if (!isServerConnected) {
+                alert('Server connection required. Please ensure server is running.');
+                return;
+            }
+
+            const allBtn = document.getElementById('all-btn');
+            allBtn.disabled = true;
+            allBtn.textContent = '🚀 Running All Analyses...';
+
+            const analyses = ['tone', 'grammar', 'narrative', 'content-fields', 'ai-optimization', 'compliance', 'fact-checking'];
+
+            for (let i = 0; i < analyses.length; i++) {
+                await runAnalysis(analyses[i]);
+                // Small delay between analyses
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Finally run recommendations
+            await runAnalysis('recommendations');
+
+            allBtn.disabled = false;
+            allBtn.textContent = '🚀 Run All Analyses';
+        }
+
+        // Display functions for each analysis type
+        function displayToneResults(analysis) {
+            const toneContent = document.getElementById('tone-content');
+            const overallScore = analysis.overall_score?.score || analysis.overall_score || 'N/A';
+            const overallTone = analysis.overall_tone || 'Neutral';
+            const toneScores = analysis.tone_scores || {};
+            const sentiment = analysis.sentiment_analysis || {};
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Tone Analysis Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${overallScore}%</div>
+                            <div class="metric-label">Overall Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${overallTone}</div>
+                            <div class="metric-label">Primary Tone</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (Object.keys(toneScores).length > 0) {
+                html += '<h4>🎨 Tone Breakdown:</h4><ul>';
+                for (const [tone, score] of Object.entries(toneScores)) {
+                    html += `<li><strong>${tone}:</strong> ${score}%</li>`;
+                }
+                html += '</ul>';
+            }
+
+            if (Object.keys(sentiment).length > 0) {
+                html += '<h4>💭 Sentiment Analysis:</h4><ul>';
+                for (const [key, value] of Object.entries(sentiment)) {
+                    html += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            toneContent.innerHTML = html;
+        }
+
+        function displayGrammarResults(analysis) {
+            const grammarContent = document.getElementById('grammar-content');
+            const overallScore = analysis.overall_score || 'N/A';
+            const grammarIssues = analysis.grammar_issues || [];
+            const readabilityMetrics = analysis.readability_metrics || {};
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Grammar Analysis Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${overallScore}%</div>
+                            <div class="metric-label">Grammar Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${grammarIssues.length}</div>
+                            <div class="metric-label">Issues Found</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (grammarIssues.length > 0) {
+                html += '<h4>📝 Grammar Issues:</h4><ul>';
+                grammarIssues.slice(0, 10).forEach(issue => {
+                    if (typeof issue === 'object') {
+                        html += `<li><strong>${issue.type || 'Issue'}:</strong> ${issue.description || issue.message}</li>`;
+                    } else {
+                        html += `<li>${issue}</li>`;
+                    }
+                });
+                if (grammarIssues.length > 10) {
+                    html += `<li><em>... and ${grammarIssues.length - 10} more issues</em></li>`;
+                }
+                html += '</ul>';
+            }
+
+            if (Object.keys(readabilityMetrics).length > 0) {
+                html += '<h4>📊 Readability Metrics:</h4><ul>';
+                for (const [metric, value] of Object.entries(readabilityMetrics)) {
+                    html += `<li><strong>${metric}:</strong> ${value}</li>`;
+                }
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            grammarContent.innerHTML = html;
+        }
+
+        function displayNarrativeResults(analysis) {
+            const narrativeContent = document.getElementById('narrative-content');
+            const structure = analysis.structure_analysis || {};
+            const flow = analysis.narrative_flow || {};
+            const coherence = analysis.coherence_score || 'N/A';
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Narrative Analysis Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${coherence}%</div>
+                            <div class="metric-label">Coherence Score</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (Object.keys(structure).length > 0) {
+                html += '<h4>🏗️ Structure Analysis:</h4><ul>';
+                for (const [key, value] of Object.entries(structure)) {
+                    html += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                html += '</ul>';
+            }
+
+            if (Object.keys(flow).length > 0) {
+                html += '<h4>🌊 Narrative Flow:</h4><ul>';
+                for (const [key, value] of Object.entries(flow)) {
+                    html += `<li><strong>${key}:</strong> ${value}</li>`;
+                }
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            narrativeContent.innerHTML = html;
+        }
+
+        function displayContentFieldsResults(analysis) {
+            const fieldsContent = document.getElementById('fields-content');
+            const fields = analysis.identified_fields || {};
+            const missing = analysis.missing_fields || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Content Fields Analysis Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${Object.keys(fields).length}</div>
+                            <div class="metric-label">Fields Identified</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${missing.length}</div>
+                            <div class="metric-label">Missing Fields</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (Object.keys(fields).length > 0) {
+                html += '<h4>🏷️ Identified Fields:</h4><ul>';
+                for (const [field, content] of Object.entries(fields)) {
+                    html += `<li><strong>${field}:</strong> ${typeof content === 'string' ? content.substring(0, 100) + '...' : JSON.stringify(content)}</li>`;
+                }
+                html += '</ul>';
+            }
+
+            if (missing.length > 0) {
+                html += '<h4>❌ Missing Fields:</h4><ul>';
+                missing.forEach(field => {
+                    html += `<li>${field}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            fieldsContent.innerHTML = html;
+        }
+
+        function displayAIOptimizationResults(analysis) {
+            const aiContent = document.getElementById('ai-content');
+            const optimizationScore = analysis.optimization_score || 'N/A';
+            const suggestions = analysis.optimization_suggestions || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ AI Optimization Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${optimizationScore}%</div>
+                            <div class="metric-label">Optimization Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${suggestions.length}</div>
+                            <div class="metric-label">Suggestions</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (suggestions.length > 0) {
+                html += '<h4>🤖 AI Optimization Suggestions:</h4><ul>';
+                suggestions.forEach(suggestion => {
+                    html += `<li>${suggestion}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            aiContent.innerHTML = html;
+        }
+
+        function displayComplianceResults(analysis) {
+            const complianceContent = document.getElementById('compliance-content');
+            const complianceScore = analysis.compliance_score || 'N/A';
+            const issues = analysis.compliance_issues || [];
+            const warnings = analysis.warnings || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Compliance Analysis Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${complianceScore}%</div>
+                            <div class="metric-label">Compliance Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${issues.length}</div>
+                            <div class="metric-label">Issues Found</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (issues.length > 0) {
+                html += '<h4>⚖️ Compliance Issues:</h4><ul>';
+                issues.forEach(issue => {
+                    html += `<li>${typeof issue === 'object' ? issue.description || JSON.stringify(issue) : issue}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (warnings.length > 0) {
+                html += '<h4>⚠️ Warnings:</h4><ul>';
+                warnings.forEach(warning => {
+                    html += `<li>${warning}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            complianceContent.innerHTML = html;
+        }
+
+        function displayFactCheckingResults(analysis) {
+            const factContent = document.getElementById('fact-content');
+            const claims = analysis.factual_claims || [];
+            const verifiable = analysis.verifiable_claims || [];
+            const unverifiable = analysis.unverifiable_claims || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Fact Checking Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${claims.length}</div>
+                            <div class="metric-label">Total Claims</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${verifiable.length}</div>
+                            <div class="metric-label">Verifiable</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${unverifiable.length}</div>
+                            <div class="metric-label">Need Verification</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (verifiable.length > 0) {
+                html += '<h4>✅ Verifiable Claims:</h4><ul>';
+                verifiable.forEach(claim => {
+                    html += `<li>${claim}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            if (unverifiable.length > 0) {
+                html += '<h4>❓ Claims Needing Verification:</h4><ul>';
+                unverifiable.forEach(claim => {
+                    html += `<li>${claim}</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            factContent.innerHTML = html;
+        }
+
+        function displayRecommendationsResults(data) {
+            const recContent = document.getElementById('recommendations-content');
+            const recommendations = data.recommendations || data;
+            const priority = recommendations.high_priority || [];
+            const medium = recommendations.medium_priority || [];
+            const low = recommendations.low_priority || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Unified Recommendations Complete!</h3>
+                    <div class="metric-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">${priority.length}</div>
+                            <div class="metric-label">High Priority</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${medium.length}</div>
+                            <div class="metric-label">Medium Priority</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${low.length}</div>
+                            <div class="metric-label">Low Priority</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (priority.length > 0) {
+                html += '<h4>🚨 High Priority Recommendations:</h4><ul>';
+                priority.forEach(rec => html += `<li>${rec}</li>`);
+                html += '</ul>';
+            }
+
+            if (medium.length > 0) {
+                html += '<h4>⚠️ Medium Priority Recommendations:</h4><ul>';
+                medium.forEach(rec => html += `<li>${rec}</li>`);
+                html += '</ul>';
+            }
+
+            if (low.length > 0) {
+                html += '<h4>💡 Low Priority Recommendations:</h4><ul>';
+                low.forEach(rec => html += `<li>${rec}</li>`);
+                html += '</ul>';
+            }
+
+            html += `<details><summary>View Raw Results</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
+            recContent.innerHTML = html;
+        }
+
+        // Generic display function for other analyses
+        function displayGenericResults(analysis, contentId, analysisName) {
+            const content = document.getElementById(contentId);
+
+            let html = `
+                <div class="success">
+                    <h3>✅ ${analysisName} Complete!</h3>
+                </div>
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px;">
+                    <h4>📊 Analysis Results:</h4>
+            `;
+
+            // Display key-value pairs from analysis
+            for (const [key, value] of Object.entries(analysis)) {
+                if (Array.isArray(value)) {
+                    html += `<p><strong>${key}:</strong> ${value.length} items</p>`;
+                    if (value.length > 0 && value.length <= 5) {
+                        html += '<ul>';
+                        value.forEach(item => html += `<li>${item}</li>`);
+                        html += '</ul>';
+                    }
+                } else if (typeof value === 'object') {
+                    html += `<p><strong>${key}:</strong> [Object with ${Object.keys(value).length} properties]</p>`;
+                } else {
+                    html += `<p><strong>${key}:</strong> ${value}</p>`;
+                }
+            }
+
+            html += `</div><details><summary>View Raw Results</summary><pre>${JSON.stringify(analysis, null, 2)}</pre></details>`;
+            content.innerHTML = html;
+        }
+
+        // Specific display functions that use the generic one
+        function displayNarrativeResults(analysis) {
+            displayGenericResults(analysis, 'narrative-content', 'Narrative Analysis');
+        }
+
+        function displayContentFieldsResults(analysis) {
+            displayGenericResults(analysis, 'fields-content', 'Content Fields Analysis');
+        }
+
+        function displayAIOptimizationResults(analysis) {
+            displayGenericResults(analysis, 'ai-content', 'AI Optimization Analysis');
+        }
+
+        function displayComplianceResults(analysis) {
+            displayGenericResults(analysis, 'compliance-content', 'Compliance Analysis');
+        }
+
+        function displayFactCheckingResults(analysis) {
+            displayGenericResults(analysis, 'fact-content', 'Fact Checking Analysis');
+        }
+
+        // Utility functions
+        function clearAll() {
+            document.getElementById('paste-input').value = '';
+
+            // Reset all analysis sections
+            Object.values(analysisConfig).forEach(config => {
+                const content = document.getElementById(config.contentId);
+                content.innerHTML = `<div class="placeholder">Click "${config.name}" to run analysis</div>`;
+            });
+        }
+
+        function loadSample() {
+            document.getElementById('paste-input').value = `PRESS RELEASES
+Nov 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            console.log('🚀 Complete Campaign Content Editor loaded');
+            checkServerHealth();
+        });
+
+        console.log('✅ Complete Campaign Content Editor with all analysis modules loaded successfully');
+    </script>
+</body>
+</html>

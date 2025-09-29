@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Content Editor - Final Working Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .content-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        button {
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+        .analysis-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .analysis-section {
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .analysis-header {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .analysis-content {
+            padding: 2rem;
+            min-height: 300px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 1rem;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #3b82f6;
+            font-size: 1.1rem;
+        }
+        .placeholder {
+            color: #64748b;
+            text-align: center;
+            padding: 3rem;
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .analysis-panel { grid-template-columns: 1fr; }
+            .controls { justify-content: stretch; }
+            .controls button { flex: 1; }
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-connected { background: #10b981; }
+        .status-disconnected { background: #ef4444; }
+        .server-status {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Campaign Content Editor</h1>
+            <p>AI-powered editorial analysis for campaign content</p>
+            <div class="server-status" id="server-status">
+                <span class="status-indicator" id="status-dot"></span>
+                <span id="status-text">Checking server connection...</span>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2>Content Input</h2>
+            <textarea id="paste-input" placeholder="Paste your campaign content here for analysis...">PRESS RELEASES
+Nov 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.</textarea>
+
+            <div class="controls">
+                <button onclick="runToneAnalysis()" id="tone-btn">🎭 Analyze Tone</button>
+                <button onclick="runGrammarAnalysis()" id="grammar-btn">📝 Analyze Grammar</button>
+                <button onclick="clearAll()" id="clear-btn">🧹 Clear All</button>
+                <button onclick="loadSample()" id="sample-btn">📄 Load Sample</button>
+            </div>
+        </div>
+
+        <div class="analysis-panel">
+            <div class="analysis-section">
+                <div class="analysis-header">🎭 Tone Analysis</div>
+                <div class="analysis-content" id="tone-content">
+                    <div class="placeholder">Click "Analyze Tone" to assess communication style and emotional resonance</div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <div class="analysis-header">📝 Grammar Analysis</div>
+                <div class="analysis-content" id="grammar-content">
+                    <div class="placeholder">Click "Analyze Grammar" to check grammar, readability, and writing style</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let isServerConnected = false;
+
+        // Check server health on load
+        async function checkServerHealth() {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    isServerConnected = true;
+                    statusDot.className = 'status-indicator status-connected';
+                    statusText.textContent = 'Server connected ✓';
+                    console.log('✅ Server health check passed:', data);
+                } else {
+                    throw new Error('Invalid server response');
+                }
+            } catch (error) {
+                isServerConnected = false;
+                statusDot.className = 'status-indicator status-disconnected';
+                statusText.textContent = 'Server connection failed ❌';
+                console.error('❌ Server health check failed:', error);
+            }
+        }
+
+        // Tone analysis function
+        async function runToneAnalysis() {
+            console.log('🎭 Starting tone analysis...');
+
+            const textToAnalyze = document.getElementById('paste-input').value;
+            const toneContent = document.getElementById('tone-content');
+            const toneBtn = document.getElementById('tone-btn');
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please paste some text to analyze');
+                return;
+            }
+
+            if (!isServerConnected) {
+                toneContent.innerHTML = '<div class="error"><h3>❌ Server Connection Required</h3><p>Please ensure the server is running on localhost:3002</p></div>';
+                return;
+            }
+
+            // UI feedback
+            toneContent.innerHTML = '<div class="loading">🎭 Analyzing tone...</div>';
+            toneBtn.disabled = true;
+            toneBtn.textContent = '🎭 Analyzing...';
+
+            try {
+                console.log('📤 Sending tone analysis request...');
+                const response = await fetch('/api/analyze/tone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: textToAnalyze,
+                        campaignProfile: null
+                    })
+                });
+
+                console.log('📥 Received response:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Tone analysis result:', result);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Tone analysis failed');
+                }
+
+                // Display results
+                displayToneResults(result.analysis);
+
+            } catch (error) {
+                console.error('❌ Tone analysis error:', error);
+                toneContent.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Tone Analysis Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Check browser console for details.</p>
+                    </div>
+                `;
+            } finally {
+                toneBtn.disabled = false;
+                toneBtn.textContent = '🎭 Analyze Tone';
+            }
+        }
+
+        // Grammar analysis function
+        async function runGrammarAnalysis() {
+            console.log('📝 Starting grammar analysis...');
+
+            const textToAnalyze = document.getElementById('paste-input').value;
+            const grammarContent = document.getElementById('grammar-content');
+            const grammarBtn = document.getElementById('grammar-btn');
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please paste some text to analyze');
+                return;
+            }
+
+            if (!isServerConnected) {
+                grammarContent.innerHTML = '<div class="error"><h3>❌ Server Connection Required</h3><p>Please ensure the server is running on localhost:3002</p></div>';
+                return;
+            }
+
+            // UI feedback
+            grammarContent.innerHTML = '<div class="loading">📝 Analyzing grammar...</div>';
+            grammarBtn.disabled = true;
+            grammarBtn.textContent = '📝 Analyzing...';
+
+            try {
+                console.log('📤 Sending grammar analysis request...');
+                const response = await fetch('/api/analyze/grammar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textToAnalyze })
+                });
+
+                console.log('📥 Received response:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Grammar analysis result:', result);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Grammar analysis failed');
+                }
+
+                // Display results
+                displayGrammarResults(result.analysis);
+
+            } catch (error) {
+                console.error('❌ Grammar analysis error:', error);
+                grammarContent.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Grammar Analysis Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Check browser console for details.</p>
+                    </div>
+                `;
+            } finally {
+                grammarBtn.disabled = false;
+                grammarBtn.textContent = '📝 Analyze Grammar';
+            }
+        }
+
+        // Display tone analysis results
+        function displayToneResults(analysis) {
+            console.log('🎨 Displaying tone results:', analysis);
+            const toneContent = document.getElementById('tone-content');
+
+            // Handle different possible data structures
+            const overallScore = analysis.overall_score?.score || analysis.overall_score || 'N/A';
+            const overallTone = analysis.overall_tone || 'Neutral';
+            const toneScores = analysis.tone_scores || {};
+            const sentiment = analysis.sentiment_analysis || {};
+            const recommendations = analysis.recommendations || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Tone Analysis Complete!</h3>
+                    <div style="font-size: 1.2rem; margin: 1rem 0;">
+                        <strong>Overall Score:</strong> ${overallScore}% | <strong>Tone:</strong> ${overallTone}
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4>📊 Detailed Results</h4>
+                    <div style="margin: 0.5rem 0;"><strong>Text Length:</strong> ${analysis.text_length || document.getElementById('paste-input').value.length} characters</div>
+            `;
+
+            // Add tone scores if available
+            if (Object.keys(toneScores).length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Tone Breakdown:</strong><ul>';
+                for (const [tone, score] of Object.entries(toneScores)) {
+                    html += `<li>${tone}: ${score}%</li>`;
+                }
+                html += '</ul></div>';
+            }
+
+            // Add sentiment if available
+            if (Object.keys(sentiment).length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Sentiment:</strong><ul>';
+                for (const [key, value] of Object.entries(sentiment)) {
+                    html += `<li>${key}: ${value}</li>`;
+                }
+                html += '</ul></div>';
+            }
+
+            // Add recommendations if available
+            if (recommendations.length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Recommendations:</strong><ul>';
+                recommendations.forEach(rec => {
+                    html += `<li>${rec}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            html += `
+                    <details style="margin-top: 1rem;">
+                        <summary style="cursor: pointer; color: #3b82f6; font-weight: 600;">View Raw Results</summary>
+                        <pre style="background: #f1f1f1; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.8rem;">${JSON.stringify(analysis, null, 2)}</pre>
+                    </details>
+                </div>
+            `;
+
+            toneContent.innerHTML = html;
+        }
+
+        // Display grammar analysis results
+        function displayGrammarResults(analysis) {
+            console.log('📝 Displaying grammar results:', analysis);
+            const grammarContent = document.getElementById('grammar-content');
+
+            // Handle different possible data structures
+            const overallScore = analysis.overall_score || 'N/A';
+            const grammarIssues = analysis.grammar_issues || [];
+            const readabilityMetrics = analysis.readability_metrics || {};
+            const recommendations = analysis.recommendations || [];
+
+            let html = `
+                <div class="success">
+                    <h3>✅ Grammar Analysis Complete!</h3>
+                    <div style="font-size: 1.2rem; margin: 1rem 0;">
+                        <strong>Overall Score:</strong> ${overallScore}%
+                    </div>
+                </div>
+
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <h4>📝 Grammar Results</h4>
+                    <div style="margin: 0.5rem 0;"><strong>Issues Found:</strong> ${grammarIssues.length}</div>
+            `;
+
+            // Add grammar issues if available
+            if (grammarIssues.length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Grammar Issues:</strong><ul>';
+                grammarIssues.forEach(issue => {
+                    if (typeof issue === 'object') {
+                        html += `<li><strong>${issue.type || 'Issue'}:</strong> ${issue.description || issue.message || JSON.stringify(issue)}</li>`;
+                    } else {
+                        html += `<li>${issue}</li>`;
+                    }
+                });
+                html += '</ul></div>';
+            }
+
+            // Add readability metrics if available
+            if (Object.keys(readabilityMetrics).length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Readability:</strong><ul>';
+                for (const [metric, value] of Object.entries(readabilityMetrics)) {
+                    html += `<li>${metric}: ${value}</li>`;
+                }
+                html += '</ul></div>';
+            }
+
+            // Add recommendations if available
+            if (recommendations.length > 0) {
+                html += '<div style="margin: 1rem 0;"><strong>Recommendations:</strong><ul>';
+                recommendations.forEach(rec => {
+                    html += `<li>${rec}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            html += `
+                    <details style="margin-top: 1rem;">
+                        <summary style="cursor: pointer; color: #3b82f6; font-weight: 600;">View Raw Results</summary>
+                        <pre style="background: #f1f1f1; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.8rem;">${JSON.stringify(analysis, null, 2)}</pre>
+                    </details>
+                </div>
+            `;
+
+            grammarContent.innerHTML = html;
+        }
+
+        // Helper functions
+        function clearAll() {
+            document.getElementById('paste-input').value = '';
+            document.getElementById('tone-content').innerHTML = '<div class="placeholder">Click "Analyze Tone" to assess communication style and emotional resonance</div>';
+            document.getElementById('grammar-content').innerHTML = '<div class="placeholder">Click "Analyze Grammar" to check grammar, readability, and writing style</div>';
+        }
+
+        function loadSample() {
+            document.getElementById('paste-input').value = `PRESS RELEASES
+Nov 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            console.log('🚀 Page loaded, checking server health...');
+            checkServerHealth();
+        });
+
+        console.log('✅ Campaign Content Editor loaded successfully');
+    </script>
+</body>
+</html>

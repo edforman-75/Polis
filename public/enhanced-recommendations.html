@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Recommendations Editor</title>
+    <!-- Cache buster: 2025-09-28-v3-fixed-quotes -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .editor-header {
+            padding: 1rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .text-editor {
+            flex: 1;
+            padding: 2rem;
+            border: none;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: none;
+            outline: none;
+            background: white;
+            color: #2d3748;
+            overflow-y: auto;
+            height: calc(100vh - 140px);
+        }
+
+        .recommendations-panel {
+            width: 450px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .recommendations-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .recommendations-header h3 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendations-summary {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .recommendations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .recommendation {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .recommendation:last-child { margin-bottom: 0; }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-type {
+            font-weight: 600;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-severity {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .recommendation-severity.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .recommendation-severity.medium {
+            background: #fef5e7;
+            color: #dd6b20;
+        }
+
+        .recommendation-severity.low {
+            background: #e6fffa;
+            color: #2c7a7b;
+        }
+
+        .recommendation-location {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 3px solid #cbd5e1;
+        }
+
+        .recommendation-issue {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+        }
+
+        .recommendation-explanation {
+            color: #4a5568;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .recommendation-context {
+            background: #f7fafc;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.85rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3182ce;
+        }
+
+        .recommendation-options {
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-options h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-button {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            color: #4a5568;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .option-button:hover {
+            background: #ebf8ff;
+            border-color: #3182ce;
+            color: #2c5aa0;
+        }
+
+        .option-button.primary {
+            background: #3182ce;
+            color: white;
+            border-color: #3182ce;
+        }
+
+        .option-button.primary:hover {
+            background: #2c5aa0;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            font-size: 0.8rem;
+            color: #4299e1;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .action-button:hover {
+            background: #ebf8ff;
+            text-decoration: underline;
+        }
+
+        .analyze-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .analyze-button:hover {
+            background: #3182ce;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem;
+            border: 1px solid #feb2b2;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #718096;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            border: 1px solid #c3e6cb;
+            font-size: 0.85rem;
+        }
+
+        .impact-indicator {
+            font-size: 0.7rem;
+            margin-top: 0.25rem;
+            padding: 0.125rem 0.25rem;
+            border-radius: 2px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .option-button .impact-indicator {
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+
+        .option-button:hover .impact-indicator {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .before-after-preview {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin: 1rem 0;
+            padding: 1rem;
+        }
+
+        .preview-section {
+            margin-bottom: 1rem;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .preview-text {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            min-height: 60px;
+        }
+
+        .before-text {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .after-text {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .alternative-suggestions {
+            background: #fefefe;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin: 1rem 0;
+            padding: 1rem;
+        }
+
+        .suggestion-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .suggestion-item.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .suggestion-label {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
+        }
+
+        .suggestion-text {
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .undo-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 0.5rem;
+        }
+
+        .undo-button:hover {
+            background: #d97706;
+        }
+
+        .undo-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎯 Enhanced Recommendations Editor</h1>
+                <div class="header-subtitle">Directive recommendations with actionable options</div>
+            </div>
+            <div class="header-controls">
+                <button onclick="loadSampleContent()" class="analyze-button">📄 Load Sample</button>
+                <button onclick="runToneAnalysis()" class="analyze-button">🎭 Analyze Tone</button>
+                <button onclick="undoLastChange()" class="undo-button" id="undo-button" disabled>↶ Undo</button>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Server connected</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <h3>Content Editor</h3>
+                    <div>
+                        <span id="issue-count" style="color: #718096; font-size: 0.9rem;">0 issues found</span>
+                    </div>
+                </div>
+                <textarea id="text-editor" class="text-editor" placeholder="Paste your campaign content here for analysis with enhanced recommendations..." oninput="enableUndo()"></textarea>
+            </div>
+
+            <div class="recommendations-panel">
+                <div class="recommendations-header">
+                    <h3>💡 Enhanced Recommendations</h3>
+                    <div class="recommendations-summary" id="analysis-summary">Click "Analyze Tone" to see directive recommendations</div>
+                </div>
+                <div class="recommendations-list" id="recommendations-list">
+                    <div class="loading-indicator">Enhanced recommendations with actionable options will appear here</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentIssues = [];
+        let undoStack = [];
+        let currentText = '';
+
+        // Undo system
+        function saveState() {
+            const editor = document.getElementById('text-editor');
+            undoStack.push(editor.value);
+            if (undoStack.length > 20) { // Keep only last 20 states
+                undoStack.shift();
+            }
+            currentText = editor.value;
+            document.getElementById('undo-button').disabled = undoStack.length <= 1;
+        }
+
+        function enableUndo() {
+            document.getElementById('undo-button').disabled = false;
+        }
+
+        function undoLastChange() {
+            if (undoStack.length > 1) {
+                undoStack.pop(); // Remove current state
+                const previousState = undoStack[undoStack.length - 1];
+                document.getElementById('text-editor').value = previousState;
+                currentText = previousState;
+
+                if (undoStack.length <= 1) {
+                    document.getElementById('undo-button').disabled = true;
+                }
+            }
+        }
+
+        // Sample content
+        function loadSampleContent() {
+            const sampleText = `PRESS RELEASE
+November 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+\"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia,\" said Spanberger. \"Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong.\"
+
+Today, Spanberger released \"What Matters Most,\" an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+
+            document.getElementById('text-editor').value = sampleText;
+            saveState(); // Save initial state for undo
+        }
+
+        // Enhanced tone analysis with better recommendations
+        async function runToneAnalysis() {
+            console.log('🚀 runToneAnalysis called');
+
+            const textToAnalyze = document.getElementById('text-editor').value;
+            console.log('📝 Text to analyze length:', textToAnalyze?.length || 0);
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                console.log('❌ No text to analyze');
+                alert('Please enter some text to analyze');
+                return;
+            }
+
+            // Update UI to show loading
+            const summaryElement = document.getElementById('analysis-summary');
+            const recommendationsElement = document.getElementById('recommendations-list');
+            console.log('🎯 Elements found:', {
+                summaryElement: !!summaryElement,
+                recommendationsElement: !!recommendationsElement
+            });
+
+            if (summaryElement) {
+                summaryElement.textContent = 'Analyzing tone and generating recommendations...';
+            }
+            if (recommendationsElement) {
+                recommendationsElement.innerHTML = '<div class="loading-indicator">🔄 Analysis in progress...</div>';
+            }
+
+            try {
+                console.log('📡 Making API request to /api/analyze/tone');
+                const response = await fetch('/api/analyze/tone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: textToAnalyze,
+                        campaignProfile: null
+                    })
+                });
+
+                console.log('📨 Response received:', response.status, response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('📊 Result received:', { success: result.success, hasAnalysis: !!result.analysis });
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Tone analysis failed');
+                }
+
+                // Process and enhance the analysis results
+                console.log('🔄 Calling processEnhancedResults');
+                processEnhancedResults(result.analysis, textToAnalyze);
+                console.log('✅ processEnhancedResults completed');
+
+            } catch (error) {
+                console.error('❌ Tone analysis error:', error);
+                if (summaryElement) {
+                    summaryElement.textContent = `Analysis failed - ${error.message}`;
+                }
+                if (recommendationsElement) {
+                    recommendationsElement.innerHTML = `
+                        <div class="error-message">
+                            <h3>❌ Tone Analysis Failed</h3>
+                            <p><strong>Error:</strong> ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Make the function globally available
+        window.runToneAnalysis = runToneAnalysis;
+
+        // Also create a simple tone analysis function for compatibility
+        window.simpleToneAnalysis = runToneAnalysis;
+
+        // Process analysis results and create enhanced recommendations
+        function processEnhancedResults(analysis, text) {
+            console.log('🔍 ProcessEnhancedResults called with:', { analysis, text: text.substring(0, 100) + '...' });
+
+            const summaryElement = document.getElementById('analysis-summary');
+            const recommendationsElement = document.getElementById('recommendations-list');
+
+            // Extract and enhance recommendations
+            const recommendations = analysis.recommendations || [];
+            console.log('📋 Original recommendations:', recommendations);
+
+            let enhancedRecommendations;
+            try {
+                enhancedRecommendations = enhanceRecommendations(recommendations, text, analysis);
+                console.log('✨ Enhanced recommendations:', enhancedRecommendations);
+            } catch (error) {
+                console.error('❌ Error in enhanceRecommendations:', error);
+                // Continue with original recommendations if enhancement fails
+                enhancedRecommendations = recommendations.map((rec, index) => ({
+                    id: index,
+                    title: rec.title || 'Recommendation',
+                    issue: rec.issue || rec,
+                    explanation: rec.explanation || 'No explanation available',
+                    priority: rec.priority || 'medium',
+                    context: rec.context || '',
+                    options: [{
+                        label: '✅ Apply suggestion',
+                        action: 'apply',
+                        description: rec.description || 'Apply this recommendation'
+                    }]
+                }));
+            }
+
+            currentIssues = enhancedRecommendations;
+
+            // Update summary
+            const overallScore = analysis.overall_score?.score || analysis.overall_score || 'N/A';
+            const overallTone = analysis.overall_tone || 'Neutral';
+            summaryElement.textContent = `Found ${enhancedRecommendations.length} recommendations | Overall Score: ${overallScore}% | Tone: ${overallTone}`;
+
+            // Update issue count
+            document.getElementById('issue-count').textContent = `${enhancedRecommendations.length} recommendations available`;
+
+            // Display enhanced recommendations
+            displayEnhancedRecommendations(enhancedRecommendations);
+
+            // Auto-jump to first recommendation if any exist
+            if (enhancedRecommendations.length > 0) {
+                setTimeout(() => {
+                    jumpToIssue(enhancedRecommendations[0].id);
+                    // Scroll to first recommendation in panel
+                    const firstRec = document.getElementById(`rec-${enhancedRecommendations[0].id}`);
+                    if (firstRec) {
+                        firstRec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Add highlight effect
+                        firstRec.style.border = '2px solid #3b82f6';
+                        firstRec.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.3)';
+                        setTimeout(() => {
+                            firstRec.style.border = '';
+                            firstRec.style.boxShadow = '';
+                        }, 3000);
+                    }
+                }, 500);
+            }
+        }
+
+        // Enhance recommendations with better explanations and actions
+        function enhanceRecommendations(recommendations, text, analysis) {
+            const enhancedRecs = [];
+
+            // Process original recommendations first
+            recommendations.forEach((rec, index) => {
+                const recText = typeof rec === 'string' ? rec : (rec.suggestion || rec.message || 'Improve communication style');
+                const priority = (typeof rec === 'object' && rec.priority) ? rec.priority : 'medium';
+                const recType = (typeof rec === 'object' && rec.type) ? rec.type : 'tone_improvement';
+
+                // Find location in text
+                const location = findIssueLocation(text, rec, recText, index);
+
+                // Create enhanced recommendation based on type
+                let enhanced = {
+                    id: index,
+                    type: recType,
+                    priority: priority,
+                    location: location,
+                    original: rec
+                };
+
+                // Enhance based on recommendation type
+                switch (recType) {
+                    case 'tone_improvement':
+                        enhanced = {
+                            ...enhanced,
+                            title: 'Strengthen Professional Tone',
+                            issue: 'The text could benefit from more authoritative and confident language',
+                            explanation: 'Professional political communication should convey authority, confidence, and competence. This helps build trust with voters and demonstrates leadership capability.',
+                            context: location.context,
+                            options: [
+                                {
+                                    label: '✅ Add stronger action verbs (recommended)',
+                                    action: 'replace_weak_verbs',
+                                    description: 'Replace passive language with active, decisive verbs like "will deliver," "commits to," "ensures"'
+                                },
+                                {
+                                    label: '📝 Include specific achievements',
+                                    action: 'add_specifics',
+                                    description: 'Add concrete examples of past accomplishments and specific policy positions'
+                                },
+                                {
+                                    label: '🎯 Emphasize decisive leadership',
+                                    action: 'leadership_language',
+                                    description: 'Use language that demonstrates decisiveness and leadership qualities'
+                                },
+                                {
+                                    label: '❌ Keep current language',
+                                    action: 'no_change',
+                                    description: 'Maintain the current tone without modifications'
+                                }
+                            ]
+                        };
+                        break;
+
+                    case 'sentiment':
+                        enhanced = {
+                            ...enhanced,
+                            title: 'Balance Emotional Tone',
+                            issue: 'Emotional tone could be more balanced for broader appeal',
+                            explanation: 'Campaign communications should strike a balance between passionate conviction and measured professionalism to appeal to diverse voter segments.',
+                            context: location.context,
+                            options: [
+                                {
+                                    label: '✅ Add hopeful language (recommended)',
+                                    action: 'add_optimism',
+                                    description: 'Include more forward-looking, optimistic phrases about the future'
+                                },
+                                {
+                                    label: '🤝 Include unifying messages',
+                                    action: 'add_unity',
+                                    description: 'Emphasize bringing people together and building consensus'
+                                },
+                                {
+                                    label: '❌ Keep current tone',
+                                    action: 'no_change',
+                                    description: 'Maintain the current emotional balance'
+                                }
+                            ]
+                        };
+                        break;
+
+                    case 'consistency':
+                        enhanced = {
+                            ...enhanced,
+                            title: 'Improve Message Consistency',
+                            issue: 'Tone varies throughout the text, affecting message clarity',
+                            explanation: 'Consistent tone throughout a piece helps reinforce key messages and makes communication more memorable and trustworthy.',
+                            context: location.context,
+                            options: [
+                                {
+                                    label: '✅ Standardize tone (recommended)',
+                                    action: 'standardize_tone',
+                                    description: 'Align all sections to use the same level of formality and energy'
+                                },
+                                {
+                                    label: '📋 Create style guide',
+                                    action: 'create_guide',
+                                    description: 'Develop guidelines for consistent voice across all communications'
+                                },
+                                {
+                                    label: '❌ Allow variation',
+                                    action: 'no_change',
+                                    description: 'Keep the current tonal variations'
+                                }
+                            ]
+                        };
+                        break;
+
+                    default:
+                        enhanced = {
+                            ...enhanced,
+                            title: 'Communication Enhancement',
+                            issue: recText,
+                            explanation: 'This area has been identified for potential improvement to enhance overall communication effectiveness.',
+                            context: location.context,
+                            options: [
+                                {
+                                    label: '✅ Apply suggested improvement (recommended)',
+                                    action: 'apply_suggestion',
+                                    description: 'Implement the recommended changes'
+                                },
+                                {
+                                    label: '❌ Keep as is',
+                                    action: 'no_change',
+                                    description: 'Maintain current language'
+                                }
+                            ]
+                        };
+                }
+
+                enhancedRecs.push(enhanced);
+            });
+
+            // Generate additional recommendations based on analysis results
+            let nextId = enhancedRecs.length;
+
+            // Add readability analysis with error handling
+            try {
+                const readabilityIssues = analyzeReadability(text);
+                if (readabilityIssues && Array.isArray(readabilityIssues)) {
+                    readabilityIssues.forEach(issue => {
+                        enhancedRecs.push({
+                            id: nextId++,
+                            type: 'readability',
+                            priority: issue.severity,
+                            title: issue.title,
+                            issue: issue.issue,
+                            explanation: issue.explanation,
+                            location: issue.location,
+                            context: issue.context,
+                            options: issue.options
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Readability analysis error:', error);
+                // Continue without readability analysis if there's an error
+            }
+
+            // Comprehensive readability analysis function
+            function analyzeReadability(text) {
+                const issues = [];
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                const lines = text.split('\n');
+
+                // Sentence Length Rules
+                sentences.forEach((sentence, index) => {
+                    const words = sentence.trim().split(/\s+/).filter(w => w.length > 0);
+                    const wordCount = words.length;
+
+                    if (wordCount >= 40) {
+                        const sentenceStart = text.indexOf(sentence.trim());
+                        const lineInfo = findLineAndColumn(text, sentenceStart);
+
+                        issues.push({
+                            severity: 'HIGH',
+                            title: 'Sentence Too Long',
+                            issue: `Sentence contains ${wordCount} words (40+ words)`,
+                            explanation: 'Very long sentences are difficult to follow and may lose readers. Consider breaking into 2-3 shorter sentences.',
+                            location: lineInfo,
+                            context: sentence.trim().substring(0, 100) + (sentence.length > 100 ? '...' : ''),
+                            options: [
+                                {
+                                    label: 'Split into shorter sentences',
+                                    action: 'split_sentence',
+                                    suggestion: splitLongSentence(sentence.trim())
+                                },
+                                {
+                                    label: 'Remove unnecessary words',
+                                    action: 'trim_sentence',
+                                    suggestion: trimSentence(sentence.trim())
+                                },
+                                {
+                                    label: 'Restructure for clarity',
+                                    action: 'restructure',
+                                    suggestion: restructureSentence(sentence.trim())
+                                }
+                            ]
+                        });
+                    } else if (wordCount >= 25) {
+                        const sentenceStart = text.indexOf(sentence.trim());
+                        const lineInfo = findLineAndColumn(text, sentenceStart);
+
+                        issues.push({
+                            severity: 'MEDIUM',
+                            title: 'Long Sentence Warning',
+                            issue: `Sentence contains ${wordCount} words (25+ words)`,
+                            explanation: 'Long sentences can be challenging to read. Consider simplifying or breaking it down.',
+                            location: lineInfo,
+                            context: sentence.trim().substring(0, 100) + (sentence.length > 100 ? '...' : ''),
+                            options: [
+                                {
+                                    label: 'Simplify sentence structure',
+                                    action: 'simplify',
+                                    suggestion: simplifySentence(sentence.trim())
+                                },
+                                {
+                                    label: 'Break into two sentences',
+                                    action: 'split_two',
+                                    suggestion: splitIntoTwo(sentence.trim())
+                                },
+                                {
+                                    label: 'Remove filler words',
+                                    action: 'remove_filler',
+                                    suggestion: removeFiller(sentence.trim())
+                                }
+                            ]
+                        });
+                    }
+                });
+
+                // Structural Complexity Analysis
+                sentences.forEach((sentence, index) => {
+                    const prepositionalPhrases = (sentence.match(/\b(in|on|at|by|for|with|from|to|of|about|under|over|through|during|before|after|between|among|within|without|beneath|above|below|across|against|along|around|behind|beside|beyond|inside|outside|toward|towards|throughout)\s+\w+/gi) || []).length;
+
+                    if (prepositionalPhrases >= 4) {
+                        const sentenceStart = text.indexOf(sentence.trim());
+                        const lineInfo = findLineAndColumn(text, sentenceStart);
+
+                        issues.push({
+                            severity: 'MEDIUM',
+                            title: 'Complex Sentence Structure',
+                            issue: `Sentence contains ${prepositionalPhrases} prepositional phrases`,
+                            explanation: 'Multiple prepositional phrases can make sentences difficult to follow. Consider simplifying.',
+                            location: lineInfo,
+                            context: sentence.trim().substring(0, 100) + (sentence.length > 100 ? '...' : ''),
+                            options: [
+                                {
+                                    label: 'Reduce prepositional phrases',
+                                    action: 'reduce_prepositions',
+                                    suggestion: reducePrepositions(sentence.trim())
+                                },
+                                {
+                                    label: 'Convert to active voice',
+                                    action: 'active_voice',
+                                    suggestion: convertToActive(sentence.trim())
+                                },
+                                {
+                                    label: 'Simplify phrasing',
+                                    action: 'simplify_phrases',
+                                    suggestion: simplifyPhrases(sentence.trim())
+                                }
+                            ]
+                        });
+                    }
+
+                    // Nested clauses detection
+                    const nestedClauses = (sentence.match(/,\s*(which|that|who|whom|whose|where|when)\s+/gi) || []).length;
+                    if (nestedClauses >= 2) {
+                        const sentenceStart = text.indexOf(sentence.trim());
+                        const lineInfo = findLineAndColumn(text, sentenceStart);
+
+                        issues.push({
+                            severity: 'MEDIUM',
+                            title: 'Nested Clauses',
+                            issue: `Sentence contains ${nestedClauses} nested relative clauses`,
+                            explanation: 'Multiple nested clauses can confuse readers. Consider breaking into separate sentences.',
+                            location: lineInfo,
+                            context: sentence.trim().substring(0, 100) + (sentence.length > 100 ? '...' : ''),
+                            options: [
+                                {
+                                    label: 'Break into separate sentences',
+                                    action: 'separate_clauses',
+                                    suggestion: separateClauses(sentence.trim())
+                                },
+                                {
+                                    label: 'Simplify clause structure',
+                                    action: 'simplify_clauses',
+                                    suggestion: simplifyClauses(sentence.trim())
+                                },
+                                {
+                                    label: 'Remove unnecessary clauses',
+                                    action: 'remove_clauses',
+                                    suggestion: removeUnnecessaryClauses(sentence.trim())
+                                }
+                            ]
+                        });
+                    }
+                });
+
+                // Clarity and Flow Rules
+                const weakOpeners = /^(There are|There is|It is|It was|This is|That is|These are|Those are)/i;
+                sentences.forEach((sentence, index) => {
+                    if (weakOpeners.test(sentence.trim())) {
+                        const sentenceStart = text.indexOf(sentence.trim());
+                        const lineInfo = findLineAndColumn(text, sentenceStart);
+
+                        issues.push({
+                            severity: 'LOW',
+                            title: 'Weak Opening',
+                            issue: 'Sentence starts with weak expletive construction',
+                            explanation: 'Sentences starting with "There are/is" or "It is/was" are often weaker. Consider starting with the main subject.',
+                            location: lineInfo,
+                            context: sentence.trim().substring(0, 100) + (sentence.length > 100 ? '...' : ''),
+                            options: [
+                                {
+                                    label: 'Start with main subject',
+                                    action: 'strong_opener',
+                                    suggestion: createStrongOpener(sentence.trim())
+                                },
+                                {
+                                    label: 'Use active construction',
+                                    action: 'active_construction',
+                                    suggestion: convertToActiveConstruction(sentence.trim())
+                                },
+                                {
+                                    label: 'Be more direct',
+                                    action: 'direct_approach',
+                                    suggestion: makeMoreDirect(sentence.trim())
+                                }
+                            ]
+                        });
+                    }
+                });
+
+                // Redundant phrases detection
+                const redundantPhrases = [
+                    'in order to', 'due to the fact that', 'at this point in time', 'in the event that',
+                    'with regard to', 'in terms of', 'for the purpose of', 'in the process of',
+                    'in close proximity to', 'at the present time', 'in the near future', 'on a regular basis'
+                ];
+
+                redundantPhrases.forEach(phrase => {
+                    const regex = new RegExp(phrase.replace(/\s+/g, '\\s+'), 'gi');
+                    let match;
+                    while ((match = regex.exec(text)) !== null) {
+                        const lineInfo = findLineAndColumn(text, match.index);
+
+                        issues.push({
+                            severity: 'LOW',
+                            title: 'Redundant Phrase',
+                            issue: `Wordy phrase: "${phrase}"`,
+                            explanation: 'This phrase can be simplified for clearer communication.',
+                            location: lineInfo,
+                            context: getContext(text, match.index, 50),
+                            options: [
+                                {
+                                    label: 'Simplify phrase',
+                                    action: 'simplify_redundant',
+                                    suggestion: simplifyRedundantPhrase(phrase, text.substring(match.index - 20, match.index + phrase.length + 20))
+                                },
+                                {
+                                    label: 'Remove entirely',
+                                    action: 'remove_redundant',
+                                    suggestion: text.replace(regex, getSimplifiedVersion(phrase))
+                                },
+                                {
+                                    label: 'Use shorter alternative',
+                                    action: 'shorter_alternative',
+                                    suggestion: getShorterAlternative(phrase)
+                                }
+                            ]
+                        });
+                    }
+                });
+
+                // Passive voice detection
+                const passivePattern = /\b(is|are|was|were|being|been|be)\s+\w+ed\b|\b(is|are|was|were|being|been|be)\s+\w+en\b/gi;
+                let passiveMatches = text.match(passivePattern) || [];
+
+                if (passiveMatches.length > Math.floor(sentences.length / 3)) {
+                    issues.push({
+                        severity: 'MEDIUM',
+                        title: 'Excessive Passive Voice',
+                        issue: `${passiveMatches.length} passive voice constructions found`,
+                        explanation: 'Overuse of passive voice can make writing feel distant and unclear. Consider using active voice.',
+                        location: { line: 1, column: 1 },
+                        context: 'Overall document analysis',
+                        options: [
+                            {
+                                label: 'Convert to active voice',
+                                action: 'convert_passive',
+                                suggestion: convertPassiveToActive(text)
+                            },
+                            {
+                                label: 'Mix active and passive strategically',
+                                action: 'strategic_voice',
+                                suggestion: balanceVoiceUsage(text)
+                            },
+                            {
+                                label: 'Focus on subject-verb clarity',
+                                action: 'subject_verb_clarity',
+                                suggestion: improveClarityWithActiveVoice(text)
+                            }
+                        ]
+                    });
+                }
+
+                // Political/Corporate Speak Detection
+                const buzzwords = [
+                    'synergy', 'leverage', 'paradigm', 'robust', 'scalable', 'innovative', 'cutting-edge',
+                    'game-changing', 'transformative', 'disruptive', 'strategic', 'dynamic', 'comprehensive',
+                    'holistic', 'seamless', 'integrated', 'optimized', 'streamlined', 'enhanced', 'elevated',
+                    'empowered', 'sustainable', 'impactful', 'revolutionary', 'groundbreaking', 'unprecedented'
+                ];
+
+                const qualifiers = [
+                    'very', 'really', 'quite', 'rather', 'somewhat', 'fairly', 'pretty', 'extremely',
+                    'incredibly', 'tremendously', 'absolutely', 'completely', 'totally', 'perfectly',
+                    'entirely', 'fully', 'utterly', 'deeply', 'highly', 'greatly', 'strongly'
+                ];
+
+                let buzzwordCount = 0;
+                let qualifierCount = 0;
+
+                buzzwords.forEach(word => {
+                    const matches = text.match(new RegExp('\\b' + word + '\\b', 'gi')) || [];
+                    buzzwordCount += matches.length;
+                });
+
+                qualifiers.forEach(word => {
+                    const matches = text.match(new RegExp('\\b' + word + '\\b', 'gi')) || [];
+                    qualifierCount += matches.length;
+                });
+
+                const totalWords = text.split(/\s+/).length;
+                const buzzwordDensity = (buzzwordCount / totalWords) * 100;
+                const qualifierDensity = (qualifierCount / totalWords) * 100;
+
+                if (buzzwordDensity > 3) {
+                    issues.push({
+                        severity: 'MEDIUM',
+                        title: 'Excessive Buzzwords',
+                        issue: `${buzzwordCount} buzzwords found (${buzzwordDensity.toFixed(1)}% density)`,
+                        explanation: 'Too many buzzwords can make content sound generic and less authentic.',
+                        location: { line: 1, column: 1 },
+                        context: 'Overall document analysis',
+                        options: [
+                            {
+                                label: 'Replace with specific terms',
+                                action: 'specific_language',
+                                suggestion: replaceWithSpecificTerms(text)
+                            },
+                            {
+                                label: 'Use concrete examples',
+                                action: 'concrete_examples',
+                                suggestion: addConcreteExamples(text)
+                            },
+                            {
+                                label: 'Simplify language',
+                                action: 'simplify_buzzwords',
+                                suggestion: simplifyBuzzwords(text)
+                            }
+                        ]
+                    });
+                }
+
+                if (qualifierDensity > 5) {
+                    issues.push({
+                        severity: 'LOW',
+                        title: 'Qualifier Overload',
+                        issue: `${qualifierCount} qualifiers found (${qualifierDensity.toFixed(1)}% density)`,
+                        explanation: 'Too many qualifiers can weaken your message. Consider more direct language.',
+                        location: { line: 1, column: 1 },
+                        context: 'Overall document analysis',
+                        options: [
+                            {
+                                label: 'Remove unnecessary qualifiers',
+                                action: 'remove_qualifiers',
+                                suggestion: removeExcessiveQualifiers(text)
+                            },
+                            {
+                                label: 'Use stronger verbs',
+                                action: 'stronger_verbs',
+                                suggestion: useStrongerVerbs(text)
+                            },
+                            {
+                                label: 'Be more direct',
+                                action: 'direct_language',
+                                suggestion: makeLanguageMoreDirect(text)
+                            }
+                        ]
+                    });
+                }
+
+                return issues;
+            }
+
+            // Helper functions for readability analysis
+            function splitLongSentence(sentence) {
+                // Find natural break points
+                const commaBreaks = sentence.split(',');
+                if (commaBreaks.length >= 2) {
+                    const midpoint = Math.floor(commaBreaks.length / 2);
+                    const firstPart = commaBreaks.slice(0, midpoint).join(',').trim();
+                    const secondPart = commaBreaks.slice(midpoint).join(',').trim();
+                    return `${firstPart}. ${secondPart.charAt(0).toUpperCase()}${secondPart.slice(1)}`;
+                }
+
+                // Fallback: split at conjunctions
+                const conjunctions = ['and', 'but', 'or', 'so', 'yet'];
+                for (const conj of conjunctions) {
+                    const parts = sentence.split(new RegExp(`\\s+${conj}\\s+`, 'i'));
+                    if (parts.length >= 2) {
+                        return `${parts[0].trim()}. ${conj.charAt(0).toUpperCase()}${conj.slice(1)} ${parts.slice(1).join(` ${conj} `)}`;
+                    }
+                }
+
+                return sentence; // Return original if no good break point
+            }
+
+            function trimSentence(sentence) {
+                return sentence
+                    .replace(/\b(very|really|quite|rather|somewhat|fairly|pretty)\s+/gi, '')
+                    .replace(/\b(in order to|for the purpose of)\b/gi, 'to')
+                    .replace(/\b(due to the fact that)\b/gi, 'because')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function restructureSentence(sentence) {
+                // Convert passive to active where possible
+                sentence = sentence.replace(/(\w+)\s+(is|was|are|were)\s+(\w+ed|built|made|created)\s+by\s+(\w+)/gi,
+                    '$4 $3 $1');
+
+                // Simplify weak constructions
+                sentence = sentence.replace(/^There (is|are)\s+(\w+)/i, '$2 exists');
+                sentence = sentence.replace(/^It is (\w+) that/i, '$1,');
+
+                return sentence;
+            }
+
+            function simplifySentence(sentence) {
+                return sentence
+                    .replace(/\b(in order to)\b/gi, 'to')
+                    .replace(/\b(due to the fact that)\b/gi, 'because')
+                    .replace(/\b(at this point in time)\b/gi, 'now')
+                    .replace(/\b(in the event that)\b/gi, 'if')
+                    .replace(/\b(with regard to)\b/gi, 'about')
+                    .replace(/\b(in terms of)\b/gi, 'for')
+                    .trim();
+            }
+
+            function splitIntoTwo(sentence) {
+                // Find the middle point
+                const words = sentence.split(' ');
+                const midpoint = Math.floor(words.length / 2);
+
+                // Look for conjunctions near the midpoint
+                const conjunctions = ['and', 'but', 'or', 'so', 'yet', 'because', 'since', 'while'];
+                for (let i = midpoint - 3; i <= midpoint + 3; i++) {
+                    if (i >= 0 && i < words.length && conjunctions.includes(words[i].toLowerCase())) {
+                        const firstPart = words.slice(0, i).join(' ').trim();
+                        const secondPart = words.slice(i + 1).join(' ').trim();
+                        return `${firstPart}. ${secondPart.charAt(0).toUpperCase()}${secondPart.slice(1)}`;
+                    }
+                }
+
+                // Fallback: split at comma
+                const commaParts = sentence.split(',');
+                if (commaParts.length >= 2) {
+                    const midIdx = Math.floor(commaParts.length / 2);
+                    const firstPart = commaParts.slice(0, midIdx).join(',').trim();
+                    const secondPart = commaParts.slice(midIdx).join(',').trim();
+                    return `${firstPart}. ${secondPart.charAt(0).toUpperCase()}${secondPart.slice(1)}`;
+                }
+
+                return sentence;
+            }
+
+            function removeFiller(sentence) {
+                const fillers = ['very', 'really', 'quite', 'rather', 'somewhat', 'fairly', 'pretty',
+                               'extremely', 'incredibly', 'tremendously', 'absolutely', 'completely',
+                               'totally', 'perfectly', 'entirely', 'fully', 'utterly'];
+
+                let result = sentence;
+                fillers.forEach(filler => {
+                    result = result.replace(new RegExp(`\\b${filler}\\s+`, 'gi'), '');
+                });
+
+                return result.replace(/\s+/g, ' ').trim();
+            }
+
+            function createStrongOpener(sentence) {
+                // Replace weak openings with stronger alternatives
+                sentence = sentence.replace(/^There are (\w+)/i, '$1 exist');
+                sentence = sentence.replace(/^There is (\w+)/i, '$1 exists');
+                sentence = sentence.replace(/^It is (\w+) that (.+)/i, '$2 $1');
+                sentence = sentence.replace(/^It was (\w+) that (.+)/i, '$2 was $1');
+                sentence = sentence.replace(/^This is (\w+)/i, '$1');
+                sentence = sentence.replace(/^That is (\w+)/i, '$1');
+
+                return sentence;
+            }
+
+            function convertToActiveConstruction(sentence) {
+                // Convert passive constructions to active
+                sentence = sentence.replace(/^There (is|are) (\w+) (\w+ed|built|made|created) by (\w+)/i,
+                    '$4 $3 $2');
+                sentence = sentence.replace(/^It is (\w+ed|built|made|created) by (\w+) that/i,
+                    '$2 $1');
+
+                return sentence;
+            }
+
+            function makeMoreDirect(sentence) {
+                return sentence
+                    .replace(/^There are many (\w+) that/i, 'Many $1')
+                    .replace(/^There is a (\w+) that/i, 'A $1')
+                    .replace(/^It is important that/i, 'We must')
+                    .replace(/^It is clear that/i, 'Clearly,')
+                    .replace(/^It is obvious that/i, 'Obviously,');
+            }
+
+            function simplifyRedundantPhrase(phrase, context) {
+                const simplifications = {
+                    'in order to': 'to',
+                    'due to the fact that': 'because',
+                    'at this point in time': 'now',
+                    'in the event that': 'if',
+                    'with regard to': 'about',
+                    'in terms of': 'for',
+                    'for the purpose of': 'to',
+                    'in the process of': 'while',
+                    'in close proximity to': 'near',
+                    'at the present time': 'now',
+                    'in the near future': 'soon',
+                    'on a regular basis': 'regularly'
+                };
+
+                return context.replace(new RegExp(phrase, 'gi'), simplifications[phrase.toLowerCase()] || phrase);
+            }
+
+            function getSimplifiedVersion(phrase) {
+                const simplifications = {
+                    'in order to': 'to',
+                    'due to the fact that': 'because',
+                    'at this point in time': 'now',
+                    'in the event that': 'if',
+                    'with regard to': 'about',
+                    'in terms of': 'for',
+                    'for the purpose of': 'to',
+                    'in the process of': 'while',
+                    'in close proximity to': 'near',
+                    'at the present time': 'now',
+                    'in the near future': 'soon',
+                    'on a regular basis': 'regularly'
+                };
+
+                return simplifications[phrase.toLowerCase()] || phrase;
+            }
+
+            function getShorterAlternative(phrase) {
+                const alternatives = {
+                    'in order to': 'to',
+                    'due to the fact that': 'since',
+                    'at this point in time': 'currently',
+                    'in the event that': 'when',
+                    'with regard to': 'regarding',
+                    'in terms of': 'regarding',
+                    'for the purpose of': 'for',
+                    'in the process of': 'during',
+                    'in close proximity to': 'close to',
+                    'at the present time': 'currently',
+                    'in the near future': 'shortly',
+                    'on a regular basis': 'often'
+                };
+
+                return alternatives[phrase.toLowerCase()] || phrase;
+            }
+
+            function getContext(text, index, length) {
+                const start = Math.max(0, index - length/2);
+                const end = Math.min(text.length, index + length/2);
+                return text.substring(start, end);
+            }
+
+            // Missing helper functions for readability analysis
+            function findLineAndColumn(text, position) {
+                const lines = text.substring(0, position).split('\n');
+                return {
+                    line: lines.length,
+                    column: lines[lines.length - 1].length + 1
+                };
+            }
+
+            function reducePrepositions(sentence) {
+                // Reduce prepositional phrases by combining or simplifying
+                return sentence
+                    .replace(/\bin the course of\b/gi, 'during')
+                    .replace(/\bin the vicinity of\b/gi, 'near')
+                    .replace(/\bin the direction of\b/gi, 'toward')
+                    .replace(/\bfor the reason that\b/gi, 'because')
+                    .replace(/\bby means of\b/gi, 'by')
+                    .replace(/\bwith the exception of\b/gi, 'except')
+                    .replace(/\bin spite of the fact that\b/gi, 'although');
+            }
+
+            function convertToActive(sentence) {
+                // Convert passive voice to active voice
+                return sentence
+                    .replace(/(\w+)\s+(is|are|was|were)\s+(\w+ed)\s+by\s+(\w+)/gi, '$4 $3 $1')
+                    .replace(/(\w+)\s+(is|are|was|were)\s+being\s+(\w+ed)\s+by\s+(\w+)/gi, '$4 is $3ing $1')
+                    .replace(/(\w+)\s+will\s+be\s+(\w+ed)\s+by\s+(\w+)/gi, '$3 will $2 $1');
+            }
+
+            function simplifyPhrases(sentence) {
+                // Simplify complex phrases
+                return sentence
+                    .replace(/\bmake an attempt to\b/gi, 'try to')
+                    .replace(/\bgive consideration to\b/gi, 'consider')
+                    .replace(/\btake action\b/gi, 'act')
+                    .replace(/\bmake a decision\b/gi, 'decide')
+                    .replace(/\bcome to a conclusion\b/gi, 'conclude')
+                    .replace(/\bput into effect\b/gi, 'implement')
+                    .replace(/\bmake improvements to\b/gi, 'improve');
+            }
+
+            function separateClauses(sentence) {
+                // Break nested clauses into separate sentences
+                const clauses = sentence.split(/,\s*(which|that|who|whom|whose|where|when)\s+/i);
+                if (clauses.length >= 2) {
+                    const mainClause = clauses[0].trim();
+                    const subordinateClause = clauses.slice(1).join(' ').trim();
+                    return `${mainClause}. ${subordinateClause.charAt(0).toUpperCase()}${subordinateClause.slice(1)}`;
+                }
+                return sentence;
+            }
+
+            function simplifyClauses(sentence) {
+                // Simplify clause structure
+                return sentence
+                    .replace(/,\s*which\s+is\s+/gi, ' that is ')
+                    .replace(/,\s*which\s+are\s+/gi, ' that are ')
+                    .replace(/,\s*who\s+is\s+/gi, ' that is ')
+                    .replace(/,\s*who\s+are\s+/gi, ' that are ');
+            }
+
+            function removeUnnecessaryClauses(sentence) {
+                // Remove or simplify unnecessary relative clauses
+                return sentence
+                    .replace(/,\s*which\s+is\s+important/gi, '')
+                    .replace(/,\s*which\s+is\s+necessary/gi, '')
+                    .replace(/,\s*that\s+is\s+essential/gi, '')
+                    .replace(/,\s*which\s+should\s+be\s+noted/gi, '');
+            }
+
+            // Additional missing functions for comprehensive analysis
+            function convertPassiveToActive(text) {
+                return text.replace(/(\w+)\s+(is|are|was|were)\s+(\w+ed)\s+by\s+(\w+)/gi, '$4 $3 $1');
+            }
+
+            function balanceVoiceUsage(text) {
+                // Strategic mix of active and passive voice
+                return text.replace(/(\w+)\s+(is|are|was|were)\s+(\w+ed)\s+by\s+(the\s+)?(\w+)/gi,
+                    (match, subject, verb, pastPart, article, agent) => {
+                        // Keep some passive for variety, convert others to active
+                        if (Math.random() > 0.5) {
+                            return `${agent} ${pastPart.replace('ed', 's')} ${subject}`;
+                        }
+                        return match;
+                    });
+            }
+
+            function improveClarityWithActiveVoice(text) {
+                return text
+                    .replace(/(\w+)\s+(is|are|was|were)\s+(\w+ed)\s+by\s+(\w+)/gi, '$4 $3 $1')
+                    .replace(/there\s+(is|are)\s+(\w+)\s+(\w+ed)\s+by/gi, '$4 $3 $2');
+            }
+
+            function replaceWithSpecificTerms(text) {
+                return text
+                    .replace(/\bstrategy\b/gi, 'plan')
+                    .replace(/\bleveraging\b/gi, 'using')
+                    .replace(/\boptimize\b/gi, 'improve')
+                    .replace(/\bstreamline\b/gi, 'simplify')
+                    .replace(/\bsynergies\b/gi, 'cooperation')
+                    .replace(/\bparadigm\b/gi, 'approach');
+            }
+
+            function addConcreteExamples(text) {
+                return text
+                    .replace(/\bcomprehensive solution\b/gi, 'specific solution including A, B, and C')
+                    .replace(/\binnovative approach\b/gi, 'new method that does X')
+                    .replace(/\bstrategic initiative\b/gi, 'focused effort to achieve Y');
+            }
+
+            function simplifyBuzzwords(text) {
+                return text
+                    .replace(/\bgroundbreaking\b/gi, 'new')
+                    .replace(/\btransformative\b/gi, 'changing')
+                    .replace(/\bparadigm-shifting\b/gi, 'different')
+                    .replace(/\brevolutionary\b/gi, 'new')
+                    .replace(/\bcutting-edge\b/gi, 'modern');
+            }
+
+            function removeExcessiveQualifiers(text) {
+                return text
+                    .replace(/\bvery\s+(\w+)/gi, '$1')
+                    .replace(/\breally\s+(\w+)/gi, '$1')
+                    .replace(/\bquite\s+(\w+)/gi, '$1')
+                    .replace(/\bextremely\s+(\w+)/gi, '$1')
+                    .replace(/\babsolutely\s+(\w+)/gi, '$1');
+            }
+
+            function useStrongerVerbs(text) {
+                return text
+                    .replace(/\bis\s+very\s+important/gi, 'matters critically')
+                    .replace(/\bis\s+really\s+good/gi, 'excels')
+                    .replace(/\bwill\s+greatly\s+help/gi, 'will transform')
+                    .replace(/\bis\s+quite\s+effective/gi, 'works well');
+            }
+
+            function makeLanguageMoreDirect(text) {
+                return text
+                    .replace(/\bI\s+think\s+that\s+maybe\b/gi, 'I believe')
+                    .replace(/\bIt\s+seems\s+like\s+perhaps\b/gi, 'Likely,')
+                    .replace(/\bWe\s+might\s+possibly\s+be\s+able\s+to\b/gi, 'We can')
+                    .replace(/\bIt\s+could\s+potentially\s+be\b/gi, 'This is');
+            }
+
+            // Check sentiment analysis for additional recommendations
+            if (analysis.sentiment_analysis) {
+                const sentiment = analysis.sentiment_analysis;
+                if (sentiment.negative > 0.3) {
+                    enhancedRecs.push({
+                        id: nextId++,
+                        type: 'sentiment',
+                        priority: 'high',
+                        title: 'Reduce Negative Language',
+                        issue: 'High negative sentiment detected in the text',
+                        explanation: 'Campaign communications should maintain a predominantly positive tone to inspire voters and build confidence.',
+                        location: findIssueLocation(text, null, 'negative sentiment', nextId),
+                        context: findNegativeLanguage(text),
+                        options: [
+                            {
+                                label: '✅ Replace negative framing (recommended)',
+                                action: 'reduce_negative',
+                                description: 'Replace negative phrases with positive, solution-oriented language'
+                            },
+                            {
+                                label: '🌟 Add inspiring vision',
+                                action: 'add_inspiration',
+                                description: 'Include more aspirational language about the future'
+                            },
+                            {
+                                label: '❌ Keep current language',
+                                action: 'no_change',
+                                description: 'Maintain the current tone'
+                            }
+                        ]
+                    });
+                }
+            }
+
+            // Check consistency analysis
+            if (analysis.consistency_analysis && analysis.consistency_analysis.score < 0.7) {
+                enhancedRecs.push({
+                    id: nextId++,
+                    type: 'consistency',
+                    priority: 'medium',
+                    title: 'Improve Tone Consistency',
+                    issue: 'Inconsistent tone detected throughout the text',
+                    explanation: 'Maintaining consistent tone helps reinforce your brand and message, making communications more professional and memorable.',
+                    location: findIssueLocation(text, null, 'inconsistent tone', nextId),
+                    context: findInconsistentSections(text),
+                    options: [
+                        {
+                            label: '✅ Standardize formal tone (recommended)',
+                            action: 'standardize_formal',
+                            description: 'Use consistently professional, authoritative language throughout'
+                        },
+                        {
+                            label: '🤝 Standardize conversational tone',
+                            action: 'standardize_casual',
+                            description: 'Use consistently approachable, personal language throughout'
+                        },
+                        {
+                            label: '❌ Allow current variation',
+                            action: 'no_change',
+                            description: 'Keep the current tonal variations'
+                        }
+                    ]
+                });
+            }
+
+            // Check formality analysis
+            if (analysis.formality_analysis && analysis.formality_analysis.variation > 0.3) {
+                enhancedRecs.push({
+                    id: nextId++,
+                    type: 'formality',
+                    priority: 'low',
+                    title: 'Balance Formal and Personal Language',
+                    issue: 'Formality levels vary significantly throughout the text',
+                    explanation: 'Effective campaign communication balances professional credibility with personal connection to voters.',
+                    location: findIssueLocation(text, null, 'formality variation', nextId),
+                    context: findFormalityVariations(text),
+                    options: [
+                        {
+                            label: '✅ Add personal touches (recommended)',
+                            action: 'add_personal',
+                            description: 'Include more personal anecdotes and relatable language'
+                        },
+                        {
+                            label: '📄 Increase professionalism',
+                            action: 'increase_formal',
+                            description: 'Use more formal, institutional language throughout'
+                        },
+                        {
+                            label: '❌ Keep current balance',
+                            action: 'no_change',
+                            description: 'Maintain the current mix of formal and personal language'
+                        }
+                    ]
+                });
+            }
+
+            // Check overall score for additional improvements
+            let overallScore = analysis.overall_score?.score || analysis.overall_score || 0;
+
+            // Handle cases where score might be a decimal between 0-1
+            if (overallScore > 0 && overallScore < 1) {
+                overallScore = Math.round(overallScore * 100);
+            }
+
+            // Default to reasonable score if we get weird values
+            if (overallScore < 0 || overallScore > 100 || isNaN(overallScore)) {
+                overallScore = 75; // Assume decent score if unclear
+            }
+
+            console.log('Overall score processed:', overallScore, 'from original:', analysis.overall_score);
+
+            if (overallScore < 75 && enhancedRecs.length < 3) {
+                enhancedRecs.push({
+                    id: nextId++,
+                    type: 'overall_improvement',
+                    priority: 'medium',
+                    title: 'General Communication Enhancement',
+                    issue: `Overall communication score is ${overallScore}% - room for improvement`,
+                    explanation: 'Stronger communication will help connect more effectively with voters and convey leadership qualities.',
+                    location: findIssueLocation(text, null, 'general improvement', nextId),
+                    context: getRandomTextSnippet(text),
+                    options: [
+                        {
+                            label: '✅ Strengthen overall message (recommended)',
+                            action: 'strengthen_message',
+                            description: 'Enhance clarity, confidence, and persuasiveness throughout'
+                        },
+                        {
+                            label: '🎯 Focus on key themes',
+                            action: 'focus_themes',
+                            description: 'Emphasize core campaign themes more prominently'
+                        },
+                        {
+                            label: '❌ Keep current approach',
+                            action: 'no_change',
+                            description: 'Maintain the current communication style'
+                        }
+                    ]
+                });
+            }
+
+            return enhancedRecs;
+        }
+
+        // Helper functions for finding specific issues
+        function findNegativeLanguage(text) {
+            const negativeWords = ['not', 'never', 'nothing', 'against', 'oppose', 'problem', 'issue', 'threat', 'dangerous'];
+            const sentences = text.split(/[.!?]+/);
+
+            for (const sentence of sentences) {
+                const words = sentence.toLowerCase().split(/\s+/);
+                const negativeCount = words.filter(word => negativeWords.some(neg => word.includes(neg))).length;
+                if (negativeCount >= 2) {
+                    return sentence.trim().substring(0, 150) + (sentence.length > 150 ? '...' : '');
+                }
+            }
+
+            return text.substring(0, 100) + '...';
+        }
+
+        function findInconsistentSections(text) {
+            const sentences = text.split(/[.!?]+/);
+            const midpoint = Math.floor(sentences.length / 2);
+            return sentences[midpoint]?.trim().substring(0, 150) + '...' || text.substring(0, 100) + '...';
+        }
+
+        function findFormalityVariations(text) {
+            const paragraphs = text.split(/\n\s*\n/);
+            const midParagraph = paragraphs[Math.floor(paragraphs.length / 2)] || text;
+            return midParagraph.substring(0, 150) + (midParagraph.length > 150 ? '...' : '');
+        }
+
+        function getRandomTextSnippet(text) {
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            const randomIndex = Math.floor(Math.random() * sentences.length);
+            const sentence = sentences[randomIndex] || text.substring(0, 100);
+            return sentence.trim().substring(0, 150) + (sentence.length > 150 ? '...' : '');
+        }
+
+        // Find location of issue in text
+        function findIssueLocation(text, rec, recText, index) {
+            // Default location based on index
+            const defaultPos = Math.floor(text.length * (0.1 + index * 0.3));
+            const lineCol = getLineAndColumn(text, defaultPos);
+
+            return {
+                start: defaultPos,
+                end: defaultPos + 50,
+                line: lineCol.line,
+                column: lineCol.column,
+                context: getContextSnippet(text, defaultPos, 100)
+            };
+        }
+
+        // Get line and column from position
+        function getLineAndColumn(text, position) {
+            const beforePosition = text.substring(0, position);
+            const lines = beforePosition.split('\n');
+            return {
+                line: lines.length,
+                column: lines[lines.length - 1].length + 1
+            };
+        }
+
+        // Get context snippet around a position
+        function getContextSnippet(text, position, length) {
+            const start = Math.max(0, position - length / 2);
+            const end = Math.min(text.length, position + length / 2);
+            let snippet = text.substring(start, end);
+
+            // Clean up the snippet
+            if (start > 0) snippet = '...' + snippet;
+            if (end < text.length) snippet = snippet + '...';
+
+            return snippet;
+        }
+
+        // Display enhanced recommendations
+        function displayEnhancedRecommendations(recommendations) {
+            const listElement = document.getElementById('recommendations-list');
+
+            if (recommendations.length === 0) {
+                listElement.innerHTML = '<div class="loading-indicator">No recommendations at this time ✅</div>';
+                return;
+            }
+
+            let html = '';
+            recommendations.forEach((rec, index) => {
+                html += `
+                    <div class="recommendation" id="rec-${rec.id}">
+                        <div class="recommendation-header">
+                            <div class="recommendation-type">
+                                ${getIssueIcon(rec.type)} ${rec.title}
+                            </div>
+                            <span class="recommendation-severity ${rec.priority}">${rec.priority.toUpperCase()}</span>
+                        </div>
+
+                        <div class="recommendation-location">📍 Line ${rec.location.line}, Column ${rec.location.column}</div>
+
+                        <div class="recommendation-issue">${rec.issue}</div>
+
+                        <div class="recommendation-explanation">${rec.explanation}</div>
+
+                        <div class="recommendation-context">"${rec.context}"</div>
+
+                        <div class="before-after-preview">
+                            <div class="preview-section">
+                                <div class="preview-label">📝 Current Text</div>
+                                <div class="preview-text before-text">${rec.context}</div>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-label">✨ After Improvement</div>
+                                <div class="preview-text after-text" id="after-preview-${rec.id}">Select an option to see the improved version</div>
+                            </div>
+                        </div>
+
+                        <div class="alternative-suggestions">
+                            <h4>💡 Alternative Text Suggestions</h4>
+                            <div id="suggestions-${rec.id}">
+                                ${generateAlternativeSuggestions(rec).map((suggestion, sugIndex) => `
+                                    <div class="suggestion-item" onclick="selectSuggestion(${rec.id}, ${sugIndex})" data-suggestion-index="${sugIndex}">
+                                        <div class="suggestion-label">${suggestion.label}</div>
+                                        <div class="suggestion-text">${suggestion.text}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="recommendation-options">
+                            <h4>Choose an action:</h4>
+                            ${rec.options.map((option, optIndex) => `
+                                <button class="option-button ${optIndex === 0 ? 'primary' : ''}"
+                                        onclick="applyRecommendation(${rec.id}, '${option.action}', '${option.label}', '${option.impact || 'Unknown'}')"
+                                        title="${option.description}${option.impact ? ' | Impact: ' + option.impact : ''}">
+                                    ${option.label}
+                                    ${option.impact ? `<div class="impact-indicator">${option.impact}</div>` : ''}
+                                </button>
+                            `).join('')}
+                        </div>
+
+                        <div class="recommendation-actions">
+                            <button class="action-button" onclick="jumpToIssue(${rec.id})">🔍 Jump to Location</button>
+                            <button class="action-button" onclick="explainMore(${rec.id})">💡 More Details</button>
+                            <button class="action-button" onclick="dismissRecommendation(${rec.id})">❌ Dismiss</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listElement.innerHTML = html;
+        }
+
+        // Generate alternative text suggestions
+        function generateAlternativeSuggestions(rec) {
+            const suggestions = [];
+
+            switch (rec.type) {
+                case 'tone_improvement':
+                    suggestions.push(
+                        { label: 'Strong & Decisive', text: rec.context.replace(/will be working/g, 'will work').replace(/am proud/g, 'am determined') },
+                        { label: 'More Personal', text: rec.context.replace(/I am proud/g, 'I am deeply honored').replace(/working hard/g, 'dedicating my full energy') },
+                        { label: 'Action-Oriented', text: rec.context.replace(/working hard to gain/g, 'actively earning').replace(/will be working/g, 'will deliver') }
+                    );
+                    break;
+                case 'sentiment':
+                    suggestions.push(
+                        { label: 'Optimistic Version', text: rec.context.replace(/will be/g, 'will successfully').replace(/working/g, 'building') },
+                        { label: 'Unifying Language', text: rec.context.replace(/I will/g, 'Together, we will').replace(/my/g, 'our shared') },
+                        { label: 'Future-Focused', text: rec.context.replace(/today/g, 'as we move forward').replace(/current/g, 'emerging') }
+                    );
+                    break;
+                case 'overall_improvement':
+                    // Generate more meaningful improvements for overall enhancement
+                    const context = rec.context;
+
+                    console.log('Generating alternatives for context:', context);
+
+                    const enhanced = enhanceTextOverall(context, 'enhanced');
+                    const professional = enhanceTextOverall(context, 'professional');
+                    const direct = enhanceTextOverall(context, 'direct');
+
+                    console.log('Enhanced:', enhanced);
+                    console.log('Professional:', professional);
+                    console.log('Direct:', direct);
+
+                    suggestions.push(
+                        {
+                            label: 'Enhanced Version',
+                            text: enhanced
+                        },
+                        {
+                            label: 'Professional Polish',
+                            text: professional
+                        },
+                        {
+                            label: 'Clear & Direct',
+                            text: direct
+                        }
+                    );
+                    break;
+                case 'consistency':
+                    suggestions.push(
+                        { label: 'Formal Tone', text: makeMoreFormal(rec.context) },
+                        { label: 'Conversational Tone', text: makeMoreConversational(rec.context) },
+                        { label: 'Balanced Approach', text: balanceTone(rec.context) }
+                    );
+                    break;
+                case 'formality':
+                    suggestions.push(
+                        { label: 'Add Personal Touch', text: addPersonalTouch(rec.context) },
+                        { label: 'Increase Formality', text: increaseFormality(rec.context) },
+                        { label: 'Natural Balance', text: balanceFormality(rec.context) }
+                    );
+                    break;
+                default:
+                    suggestions.push(
+                        { label: 'Enhanced Version', text: rec.context.replace(/will/g, 'will decisively').replace(/work/g, 'champion') },
+                        { label: 'Professional Polish', text: rec.context.replace(/am/g, 'remain').replace(/working/g, 'focused on') },
+                        { label: 'Clear & Direct', text: rec.context.replace(/working hard to/g, 'committed to').replace(/will be/g, 'will') }
+                    );
+            }
+
+            return suggestions;
+        }
+
+        // Helper functions for text enhancement
+        function enhanceTextOverall(text, style) {
+            console.log('enhanceTextOverall called with:', text, 'style:', style);
+
+            let result = text;
+
+            switch (style) {
+                case 'enhanced':
+                    result = text
+                        // Specific phrases first
+                        .replace(/\band that's what matters most\b/gi, 'and this is what defines our priorities')
+                        .replace(/\bthat's what matters most\b/gi, 'this is what defines our priorities')
+                        .replace(/\bwhat matters most\b/gi, 'what defines our priorities')
+                        // General improvements
+                        .replace(/\bwhere I grew up\b/gi, 'my childhood home')
+                        .replace(/\bwhere I am raising\b/gi, 'where my family and I are nurturing')
+                        .replace(/\bintend to build\b/gi, 'are committed to creating')
+                        .replace(/\bstronger future\b/gi, 'more prosperous tomorrow')
+                        .replace(/\bnext generation\b/gi, 'future leaders')
+                        .replace(/\bthat's\b/gi, 'this is')
+                        .replace(/\bmatters\b/gi, 'is essential')
+                        .replace(/\bimportant\b/gi, 'crucial')
+                        .replace(/\bgreat\b/gi, 'exceptional')
+                        .replace(/\bwhere\b/gi, 'the place where');
+                    break;
+                case 'professional':
+                    result = text
+                        // Specific phrases first
+                        .replace(/\band that's what matters most\b/gi, 'and this represents our fundamental commitment')
+                        .replace(/\bthat's what matters most\b/gi, 'this represents our fundamental commitment')
+                        .replace(/\bwhat matters most\b/gi, 'our fundamental commitment')
+                        // General improvements
+                        .replace(/\bwhere I grew up\b/gi, 'where I was raised and educated')
+                        .replace(/\bwhere I am raising\b/gi, 'where my family and I are developing')
+                        .replace(/\bintend to build\b/gi, 'are dedicated to establishing')
+                        .replace(/\bstronger future\b/gi, 'enhanced opportunities')
+                        .replace(/\bnext generation\b/gi, 'emerging generation')
+                        .replace(/\bthat's\b/gi, 'this represents')
+                        .replace(/\bmatters\b/gi, 'remains paramount')
+                        .replace(/\bimportant\b/gi, 'paramount')
+                        .replace(/\bgreat\b/gi, 'exemplary');
+                    break;
+                case 'direct':
+                    result = text
+                        // Specific phrases first
+                        .replace(/\band that's what matters most\b/gi, 'and this is our priority')
+                        .replace(/\bthat's what matters most\b/gi, 'this is our priority')
+                        .replace(/\bmatters most\b/gi, 'comes first')
+                        .replace(/\bwhat matters\b/gi, 'what counts')
+                        // General improvements
+                        .replace(/\bwhere I grew up\b/gi, 'my home')
+                        .replace(/\bwhere I am raising\b/gi, 'where I\\'m raising')
+                        .replace(/\bintend to build\b/gi, 'will build')
+                        .replace(/\bstronger future\b/gi, 'better future')
+                        .replace(/\bnext generation\b/gi, 'our children')
+                        .replace(/\bthat's\b/gi, 'this is')
+                        .replace(/\bimportant\b/gi, 'key')
+                        .replace(/\bgreat\b/gi, 'strong');
+                    break;
+                default:
+                    result = text;
+            }
+
+            console.log('enhanceTextOverall result:', result);
+            return result;
+        }
+
+        function makeMoreFormal(text) {
+            return text
+                .replace(/\bI\'m\b/g, 'I am')
+                .replace(/\bwe\'re\b/g, 'we are')
+                .replace(/\bthat\'s\b/g, 'that is')
+                .replace(/\bwon't\b/g, 'will not')
+                .replace(/\bcan't\b/g, 'cannot');
+        }
+
+        function makeMoreConversational(text) {
+            return text
+                .replace(/\bI am\b/g, "I\'m")
+                .replace(/\bwe are\b/g, "we\'re")
+                .replace(/\bthat is\b/g, "that\'s")
+                .replace(/\bwill not\b/g, "won\'t")
+                .replace(/\bcannot\b/g, "can\'t");
+        }
+
+        function balanceTone(text) {
+            // Keep some contractions but make it slightly more formal
+            return text
+                .replace(/\bI am going to\b/g, "I will")
+                .replace(/\bwe are going to\b/g, "we will")
+                .replace(/\ba lot of\b/g, "many")
+                .replace(/\bkind of\b/g, "somewhat");
+        }
+
+        function addPersonalTouch(text) {
+            return text
+                .replace(/\bwe\b/g, 'my family and I')
+                .replace(/\bour\b/g, 'my')
+                .replace(/\bbelieve\b/g, 'personally believe')
+                .replace(/\bcommitted\b/g, 'personally committed');
+        }
+
+        function increaseFormality(text) {
+            return text
+                .replace(/\bgreat\b/g, 'exceptional')
+                .replace(/\bbig\b/g, 'significant')
+                .replace(/\bhelp\b/g, 'assist')
+                .replace(/\bget\b/g, 'obtain');
+        }
+
+        function balanceFormality(text) {
+            return text
+                .replace(/\bvery\b/g, 'quite')
+                .replace(/\breally\b/g, 'genuinely')
+                .replace(/\bawesome\b/g, 'excellent')
+                .replace(/\bgreat\b/g, 'strong');
+        }
+
+        // Select a suggestion and update the after preview
+        function selectSuggestion(recId, suggestionIndex) {
+            // Remove selection from other suggestions
+            const suggestionsContainer = document.getElementById(`suggestions-${recId}`);
+            suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Select the clicked suggestion
+            const selectedSuggestion = suggestionsContainer.children[suggestionIndex];
+            selectedSuggestion.classList.add('selected');
+
+            // Update the after preview
+            const afterPreview = document.getElementById(`after-preview-${recId}`);
+            const suggestionText = selectedSuggestion.querySelector('.suggestion-text').textContent;
+            afterPreview.textContent = suggestionText;
+
+            // Store the selected suggestion for when user applies the recommendation
+            const rec = currentIssues.find(r => r.id === recId);
+            if (rec) {
+                rec.selectedSuggestion = suggestionText;
+            }
+        }
+
+        // Apply recommendation action
+        function applyRecommendation(recId, action, label, impact = 'Unknown') {
+            const rec = currentIssues.find(r => r.id === recId);
+            if (!rec) return;
+
+            // Save current state for undo
+            saveState();
+
+            // Get the editor and current text
+            const editor = document.getElementById('text-editor');
+            let currentText = editor.value;
+            let changeApplied = false;
+
+            // Apply the change to the text if we have a selected suggestion
+            if (rec.selectedSuggestion && action !== 'no_change') {
+                // Clean up the context and suggestion strings for better matching
+                const originalContext = rec.context.trim();
+                const newText = rec.selectedSuggestion.trim();
+
+                console.log('Attempting text replacement:');
+                console.log('Original context:', originalContext);
+                console.log('New text:', newText);
+                console.log('Current editor text length:', currentText.length);
+
+                // Strategy 1: Direct string replacement
+                if (currentText.includes(originalContext)) {
+                    currentText = currentText.replace(originalContext, newText);
+                    changeApplied = true;
+                    console.log('✅ Direct replacement successful');
+                } else {
+                    console.log('❌ Direct replacement failed, trying alternatives...');
+
+                    // Strategy 2: Try with normalized whitespace
+                    const normalizedContext = originalContext.replace(/\s+/g, ' ');
+                    const normalizedCurrentText = currentText.replace(/\s+/g, ' ');
+
+                    if (normalizedCurrentText.includes(normalizedContext)) {
+                        // Find the original position and replace with proper spacing
+                        const contextIndex = normalizedCurrentText.indexOf(normalizedContext);
+                        if (contextIndex !== -1) {
+                            // Calculate position in original text
+                            let realIndex = 0;
+                            let normalizedIndex = 0;
+                            while (normalizedIndex < contextIndex && realIndex < currentText.length) {
+                                if (currentText[realIndex].match(/\s/)) {
+                                    // Skip extra whitespace in original
+                                    while (realIndex < currentText.length && currentText[realIndex].match(/\s/)) {
+                                        realIndex++;
+                                    }
+                                    normalizedIndex++;
+                                } else {
+                                    realIndex++;
+                                    normalizedIndex++;
+                                }
+                            }
+
+                            // Find end position
+                            let endIndex = realIndex;
+                            let remainingNormalized = normalizedContext.length;
+                            while (remainingNormalized > 0 && endIndex < currentText.length) {
+                                if (currentText[endIndex].match(/\s/)) {
+                                    while (endIndex < currentText.length && currentText[endIndex].match(/\s/)) {
+                                        endIndex++;
+                                    }
+                                    remainingNormalized--;
+                                } else {
+                                    endIndex++;
+                                    remainingNormalized--;
+                                }
+                            }
+
+                            if (realIndex < currentText.length) {
+                                currentText = currentText.substring(0, realIndex) + newText + currentText.substring(endIndex);
+                                changeApplied = true;
+                                console.log('✅ Normalized whitespace replacement successful');
+                            }
+                        }
+                    }
+
+                    // Strategy 3: Try finding key phrases from the context
+                    if (!changeApplied) {
+                        const contextWords = originalContext.split(/\s+/);
+                        if (contextWords.length >= 3) {
+                            // Look for a sequence of 3+ consecutive words from the context
+                            for (let i = 0; i <= contextWords.length - 3; i++) {
+                                const phrase = contextWords.slice(i, i + 3).join(' ');
+                                if (currentText.includes(phrase)) {
+                                    // Try to expand the match to cover more context
+                                    let expandedMatch = phrase;
+                                    let startIdx = i;
+                                    let endIdx = i + 3;
+
+                                    // Expand backwards
+                                    while (startIdx > 0) {
+                                        const expandedPhrase = contextWords.slice(startIdx - 1, endIdx).join(' ');
+                                        if (currentText.includes(expandedPhrase)) {
+                                            expandedMatch = expandedPhrase;
+                                            startIdx--;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+
+                                    // Expand forwards
+                                    while (endIdx < contextWords.length) {
+                                        const expandedPhrase = contextWords.slice(startIdx, endIdx + 1).join(' ');
+                                        if (currentText.includes(expandedPhrase)) {
+                                            expandedMatch = expandedPhrase;
+                                            endIdx++;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+
+                                    // Replace the expanded match with new text
+                                    currentText = currentText.replace(expandedMatch, newText);
+                                    changeApplied = true;
+                                    console.log('✅ Phrase expansion replacement successful with:', expandedMatch);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // Strategy 4: Try word-by-word fuzzy matching
+                    if (!changeApplied) {
+                        const contextWords = originalContext.split(/\s+/);
+                        const currentWords = currentText.split(/\s+/);
+
+                        // Find the best matching sequence
+                        let bestMatch = { score: 0, start: 0, end: 0 };
+
+                        for (let i = 0; i <= currentWords.length - contextWords.length; i++) {
+                            let matchScore = 0;
+                            for (let j = 0; j < contextWords.length; j++) {
+                                if (i + j < currentWords.length) {
+                                    const currentWord = currentWords[i + j].toLowerCase().replace(/[^\w]/g, '');
+                                    const contextWord = contextWords[j].toLowerCase().replace(/[^\w]/g, '');
+                                    if (currentWord === contextWord) {
+                                        matchScore++;
+                                    }
+                                }
+                            }
+
+                            if (matchScore > bestMatch.score && matchScore >= Math.min(contextWords.length * 0.7, 3)) {
+                                bestMatch = { score: matchScore, start: i, end: i + contextWords.length };
+                            }
+                        }
+
+                        if (bestMatch.score > 0) {
+                            // Replace the best matching sequence
+                            const beforeMatch = currentWords.slice(0, bestMatch.start).join(' ');
+                            const afterMatch = currentWords.slice(bestMatch.end).join(' ');
+                            currentText = beforeMatch + (beforeMatch ? ' ' : '') + newText + (afterMatch ? ' ' + afterMatch : '');
+                            changeApplied = true;
+                            console.log('✅ Fuzzy word matching replacement successful');
+                        }
+                    }
+                }
+
+                console.log('Final replacement result:', changeApplied ? 'SUCCESS' : 'FAILED');
+
+                if (changeApplied) {
+                    editor.value = currentText;
+
+                    // Highlight the changed text with better detection
+                    highlightChangedText(editor, newText, originalContext);
+
+                    // Update the current text reference
+                    currentText = editor.value;
+                }
+            }
+
+            // Show success message
+            const recElement = document.getElementById(`rec-${recId}`);
+            const successMsg = document.createElement('div');
+            successMsg.className = 'success-message';
+            if (changeApplied) {
+                successMsg.innerHTML = `✅ Applied: ${label}<br><small>Expected Impact: ${impact}</small><br><em>✨ Text updated in editor - see highlighted change</em>`;
+            } else if (action !== 'no_change') {
+                successMsg.innerHTML = `✅ Applied: ${label}<br><small>Expected Impact: ${impact}</small><br><em>⚠️ Could not automatically update text - please apply manually</em>`;
+            } else {
+                successMsg.innerHTML = `✅ Applied: ${label}<br><small>Expected Impact: ${impact}</small>`;
+            }
+            recElement.appendChild(successMsg);
+
+            // Simulate applying the change
+            switch (action) {
+                case 'replace_weak_verbs':
+                    console.log('Applying stronger verbs to text...');
+                    break;
+                case 'add_specifics':
+                    console.log('Adding specific achievements...');
+                    break;
+                case 'leadership_language':
+                    console.log('Emphasizing leadership language...');
+                    break;
+                case 'power_language':
+                    console.log('Adding power words and phrases...');
+                    break;
+                case 'unique_qualifications':
+                    console.log('Highlighting unique qualifications...');
+                    break;
+                case 'add_optimism':
+                    console.log('Adding hopeful language...');
+                    break;
+                case 'add_unity':
+                    console.log('Including unifying messages...');
+                    break;
+                case 'add_passion':
+                    console.log('Adding passionate conviction...');
+                    break;
+                case 'data_optimism':
+                    console.log('Including data-driven optimism...');
+                    break;
+                case 'vision_language':
+                    console.log('Emphasizing vision and possibility...');
+                    break;
+                case 'standardize_tone':
+                    console.log('Standardizing tone throughout...');
+                    break;
+                case 'create_guide':
+                    console.log('Creating style guide...');
+                    break;
+                case 'match_strongest':
+                    console.log('Matching strongest sections...');
+                    break;
+                case 'balance_tone':
+                    console.log('Balancing formal and personal tone...');
+                    break;
+                case 'minimal_fix':
+                    console.log('Fixing only major inconsistencies...');
+                    break;
+                case 'alternative_approach':
+                    console.log('Trying alternative approach...');
+                    break;
+                case 'quick_fix':
+                    console.log('Applying quick fix only...');
+                    break;
+                case 'no_change':
+                    successMsg.innerHTML = `ℹ️ Kept current language as requested<br><small>Expected Impact: ${impact}</small>`;
+                    break;
+                default:
+                    console.log(`Applied action: ${action}`);
+            }
+
+            // Disable the options after selection
+            const optionButtons = recElement.querySelectorAll('.option-button');
+            optionButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+        }
+
+        // Jump to issue in text
+        function jumpToIssue(recId) {
+            const rec = currentIssues.find(r => r.id === recId);
+            if (!rec) return;
+
+            const editor = document.getElementById('text-editor');
+            editor.focus();
+            editor.setSelectionRange(rec.location.start, rec.location.end);
+
+            // Scroll to make the selection visible
+            const lineHeight = parseInt(getComputedStyle(editor).lineHeight);
+            const lines = editor.value.substring(0, rec.location.start).split('\n').length;
+            editor.scrollTop = Math.max(0, (lines - 5) * lineHeight);
+        }
+
+        // Show more explanation
+        function explainMore(recId) {
+            const rec = currentIssues.find(r => r.id === recId);
+            if (!rec) return;
+
+            alert(`Detailed Explanation:\n\n${rec.explanation}\n\nThis recommendation helps improve the overall effectiveness of your campaign communication by making it more professional, authoritative, and engaging for your target audience.`);
+        }
+
+        // Dismiss recommendation
+        function dismissRecommendation(recId) {
+            const recElement = document.getElementById(`rec-${recId}`);
+            if (recElement) {
+                recElement.style.opacity = '0.5';
+                recElement.style.transform = 'scale(0.95)';
+
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.innerHTML = `🗑️ Recommendation dismissed`;
+                recElement.appendChild(successMsg);
+            }
+        }
+
+        // Get issue icon
+        function getIssueIcon(type) {
+            const icons = {
+                'tone_improvement': '🎭',
+                'sentiment': '😊',
+                'consistency': '🔄',
+                'formality': '👔',
+                'grammar': '📝',
+                'style': '✨'
+            };
+            return icons[type] || '💡';
+        }
+
+        // Function to highlight changed text in the editor
+        function highlightChangedText(editor, changedText, originalContext) {
+            // Save the current scroll position
+            const scrollTop = editor.scrollTop;
+            const scrollLeft = editor.scrollLeft;
+
+            // Find the position of the changed text
+            const text = editor.value;
+            let changeIndex = text.indexOf(changedText);
+
+            // If we can't find the exact changed text, try to find it using the original context
+            if (changeIndex === -1 && originalContext) {
+                // Look for key phrases that might have been changed
+                const changedWords = changedText.split(' ');
+                const originalWords = originalContext.split(' ');
+
+                // Find words that are different between original and new
+                const differentWords = [];
+                for (let i = 0; i < Math.max(changedWords.length, originalWords.length); i++) {
+                    if (changedWords[i] !== originalWords[i]) {
+                        if (changedWords[i]) differentWords.push(changedWords[i]);
+                    }
+                }
+
+                // Try to find the location using the different words
+                for (const word of differentWords) {
+                    const wordIndex = text.indexOf(word);
+                    if (wordIndex !== -1) {
+                        changeIndex = wordIndex;
+                        break;
+                    }
+                }
+
+                console.log('Looking for changed words:', differentWords);
+                console.log('Found change at index:', changeIndex);
+            }
+
+            if (changeIndex !== -1) {
+                // Calculate line and column position
+                const beforeText = text.substring(0, changeIndex);
+                const lines = beforeText.split('\n');
+                const lineNumber = lines.length;
+                const columnNumber = lines[lines.length - 1].length;
+
+                // Focus the editor and set cursor position
+                editor.focus();
+                editor.setSelectionRange(changeIndex, changeIndex + changedText.length);
+
+                // Create a temporary highlight overlay
+                const highlightDiv = document.createElement('div');
+                highlightDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #22c55e;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+                    z-index: 10000;
+                    animation: slideInFade 0.4s ease-out;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                `;
+                highlightDiv.innerHTML = `✅ Text updated at line ${lineNumber}<br><small>📍 Look for the highlighted selection</small>`;
+
+                // Add animation keyframes if not already added
+                if (!document.querySelector('#highlight-animations')) {
+                    const style = document.createElement('style');
+                    style.id = 'highlight-animations';
+                    style.textContent = `
+                        @keyframes slideInFade {
+                            from { opacity: 0; transform: translateY(-20px) scale(0.9); }
+                            to { opacity: 1; transform: translateY(0) scale(1); }
+                        }
+                        @keyframes fadeOut {
+                            from { opacity: 1; transform: scale(1); }
+                            to { opacity: 0; transform: scale(0.95); }
+                        }
+                        @keyframes pulseSelection {
+                            0%, 100% { background-color: rgba(34, 197, 94, 0.3); }
+                            50% { background-color: rgba(34, 197, 94, 0.6); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+
+                document.body.appendChild(highlightDiv);
+
+                // Add a pulsing background highlight to the editor selection
+                const originalBackground = editor.style.backgroundColor;
+                const originalBorder = editor.style.border;
+
+                editor.style.backgroundColor = '#f0fdf4';
+                editor.style.border = '2px solid #22c55e';
+                editor.style.transition = 'all 0.3s ease';
+
+                // Create a visual indicator that pulses on the selected text
+                setTimeout(() => {
+                    if (editor.selectionStart === changeIndex) {
+                        // Add a temporary pulsing effect
+                        editor.style.animation = 'pulseSelection 1s ease-in-out 3';
+                    }
+                }, 500);
+
+                // Remove highlights after 4 seconds
+                setTimeout(() => {
+                    highlightDiv.style.animation = 'fadeOut 0.4s ease-out';
+                    editor.style.backgroundColor = originalBackground;
+                    editor.style.border = originalBorder;
+                    editor.style.animation = '';
+
+                    setTimeout(() => {
+                        if (highlightDiv.parentNode) {
+                            highlightDiv.parentNode.removeChild(highlightDiv);
+                        }
+                    }, 400);
+                }, 4000);
+
+                // Restore scroll position but ensure the changed text is visible
+                setTimeout(() => {
+                    // Calculate if we need to scroll to make the selection visible
+                    const lineHeight = parseInt(getComputedStyle(editor).lineHeight) || 20;
+                    const editorRect = editor.getBoundingClientRect();
+                    const currentScrollTop = editor.scrollTop;
+                    const selectionTop = (lineNumber - 1) * lineHeight;
+
+                    // Check if selection is visible
+                    if (selectionTop < currentScrollTop || selectionTop > currentScrollTop + editorRect.height - lineHeight * 2) {
+                        // Scroll to center the selection
+                        editor.scrollTop = Math.max(0, selectionTop - editorRect.height / 2);
+                    } else {
+                        // Restore original position if selection is already visible
+                        editor.scrollTop = scrollTop;
+                    }
+                    editor.scrollLeft = scrollLeft;
+                }, 100);
+
+                console.log(`✅ Highlighted changed text at line ${lineNumber}, column ${columnNumber}`);
+                console.log(`📝 Changed text: "${changedText.substring(0, 100)}${changedText.length > 100 ? '...' : ''}"`);
+            } else {
+                console.log('❌ Could not find changed text in editor for highlighting');
+
+                // Show a fallback notification
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #f59e0b;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+                    z-index: 10000;
+                    animation: slideInFade 0.4s ease-out;
+                `;
+                fallbackDiv.innerHTML = `⚠️ Text was updated<br><small>Check the editor for changes</small>`;
+
+                document.body.appendChild(fallbackDiv);
+
+                setTimeout(() => {
+                    fallbackDiv.style.animation = 'fadeOut 0.4s ease-out';
+                    setTimeout(() => {
+                        if (fallbackDiv.parentNode) {
+                            fallbackDiv.parentNode.removeChild(fallbackDiv);
+                        }
+                    }, 400);
+                }, 3000);
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test server connection
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Server connection successful:', data);
+                })
+                .catch(error => {
+                    console.log('❌ Server connection failed:', error);
+                    document.querySelector('.status-indicator span').textContent = 'Server connection failed';
+                    document.querySelector('.status-dot').style.background = '#e53e3e';
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Content Editor - Tabbed Multi-Surface Editor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .editor-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .server-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f56565;
+        }
+
+        .status-indicator.connected { background: #48bb78; }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover { background: #3182ce; }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover { background: #cbd5e1; }
+
+        .tab-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-navigation {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tab-navigation::-webkit-scrollbar { display: none; }
+
+        .tab-button {
+            flex-shrink: 0;
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #718096;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button:hover {
+            color: #4a5568;
+            background: #f7fafc;
+        }
+
+        .tab-button.active {
+            color: #4299e1;
+            border-bottom-color: #4299e1;
+            background: #f7fafc;
+        }
+
+        .tab-badge {
+            background: #fed7d7;
+            color: #c53030;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .tab-badge.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .surface {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .surface-header {
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .surface-title {
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .surface-description {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .surface-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .surface-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0;
+        }
+
+        .text-editor {
+            flex: 1;
+            padding: 2rem;
+            border: none;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: none;
+            outline: none;
+            background: white;
+            color: #2d3748;
+            overflow-y: auto;
+            height: calc(100vh - 160px);
+            min-height: calc(100vh - 160px);
+        }
+
+        .text-editor:focus {
+            background: #f7fafc;
+        }
+
+        .analysis-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            padding: 2rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: transparent;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .highlight {
+            background: rgba(239, 68, 68, 0.15);
+            border-bottom: 2px solid #ef4444;
+            border-radius: 2px;
+            position: relative;
+            pointer-events: auto;
+            cursor: pointer;
+            padding: 1px 2px;
+        }
+
+        .highlight.grammar { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; }
+        .highlight.tone { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; }
+        .highlight.narrative { background: rgba(16, 185, 129, 0.15); border-color: #10b981; }
+        .highlight.compliance { background: rgba(245, 101, 101, 0.15); border-color: #f56565; }
+        .highlight.fact-check { background: rgba(251, 191, 36, 0.15); border-color: #fbbf24; }
+        .highlight.ai-optimization { background: rgba(139, 92, 246, 0.15); border-color: #8b5cf6; }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a202c;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            max-width: 300px;
+            white-space: normal;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .highlight:hover .tooltip { opacity: 1; }
+
+        .recommendations-panel {
+            width: 400px;
+            background: #f7fafc;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .recommendations-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .recommendations-header h3 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendations-summary {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .recommendations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .recommendation {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .recommendation:last-child { margin-bottom: 0; }
+
+        .recommendation-type {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .recommendation-severity {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .recommendation-severity.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .recommendation-severity.medium {
+            background: #fef5e7;
+            color: #dd6b20;
+        }
+
+        .recommendation-severity.low {
+            background: #e6fffa;
+            color: #2c7a7b;
+        }
+
+        .recommendation-text {
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .recommendation-action {
+            font-size: 0.8rem;
+            color: #4299e1;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .recommendation-action:hover {
+            background: #ebf8ff;
+            text-decoration: underline;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #48bb78;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .sync-indicator.active { opacity: 1; }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .analysis-status {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.8rem;
+            color: #718096;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 768px) {
+            .recommendations-panel {
+                width: 100%;
+                position: absolute;
+                top: 0;
+                right: -100%;
+                transition: right 0.3s;
+                z-index: 20;
+            }
+
+            .recommendations-panel.mobile-open {
+                right: 0;
+            }
+
+            .surface-content {
+                position: relative;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="header">
+            <div class="header-controls">
+                <div>
+                    <h1>🎯 Tabbed Multi-Surface Editor</h1>
+                    <p>Synchronized analysis across specialized editorial surfaces</p>
+                </div>
+                <div class="global-controls">
+                    <button class="btn btn-primary" onclick="runAllAnalyses()">
+                        🔄 Analyze All Surfaces
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadSampleContent()">
+                        📄 Load Sample
+                    </button>
+                    <div class="server-status">
+                        <span class="status-indicator" id="server-status"></span>
+                        <span id="server-text">Checking connection...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab-navigation" id="tab-navigation">
+                <!-- Tabs will be dynamically generated -->
+            </div>
+
+            <div id="tab-contents">
+                <!-- Tab contents will be dynamically generated -->
+            </div>
+        </div>
+    </div>
+
+    <div class="sync-indicator" id="sync-indicator">
+        🔄 Syncing changes across surfaces...
+    </div>
+
+    <script>
+        // Global state management
+        const EditorState = {
+            currentText: '',
+            analyses: {},
+            activeTab: 'tone',
+            syncTimeout: null,
+            isAnalyzing: false,
+            analysisStatuses: {}
+        };
+
+        // Surface configurations
+        const SURFACE_CONFIGS = {
+            tone: {
+                title: '🎭 Tone Analysis',
+                endpoint: '/api/analyze/tone',
+                highlightClass: 'tone',
+                description: 'Communication style, emotional resonance, and audience alignment',
+                shortDesc: 'Style & Tone'
+            },
+            grammar: {
+                title: '📝 Grammar Check',
+                endpoint: '/api/analyze/grammar',
+                highlightClass: 'grammar',
+                description: 'Grammar, readability, writing style, and language mechanics',
+                shortDesc: 'Grammar & Style'
+            },
+            narrative: {
+                title: '📖 Narrative Flow',
+                endpoint: '/api/analyze/narrative',
+                highlightClass: 'narrative',
+                description: 'Story structure, message coherence, and narrative effectiveness',
+                shortDesc: 'Story & Flow'
+            },
+            compliance: {
+                title: '⚖️ Compliance Check',
+                endpoint: '/api/analyze/compliance',
+                highlightClass: 'compliance',
+                description: 'Legal requirements, regulatory compliance, and policy adherence',
+                shortDesc: 'Legal & Policy'
+            },
+            'fact-checking': {
+                title: '🔍 Fact Check',
+                endpoint: '/api/analyze/fact-checking',
+                highlightClass: 'fact-check',
+                description: 'Factual accuracy, source verification, and claim validation',
+                shortDesc: 'Facts & Sources'
+            },
+            'ai-optimization': {
+                title: '🤖 AI Optimization',
+                endpoint: '/api/analyze/ai-optimization',
+                highlightClass: 'ai-optimization',
+                description: 'Content optimization, engagement enhancement, and performance tuning',
+                shortDesc: 'AI Enhancement'
+            }
+        };
+
+        // Initialize the editor
+        async function initializeEditor() {
+            checkServerConnection();
+            createTabs();
+            loadSampleContent();
+            switchTab('tone'); // Start with tone analysis
+
+            // Set up periodic server health checks
+            setInterval(checkServerConnection, 30000);
+        }
+
+        // Check server connection
+        async function checkServerConnection() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                document.getElementById('server-status').classList.add('connected');
+                document.getElementById('server-text').textContent = 'Server connected';
+            } catch (error) {
+                document.getElementById('server-status').classList.remove('connected');
+                document.getElementById('server-text').textContent = 'Server disconnected';
+            }
+        }
+
+        // Create tab navigation and content
+        function createTabs() {
+            const tabNav = document.getElementById('tab-navigation');
+            const tabContents = document.getElementById('tab-contents');
+
+            Object.entries(SURFACE_CONFIGS).forEach(([type, config]) => {
+                // Create tab button
+                const tabButton = document.createElement('button');
+                tabButton.className = 'tab-button';
+                tabButton.id = `tab-${type}`;
+                tabButton.onclick = () => switchTab(type);
+
+                tabButton.innerHTML = `
+                    ${config.title.split(' ')[0]} ${config.shortDesc}
+                    <span class="tab-badge" id="badge-${type}">Ready</span>
+                `;
+
+                tabNav.appendChild(tabButton);
+
+                // Create tab content
+                const tabContent = createTabContent(type, config);
+                tabContents.appendChild(tabContent);
+            });
+        }
+
+        // Create individual tab content
+        function createTabContent(type, config) {
+            const tabContent = document.createElement('div');
+            tabContent.className = 'tab-content';
+            tabContent.id = `content-${type}`;
+
+            tabContent.innerHTML = `
+                <div class="surface">
+                    <div class="surface-header">
+                        <div>
+                            <div class="surface-title">${config.title}</div>
+                            <div class="surface-description">${config.description}</div>
+                        </div>
+                        <div class="surface-controls">
+                            <button class="btn btn-secondary" onclick="analyzeSurface('${type}')">
+                                🔍 Analyze
+                            </button>
+                            <button class="btn btn-primary" onclick="applyTopSuggestion('${type}')">
+                                ✨ Apply Top Fix
+                            </button>
+                        </div>
+                    </div>
+                    <div class="surface-content">
+                        <div class="editor-panel">
+                            <textarea
+                                class="text-editor"
+                                id="editor-${type}"
+                                placeholder="Content will sync across all surfaces..."
+                                oninput="handleTextChange('${type}')"
+                            ></textarea>
+                            <div class="analysis-overlay" id="overlay-${type}"></div>
+                            <div class="loading-overlay" id="loading-${type}">
+                                <div class="spinner"></div>
+                            </div>
+                            <div class="analysis-status" id="status-${type}">
+                                Ready for analysis
+                            </div>
+                        </div>
+                        <div class="recommendations-panel">
+                            <div class="recommendations-header">
+                                <h3>Recommendations</h3>
+                                <div class="recommendations-summary" id="summary-${type}">
+                                    Make changes to see analysis results and recommendations
+                                </div>
+                            </div>
+                            <div class="recommendations-list" id="recommendations-${type}">
+                                <div class="recommendation">
+                                    <div class="recommendation-type">
+                                        Getting Started
+                                        <span class="recommendation-severity low">Info</span>
+                                    </div>
+                                    <div class="recommendation-text">
+                                        This surface will analyze your content for ${config.description.toLowerCase()}.
+                                        Start typing or load sample content to begin analysis.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return tabContent;
+        }
+
+        // Switch between tabs
+        function switchTab(tabType) {
+            // Update active states
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            document.getElementById(`tab-${tabType}`).classList.add('active');
+            document.getElementById(`content-${tabType}`).classList.add('active');
+
+            EditorState.activeTab = tabType;
+
+            // Focus the editor in the new tab
+            setTimeout(() => {
+                const editor = document.getElementById(`editor-${tabType}`);
+                if (editor) editor.focus();
+            }, 100);
+        }
+
+        // Handle text changes with synchronization
+        function handleTextChange(sourceSurface) {
+            const textarea = document.getElementById(`editor-${sourceSurface}`);
+            const newText = textarea.value;
+
+            // Update global state
+            EditorState.currentText = newText;
+
+            // Sync to all other surfaces
+            syncTextAcrossSurfaces(sourceSurface, newText);
+
+            // Debounced analysis trigger
+            clearTimeout(EditorState.syncTimeout);
+            EditorState.syncTimeout = setTimeout(() => {
+                triggerAnalysisForActiveSurface();
+            }, 1500);
+
+            // Show sync indicator
+            showSyncIndicator();
+        }
+
+        // Sync text across all surfaces
+        function syncTextAcrossSurfaces(sourceSurface, text) {
+            Object.keys(SURFACE_CONFIGS).forEach(type => {
+                if (type !== sourceSurface) {
+                    const editor = document.getElementById(`editor-${type}`);
+                    if (editor && editor.value !== text) {
+                        editor.value = text;
+                    }
+                }
+            });
+        }
+
+        // Show sync indicator
+        function showSyncIndicator() {
+            const indicator = document.getElementById('sync-indicator');
+            indicator.classList.add('active');
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 2000);
+        }
+
+        // Trigger analysis for active surface
+        async function triggerAnalysisForActiveSurface() {
+            if (!EditorState.currentText.trim()) return;
+            await analyzeSurface(EditorState.activeTab);
+        }
+
+        // Run analysis on all surfaces
+        async function runAllAnalyses() {
+            if (!EditorState.currentText.trim()) {
+                alert('Please enter some content first');
+                return;
+            }
+
+            const analysisPromises = Object.keys(SURFACE_CONFIGS).map(type =>
+                analyzeSurface(type, false)
+            );
+
+            try {
+                await Promise.all(analysisPromises);
+                showSyncIndicator();
+            } catch (error) {
+                console.error('Error running all analyses:', error);
+            }
+        }
+
+        // Analyze specific surface
+        async function analyzeSurface(type, showLoading = true) {
+            const config = SURFACE_CONFIGS[type];
+            const text = EditorState.currentText;
+
+            if (!text.trim()) return;
+
+            // Update status
+            updateTabBadge(type, 'Analyzing...', 'analyzing');
+            document.getElementById(`status-${type}`).textContent = 'Analyzing...';
+
+            if (showLoading) {
+                document.getElementById(`loading-${type}`).classList.add('active');
+            }
+
+            try {
+                const response = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    EditorState.analyses[type] = result.analysis;
+                    updateSurfaceDisplay(type, result.analysis);
+
+                    const issueCount = getIssueCount(type, result.analysis);
+                    updateTabBadge(type, issueCount > 0 ? `${issueCount} issues` : 'Clean', issueCount > 0 ? 'issues' : 'success');
+                    document.getElementById(`status-${type}`).textContent =
+                        issueCount > 0 ? `Found ${issueCount} issues` : 'Analysis complete - no issues found';
+                } else {
+                    showError(type, result.error);
+                    updateTabBadge(type, 'Error', 'error');
+                    document.getElementById(`status-${type}`).textContent = 'Analysis failed';
+                }
+            } catch (error) {
+                showError(type, error.message);
+                updateTabBadge(type, 'Error', 'error');
+                document.getElementById(`status-${type}`).textContent = 'Connection error';
+            } finally {
+                if (showLoading) {
+                    document.getElementById(`loading-${type}`).classList.remove('active');
+                }
+            }
+        }
+
+        // Update tab badge
+        function updateTabBadge(type, text, status) {
+            const badge = document.getElementById(`badge-${type}`);
+            badge.textContent = text;
+            badge.className = 'tab-badge';
+
+            if (status === 'success') badge.classList.add('success');
+            else if (status === 'issues') badge.className = 'tab-badge';
+            else if (status === 'error') badge.className = 'tab-badge';
+        }
+
+        // Get issue count from analysis
+        function getIssueCount(type, analysis) {
+            switch (type) {
+                case 'grammar':
+                    return (analysis.grammar_issues || []).length;
+                case 'tone':
+                    return (analysis.recommendations || []).length;
+                default:
+                    return (analysis.recommendations || []).length;
+            }
+        }
+
+        // Update surface display with analysis results
+        function updateSurfaceDisplay(type, analysis) {
+            updateHighlights(type, analysis);
+            updateRecommendations(type, analysis);
+        }
+
+        // Update text highlights (simplified for tab view)
+        function updateHighlights(type, analysis) {
+            const overlay = document.getElementById(`overlay-${type}`);
+            const config = SURFACE_CONFIGS[type];
+            const text = EditorState.currentText;
+
+            let highlightedText = text;
+            const issues = extractIssues(type, analysis);
+
+            // Sort issues by position (descending) to avoid offset problems
+            issues.sort((a, b) => b.start - a.start);
+
+            issues.forEach(issue => {
+                const beforeText = highlightedText.substring(0, issue.start);
+                const issueText = highlightedText.substring(issue.start, issue.end);
+                const afterText = highlightedText.substring(issue.end);
+
+                const highlightHtml = `<span class="highlight ${config.highlightClass}" data-issue="${encodeURIComponent(JSON.stringify(issue))}">
+                    ${issueText}
+                    <span class="tooltip">${issue.message}</span>
+                </span>`;
+
+                highlightedText = beforeText + highlightHtml + afterText;
+            });
+
+            overlay.innerHTML = highlightedText;
+        }
+
+        // Extract issues from analysis results (enhanced)
+        function extractIssues(type, analysis) {
+            const issues = [];
+            const text = EditorState.currentText;
+            const lines = text.split('\n');
+
+            switch (type) {
+                case 'grammar':
+                    if (analysis.grammar_issues) {
+                        analysis.grammar_issues.forEach((issue, index) => {
+                            const problemText = issue.text || issue.word || 'issue';
+                            const position = text.indexOf(problemText);
+                            if (position !== -1) {
+                                const lineInfo = getLineAndColumn(text, position);
+                                issues.push({
+                                    start: position,
+                                    end: position + problemText.length,
+                                    message: issue.description || issue.message || 'Grammar issue',
+                                    type: 'grammar',
+                                    suggestion: issue.suggestion,
+                                    severity: issue.severity || 'medium',
+                                    line: lineInfo.line,
+                                    column: lineInfo.column,
+                                    context: getContextSnippet(text, position, problemText.length)
+                                });
+                            }
+                        });
+                    }
+                    break;
+
+                case 'tone':
+                    if (analysis.recommendations) {
+                        // Extract tone issues with more intelligent positioning
+                        analysis.recommendations.slice(0, 5).forEach((rec, index) => {
+                            let position, endPosition, contextText;
+
+                            // Try to identify specific tone issues in the text
+                            const recText = typeof rec === 'string' ? rec : (rec.suggestion || rec.message || JSON.stringify(rec));
+                            if (recText.toLowerCase().includes('formal') || recText.toLowerCase().includes('informal')) {
+                                // Look for overly formal or informal phrases
+                                const formalWords = ['furthermore', 'moreover', 'nevertheless', 'pursuant to'];
+                                const informalWords = ['gonna', 'wanna', 'yeah', 'awesome'];
+                                const searchWords = recText.toLowerCase().includes('formal') ? formalWords : informalWords;
+
+                                for (const word of searchWords) {
+                                    const pos = text.toLowerCase().indexOf(word);
+                                    if (pos !== -1) {
+                                        position = pos;
+                                        endPosition = pos + word.length;
+                                        contextText = word;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!position) {
+                                // Fallback to paragraph-based positioning
+                                const paragraphs = text.split('\n\n');
+                                const targetPara = Math.min(index, paragraphs.length - 1);
+                                const paraStart = text.indexOf(paragraphs[targetPara]);
+                                position = paraStart >= 0 ? paraStart : Math.floor(text.length * (0.1 + index * 0.2));
+                                endPosition = position + Math.min(50, paragraphs[targetPara]?.length || 50);
+                                contextText = paragraphs[targetPara]?.substring(0, 50) + '...' || 'paragraph ' + (targetPara + 1);
+                            }
+
+                            const lineInfo = getLineAndColumn(text, position);
+                            issues.push({
+                                start: position,
+                                end: endPosition,
+                                message: typeof rec === 'string' ? rec : (rec.suggestion || rec.message || JSON.stringify(rec)),
+                                type: 'tone',
+                                severity: index < 2 ? 'high' : index < 4 ? 'medium' : 'low',
+                                line: lineInfo.line,
+                                column: lineInfo.column,
+                                context: contextText
+                            });
+                        });
+                    }
+                    break;
+
+                default:
+                    if (analysis.recommendations) {
+                        analysis.recommendations.slice(0, 3).forEach((rec, index) => {
+                            const position = Math.floor(text.length * (0.2 + index * 0.3));
+                            const endPosition = position + 30;
+                            const lineInfo = getLineAndColumn(text, position);
+                            issues.push({
+                                start: position,
+                                end: endPosition,
+                                message: typeof rec === 'string' ? rec : (rec.suggestion || rec.message || JSON.stringify(rec)),
+                                type: type,
+                                severity: 'medium',
+                                line: lineInfo.line,
+                                column: lineInfo.column,
+                                context: getContextSnippet(text, position, 30)
+                            });
+                        });
+                    }
+            }
+
+            return issues;
+        }
+
+        // Helper function to get line and column from position
+        function getLineAndColumn(text, position) {
+            const beforePosition = text.substring(0, position);
+            const lines = beforePosition.split('\n');
+            return {
+                line: lines.length,
+                column: lines[lines.length - 1].length + 1
+            };
+        }
+
+        // Helper function to get context snippet around position
+        function getContextSnippet(text, position, length) {
+            const start = Math.max(0, position - 20);
+            const end = Math.min(text.length, position + length + 20);
+            const snippet = text.substring(start, end);
+            return (start > 0 ? '...' : '') + snippet + (end < text.length ? '...' : '');
+        }
+
+        // Update recommendations panel
+        function updateRecommendations(type, analysis) {
+            const panel = document.getElementById(`recommendations-${type}`);
+            const summary = document.getElementById(`summary-${type}`);
+            const recommendations = analysis.recommendations || [];
+
+            // Update summary
+            const issueCount = getIssueCount(type, analysis);
+            summary.textContent = issueCount > 0
+                ? `Found ${issueCount} recommendations for improvement`
+                : 'No issues found - content looks good!';
+
+            if (recommendations.length === 0) {
+                panel.innerHTML = `
+                    <div class="recommendation">
+                        <div class="recommendation-type">
+                            Analysis Complete
+                            <span class="recommendation-severity success">Clean</span>
+                        </div>
+                        <div class="recommendation-text">
+                            No issues found in this analysis. Your content meets the standards for ${SURFACE_CONFIGS[type].shortDesc.toLowerCase()}.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get issues for location information
+            const issues = extractIssues(type, analysis);
+
+            const html = recommendations.slice(0, 8).map((rec, index) => {
+                const severity = index < 2 ? 'high' : index < 5 ? 'medium' : 'low';
+                const issue = issues[index];
+                const locationInfo = issue ? `Line ${issue.line}, Column ${issue.column}` : 'General suggestion';
+                const contextInfo = issue ? issue.context : 'Overall content';
+
+                return `
+                    <div class="recommendation">
+                        <div class="recommendation-type">
+                            ${type.charAt(0).toUpperCase() + type.slice(1)} Issue ${index + 1}
+                            <span class="recommendation-severity ${severity}">${severity.toUpperCase()}</span>
+                        </div>
+                        <div class="recommendation-location" style="font-size: 0.8rem; color: #718096; margin-bottom: 0.5rem;">
+                            📍 ${locationInfo}
+                        </div>
+                        <div class="recommendation-context" style="font-size: 0.8rem; background: #f7fafc; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid #4299e1;">
+                            <strong>Context:</strong> "${contextInfo}"
+                        </div>
+                        <div class="recommendation-text">${rec}</div>
+                        <div class="recommendation-actions">
+                            <span class="recommendation-action" onclick="applyRecommendation('${type}', ${index})">
+                                Apply Fix
+                            </span>
+                            <span class="recommendation-action" onclick="highlightIssue('${type}', ${index})">
+                                Jump to Location
+                            </span>
+                            ${issue ? `<span class="recommendation-action" onclick="scrollToIssue('${type}', ${issue.start})">
+                                Scroll to Text
+                            </span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            panel.innerHTML = html;
+        }
+
+        // Show error message
+        function showError(type, message) {
+            const panel = document.getElementById(`recommendations-${type}`);
+            const summary = document.getElementById(`summary-${type}`);
+
+            summary.textContent = 'Analysis failed - please try again';
+
+            panel.innerHTML = `
+                <div class="recommendation">
+                    <div class="recommendation-type">
+                        Analysis Error
+                        <span class="recommendation-severity high">ERROR</span>
+                    </div>
+                    <div class="recommendation-text">Error: ${message}</div>
+                    <div class="recommendation-actions">
+                        <span class="recommendation-action" onclick="analyzeSurface('${type}')">
+                            Retry Analysis
+                        </span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Apply recommendation
+        function applyRecommendation(type, index) {
+            alert(`Applied ${type} recommendation ${index + 1}. This would modify the text based on the specific suggestion.`);
+        }
+
+        // Apply top suggestion
+        function applyTopSuggestion(type) {
+            const analysis = EditorState.analyses[type];
+            if (analysis && analysis.recommendations && analysis.recommendations.length > 0) {
+                applyRecommendation(type, 0);
+            } else {
+                alert(`No suggestions available for ${type}. Run analysis first.`);
+            }
+        }
+
+        // Highlight specific issue in text
+        function highlightIssue(type, index) {
+            const analysis = EditorState.analyses[type];
+            if (analysis) {
+                const issues = extractIssues(type, analysis);
+                const issue = issues[index];
+                if (issue) {
+                    scrollToIssue(type, issue.start);
+                } else {
+                    alert(`Issue ${index + 1} location not found in ${type} analysis.`);
+                }
+            }
+        }
+
+        // Scroll to specific position in text
+        function scrollToIssue(type, position) {
+            const editor = document.getElementById(`editor-${type}`);
+            if (editor) {
+                // Focus the editor and set cursor position
+                editor.focus();
+                editor.setSelectionRange(position, position + 20);
+
+                // Calculate approximate scroll position
+                const text = editor.value;
+                const beforeText = text.substring(0, position);
+                const lines = beforeText.split('\n');
+                const lineHeight = 24; // Approximate line height
+                const scrollTop = Math.max(0, (lines.length - 3) * lineHeight);
+
+                editor.scrollTop = scrollTop;
+
+                // Highlight the area temporarily
+                setTimeout(() => {
+                    editor.setSelectionRange(position, position);
+                }, 2000);
+            }
+        }
+
+        // Load sample content
+        function loadSampleContent() {
+            const sampleText = `PRESS RELEASE
+November 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+
+            EditorState.currentText = sampleText;
+
+            // Load into all surfaces
+            Object.keys(SURFACE_CONFIGS).forEach(type => {
+                document.getElementById(`editor-${type}`).value = sampleText;
+                updateTabBadge(type, 'Ready', 'ready');
+            });
+
+            // Show sync indicator
+            showSyncIndicator();
+
+            // Trigger analysis for active surface
+            setTimeout(() => {
+                triggerAnalysisForActiveSurface();
+            }, 1000);
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeEditor);
+    </script>
+</body>
+</html>
