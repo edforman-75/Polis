@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Recommendations Editor - Fixed Infinite Loop & Organized Structure 9:42pm</title>
+    <title>Enhanced Recommendations Editor - Generalized for Any Campaign 9:45pm</title>
     <!-- Cache buster: v10-double-click-sentence-fix -->
     <style>
         * {
@@ -645,39 +645,39 @@
         let undoStack = [];
         let currentText = '';
 
-        // Sample content for testing - Full Spanberger Press Release
+        // Sample content for testing - Generic Campaign Press Release
         const SAMPLE_TEXT = `PRESS RELEASES
 Nov 13, 2023
-SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
-HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+CANDIDATE ANNOUNCES RUN FOR GOVERNOR
+CITY, State — U.S. Representative Jane Candidate today announced that she is running to become the next Governor and will not seek reelection to the U.S. House in 2024.
 
-"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+"The greatest honor of my life has been to represent the people of this district in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all voters to continue this service as the next Governor," said Candidate. "This state is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation. As a former law enforcement officer and current Member of Congress, I have always believed in the value of public service. I look forward to serving this district through the end of this term and then pursuing the important work of bringing our state together to keep our communities strong."
 
 —
 
-Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.
+Today, Candidate released "Our Shared Vision," an announcement video highlighting her record of public service, her commitment to the future of the state, and her reputation for getting things done.
 
 Click here to watch, and a full transcript is below.
 
 —
 
-From our stunning landscapes to our diverse communities, Virginia is a lot of things. But most importantly, it's home.
+From our beautiful landscapes to our diverse communities, this state is a lot of things. But most importantly, it's home.
 
-I'm Abigail Spanberger. I grew up here in Central Virginia. And now, my husband Adam and I are raising our three girls here. Teaching them, like my parents taught me, that if you see something wrong, do everything in your power to right it.
+I'm Jane Candidate. I grew up here in the central part of our state. And now, my spouse and I are raising our children here. Teaching them, like my parents taught me, that if you see something wrong, do everything in your power to right it.
 
-It's why I committed to a life of service for our country and the people of Virginia. First in law enforcement, then at CIA working to keep our country safe, and today in Congress. Where, despite dangerous polarization, I have found ways to bring people together and focus on what really matters.
+It's why I committed to a life of service for our country and the people of this state. First in law enforcement, then working to keep our communities safe, and today in Congress. Where, despite dangerous polarization, I have found ways to bring people together and focus on what really matters.
 
 Providing veterans with the support they need, supporting small businesses so they can grow, assisting families and communities struggling with addiction. Proving that to get things done, people must come first.
 
-But today, we find ourselves at a crossroads. Our country and our Commonwealth are facing fundamental threats to our rights, our freedoms, and to our democracy. While some politicians in Richmond focus on banning abortion and books, what they're not doing is helping people.
+But today, we find ourselves at a crossroads. Our country and our state are facing fundamental threats to our rights, our freedoms, and to our democracy. While some politicians focus on divisive issues, what they're not doing is helping people.
 
 I know how to bring people together and get real things done that improve lives.
 
 That's why I'm running for Governor.
 
-Because when we rise above the chaos and division, we can focus on what matters most to Virginians: lowering prescription drug prices, growing the middle class, lowering costs, and easing inflation. No more using teachers and our kids as political pawns — it's about focusing on recruiting and retaining teachers, so all of our kids can succeed. And stopping extremists from shredding women's reproductive rights.
+Because when we rise above the chaos and division, we can focus on what matters most: lowering prescription drug prices, growing the middle class, lowering costs, and easing inflation. No more using teachers and our kids as political pawns — it's about focusing on recruiting and retaining teachers, so all of our kids can succeed. And protecting fundamental rights.
 
-Even in this moment of deep division, we can seize the opportunity. I am running to serve all Virginians in every community across our Commonwealth, because it's about time we do what's right for everyone.
+Even in this moment of deep division, we can seize the opportunity. I am running to serve all voters in every community across our state, because it's about time we do what's right for everyone.
 
 And that's what matters most.
 
@@ -685,9 +685,9 @@ And that's what matters most.
 
 BACKGROUND
 
-U.S. Rep. Abigail Spanberger (VA-07) is serving her third term in the U.S. House of Representatives. In Congress, she serves on the U.S. House Permanent Select Committee on Intelligence and the U.S. House Agriculture Committee — and she has consistently been ranked as the most bipartisan Member of Congress from Virginia and one of the most bipartisan lawmakers in the country.
+U.S. Rep. Jane Candidate is serving her third term in the U.S. House of Representatives. In Congress, she serves on key committees and has consistently been ranked as one of the most effective lawmakers in the country.
 
-Before Congress, Spanberger served as a federal law enforcement officer — tracking narcotics traffickers and working money laundering cases — and as a CIA case officer — working undercover on counterterrorism and nuclear counterproliferation cases. She and her husband Adam are the proud parents of three school-aged daughters`;
+Before Congress, Candidate served as a law enforcement officer and community leader. She and her spouse are the proud parents of school-aged children`;
 
         // Load sample content
         function loadSampleContent() {
@@ -1206,6 +1206,42 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
             return colors[index % colors.length];
         }
 
+        // Generic helper functions for text transformation
+        function generateShorterSentences(text) {
+            // Split long sentences and simplify
+            return text.replace(/,\s+/g, '. ').replace(/\.\s+\./g, '.').substring(0, Math.max(50, text.length * 0.7));
+        }
+
+        function simplifyPoliticalLanguage(text) {
+            const simplifications = {
+                'announced': 'said',
+                'declared': 'said',
+                'Representative': 'Rep.',
+                'former': 'past',
+                'commitment': 'promise',
+                'public service': 'serving people',
+                'working hard': 'working',
+                'the people of': 'people in'
+            };
+
+            let simplified = text;
+            for (const [formal, simple] of Object.entries(simplifications)) {
+                simplified = simplified.replace(new RegExp(formal, 'gi'), simple);
+            }
+            return simplified;
+        }
+
+        function addSpecificDetails(text) {
+            // Add hypothetical specific details for demonstration
+            if (text.toLowerCase().includes('video')) {
+                return text.replace(/video/gi, '3-minute professionally-produced campaign video');
+            }
+            if (text.toLowerCase().includes('service')) {
+                return text.replace(/service/gi, 'dedicated public service record spanning over [X] years');
+            }
+            return `${text} [Additional specific details would be added based on candidate background]`;
+        }
+
         // Generate alternative recommendations for each issue
         function generateAlternatives(recommendation) {
             const type = recommendation.type;
@@ -1224,20 +1260,23 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
                 ];
             }
 
-            // Provide specific alternatives based on the actual text content
-            if (originalText.includes('As a former CIA case officer')) {
+            // Generic pattern-based alternatives for common political content
+
+            // Handle law enforcement/government service background
+            if (originalText.toLowerCase().includes('former') && (originalText.toLowerCase().includes('officer') || originalText.toLowerCase().includes('agent'))) {
                 return [
-                    { label: '🎯 Preferred: Clearer Language', text: 'I served as a CIA case officer and federal law enforcement officer before joining Congress. I have always believed in public service.' },
-                    { label: '📝 Alternative: Simpler Words', text: 'I worked at the CIA and in law enforcement before coming to Congress. I believe deeply in serving the public.' },
-                    { label: '🔍 Alternative: More Specific', text: 'As a former CIA operations officer who tracked terrorists and a federal agent who fought drug trafficking, I have dedicated my career to protecting Americans through public service.' }
+                    { label: '🎯 Preferred: Clearer Language', text: generateShorterSentences(originalText) },
+                    { label: '📝 Alternative: Simpler Words', text: simplifyPoliticalLanguage(originalText) },
+                    { label: '🔍 Alternative: More Specific', text: addSpecificDetails(originalText) }
                 ];
             }
 
-            if (originalText.includes('Today, Spanberger released') && originalText.includes('What Matters Most')) {
+            // Handle media/video release announcements
+            if (originalText.toLowerCase().includes('released') && (originalText.includes('"') || originalText.toLowerCase().includes('video'))) {
                 return [
-                    { label: '🎯 Preferred: Clearer Language', text: 'Today, Spanberger released "What Matters Most." The video highlights her record of public service. It shows her commitment to Virginia\'s future.' },
-                    { label: '📝 Alternative: Simpler Words', text: 'Today, Spanberger put out "What Matters Most." It\'s a video about her public service. It shows her promise to Virginia.' },
-                    { label: '🔍 Alternative: More Specific', text: 'Today, Spanberger released "What Matters Most," a professionally-produced campaign video. The 3-minute video details her 15 years of public service and her specific plans for Virginia\'s economic future.' }
+                    { label: '🎯 Preferred: Clearer Language', text: generateShorterSentences(originalText) },
+                    { label: '📝 Alternative: Simpler Words', text: simplifyPoliticalLanguage(originalText) },
+                    { label: '🔍 Alternative: More Specific', text: addSpecificDetails(originalText) }
                 ];
             }
 
@@ -1709,7 +1748,7 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
 
             // Aggressive shortening patterns
             const punchyPatterns = {
-                'Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians': 'Virginia is my home. I\'m building its future.',
+                'long family heritage statement': 'shorter family connection',
                 'working hard': 'fighting',
                 'trying to': 'will',
                 'planning to': 'will',
@@ -1738,7 +1777,7 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
 
             // Conversational transformations - make it much more personal
             const conversationalPatterns = {
-                'Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians': 'You know, Virginia isn\'t just where I live - it\'s where I\'m raising my three daughters and where I want them to have every opportunity.',
+                'formal background statement': 'personal family connection',
                 'representative': 'your voice in Congress',
                 'individuals': 'folks',
                 'assistance': 'help',
@@ -1778,13 +1817,13 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
 
             // General specificity patterns - these can be customized per region/context
             const specificPatterns = {
-                'Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians': 'The Commonwealth of Virginia - specifically Central Virginia\'s 7th Congressional District, home to over 400,000 residents across 10 counties - is where I was born and raised, where my husband Adam and I are now raising our three school-aged daughters, and where I am committed to implementing a comprehensive 50-point policy agenda to strengthen economic opportunities for the next generation of Virginia families.',
+                'home state heritage': 'detailed local connection with specific demographics and policy plans',
                 'today': 'today at 2:00 PM EST',
-                'Virginia': 'the Commonwealth of Virginia (population 8.6 million)',
-                'people': 'the 400,000 constituents across Virginia\'s 7th Congressional District',
+                'state': 'the state (with population details)',
+                'people': 'constituents across the district',
                 'Congress': 'the U.S. House of Representatives (435 members)',
                 'working hard': 'dedicating 70+ hours per week across 15+ committees',
-                'families': 'the 150,000 working families across Central Virginia\'s communities'
+                'families': 'working families across the region'
             };
 
             for (const [vague, specific] of Object.entries(specificPatterns)) {
