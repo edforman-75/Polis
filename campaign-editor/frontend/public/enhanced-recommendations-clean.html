@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Recommendations Editor - Fixed Re-analysis Bug & Working Document Detection 9:42pm</title>
+    <title>Enhanced Recommendations Editor - Fixed Infinite Loop & Organized Structure 9:42pm</title>
     <!-- Cache buster: v10-double-click-sentence-fix -->
     <style>
         * {
@@ -904,6 +904,8 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
         let maxPossibleScore = 100;
         let appliedRecommendations = new Set();
         let dismissedRecommendations = new Set();
+        let isReAnalyzing = false;
+        let lastReAnalysisTime = 0;
 
         // Dynamic scoring functions
         function calculateCurrentScore() {
@@ -2037,6 +2039,19 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
 
         // Dynamic re-analysis function to get fresh recommendations after edits
         async function reAnalyzeAndUpdateRecommendations() {
+            // Prevent multiple simultaneous re-analyses
+            if (isReAnalyzing) {
+                console.log('⏳ Re-analysis already in progress, skipping...');
+                return;
+            }
+
+            // Throttle re-analysis to prevent infinite loops (minimum 3 seconds between calls)
+            const now = Date.now();
+            if (now - lastReAnalysisTime < 3000) {
+                console.log('⏱️ Re-analysis throttled, waiting for cooldown...');
+                return;
+            }
+
             const editor = document.getElementById('text-editor');
             const currentText = editor.value;
 
@@ -2045,6 +2060,9 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
                 showNotification('Text too short for analysis. Please add more content.', 'warning');
                 return;
             }
+
+            isReAnalyzing = true;
+            lastReAnalysisTime = now;
 
             try {
                 console.log('📡 Re-running tone analysis on modified text...');
@@ -2083,8 +2101,7 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
                 console.log('✅ Re-analysis completed, updating UI with fresh recommendations');
 
                 // Update the global recommendations with fresh data
-                const currentText = document.getElementById('text-editor').value;
-                currentRecommendations = result.analysis ? enhanceRecommendations(result.analysis, currentText) : [];
+                currentRecommendations = result.analysis ? enhanceRecommendations(result.analysis) : [];
 
                 // Reset applied/dismissed tracking for new recommendations
                 appliedRecommendations.clear();
@@ -2111,6 +2128,10 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
                     console.log('🏁 Re-analysis failed, checking if all recommendations are complete...');
                     checkAndShowCompletion();
                 }, 1000);
+            } finally {
+                // Reset the re-analysis flag
+                isReAnalyzing = false;
+                console.log('🔓 Re-analysis lock released');
             }
         }
 
@@ -2873,10 +2894,6 @@ Before Congress, Spanberger served as a federal law enforcement officer — trac
 
         // Document type detection system
         function detectDocumentType(text) {
-            if (!text || typeof text !== 'string') {
-                console.log('⚠️ Invalid text provided for document type detection, defaulting to general');
-                return { type: 'general', subtype: 'article' };
-            }
             const upperText = text.toUpperCase();
             const firstLines = text.split('\n').slice(0, 10).join('\n').toUpperCase();
 

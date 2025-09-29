@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Issue Editor</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.25rem;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .editor-header {
+            padding: 1rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .text-editor {
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            border: none;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: none;
+            outline: none;
+            background: white;
+            color: #2d3748;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .highlights-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .issue-highlight {
+            background: rgba(239, 68, 68, 0.2);
+            border-bottom: 2px wavy #ef4444;
+            position: relative;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .issue-highlight:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .issue-highlight.tone-issue {
+            background: rgba(59, 130, 246, 0.2);
+            border-bottom: 2px wavy #3b82f6;
+        }
+
+        .issue-highlight.grammar-issue {
+            background: rgba(239, 68, 68, 0.2);
+            border-bottom: 2px wavy #ef4444;
+        }
+
+        .issue-highlight.style-issue {
+            background: rgba(168, 85, 247, 0.2);
+            border-bottom: 2px wavy #a855f7;
+        }
+
+        .issue-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a202c;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .issue-highlight:hover .issue-tooltip {
+            opacity: 1;
+        }
+
+        .recommendations-panel {
+            width: 400px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .recommendations-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .recommendations-header h3 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendations-summary {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .recommendations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .recommendation {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .recommendation.highlighted {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .recommendation:last-child { margin-bottom: 0; }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-type {
+            font-weight: 600;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .recommendation-severity {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .recommendation-severity.high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .recommendation-severity.medium {
+            background: #fef5e7;
+            color: #dd6b20;
+        }
+
+        .recommendation-severity.low {
+            background: #e6fffa;
+            color: #2c7a7b;
+        }
+
+        .recommendation-location {
+            font-size: 0.7rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendation-text {
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .recommendation-context {
+            background: #f7fafc;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8rem;
+            color: #4a5568;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #cbd5e1;
+        }
+
+        .recommendation-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .recommendation-action {
+            font-size: 0.8rem;
+            color: #4299e1;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+        }
+
+        .recommendation-action:hover {
+            background: #ebf8ff;
+            text-decoration: underline;
+        }
+
+        .analyze-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .analyze-button:hover {
+            background: #3182ce;
+        }
+
+        .analyze-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #48bb78;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .sync-indicator.show {
+            opacity: 1;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem;
+            border: 1px solid #feb2b2;
+        }
+
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎯 Visual Issue Editor</h1>
+                <div class="header-subtitle">Real-time issue highlighting with synchronized recommendations</div>
+            </div>
+            <div class="header-controls">
+                <button onclick="loadSampleContent()" class="analyze-button">📄 Load Sample</button>
+                <button onclick="runToneAnalysis()" class="analyze-button">🎭 Analyze Tone</button>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Server connected</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="editor-header">
+                    <h3>Content Editor</h3>
+                    <div>
+                        <span id="issue-count" style="color: #718096; font-size: 0.9rem;">0 issues found</span>
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <textarea id="text-editor" class="text-editor" placeholder="Paste your campaign content here for analysis with visual issue highlighting..."></textarea>
+                    <div id="highlights-overlay" class="highlights-overlay"></div>
+                </div>
+            </div>
+
+            <div class="recommendations-panel">
+                <div class="recommendations-header">
+                    <h3>💡 Issue Recommendations</h3>
+                    <div class="recommendations-summary" id="analysis-summary">Click "Analyze Tone" to see issues highlighted in text</div>
+                </div>
+                <div class="recommendations-list" id="recommendations-list">
+                    <div class="loading-indicator">Issues will appear here with precise location highlighting</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sync-indicator" class="sync-indicator">✅ Analysis complete</div>
+
+    <script>
+        let currentIssues = [];
+        let highlightedIssueIndex = -1;
+
+        // Sample content
+        function loadSampleContent() {
+            const sampleText = `PRESS RELEASE
+November 13, 2023
+SPANBERGER ANNOUNCES RUN FOR GOVERNOR OF VIRGINIA
+
+HENRICO, Va. — U.S. Representative Abigail Spanberger today announced that she is running to become the 75th Governor of Virginia and will not seek reelection to the U.S. House in 2024.
+
+"The greatest honor of my life has been to represent Virginians in the U.S. House. Today, I am proud to announce that I will be working hard to gain the support and trust of all Virginians to continue this service as the next Governor of Virginia," said Spanberger. "Virginia is where I grew up, where I am raising my own family, and where I intend to build a stronger future for the next generation of Virginians. As a former CIA case officer, former federal law enforcement officer, and current Member of Congress, I have always believed in the value of public service. I look forward to serving the Seventh District through the end of this term and then pursuing the important work of bringing Virginia together to keep our Commonwealth strong."
+
+Today, Spanberger released "What Matters Most," an announcement video highlighting her record of public service, her commitment to the future of Virginia, and her reputation for getting things done.`;
+
+            document.getElementById('text-editor').value = sampleText;
+            updateHighlights();
+        }
+
+        // Tone analysis with issue extraction
+        async function runToneAnalysis() {
+            const textToAnalyze = document.getElementById('text-editor').value;
+
+            if (!textToAnalyze || textToAnalyze.trim().length === 0) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+
+            // Update UI to show loading
+            const summaryElement = document.getElementById('analysis-summary');
+            const recommendationsElement = document.getElementById('recommendations-list');
+
+            summaryElement.textContent = 'Analyzing tone and extracting issues...';
+            recommendationsElement.innerHTML = '<div class="loading-indicator">🔄 Analysis in progress...</div>';
+
+            try {
+                const response = await fetch('/api/analyze/tone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: textToAnalyze,
+                        campaignProfile: null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Tone analysis failed');
+                }
+
+                // Process the analysis results
+                processAnalysisResults(result.analysis, textToAnalyze);
+
+            } catch (error) {
+                console.error('Tone analysis error:', error);
+                summaryElement.textContent = `Analysis failed - ${error.message}`;
+                recommendationsElement.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Tone Analysis Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Process analysis results and extract issues
+        function processAnalysisResults(analysis, text) {
+            currentIssues = [];
+
+            // Extract issues from recommendations
+            const recommendations = analysis.recommendations || [];
+
+            recommendations.forEach((rec, index) => {
+                const recText = getRecommendationText(rec);
+                const priority = getRecommendationPriority(rec);
+                const recType = (typeof rec === 'object' && rec.type) ? rec.type : 'tone_improvement';
+
+                // Try to locate the issue in the text
+                const location = findIssueLocation(text, rec, recText, index);
+
+                const issue = {
+                    id: index,
+                    type: recType,
+                    priority: priority,
+                    text: recText,
+                    location: location,
+                    recommendation: rec
+                };
+
+                currentIssues.push(issue);
+            });
+
+            // Update the displays
+            updateHighlights();
+            updateRecommendationsList();
+            updateSummary();
+            showSyncIndicator();
+        }
+
+        // Find location of issue in text
+        function findIssueLocation(text, rec, recText, index) {
+            // Strategy 1: Look for specific keywords mentioned in the recommendation
+            if (recText.toLowerCase().includes('formal')) {
+                const informalWords = ['gonna', 'wanna', 'yeah', 'awesome', 'cool', 'kinda', 'sorta'];
+                for (const word of informalWords) {
+                    const pos = text.toLowerCase().indexOf(word);
+                    if (pos !== -1) {
+                        return {
+                            start: pos,
+                            end: pos + word.length,
+                            context: getContextSnippet(text, pos, 50)
+                        };
+                    }
+                }
+            }
+
+            // Strategy 2: Look for repetitive words or phrases for consistency issues
+            if (recText.toLowerCase().includes('consistency') || recText.toLowerCase().includes('repetitive')) {
+                const words = text.toLowerCase().match(/\b\w{4,}\b/g) || [];
+                const wordCounts = {};
+                words.forEach(word => {
+                    wordCounts[word] = (wordCounts[word] || 0) + 1;
+                });
+
+                for (const [word, count] of Object.entries(wordCounts)) {
+                    if (count > 2) {
+                        const pos = text.toLowerCase().indexOf(word);
+                        if (pos !== -1) {
+                            return {
+                                start: pos,
+                                end: pos + word.length,
+                                context: getContextSnippet(text, pos, 50)
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Strategy 3: Look for sentences with potential tone issues
+            if (recText.toLowerCase().includes('professional') || recText.toLowerCase().includes('confident')) {
+                const sentences = text.split(/[.!?]+/);
+                for (let i = 0; i < sentences.length; i++) {
+                    const sentence = sentences[i].trim();
+                    if (sentence.length > 20) {
+                        const pos = text.indexOf(sentence);
+                        if (pos !== -1) {
+                            return {
+                                start: pos,
+                                end: pos + Math.min(50, sentence.length),
+                                context: getContextSnippet(text, pos, 100)
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Strategy 4: Default location based on index
+            const defaultPos = Math.floor(text.length * (0.1 + index * 0.2));
+            return {
+                start: defaultPos,
+                end: defaultPos + 30,
+                context: getContextSnippet(text, defaultPos, 50)
+            };
+        }
+
+        // Get context snippet around a position
+        function getContextSnippet(text, position, length) {
+            const start = Math.max(0, position - length / 2);
+            const end = Math.min(text.length, position + length / 2);
+            return text.substring(start, end);
+        }
+
+        // Update highlights overlay
+        function updateHighlights() {
+            const editor = document.getElementById('text-editor');
+            const overlay = document.getElementById('highlights-overlay');
+            const text = editor.value;
+
+            if (currentIssues.length === 0) {
+                overlay.innerHTML = '';
+                return;
+            }
+
+            // Create highlighted version of text
+            let highlightedText = text;
+            let offset = 0;
+
+            // Sort issues by start position to avoid conflicts
+            const sortedIssues = [...currentIssues].sort((a, b) => a.location.start - b.location.start);
+
+            sortedIssues.forEach((issue, index) => {
+                const start = issue.location.start + offset;
+                const end = issue.location.end + offset;
+
+                const originalPart = highlightedText.substring(start, end);
+                const highlightedPart = `<span class="issue-highlight ${issue.type}-issue" data-issue-id="${issue.id}" onclick="highlightIssue(${issue.id})" title="${issue.text}">
+                    ${originalPart}
+                    <div class="issue-tooltip">${issue.type}: ${issue.text.substring(0, 50)}...</div>
+                </span>`;
+
+                highlightedText = highlightedText.substring(0, start) + highlightedPart + highlightedText.substring(end);
+                offset += highlightedPart.length - originalPart.length;
+            });
+
+            overlay.innerHTML = highlightedText;
+        }
+
+        // Update recommendations list
+        function updateRecommendationsList() {
+            const listElement = document.getElementById('recommendations-list');
+
+            if (currentIssues.length === 0) {
+                listElement.innerHTML = '<div class="loading-indicator">No issues found! ✅</div>';
+                return;
+            }
+
+            let html = '';
+            currentIssues.forEach((issue, index) => {
+                const lineCol = getLineAndColumn(document.getElementById('text-editor').value, issue.location.start);
+                html += `
+                    <div class="recommendation" id="rec-${issue.id}">
+                        <div class="recommendation-header">
+                            <div class="recommendation-type">
+                                ${getIssueIcon(issue.type)} ${issue.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            </div>
+                            <span class="recommendation-severity ${issue.priority}">${issue.priority.toUpperCase()}</span>
+                        </div>
+                        <div class="recommendation-location">📍 Line ${lineCol.line}, Column ${lineCol.column}</div>
+                        <div class="recommendation-text">${issue.text}</div>
+                        <div class="recommendation-context">"${issue.location.context}"</div>
+                        <div class="recommendation-actions">
+                            <button class="recommendation-action" onclick="jumpToIssue(${issue.id})">🔍 Jump to Location</button>
+                            <button class="recommendation-action" onclick="highlightIssue(${issue.id})">✨ Highlight Issue</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listElement.innerHTML = html;
+        }
+
+        // Get issue icon
+        function getIssueIcon(type) {
+            const icons = {
+                'tone_improvement': '🎭',
+                'sentiment': '😊',
+                'consistency': '🔄',
+                'formality': '👔',
+                'grammar': '📝',
+                'style': '✨'
+            };
+            return icons[type] || '⚠️';
+        }
+
+        // Highlight specific issue
+        function highlightIssue(issueId) {
+            // Clear previous highlights
+            document.querySelectorAll('.recommendation').forEach(rec => {
+                rec.classList.remove('highlighted');
+            });
+
+            // Highlight the recommendation
+            const recElement = document.getElementById(`rec-${issueId}`);
+            if (recElement) {
+                recElement.classList.add('highlighted');
+                recElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            highlightedIssueIndex = issueId;
+        }
+
+        // Jump to issue in text
+        function jumpToIssue(issueId) {
+            const issue = currentIssues.find(i => i.id === issueId);
+            if (!issue) return;
+
+            const editor = document.getElementById('text-editor');
+            editor.focus();
+            editor.setSelectionRange(issue.location.start, issue.location.end);
+
+            // Scroll to make the selection visible
+            const lineHeight = parseInt(getComputedStyle(editor).lineHeight);
+            const lines = editor.value.substring(0, issue.location.start).split('\n').length;
+            editor.scrollTop = Math.max(0, (lines - 5) * lineHeight);
+
+            highlightIssue(issueId);
+        }
+
+        // Get line and column from position
+        function getLineAndColumn(text, position) {
+            const beforePosition = text.substring(0, position);
+            const lines = beforePosition.split('\n');
+            return {
+                line: lines.length,
+                column: lines[lines.length - 1].length + 1
+            };
+        }
+
+        // Update summary
+        function updateSummary() {
+            const summaryElement = document.getElementById('analysis-summary');
+            const countElement = document.getElementById('issue-count');
+
+            if (currentIssues.length === 0) {
+                summaryElement.textContent = 'Analysis complete - no issues found!';
+                countElement.textContent = '0 issues found';
+            } else {
+                const highPriority = currentIssues.filter(i => i.priority === 'high').length;
+                const mediumPriority = currentIssues.filter(i => i.priority === 'medium').length;
+                const lowPriority = currentIssues.filter(i => i.priority === 'low').length;
+
+                summaryElement.textContent = `Found ${currentIssues.length} issues: ${highPriority} high, ${mediumPriority} medium, ${lowPriority} low priority`;
+                countElement.textContent = `${currentIssues.length} issues found`;
+            }
+        }
+
+        // Utility functions
+        function getRecommendationText(rec) {
+            if (typeof rec === 'string') return rec;
+            return rec.suggestion || rec.message || rec.description || JSON.stringify(rec);
+        }
+
+        function getRecommendationPriority(rec) {
+            if (typeof rec === 'object' && rec.priority) return rec.priority;
+            return 'medium';
+        }
+
+        function showSyncIndicator() {
+            const indicator = document.getElementById('sync-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const textEditor = document.getElementById('text-editor');
+
+            // Update highlights when text changes
+            textEditor.addEventListener('input', function() {
+                // Clear current issues when text changes
+                currentIssues = [];
+                updateHighlights();
+                updateSummary();
+            });
+
+            // Test server connection
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Server connection successful:', data);
+                })
+                .catch(error => {
+                    console.log('❌ Server connection failed:', error);
+                    document.querySelector('.status-indicator span').textContent = 'Server connection failed';
+                    document.querySelector('.status-dot').style.background = '#e53e3e';
+                });
+        });
+    </script>
+</body>
+</html>
