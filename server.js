@@ -444,6 +444,33 @@ if (process.env.NODE_ENV === 'development') {
     }));
 }
 
+// Documentation routes - serve markdown files
+const fs = require('fs');
+
+app.get('/api/docs/prd', (req, res) => {
+    const filePath = path.join(__dirname, 'PRD-Campaign-AI-Editor.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+app.get('/api/docs/user-guide', (req, res) => {
+    const filePath = path.join(__dirname, 'USER_GUIDE.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+app.get('/api/docs/technical', (req, res) => {
+    const filePath = path.join(__dirname, 'TECHNICAL_DOCS.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+app.get('/api/docs/design-patterns', (req, res) => {
+    const filePath = path.join(__dirname, 'DESIGN_PATTERNS.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
