@@ -1,0 +1,15 @@
+.textarea-wrap { position: relative; }
+.suggestion-overlay { position:absolute; inset:0; pointer-events:none; }
+.suggestion-rect { background: rgba(255,243,205,.9); outline:2px solid #ffda6a; border-radius:2px; box-shadow:0 0 0 2px rgba(255,218,106,.5) inset; animation:pulse 1.2s ease-out 1; }
+.suggestion-highlight { background:#fff3cd; outline:2px solid #ffda6a; border-radius:2px; box-shadow:0 0 0 2px rgba(255,218,106,.4) inset; animation:pulse 1.2s ease-out 1; }
+@keyframes pulse { from{box-shadow:0 0 0 6px rgba(255,218,106,0) inset} to{box-shadow:0 0 0 2px rgba(255,218,106,.5) inset} }
+
+.cpo-popover { position:absolute; z-index:2147483000; display:none; width:360px; }
+.cpo-popover-body{ background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:10px; }
+.cpo-popover-head{ font-weight:600; margin-bottom:6px; }
+.cpo-preview{ width:100%; min-height:72px; resize:vertical; font: inherit; }
+.cpo-actions{ display:flex; gap:.5rem; justify-content:flex-end; margin-top:.5rem; }
+.cpo-actions button{ padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#f7f7f7; cursor:pointer; }
+.cpo-actions .cpo-apply{ background:#184; color:#fff; border-color:#184; }
+.cpo-actions .cpo-undo:disabled{ opacity:.5; cursor:not-allowed; }
+.cpo-status{ color:#666; font-size:.85rem; margin-top:6px; }

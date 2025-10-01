@@ -26,6 +26,8 @@ const authorizationRoutes = require('./backend/routes/authorization');
 const editorialCommentsRoutes = require('./backend/routes/editorial-comments');
 const editorialAIRoutes = require('./backend/routes/editorial-ai');
 const collaborationRoutes = require('./backend/routes/collaboration');
+const pressReleaseTypologyRoutes = require('./backend/routes/press-release-typology');
+const pressReleaseParserRoutes = require('./backend/routes/press-release-parser');
 
 // Import database
 const db = require('./backend/database/init');
@@ -52,7 +54,19 @@ app.use(helmet({
 // CORS configuration for development
 app.use(cors({
     origin: process.env.NODE_ENV === 'development'
-        ? ['http://localhost:3000', 'http://127.0.0.1:3000', 'file://']
+        ? function(origin, callback) {
+            // Allow requests with no origin (like mobile apps, curl, Postman)
+            if (!origin) return callback(null, true);
+            // Allow any localhost or 127.0.0.1 on any port
+            if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+                return callback(null, true);
+            }
+            // Allow file:// protocol for local testing
+            if (origin.startsWith('file://')) {
+                return callback(null, true);
+            }
+            callback(new Error('Not allowed by CORS'));
+        }
         : process.env.FRONTEND_URL,
     credentials: true
 }));
@@ -107,6 +121,44 @@ app.use('/api/authorization', authorizationRoutes);
 app.use('/api/editorial-comments', editorialCommentsRoutes);
 app.use('/api/editorial-ai', editorialAIRoutes);
 app.use('/api/collaboration', collaborationRoutes);
+app.use('/api/press-release-typology', pressReleaseTypologyRoutes);
+app.use('/api/press-release-parser', pressReleaseParserRoutes);
+
+// Prose enhancement endpoint for editor (no auth required for simplicity)
+const aiService = require('./backend/services/ai-service');
+app.post('/enhance', async (req, res) => {
+    try {
+        const { sentence } = req.body;
+
+        if (!sentence || typeof sentence !== 'string') {
+            return res.status(400).json({ error: 'Missing or invalid sentence parameter' });
+        }
+
+        const prompt = `Improve this sentence for a political campaign press release. Make it more compelling, professional, and impactful while keeping the core message. Return ONLY the improved sentence, nothing else.
+
+Original: "${sentence}"
+
+Improved:`;
+
+        const result = await aiService.performResearch(prompt, {
+            contextType: 'prose-enhancement',
+            maxTokens: 150
+        });
+
+        // Extract just the improved sentence from the response
+        let enhanced = result.text.trim();
+        // Remove quotes if AI added them
+        enhanced = enhanced.replace(/^["']|["']$/g, '');
+
+        res.json({ enhanced });
+    } catch (error) {
+        console.error('Prose enhancement error:', error);
+        res.status(500).json({
+            error: 'Enhancement failed',
+            enhanced: req.body.sentence // Fallback to original
+        });
+    }
+});
 
 // Serve static files in development
 if (process.env.NODE_ENV === 'development') {
@@ -223,6 +275,26 @@ if (process.env.NODE_ENV === 'development') {
         res.sendFile(path.join(__dirname, 'public', 'press-release-editor.html'));
     });
 
+    // Serve the multi-surface press release canvas
+    app.get('/press-release-canvas', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'press-release-canvas.html'));
+    });
+
+    // Serve the press release briefing workflow
+    app.get('/press-release-briefing', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'public', 'press-release-briefing.html'));
+    });
+
     // Serve the talking points editor
     app.get('/talking-points', (req, res) => {
         res.set({
@@ -303,6 +375,12 @@ if (process.env.NODE_ENV === 'development') {
             res.redirect(`/?assignment=${assignmentId}`);
         }
     });
+} else {
+    // Production mode - serve static files with caching
+    app.use(express.static(path.join(__dirname, 'public'), {
+        maxAge: '1h',
+        etag: true
+    }));
 }
 
 // Health check endpoint
@@ -325,7 +403,11 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize database and start server
-db.initialize().then(() => {
+db.initialize().then(async () => {
+    // Initialize parser feedback service tables
+    const feedbackService = require('./backend/services/parser-feedback-service');
+    await feedbackService.initializeDatabase();
+
     const server = app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
         console.log(`📝 Main Editor available at http://localhost:${PORT}/`);

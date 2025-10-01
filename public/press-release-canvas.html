@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Canvas - Multi-Surface Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .surface-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .surface-tab {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .surface-tab.active {
+            background: white;
+            color: #1e40af;
+        }
+
+        .main-container {
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        .surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .surface.active {
+            display: block;
+        }
+
+        /* Fields Canvas Styles */
+        .fields-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .field-group {
+            margin-bottom: 24px;
+        }
+
+        .field-group h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            align-items: start;
+        }
+
+        .field {
+            flex: 1;
+        }
+
+        .field-half {
+            flex: 0.5;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .field input, .field textarea, .field select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.4;
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus, .field textarea:focus, .field select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field textarea.large {
+            min-height: 120px;
+        }
+
+        .embargo-section {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        /* Gutenberg Canvas Styles */
+        .gutenberg-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .gutenberg-toolbar {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px 8px 0 0;
+            padding: 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .block-button {
+            padding: 8px 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .block-button:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .gutenberg-editor {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            min-height: 600px;
+            padding: 20px;
+        }
+
+        .gutenberg-block {
+            border: 1px dashed #cbd5e1;
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            min-height: 60px;
+        }
+
+        .gutenberg-block:hover {
+            border-color: #3b82f6;
+        }
+
+        .block-label {
+            position: absolute;
+            top: -8px;
+            left: 8px;
+            background: white;
+            padding: 2px 6px;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .block-content {
+            width: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .block-content.heading {
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .block-content.subheading {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* Clean View Styles */
+        .clean-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .clean-content {
+            white-space: pre-wrap;
+            font-family: Georgia, serif;
+            width: 100%;
+            min-height: 500px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            background: #fefefe;
+        }
+
+        .clean-content.editable {
+            background: #fefefe;
+            transition: all 0.2s ease;
+        }
+
+        .clean-content.editable:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+
+        .clean-header {
+            margin-bottom: 10px;
+        }
+
+        /* Stationary Preview Styles */
+        .stationary-container {
+            max-width: 8.5in;
+            margin: 0 auto;
+            background: white;
+            padding: 1in;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            min-height: 11in;
+            font-family: 'Times New Roman', serif;
+            font-size: 12pt;
+            line-height: 1.6;
+        }
+
+        .letterhead {
+            text-align: center;
+            border-bottom: 2px solid #1e40af;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .campaign-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+
+        .campaign-tagline {
+            font-size: 10pt;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .release-header {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 10pt;
+            color: #64748b;
+        }
+
+        .release-title {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .release-subtitle {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .release-body {
+            text-align: justify;
+        }
+
+        .release-body p {
+            margin-bottom: 12pt;
+            text-indent: 0;
+        }
+
+        .quote {
+            font-style: italic;
+            margin: 15px 0;
+            padding-left: 20px;
+            border-left: 3px solid #e2e8f0;
+        }
+
+        .contact-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10pt;
+        }
+
+        .paid-for {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 8pt;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        /* Combobox styles */
+        .combobox-container {
+            position: relative;
+        }
+
+        .combobox-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .combobox-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .combobox-container textarea,
+        .combobox-container input[type="text"] {
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .combobox-container textarea:focus,
+        .combobox-container input[type="text"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Date/Time Widget styles */
+        .date-widget-container,
+        .time-widget-container {
+            position: relative;
+        }
+
+        .date-presets,
+        .time-presets {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .preset-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+
+        .preset-btn:active {
+            background: #cbd5e1;
+            transform: translateY(1px);
+        }
+
+        .preset-btn.small {
+            padding: 3px 6px;
+            font-size: 10px;
+        }
+
+        .date-widget-container input[type="date"],
+        .time-widget-container input[type="time"] {
+            width: 100%;
+            margin-top: 0;
+        }
+
+        /* Enhanced date/time input styling */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>') no-repeat center;
+            background-size: 16px 16px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>') no-repeat center;
+            background-size: 16px 16px;
+        }
+    </style>
+    <link rel="stylesheet" href="./css/suggestion-highlighter.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Press Release Canvas</h1>
+        <div class="surface-tabs">
+            <div class="surface-tab active" data-surface="fields">Fields</div>
+            <div class="surface-tab" data-surface="gutenberg">Gutenberg</div>
+            <div class="surface-tab" data-surface="clean">Clean View</div>
+            <div class="surface-tab" data-surface="stationary">Stationary</div>
+            <button class="btn-import" onclick="showImportDialog()">📋 Import Draft</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Fields Surface -->
+        <div class="surface active" id="fields-surface">
+            <div class="fields-container">
+                <div class="field-group">
+                    <h3>Release Information</h3>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="release-type">Release Type</label>
+                            <select id="release-type">
+                                <option value="immediate">FOR IMMEDIATE RELEASE</option>
+                                <option value="scheduled">FOR RELEASE ON [DATE]</option>
+                                <option value="embargoed">FOR EMBARGOED RELEASE</option>
+                                <option value="custom">CUSTOM</option>
+                            </select>
+                            <div id="embargo-fields" class="embargo-section" style="display: none;">
+                                <div class="field-row">
+                                    <div class="field field-half">
+                                        <label for="embargo-date">Embargo Date</label>
+                                        <div class="date-widget-container">
+                                            <div class="date-presets">
+                                                <button type="button" class="preset-btn" onclick="setEmbargoDatePreset('today')">Today</button>
+                                                <button type="button" class="preset-btn" onclick="setEmbargoDatePreset('tomorrow')">Tomorrow</button>
+                                                <button type="button" class="preset-btn" onclick="setEmbargoDatePreset('week')">Next Week</button>
+                                            </div>
+                                            <input type="date" id="embargo-date">
+                                        </div>
+                                    </div>
+                                    <div class="field field-half">
+                                        <label for="embargo-time">Embargo Time</label>
+                                        <div class="time-widget-container">
+                                            <div class="time-presets">
+                                                <button type="button" class="preset-btn small" onclick="setEmbargoTimePreset('9am')">9 AM</button>
+                                                <button type="button" class="preset-btn small" onclick="setEmbargoTimePreset('12pm')">12 PM</button>
+                                                <button type="button" class="preset-btn small" onclick="setEmbargoTimePreset('5pm')">5 PM</button>
+                                            </div>
+                                            <input type="time" id="embargo-time">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field field-half">
+                            <label for="release-date">Release Date</label>
+                            <div class="date-widget-container">
+                                <div class="date-presets">
+                                    <button type="button" class="preset-btn" onclick="setReleaseDatePreset('today')">Today</button>
+                                    <button type="button" class="preset-btn" onclick="setReleaseDatePreset('tomorrow')">Tomorrow</button>
+                                    <button type="button" class="preset-btn" onclick="setReleaseDatePreset('week')">Next Week</button>
+                                </div>
+                                <input type="date" id="release-date">
+                            </div>
+                        </div>
+                        <div class="field field-half">
+                            <label for="release-location">Location</label>
+                            <input type="text" id="release-location" placeholder="City, State">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h3>Headlines</h3>
+                    <div class="field">
+                        <label for="headline">Headline</label>
+                        <input type="text" id="headline" placeholder="Main headline for the press release">
+                    </div>
+                    <div class="field">
+                        <label for="subhead">Subhead</label>
+                        <input type="text" id="subhead" placeholder="Supporting subheadline">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h3>Content</h3>
+                    <div class="field">
+                        <label for="lead-paragraph">Lead Paragraph</label>
+                        <textarea id="lead-paragraph" class="large" placeholder="Opening paragraph with key information"></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="supporting-details">Supporting Details</label>
+                        <textarea id="supporting-details" class="large" placeholder="Additional context and details"></textarea>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h3>Quotes</h3>
+                    <div class="field-row">
+                        <div class="field field-half">
+                            <label for="spokesperson-1">First Spokesperson</label>
+                            <input type="text" id="spokesperson-1" placeholder="Name and title">
+                        </div>
+                        <div class="field field-half">
+                            <label for="quote-1">First Quote</label>
+                            <textarea id="quote-1" placeholder="Quote content"></textarea>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field field-half">
+                            <label for="spokesperson-2">Second Spokesperson</label>
+                            <input type="text" id="spokesperson-2" placeholder="Name and title">
+                        </div>
+                        <div class="field field-half">
+                            <label for="quote-2">Second Quote</label>
+                            <textarea id="quote-2" placeholder="Quote content"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h3>Additional Information</h3>
+                    <div class="field">
+                        <label for="additional-info">Additional Information</label>
+                        <textarea id="additional-info" placeholder="Background information, statistics, etc."></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="boilerplate">Candidate Background</label>
+                        <textarea id="boilerplate" placeholder="Standard candidate or organization background paragraph"></textarea>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <h3>Contact & Attribution</h3>
+                    <div class="field-row">
+                        <div class="field field-half">
+                            <label for="media-contact">Media Contact</label>
+                            <div class="combobox-container">
+                                <select id="media-contact-select" class="combobox-select" onchange="handleMediaContactChange()">
+                                    <option value="">Select contact or enter new...</option>
+                                    <option value="John Smith, Communications Director, (555) 123-4567, john@campaign.com">John Smith, Communications Director, (555) 123-4567, john@campaign.com</option>
+                                    <option value="Sarah Johnson, Press Secretary, (555) 234-5678, sarah@campaign.com">Sarah Johnson, Press Secretary, (555) 234-5678, sarah@campaign.com</option>
+                                    <option value="Mike Davis, Campaign Manager, (555) 345-6789, mike@campaign.com">Mike Davis, Campaign Manager, (555) 345-6789, mike@campaign.com</option>
+                                    <option value="Lisa Brown, Communications Coordinator, (555) 456-7890, lisa@campaign.com">Lisa Brown, Communications Coordinator, (555) 456-7890, lisa@campaign.com</option>
+                                    <option value="custom">Enter new contact...</option>
+                                </select>
+                                <textarea id="media-contact" placeholder="Contact name, phone, email" style="display: none;"></textarea>
+                            </div>
+                        </div>
+                        <div class="field field-half">
+                            <label for="paid-for">Paid For By</label>
+                            <div class="combobox-container">
+                                <select id="paid-for-select" class="combobox-select" onchange="handlePaidForChange()">
+                                    <option value="">Select committee or enter new...</option>
+                                    <option value="Friends of [Candidate Name]">Friends of [Candidate Name]</option>
+                                    <option value="[Candidate Name] for [Office]">Candidate for Office</option>
+                                    <option value="Committee to Elect [Candidate Name]">Committee to Elect [Candidate Name]</option>
+                                    <option value="[Candidate Name] Campaign Committee">Campaign Committee</option>
+                                    <option value="Citizens for [Candidate Name]">Citizens for [Candidate Name]</option>
+                                    <option value="[Candidate Name] for Change">Candidate for Change</option>
+                                    <option value="custom">Enter new committee...</option>
+                                </select>
+                                <input type="text" id="paid-for" placeholder="Campaign committee name" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gutenberg Surface -->
+        <div class="surface" id="gutenberg-surface">
+            <div class="gutenberg-container">
+                <div class="gutenberg-toolbar">
+                    <div class="block-button" data-block="paragraph">📄 Paragraph</div>
+                    <div class="block-button" data-block="heading">📰 Heading</div>
+                    <div class="block-button" data-block="list">📋 List</div>
+                    <div class="block-button" data-block="quote">💬 Quote</div>
+                    <div class="block-button" data-block="separator">➖ Separator</div>
+                    <div class="block-button" data-block="spacer">⬜ Spacer</div>
+                    <div class="block-button" data-block="group">📦 Group</div>
+                    <div class="block-button" data-block="columns">📊 Columns</div>
+                </div>
+                <div class="gutenberg-editor" id="gutenberg-editor">
+                    <!-- Blocks will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Clean View Surface -->
+        <div class="surface" id="clean-surface">
+            <div class="clean-container">
+                <div class="clean-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <small style="color: #64748b; font-size: 12px;">Edit press release content here, or view the generated clean text from other surfaces</small>
+                    <button id="clean-parse-btn" onclick="app.handleCleanViewParse()"
+                            style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; opacity: 0.8;">
+                        🔄 Parse Content
+                    </button>
+                </div>
+
+
+                <textarea class="clean-content editable" id="clean-content" placeholder="Paste your press release text here to automatically parse and populate all fields...
+
+Or use the other surfaces to build your press release - this view will show the clean formatted text."></textarea>
+            </div>
+        </div>
+
+        <!-- Stationary Surface -->
+        <div class="surface" id="stationary-surface">
+            <div class="stationary-container">
+                <div class="letterhead">
+                    <div class="campaign-name" id="stationary-campaign">Campaign Name</div>
+                    <div class="campaign-tagline">Working for Progress and Change</div>
+                </div>
+
+                <div class="release-header" id="stationary-header">
+                    FOR IMMEDIATE RELEASE
+                </div>
+
+                <div class="release-title" id="stationary-title">Press Release Headline</div>
+                <div class="release-subtitle" id="stationary-subtitle">Supporting subheadline</div>
+
+                <div class="release-body" id="stationary-body">
+                    <p>Press release content will appear here...</p>
+                </div>
+
+                <div class="contact-info" id="stationary-contact">
+                    <strong>Media Contact:</strong><br>
+                    Contact information will appear here
+                </div>
+
+                <div class="paid-for" id="stationary-paid">
+                    Paid for by Campaign Committee
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Dialog -->
+    <div class="import-overlay" id="import-overlay">
+        <div class="import-dialog">
+            <h2>📋 Import Press Release Draft</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">
+                Import your press release content from text, URL, or file and we'll automatically populate all surfaces.
+            </p>
+
+            <!-- Import Method Tabs -->
+            <div class="import-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                <button class="import-tab active" onclick="switchImportMethod('text')" data-method="text"
+                        style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    📝 Paste Text
+                </button>
+                <button class="import-tab" onclick="switchImportMethod('url')" data-method="url"
+                        style="padding: 8px 16px; background: #f1f5f9; color: #64748b; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    🌐 From URL
+                </button>
+                <button class="import-tab" onclick="switchImportMethod('file')" data-method="file"
+                        style="padding: 8px 16px; background: #f1f5f9; color: #64748b; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    📁 From File
+                </button>
+            </div>
+
+            <!-- Text Import Section -->
+            <div class="import-section" id="text-import" style="display: block;">
+                <textarea
+                class="import-textarea"
+                id="import-textarea"
+                placeholder="Paste your press release draft here...
+
+Example:
+FOR IMMEDIATE RELEASE
+
+CONTACT: Jane Smith
+Phone: (555) 123-4567
+Email: press@campaign.com
+
+Martinez Announces Healthcare Plan to Lower Prescription Drug Costs
+
+Comprehensive proposal would save families an average of $2,400 annually
+
+TOLEDO, OH – March 15, 2024 – Congressional candidate Maria Martinez today unveiled her comprehensive healthcare plan that would dramatically reduce prescription drug costs for working families across Ohio's 9th District.
+
+'Too many families are forced to choose between paying for life-saving medications and putting food on the table,' said Martinez. 'This is unacceptable in the wealthiest nation on earth.'
+
+###
+
+Paid for by Martinez for Congress"></textarea>
+            </div>
+
+            <!-- URL Import Section -->
+            <div class="import-section" id="url-import" style="display: none;">
+                <div style="margin-bottom: 16px;">
+                    <label for="dialog-url-input" style="display: block; margin-bottom: 8px; font-weight: 500; color: #374151;">Enter URL:</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="url" id="dialog-url-input" placeholder="https://example.com/press-release"
+                               style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        <button onclick="importFromURLDialog()" id="dialog-url-btn"
+                                style="padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;">
+                            🌐 Import URL
+                        </button>
+                    </div>
+                    <div id="dialog-url-status" style="margin-top: 8px; font-size: 12px; color: #64748b;"></div>
+                </div>
+            </div>
+
+            <!-- File Import Section -->
+            <div class="import-section" id="file-import" style="display: none;">
+                <div style="margin-bottom: 16px;">
+                    <label for="dialog-file-input" style="display: block; margin-bottom: 8px; font-weight: 500; color: #374151;">Choose File:</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <label for="dialog-file-input" style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                            📁 Choose file...
+                            <span id="dialog-file-name" style="color: #64748b; font-size: 12px; margin-left: auto;"></span>
+                        </label>
+                        <input type="file" id="dialog-file-input" accept=".txt,.md,text/*" onchange="importFromFileDialog(event)" style="display: none;">
+                        <span style="padding: 12px 20px; background: #6b7280; color: white; border: none; border-radius: 6px; font-size: 14px; white-space: nowrap;">
+                            📄 Import File
+                        </span>
+                    </div>
+                    <div id="dialog-file-status" style="margin-top: 8px; font-size: 12px; color: #64748b;">Supports .txt, .md, and plain text files</div>
+                </div>
+            </div>
+
+            <div class="parse-results" id="parse-results">
+                <h3>📊 Parsing Results</h3>
+                <div class="parse-summary" id="parse-summary">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <div class="import-actions">
+                <button class="btn btn-secondary" onclick="hideImportDialog()">Cancel</button>
+                <button class="btn btn-primary" onclick="previewParsing()">Preview Import</button>
+                <button class="btn btn-success" onclick="importDraft()" id="import-confirm" style="display: none;">Import & Populate</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .btn-import {
+            background: #059669 !important;
+            color: white !important;
+            margin-left: 16px;
+            padding: 8px 16px;
+            border: none !important;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 100;
+            display: inline-block !important;
+            visibility: visible !important;
+        }
+
+        .btn-import:hover {
+            background: #047857;
+        }
+
+        .import-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .import-dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .import-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: Georgia, serif;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .import-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .import-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .parse-results {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .parse-results h3 {
+            color: #0c4a6e;
+            margin-bottom: 12px;
+        }
+
+        .parse-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .parse-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #e0f2fe;
+        }
+
+        .parse-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #0369a1;
+        }
+
+        .parse-value {
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        /* Enhanced parsing preview styles */
+        .parse-section {
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .parse-section h4 {
+            margin: 0;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .parse-content {
+            padding: 12px 16px;
+            background: white;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .parse-content:not(:last-child) {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .quote-item {
+            background: #f9fafb !important;
+            border-left: 3px solid #3b82f6;
+            margin: 8px 0;
+        }
+
+        .quote-text {
+            font-style: italic;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .quote-attribution {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .paragraph-preview {
+            background: #fefefe !important;
+            border: 1px solid #f3f4f6;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 8px 0 !important;
+        }
+
+        .metadata-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metadata-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .metadata-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+    </style>
+
+    <script>
+        // Combobox handling functions
+        function handleMediaContactChange() {
+            const select = document.getElementById('media-contact-select');
+            const textarea = document.getElementById('media-contact');
+
+            if (select.value === 'custom') {
+                select.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.focus();
+                textarea.value = '';
+            } else if (select.value === '') {
+                textarea.style.display = 'none';
+                select.style.display = 'block';
+                textarea.value = '';
+            } else {
+                textarea.style.display = 'none';
+                select.style.display = 'block';
+                textarea.value = select.value;
+            }
+
+            // Trigger sync if canvas exists
+            if (window.pressReleaseCanvas) {
+                window.pressReleaseCanvas.syncAllSurfaces();
+            }
+        }
+
+        function handlePaidForChange() {
+            const select = document.getElementById('paid-for-select');
+            const input = document.getElementById('paid-for');
+
+            if (select.value === 'custom') {
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                input.value = '';
+            } else if (select.value === '') {
+                input.style.display = 'none';
+                select.style.display = 'block';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+                select.style.display = 'block';
+                input.value = select.value;
+            }
+
+            // Trigger sync if canvas exists
+            if (window.pressReleaseCanvas) {
+                window.pressReleaseCanvas.syncAllSurfaces();
+            }
+        }
+
+        // Function to allow editing of selected items
+        function editMediaContact() {
+            const select = document.getElementById('media-contact-select');
+            const textarea = document.getElementById('media-contact');
+
+            select.style.display = 'none';
+            textarea.style.display = 'block';
+            textarea.focus();
+        }
+
+        function editPaidFor() {
+            const select = document.getElementById('paid-for-select');
+            const input = document.getElementById('paid-for');
+
+            select.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+        }
+
+        // Helper functions to get values from combobox fields
+        function getMediaContactValue() {
+            const textarea = document.getElementById('media-contact');
+            return textarea.value;
+        }
+
+        function getPaidForValue() {
+            const input = document.getElementById('paid-for');
+            return input.value;
+        }
+
+        function setMediaContactValue(value) {
+            const select = document.getElementById('media-contact-select');
+            const textarea = document.getElementById('media-contact');
+
+            // Check if value matches any option
+            const option = Array.from(select.options).find(opt => opt.value === value);
+            if (option && value !== '') {
+                select.value = value;
+                select.style.display = 'block';
+                textarea.style.display = 'none';
+                textarea.value = value;
+            } else {
+                select.value = '';
+                select.style.display = 'none';
+                textarea.style.display = 'block';
+                textarea.value = value;
+            }
+        }
+
+        function setPaidForValue(value) {
+            const select = document.getElementById('paid-for-select');
+            const input = document.getElementById('paid-for');
+
+            // Check if value matches any option
+            const option = Array.from(select.options).find(opt => opt.value === value);
+            if (option && value !== '') {
+                select.value = value;
+                select.style.display = 'block';
+                input.style.display = 'none';
+                input.value = value;
+            } else {
+                select.value = '';
+                select.style.display = 'none';
+                input.style.display = 'block';
+                input.value = value;
+            }
+        }
+
+        // Date/Time preset functions
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setEmbargoDatePreset(preset) {
+            const dateInput = document.getElementById('embargo-date');
+            const today = new Date();
+            let targetDate;
+
+            switch (preset) {
+                case 'today':
+                    targetDate = new Date(today);
+                    break;
+                case 'tomorrow':
+                    targetDate = new Date(today);
+                    targetDate.setDate(targetDate.getDate() + 1);
+                    break;
+                case 'week':
+                    targetDate = new Date(today);
+                    targetDate.setDate(targetDate.getDate() + 7);
+                    break;
+            }
+
+            if (targetDate) {
+                dateInput.value = formatDateForInput(targetDate);
+                dateInput.dispatchEvent(new Event('change'));
+
+                // Trigger sync if canvas exists
+                if (window.pressReleaseCanvas) {
+                    window.pressReleaseCanvas.syncAllSurfaces();
+                }
+            }
+        }
+
+        function setEmbargoTimePreset(preset) {
+            const timeInput = document.getElementById('embargo-time');
+            let timeValue;
+
+            switch (preset) {
+                case '9am':
+                    timeValue = '09:00';
+                    break;
+                case '12pm':
+                    timeValue = '12:00';
+                    break;
+                case '5pm':
+                    timeValue = '17:00';
+                    break;
+            }
+
+            if (timeValue) {
+                timeInput.value = timeValue;
+                timeInput.dispatchEvent(new Event('change'));
+
+                // Trigger sync if canvas exists
+                if (window.pressReleaseCanvas) {
+                    window.pressReleaseCanvas.syncAllSurfaces();
+                }
+            }
+        }
+
+        function setReleaseDatePreset(preset) {
+            const dateInput = document.getElementById('release-date');
+            const today = new Date();
+            let targetDate;
+
+            switch (preset) {
+                case 'today':
+                    targetDate = new Date(today);
+                    break;
+                case 'tomorrow':
+                    targetDate = new Date(today);
+                    targetDate.setDate(targetDate.getDate() + 1);
+                    break;
+                case 'week':
+                    targetDate = new Date(today);
+                    targetDate.setDate(targetDate.getDate() + 7);
+                    break;
+            }
+
+            if (targetDate) {
+                dateInput.value = formatDateForInput(targetDate);
+                dateInput.dispatchEvent(new Event('change'));
+
+                // Trigger sync if canvas exists
+                if (window.pressReleaseCanvas) {
+                    window.pressReleaseCanvas.syncAllSurfaces();
+                }
+            }
+        }
+
+        // Auto-set release date to today if empty when page loads
+        function initializeDateDefaults() {
+            const releaseDateInput = document.getElementById('release-date');
+            if (!releaseDateInput.value) {
+                releaseDateInput.value = formatDateForInput(new Date());
+            }
+        }
+
+        class PressReleaseCanvas {
+            constructor() {
+                this.currentSurface = 'fields';
+                this.gutenbergBlocks = [];
+                this.syncInProgress = false;
+
+                this.initializeEventListeners();
+                this.initializeGutenberg();
+                this.syncAllSurfaces();
+            }
+
+            initializeEventListeners() {
+                // Surface switching
+                document.querySelectorAll('.surface-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        this.switchSurface(e.target.dataset.surface);
+                    });
+                });
+
+                // Field synchronization
+                document.querySelectorAll('#fields-surface input, #fields-surface textarea, #fields-surface select').forEach(field => {
+                    field.addEventListener('input', () => {
+                        if (!this.syncInProgress) {
+                            this.syncAllSurfaces();
+                        }
+                    });
+                });
+
+                // Release type handling
+                document.getElementById('release-type').addEventListener('change', (e) => {
+                    const embargoFields = document.getElementById('embargo-fields');
+                    if (e.target.value === 'embargoed') {
+                        embargoFields.style.display = 'block';
+                    } else {
+                        embargoFields.style.display = 'none';
+                    }
+                    this.syncAllSurfaces();
+                });
+
+                // Combobox field sync
+                document.getElementById('media-contact').addEventListener('input', () => {
+                    this.syncAllSurfaces();
+                });
+                document.getElementById('paid-for').addEventListener('input', () => {
+                    this.syncAllSurfaces();
+                });
+
+                // Date/Time field sync
+                document.getElementById('embargo-date').addEventListener('change', () => {
+                    this.syncAllSurfaces();
+                });
+                document.getElementById('embargo-time').addEventListener('change', () => {
+                    this.syncAllSurfaces();
+                });
+                document.getElementById('release-date').addEventListener('change', () => {
+                    this.syncAllSurfaces();
+                });
+
+                // Clean View paste detection
+                const cleanContent = document.getElementById('clean-content');
+                let cleanViewLastValue = '';
+
+                cleanContent.addEventListener('paste', async (e) => {
+                    // Small delay to let paste complete
+                    setTimeout(async () => {
+                        await this.handleCleanViewPaste();
+                    }, 100);
+                });
+
+                cleanContent.addEventListener('input', async (e) => {
+                    // Detect significant changes (more than just typing)
+                    const currentValue = e.target.value;
+                    if (currentValue.length > cleanViewLastValue.length + 50) {
+                        await this.handleCleanViewPaste();
+                    }
+                    cleanViewLastValue = currentValue;
+                });
+
+                // Gutenberg toolbar
+                document.querySelectorAll('.block-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.addGutenbergBlock(e.target.dataset.block);
+                    });
+                });
+            }
+
+            switchSurface(surface) {
+                // Update tabs
+                document.querySelectorAll('.surface-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`[data-surface="${surface}"]`).classList.add('active');
+
+                // Update surfaces
+                document.querySelectorAll('.surface').forEach(surf => {
+                    surf.classList.remove('active');
+                });
+                document.getElementById(`${surface}-surface`).classList.add('active');
+
+                this.currentSurface = surface;
+
+                // Sync when switching to ensure content is current
+                if (!this.syncInProgress) {
+                    this.syncAllSurfaces();
+                }
+            }
+
+            initializeGutenberg() {
+                // Add initial blocks based on press release structure
+                this.addGutenbergBlock('heading', 'Press Release Headline');
+                this.addGutenbergBlock('heading', 'Supporting Subheadline');
+                this.addGutenbergBlock('paragraph', 'Lead paragraph content...');
+                this.addGutenbergBlock('quote', 'Spokesperson quote...');
+                this.addGutenbergBlock('paragraph', 'Additional details...');
+            }
+
+            addGutenbergBlock(type, content = '') {
+                const blockId = 'block-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+
+                const block = {
+                    id: blockId,
+                    type: type,
+                    content: content
+                };
+
+                this.gutenbergBlocks.push(block);
+                this.renderGutenbergBlocks();
+                this.syncAllSurfaces();
+            }
+
+            renderGutenbergBlocks() {
+                const editor = document.getElementById('gutenberg-editor');
+                editor.innerHTML = '';
+
+                this.gutenbergBlocks.forEach(block => {
+                    const blockElement = this.createGutenbergBlockElement(block);
+                    editor.appendChild(blockElement);
+                });
+            }
+
+            createGutenbergBlockElement(block) {
+                const div = document.createElement('div');
+                div.className = 'gutenberg-block';
+                div.dataset.blockId = block.id;
+
+                const label = document.createElement('div');
+                label.className = 'block-label';
+                label.textContent = this.getBlockTypeLabel(block.type);
+
+                const content = this.createBlockContentElement(block);
+
+                div.appendChild(label);
+                div.appendChild(content);
+
+                return div;
+            }
+
+            createBlockContentElement(block) {
+                let element;
+
+                switch (block.type) {
+                    case 'heading':
+                        element = document.createElement('textarea');
+                        element.className = 'block-content heading';
+                        element.placeholder = 'Heading text...';
+                        break;
+                    case 'quote':
+                        element = document.createElement('textarea');
+                        element.className = 'block-content';
+                        element.placeholder = 'Quote text...';
+                        break;
+                    case 'list':
+                        element = document.createElement('textarea');
+                        element.className = 'block-content';
+                        element.placeholder = '• List item 1\n• List item 2\n• List item 3';
+                        break;
+                    case 'separator':
+                        element = document.createElement('div');
+                        element.style.height = '1px';
+                        element.style.background = '#e2e8f0';
+                        element.style.margin = '20px 0';
+                        return element;
+                    case 'spacer':
+                        element = document.createElement('div');
+                        element.style.height = '40px';
+                        return element;
+                    default:
+                        element = document.createElement('textarea');
+                        element.className = 'block-content';
+                        element.placeholder = 'Paragraph text...';
+                }
+
+                if (element.tagName === 'TEXTAREA') {
+                    element.value = block.content;
+                    element.style.height = 'auto';
+                    element.style.height = element.scrollHeight + 'px';
+
+                    element.addEventListener('input', (e) => {
+                        // Auto-resize
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+
+                        // Update block content
+                        const blockIndex = this.gutenbergBlocks.findIndex(b => b.id === block.id);
+                        if (blockIndex !== -1) {
+                            this.gutenbergBlocks[blockIndex].content = e.target.value;
+                            if (!this.syncInProgress) {
+                                this.syncAllSurfaces();
+                            }
+                        }
+                    });
+                }
+
+                return element;
+            }
+
+            getBlockTypeLabel(type) {
+                const labels = {
+                    'paragraph': 'Paragraph',
+                    'heading': 'Heading',
+                    'list': 'List',
+                    'quote': 'Quote',
+                    'separator': 'Separator',
+                    'spacer': 'Spacer',
+                    'group': 'Group',
+                    'columns': 'Columns'
+                };
+                return labels[type] || 'Block';
+            }
+
+            syncAllSurfaces() {
+                if (this.syncInProgress) return;
+                this.syncInProgress = true;
+
+                const data = this.collectFieldsData();
+                this.updateCleanView(data);
+                this.updateStationaryView(data);
+
+                this.syncInProgress = false;
+            }
+
+            collectFieldsData() {
+                return {
+                    releaseType: document.getElementById('release-type').value,
+                    embargoDate: document.getElementById('embargo-date').value,
+                    embargoTime: document.getElementById('embargo-time').value,
+                    releaseDate: document.getElementById('release-date').value,
+                    location: document.getElementById('release-location').value,
+                    headline: document.getElementById('headline').value,
+                    subhead: document.getElementById('subhead').value,
+                    leadParagraph: document.getElementById('lead-paragraph').value,
+                    supportingDetails: document.getElementById('supporting-details').value,
+                    spokesperson1: document.getElementById('spokesperson-1').value,
+                    quote1: document.getElementById('quote-1').value,
+                    spokesperson2: document.getElementById('spokesperson-2').value,
+                    quote2: document.getElementById('quote-2').value,
+                    additionalInfo: document.getElementById('additional-info').value,
+                    boilerplate: document.getElementById('boilerplate').value,
+                    mediaContact: getMediaContactValue(),
+                    paidFor: getPaidForValue()
+                };
+            }
+
+            updateCleanView(data) {
+                const cleanContent = document.getElementById('clean-content');
+
+                // Skip updating if user is currently focused on clean view (to prevent overwriting manual edits)
+                if (document.activeElement === cleanContent) {
+                    return;
+                }
+
+                let content = '';
+
+                // Release header
+                if (data.releaseType === 'embargoed' && data.embargoDate && data.embargoTime) {
+                    const embargoDateTime = new Date(data.embargoDate + 'T' + data.embargoTime);
+                    content += `FOR EMBARGOED RELEASE\nEMBARGO: ${embargoDateTime.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}, ${embargoDateTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    })}\n\n`;
+                } else {
+                    const typeLabels = {
+                        'immediate': 'FOR IMMEDIATE RELEASE',
+                        'scheduled': 'FOR RELEASE ON [DATE]',
+                        'custom': 'CUSTOM RELEASE TYPE'
+                    };
+                    content += (typeLabels[data.releaseType] || 'FOR IMMEDIATE RELEASE') + '\n\n';
+                }
+
+                // Date and location
+                if (data.releaseDate || data.location) {
+                    const releaseDateTime = data.releaseDate ? new Date(data.releaseDate) : new Date();
+                    const dateStr = releaseDateTime.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    content += `${data.location ? data.location + ' – ' : ''}${dateStr}\n\n`;
+                }
+
+                // Headlines
+                if (data.headline) {
+                    content += `${data.headline}\n\n`;
+                }
+                if (data.subhead) {
+                    content += `${data.subhead}\n\n`;
+                }
+
+                // Content sections
+                if (data.leadParagraph) {
+                    content += `${data.leadParagraph}\n\n`;
+                }
+
+                if (data.quote1 && data.spokesperson1) {
+                    content += `"${data.quote1}" said ${data.spokesperson1}.\n\n`;
+                }
+
+                if (data.supportingDetails) {
+                    content += `${data.supportingDetails}\n\n`;
+                }
+
+                if (data.quote2 && data.spokesperson2) {
+                    content += `"${data.quote2}" said ${data.spokesperson2}.\n\n`;
+                }
+
+                if (data.additionalInfo) {
+                    content += `${data.additionalInfo}\n\n`;
+                }
+
+                if (data.boilerplate) {
+                    content += `${data.boilerplate}\n\n`;
+                }
+
+                // Contact info
+                if (data.mediaContact) {
+                    content += `Media Contact:\n${data.mediaContact}\n\n`;
+                }
+
+                // Paid for
+                if (data.paidFor) {
+                    content += `Paid for by ${data.paidFor}`;
+                }
+
+                cleanContent.textContent = content;
+            }
+
+            updateStationaryView(data) {
+                // Update header
+                const header = document.getElementById('stationary-header');
+                if (data.releaseType === 'embargoed' && data.embargoDate && data.embargoTime) {
+                    const embargoDateTime = new Date(data.embargoDate + 'T' + data.embargoTime);
+                    header.innerHTML = `FOR EMBARGOED RELEASE<br>EMBARGO: ${embargoDateTime.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}, ${embargoDateTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    })}`;
+                } else {
+                    const typeLabels = {
+                        'immediate': 'FOR IMMEDIATE RELEASE',
+                        'scheduled': 'FOR RELEASE ON [DATE]',
+                        'custom': 'CUSTOM RELEASE TYPE'
+                    };
+                    header.textContent = typeLabels[data.releaseType] || 'FOR IMMEDIATE RELEASE';
+                }
+
+                // Update content
+                document.getElementById('stationary-title').textContent = data.headline || 'Press Release Headline';
+                document.getElementById('stationary-subtitle').textContent = data.subhead || 'Supporting subheadline';
+
+                // Update body
+                const body = document.getElementById('stationary-body');
+                let bodyHTML = '';
+
+                if (data.releaseDate || data.location) {
+                    const releaseDateTime = data.releaseDate ? new Date(data.releaseDate) : new Date();
+                    const dateStr = releaseDateTime.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    bodyHTML += `<p><strong>${data.location ? data.location + ' – ' : ''}${dateStr}</strong></p>`;
+                }
+
+                if (data.leadParagraph) {
+                    bodyHTML += `<p>${data.leadParagraph}</p>`;
+                }
+
+                if (data.quote1 && data.spokesperson1) {
+                    bodyHTML += `<div class="quote">"${data.quote1}" said ${data.spokesperson1}.</div>`;
+                }
+
+                if (data.supportingDetails) {
+                    bodyHTML += `<p>${data.supportingDetails}</p>`;
+                }
+
+                if (data.quote2 && data.spokesperson2) {
+                    bodyHTML += `<div class="quote">"${data.quote2}" said ${data.spokesperson2}.</div>`;
+                }
+
+                if (data.additionalInfo) {
+                    bodyHTML += `<p>${data.additionalInfo}</p>`;
+                }
+
+                if (data.boilerplate) {
+                    bodyHTML += `<p>${data.boilerplate}</p>`;
+                }
+
+                body.innerHTML = bodyHTML || '<p>Press release content will appear here...</p>';
+
+                // Update contact and paid for
+                document.getElementById('stationary-contact').innerHTML = data.mediaContact ?
+                    `<strong>Media Contact:</strong><br>${data.mediaContact.replace(/\n/g, '<br>')}` :
+                    '<strong>Media Contact:</strong><br>Contact information will appear here';
+
+                document.getElementById('stationary-paid').textContent = data.paidFor ?
+                    `Paid for by ${data.paidFor}` :
+                    'Paid for by Campaign Committee';
+            }
+
+            async handleCleanViewParse() {
+                const cleanContent = document.getElementById('clean-content');
+                const parseBtn = document.getElementById('clean-parse-btn');
+                const text = cleanContent.value.trim();
+
+                // Check if there's content to parse
+                if (text.length < 50) {
+                    alert('Please enter at least 50 characters of press release content to parse.');
+                    return;
+                }
+
+                try {
+                    // Show loading state
+                    const originalBtnText = parseBtn.textContent;
+                    parseBtn.textContent = '⏳ Parsing...';
+                    parseBtn.disabled = true;
+
+                    // Show a temporary indicator that parsing is happening
+                    const originalPlaceholder = cleanContent.placeholder;
+                    cleanContent.placeholder = 'Parsing press release content...';
+
+                    // Call the press release parser API
+                    const response = await fetch('/api/press-release-parser/extract-fields', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+
+                        if (result.success && result.fields) {
+                            // Temporarily disable sync to prevent loops
+                            this.syncInProgress = true;
+
+                            // Populate all fields from parsed data
+                            populateFieldsFromData(result.fields);
+
+                            // Switch to Fields view to show the populated data
+                            this.switchSurface('fields');
+
+                            // Show a brief success message
+                            this.showParseSuccessMessage();
+
+                            // Re-enable sync after a delay
+                            setTimeout(() => {
+                                this.syncInProgress = false;
+                                this.syncAllSurfaces();
+                            }, 500);
+                        } else {
+                            alert('Failed to parse content: ' + (result.error || 'Unknown error'));
+                        }
+                    } else {
+                        alert('Error parsing content. Please try again.');
+                    }
+
+                    // Restore original placeholder and button
+                    cleanContent.placeholder = originalPlaceholder;
+                    parseBtn.textContent = originalBtnText;
+                    parseBtn.disabled = false;
+
+                } catch (error) {
+                    console.error('Parse error:', error);
+                    alert('Error parsing content. Please try again.');
+
+                    // Restore button state
+                    parseBtn.textContent = '🔄 Parse Content';
+                    parseBtn.disabled = false;
+                }
+            }
+
+            async handleCleanViewPaste() {
+                const cleanContent = document.getElementById('clean-content');
+                const text = cleanContent.value.trim();
+
+                // Only trigger parsing if there's substantial content
+                if (text.length < 100) {
+                    return;
+                }
+
+                try {
+                    // Show a temporary indicator that parsing is happening
+                    const originalPlaceholder = cleanContent.placeholder;
+                    cleanContent.placeholder = 'Parsing press release content...';
+
+                    // Call the press release parser API
+                    const response = await fetch('/api/press-release-parser/extract-fields', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ text })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+
+                        if (result.success && result.fields) {
+                            // Temporarily disable sync to prevent loops
+                            this.syncInProgress = true;
+
+                            // Populate all fields from parsed data
+                            populateFieldsFromData(result.fields);
+
+                            // Switch to Fields view to show the populated data
+                            this.switchSurface('fields');
+
+                            // Show a brief success message
+                            this.showParseSuccessMessage();
+
+                            // Re-enable sync after a delay
+                            setTimeout(() => {
+                                this.syncInProgress = false;
+                                this.syncAllSurfaces();
+                            }, 500);
+                        }
+                    }
+
+                    // Restore original placeholder
+                    cleanContent.placeholder = originalPlaceholder;
+
+                } catch (error) {
+                    console.error('Error parsing pasted content:', error);
+                    // Restore placeholder on error
+                    cleanContent.placeholder = 'Paste your press release text here to automatically parse and populate all fields...';
+                }
+            }
+
+
+            showParseSuccessMessage() {
+                // Create a temporary success message
+                const message = document.createElement('div');
+                message.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #10b981;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    z-index: 1000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                `;
+                message.textContent = '✓ Press release parsed and fields populated!';
+                document.body.appendChild(message);
+
+                // Remove message after 3 seconds
+                setTimeout(() => {
+                    document.body.removeChild(message);
+                }, 3000);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.pressReleaseCanvas = new PressReleaseCanvas();
+            initializeDateDefaults();
+        });
+
+        // Import functionality
+        let parseResults = null;
+
+        function showImportDialog() {
+            document.getElementById('import-overlay').style.display = 'flex';
+            document.getElementById('import-textarea').focus();
+        }
+
+        function hideImportDialog() {
+            document.getElementById('import-overlay').style.display = 'none';
+            document.getElementById('parse-results').style.display = 'none';
+            document.getElementById('import-confirm').style.display = 'none';
+            document.getElementById('import-textarea').value = '';
+            parseResults = null;
+        }
+
+        async function previewParsing() {
+            const text = document.getElementById('import-textarea').value.trim();
+
+            if (text.length < 50) {
+                alert('Please paste a press release draft (at least 50 characters)');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    parseResults = result.parsed;
+                    displayParseResults(parseResults);
+                    document.getElementById('parse-results').style.display = 'block';
+                    document.getElementById('import-confirm').style.display = 'inline-block';
+                } else {
+                    alert('Error parsing press release: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Parse error:', error);
+                alert('Error parsing press release. Please try again.');
+            }
+        }
+
+        function displayParseResults(parsed) {
+            const summary = document.getElementById('parse-summary');
+
+            // Create a detailed content preview with proper formatting
+            let contentPreview = '';
+
+            // Build content sections with line breaks for readability
+            if (parsed.content_structure.headline) {
+                contentPreview += `<div class="parse-section">
+                    <h4>📰 Headline</h4>
+                    <div class="parse-content">${escapeHtml(parsed.content_structure.headline)}</div>
+                </div>`;
+            }
+
+            if (parsed.content_structure.dateline && parsed.content_structure.dateline.location) {
+                contentPreview += `<div class="parse-section">
+                    <h4>📍 Location & Date</h4>
+                    <div class="parse-content">${escapeHtml(parsed.content_structure.dateline.location)}${parsed.content_structure.dateline.date ? ' - ' + parsed.content_structure.dateline.date : ''}</div>
+                </div>`;
+            }
+
+            if (parsed.content_structure.lead_paragraph) {
+                contentPreview += `<div class="parse-section">
+                    <h4>📝 Lead Paragraph</h4>
+                    <div class="parse-content">${escapeHtml(parsed.content_structure.lead_paragraph).replace(/\n/g, '<br>')}</div>
+                </div>`;
+            }
+
+            if (parsed.quotes && parsed.quotes.length > 0) {
+                contentPreview += `<div class="parse-section">
+                    <h4>💬 Quotes (${parsed.quotes.length} found)</h4>`;
+
+                parsed.quotes.forEach((quote, index) => {
+                    contentPreview += `<div class="parse-content quote-item">
+                        <div class="quote-text">"${escapeHtml(quote.text)}"</div>
+                        <div class="quote-attribution">— ${escapeHtml(quote.attribution)}</div>
+                    </div>`;
+                });
+
+                contentPreview += `</div>`;
+            }
+
+            if (parsed.content_structure.body_paragraphs && parsed.content_structure.body_paragraphs.length > 0) {
+                contentPreview += `<div class="parse-section">
+                    <h4>📄 Supporting Content (${parsed.content_structure.body_paragraphs.length} paragraphs)</h4>`;
+
+                parsed.content_structure.body_paragraphs.slice(0, 3).forEach((paragraph, index) => {
+                    contentPreview += `<div class="parse-content paragraph-preview">
+                        <strong>Paragraph ${index + 1}:</strong><br>
+                        ${escapeHtml(paragraph.substring(0, 200)).replace(/\n/g, '<br>')}${paragraph.length > 200 ? '...' : ''}
+                    </div>`;
+                });
+
+                if (parsed.content_structure.body_paragraphs.length > 3) {
+                    contentPreview += `<div class="parse-content">... and ${parsed.content_structure.body_paragraphs.length - 3} more paragraphs</div>`;
+                }
+
+                contentPreview += `</div>`;
+            }
+
+            if (parsed.contact_info && (parsed.contact_info.media_contact || parsed.contact_info.paid_for)) {
+                contentPreview += `<div class="parse-section">
+                    <h4>📞 Contact Information</h4>`;
+
+                if (parsed.contact_info.media_contact) {
+                    contentPreview += `<div class="parse-content">
+                        <strong>Media Contact:</strong><br>
+                        ${escapeHtml(parsed.contact_info.media_contact).replace(/\n/g, '<br>')}
+                    </div>`;
+                }
+
+                if (parsed.contact_info.paid_for) {
+                    contentPreview += `<div class="parse-content">
+                        <strong>Paid For:</strong> ${escapeHtml(parsed.contact_info.paid_for)}
+                    </div>`;
+                }
+
+                contentPreview += `</div>`;
+            }
+
+            // Add metadata summary at the bottom
+            contentPreview += `<div class="parse-section">
+                <h4>📊 Analysis Summary</h4>
+                <div class="parse-content metadata-grid">
+                    <div class="metadata-item">
+                        <span class="metadata-label">Release Type:</span>
+                        <span class="metadata-value">${parsed.release_info?.releaseType || 'Standard'}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Word Count:</span>
+                        <span class="metadata-value">${parsed.metadata?.word_count || 0}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Content Type:</span>
+                        <span class="metadata-value">${parsed.metadata?.inferred_type || 'General'}</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="metadata-label">Reading Level:</span>
+                        <span class="metadata-value">${parsed.metadata?.reading_level || 'Medium'}</span>
+                    </div>
+                </div>
+            </div>`;
+
+            summary.innerHTML = contentPreview;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function importDraft() {
+            if (!parseResults) {
+                alert('Please preview the import first');
+                return;
+            }
+
+            try {
+                console.log('Import starting with parseResults:', parseResults);
+
+                // Check if required data exists
+                if (!parseResults.fields_data) {
+                    console.error('Missing fields_data in parseResults');
+                    alert('Error: Missing field data for import');
+                    return;
+                }
+
+                // Populate fields surface
+                console.log('Populating fields with:', parseResults.fields_data);
+                populateFieldsSurface(parseResults.fields_data);
+
+                // Populate Gutenberg blocks
+                if (parseResults.gutenberg_blocks && parseResults.gutenberg_blocks.length > 0) {
+                    console.log('Populating Gutenberg blocks:', parseResults.gutenberg_blocks);
+                    populateGutenbergSurface(parseResults.gutenberg_blocks);
+                } else {
+                    console.log('No Gutenberg blocks to populate');
+                }
+
+                // Update clean view and stationary view
+                if (window.pressReleaseCanvas && window.pressReleaseCanvas.syncAllSurfaces) {
+                    window.pressReleaseCanvas.syncAllSurfaces();
+                } else {
+                    console.warn('pressReleaseCanvas.syncAllSurfaces not available');
+                }
+
+                // Close dialog
+                hideImportDialog();
+
+                // Show success message
+                alert('Press release imported successfully! All surfaces have been populated.');
+
+            } catch (error) {
+                console.error('Import error:', error);
+                alert('Error importing press release: ' + error.message);
+            }
+        }
+
+        function populateFieldsSurface(fieldsData) {
+            // Map the parsed data to form fields
+            const fieldMappings = {
+                'release-type': fieldsData['release-type'] || 'immediate',
+                'embargo-date': fieldsData['embargo-date'] || '',
+                'embargo-time': fieldsData['embargo-time'] || '',
+                'release-date': fieldsData['release-date'] || '',
+                'release-location': fieldsData['release-location'] || '',
+                'headline': fieldsData['headline'] || '',
+                'subhead': fieldsData['subhead'] || '',
+                'lead-paragraph': fieldsData['lead-paragraph'] || '',
+                'supporting-details': fieldsData['supporting-details'] || '',
+                'spokesperson-1': fieldsData['spokesperson-1'] || '',
+                'quote-1': fieldsData['quote-1'] || '',
+                'spokesperson-2': fieldsData['spokesperson-2'] || '',
+                'quote-2': fieldsData['quote-2'] || '',
+                'additional-info': fieldsData['additional-info'] || '',
+                'boilerplate': fieldsData['boilerplate'] || '',
+                'media-contact': fieldsData['media-contact'] || '',
+                'paid-for': fieldsData['paid-for'] || ''
+            };
+
+            // Populate form fields
+            Object.entries(fieldMappings).forEach(([fieldId, value]) => {
+                if (fieldId === 'media-contact') {
+                    setMediaContactValue(value || '');
+                } else if (fieldId === 'paid-for') {
+                    setPaidForValue(value || '');
+                } else {
+                    const field = document.getElementById(fieldId);
+                    if (field && value) {
+                        field.value = value;
+
+                        // Trigger change event to update canvas
+                        field.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+
+            // Handle embargo fields visibility
+            const releaseType = document.getElementById('release-type');
+            if (releaseType && fieldsData['release-type'] === 'embargoed') {
+                releaseType.value = 'embargoed';
+                releaseType.dispatchEvent(new Event('change'));
+            }
+        }
+
+        function populateGutenbergSurface(blocks) {
+            // Clear existing blocks
+            window.pressReleaseCanvas.gutenbergBlocks = [];
+
+            // Add parsed blocks
+            blocks.forEach(block => {
+                window.pressReleaseCanvas.gutenbergBlocks.push({
+                    id: 'imported-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                    type: block.type,
+                    content: block.content,
+                    level: block.level,
+                    className: block.className
+                });
+            });
+
+            // Re-render Gutenberg blocks
+            window.pressReleaseCanvas.renderGutenbergBlocks();
+        }
+
+        // Close dialog when clicking overlay
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'import-overlay') {
+                hideImportDialog();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('import-overlay').style.display === 'flex') {
+                hideImportDialog();
+            }
+        });
+
+        // Import method switching
+        function switchImportMethod(method) {
+            // Update tab styles
+            document.querySelectorAll('.import-tab').forEach(tab => {
+                const isActive = tab.dataset.method === method;
+                tab.style.background = isActive ? '#3b82f6' : '#f1f5f9';
+                tab.style.color = isActive ? 'white' : '#64748b';
+                tab.style.border = isActive ? 'none' : '1px solid #d1d5db';
+                if (isActive) tab.classList.add('active');
+                else tab.classList.remove('active');
+            });
+
+            // Show/hide import sections
+            document.getElementById('text-import').style.display = method === 'text' ? 'block' : 'none';
+            document.getElementById('url-import').style.display = method === 'url' ? 'block' : 'none';
+            document.getElementById('file-import').style.display = method === 'file' ? 'block' : 'none';
+
+            // Clear any previous results
+            document.getElementById('parse-results').style.display = 'none';
+            document.getElementById('import-confirm').style.display = 'none';
+            parseResults = null;
+        }
+
+        // Import from URL in dialog
+        async function importFromURLDialog() {
+            const urlInput = document.getElementById('dialog-url-input');
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            try {
+                urlInput.disabled = true;
+                document.getElementById('dialog-url-btn').textContent = '⏳ Loading...';
+                document.getElementById('dialog-url-btn').disabled = true;
+
+                const response = await fetch('/api/press-release-parser/parse-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Display extracted text in the textarea for preview
+                    document.getElementById('import-textarea').value = result.extracted_text;
+
+                    // Parse the extracted content
+                    // Get Gutenberg blocks for the imported text
+                    let gutenbergBlocks = [];
+                    try {
+                        const gutenbergResponse = await fetch('/api/press-release-parser/to-gutenberg', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: result.extracted_text })
+                        });
+                        const gutenbergResult = await gutenbergResponse.json();
+                        if (gutenbergResult.success) {
+                            gutenbergBlocks = gutenbergResult.blocks;
+                        }
+                    } catch (error) {
+                        console.warn('Could not generate Gutenberg blocks:', error);
+                    }
+
+                    parseResults = {
+                        // For display purposes
+                        content_structure: {
+                            headline: result.fields.headline || '',
+                            dateline: {
+                                location: result.fields['release-location'] || '',
+                                date: result.fields['release-date'] || ''
+                            },
+                            total_paragraphs: result.metadata.paragraph_count || 0,
+                            lead_paragraph: (() => {
+                                // Extract a proper lead paragraph from the content
+                                const fullText = result.fields['lead-paragraph'] || '';
+                                const sentences = fullText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+                                if (sentences.length > 0) {
+                                    // Take first 2-3 sentences as lead paragraph
+                                    return sentences.slice(0, Math.min(3, sentences.length)).join('. ').trim() + '.';
+                                }
+                                return fullText.substring(0, 300) + (fullText.length > 300 ? '...' : '');
+                            })(),
+                            body_paragraphs: (() => {
+                                // Better paragraph extraction
+                                const leadText = result.fields['lead-paragraph'] || '';
+                                const supportingText = result.fields['supporting-details'] || '';
+                                const additionalText = result.fields['additional-info'] || '';
+
+                                const allParagraphs = [];
+
+                                // Split lead paragraph into multiple paragraphs if it's very long
+                                if (leadText.length > 400) {
+                                    const sentences = leadText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+                                    if (sentences.length > 3) {
+                                        // Take remaining sentences after the lead as body paragraphs
+                                        const remainingSentences = sentences.slice(3);
+                                        for (let i = 0; i < remainingSentences.length; i += 2) {
+                                            const chunk = remainingSentences.slice(i, i + 2).join('. ').trim() + '.';
+                                            if (chunk.length > 50) allParagraphs.push(chunk);
+                                        }
+                                    }
+                                }
+
+                                // Add supporting details
+                                if (supportingText && supportingText.trim().length > 50) {
+                                    supportingText.split('\n\n').forEach(p => {
+                                        if (p.trim().length > 50) allParagraphs.push(p.trim());
+                                    });
+                                }
+
+                                // Add additional info
+                                if (additionalText && additionalText.trim().length > 50) {
+                                    additionalText.split('\n\n').forEach(p => {
+                                        if (p.trim().length > 50) allParagraphs.push(p.trim());
+                                    });
+                                }
+
+                                return allParagraphs.slice(0, 5); // Limit to 5 paragraphs for display
+                            })()
+                        },
+                        metadata: result.metadata,
+                        quotes: [], // Backend doesn't return quotes array in current implementation
+                        release_info: {
+                            releaseType: result.fields['release-type'] === 'for_immediate_release' ? 'FOR IMMEDIATE RELEASE' : 'FOR EMBARGOED RELEASE'
+                        },
+                        contact_info: {
+                            media_contact: result.fields['media-contact'] || '',
+                            paid_for: result.fields['paid-for'] || ''
+                        },
+                        // For import functionality - what importDraft() expects
+                        fields_data: result.fields,
+                        gutenberg_blocks: gutenbergBlocks
+                    };
+
+                    displayParseResults(parseResults);
+                    document.getElementById('parse-results').style.display = 'block';
+                    document.getElementById('import-confirm').style.display = 'inline-block';
+
+                    // Switch to text tab to show the content
+                    switchImportMethod('text');
+                } else {
+                    alert('Error importing from URL: ' + result.error);
+                }
+            } catch (error) {
+                console.error('URL import error:', error);
+                alert('Error importing from URL. Please try again.');
+            } finally {
+                urlInput.disabled = false;
+                document.getElementById('dialog-url-btn').textContent = '🌐 Import URL';
+                document.getElementById('dialog-url-btn').disabled = false;
+            }
+        }
+
+        // Import from file in dialog
+        async function importFromFileDialog(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file type
+            if (!file.type.startsWith('text/') && !file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
+                alert('Please select a text file (.txt or .md)');
+                event.target.value = '';
+                return;
+            }
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const text = e.target.result;
+
+                    if (text.trim().length < 50) {
+                        alert('File content is too short. Please select a file with at least 50 characters.');
+                        return;
+                    }
+
+                    // Display content in textarea for preview
+                    document.getElementById('import-textarea').value = text;
+
+                    // Parse the content automatically
+                    try {
+                        const response = await fetch('/api/press-release-parser/parse', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ text })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            parseResults = result.parsed;
+                            displayParseResults(parseResults);
+                            document.getElementById('parse-results').style.display = 'block';
+                            document.getElementById('import-confirm').style.display = 'inline-block';
+
+                            // Switch to text tab to show the content
+                            switchImportMethod('text');
+                        } else {
+                            alert('Error parsing file content: ' + result.error);
+                        }
+                    } catch (parseError) {
+                        console.error('Parse error:', parseError);
+                        alert('Error parsing file content. Please try again.');
+                    }
+                };
+
+                reader.readAsText(file);
+            } catch (error) {
+                console.error('File read error:', error);
+                alert('Error reading file. Please try again.');
+            } finally {
+                // Clear file input
+                event.target.value = '';
+            }
+        }
+    </script>
+    <!-- Optional: Override API base URL (defaults to same origin as this page) -->
+    <!-- <script>window.CPO_API_BASE="http://127.0.0.1:5055";</script> -->
+    <script src="./js/prose-enhancer.js" type="module"></script>
+    <script type="module">
+        // Parser Learning System Integration
+        import { ParserFeedbackTracker } from './js/parser-feedback-tracker.js';
+        import { SmartFieldSuggestions } from './js/smart-field-suggestions.js';
+
+        // Global tracker instance
+        window.parserFeedbackTracker = new ParserFeedbackTracker();
+        window.smartSuggestions = new SmartFieldSuggestions(window.parserFeedbackTracker);
+
+        // Hook into import process
+        const originalImportDraft = window.importDraft;
+        window.importDraft = async function() {
+            await originalImportDraft();
+
+            // Start tracking after successful import
+            if (window.parseResults && window.originalImportText) {
+                console.log('🧠 Starting parser learning system...');
+                window.parserFeedbackTracker.startTracking(
+                    window.originalImportText,
+                    window.parseResults
+                );
+                window.parserFeedbackTracker.setupAutoTracking();
+
+                // Enable smart suggestions
+                window.smartSuggestions.enableAutoSuggestions();
+            }
+        };
+
+        // Store original text when parsing
+        const originalParseText = window.parseTextImport;
+        window.parseTextImport = async function() {
+            const textarea = document.getElementById('dialog-paste');
+            window.originalImportText = textarea.value;
+            return originalParseText();
+        };
+    </script>
+</body>
+</html>
