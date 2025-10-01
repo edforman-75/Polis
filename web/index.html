@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Campaign Editor – AI Tools</title></head>
+<body>
+  <h1>AI Helpers</h1>
+  <textarea id="jsonld" rows="10" cols="100">
+{"@context":"https://schema.org","@type":"NewsArticle","headline":"","claims":[{"id":"clm-1","text":"Jane Smith created 2,000 local jobs as mayor.","sources":[{"url":"https://example.com/jobs-report.pdf"}]}]}
+  </textarea>
+  <div style="margin:8px 0;">
+    <button id="btn-next">What to add next</button>
+    <button id="btn-recap">Copy JSON-LD claims summary</button>
+  </div>
+  <textarea id="output" rows="4" cols="100" placeholder="Output will appear here"></textarea>
+
+  <script type="module">
+    import { wireSuggestionButtons } from './plugins/ai_suggestions.js';
+    wireSuggestionButtons({
+      jsonldSelector:"#jsonld",
+      nextBtnSelector:"#btn-next",
+      recapBtnSelector:"#btn-recap",
+      outputSelector:"#output",
+      subtype:"ANN.GEN"
+    });
+  </script>
+</body>
+</html>

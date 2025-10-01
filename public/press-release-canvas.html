@@ -476,6 +476,8 @@
             <div class="surface-tab" data-surface="clean">Clean View</div>
             <div class="surface-tab" data-surface="stationary">Stationary</div>
             <button class="btn-import" onclick="showImportDialog()">📋 Import Draft</button>
+            <button class="btn-preview" onclick="showPreviewDialog()">👁️ Preview</button>
+            <button class="btn-export" onclick="showExportDialog()">💾 Export</button>
         </div>
     </div>
 
@@ -807,11 +809,111 @@ Paid for by Martinez for Congress"></textarea>
         </div>
     </div>
 
+    <!-- Preview Dialog -->
+    <div class="preview-overlay" id="preview-overlay" style="display: none;">
+        <div class="preview-dialog">
+            <h2>👁️ Preview Outputs</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">
+                Preview all output files before exporting
+            </p>
+
+            <div class="preview-tabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <button class="preview-tab active" onclick="switchPreview('html')">🌐 HTML</button>
+                <button class="preview-tab" onclick="switchPreview('txt')">📄 Plain Text</button>
+                <button class="preview-tab" onclick="switchPreview('jsonld')">📊 JSON-LD</button>
+                <button class="preview-tab" onclick="switchPreview('tracked')">📋 Tracked Changes</button>
+            </div>
+
+            <div id="html-preview" class="preview-content" style="display: block;">
+                <iframe id="html-preview-frame" style="width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 6px; background: white;"></iframe>
+            </div>
+
+            <div id="txt-preview" class="preview-content" style="display: none;">
+                <pre id="txt-preview-content" style="width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; background: white; overflow: auto; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6;"></pre>
+            </div>
+
+            <div id="jsonld-preview" class="preview-content" style="display: none;">
+                <pre id="jsonld-preview-content" style="width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; background: #1e293b; color: #e2e8f0; overflow: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6;"></pre>
+            </div>
+
+            <div id="tracked-preview" class="preview-content" style="display: none;">
+                <iframe id="tracked-preview-frame" style="width: 100%; height: 500px; border: 1px solid #e2e8f0; border-radius: 6px; background: white;"></iframe>
+            </div>
+
+            <div class="preview-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="hidePreviewDialog()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Dialog -->
+    <div class="export-overlay" id="export-overlay" style="display: none;">
+        <div class="export-dialog">
+            <h2>💾 Export Press Release</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">
+                Download your press release in multiple formats
+            </p>
+
+            <div class="export-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                <div class="export-option">
+                    <label style="display: flex; align-items: center; padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="checkbox" id="export-html" checked style="width: 20px; height: 20px; margin-right: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">🌐 HTML File</div>
+                            <div style="font-size: 12px; color: #64748b;">Web-ready formatted release</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="export-option">
+                    <label style="display: flex; align-items: center; padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="checkbox" id="export-txt" checked style="width: 20px; height: 20px; margin-right: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">📄 Plain Text</div>
+                            <div style="font-size: 12px; color: #64748b;">Email distribution format</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="export-option">
+                    <label style="display: flex; align-items: center; padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="checkbox" id="export-jsonld" checked style="width: 20px; height: 20px; margin-right: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">📊 JSON-LD</div>
+                            <div style="font-size: 12px; color: #64748b;">Structured data for SEO</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="export-option">
+                    <label style="display: flex; align-items: center; padding: 16px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="checkbox" id="export-tracked" checked style="width: 20px; height: 20px; margin-right: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">📋 Tracked Changes</div>
+                            <div style="font-size: 12px; color: #64748b;">Before/after comparison</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="export-info" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <div style="font-weight: 600; color: #0c4a6e; margin-bottom: 8px;">📦 File Naming</div>
+                <div style="font-size: 13px; color: #0369a1;">
+                    Files will be named: <code style="background: white; padding: 2px 6px; border-radius: 3px;">release-[slug]-[date].[ext]</code>
+                </div>
+            </div>
+
+            <div class="export-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="hideExportDialog()">Cancel</button>
+                <button class="btn btn-primary" onclick="exportSelectedFiles()">📥 Download Files</button>
+            </div>
+        </div>
+    </div>
+
     <style>
-        .btn-import {
-            background: #059669 !important;
+        .btn-import, .btn-preview, .btn-export {
             color: white !important;
-            margin-left: 16px;
+            margin-left: 8px;
             padding: 8px 16px;
             border: none !important;
             border-radius: 6px;
@@ -826,11 +928,31 @@ Paid for by Martinez for Congress"></textarea>
             visibility: visible !important;
         }
 
-        .btn-import:hover {
-            background: #047857;
+        .btn-import {
+            background: #059669 !important;
         }
 
-        .import-overlay {
+        .btn-import:hover {
+            background: #047857 !important;
+        }
+
+        .btn-preview {
+            background: #3b82f6 !important;
+        }
+
+        .btn-preview:hover {
+            background: #2563eb !important;
+        }
+
+        .btn-export {
+            background: #8b5cf6 !important;
+        }
+
+        .btn-export:hover {
+            background: #7c3aed !important;
+        }
+
+        .import-overlay, .preview-overlay, .export-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -843,15 +965,40 @@ Paid for by Martinez for Congress"></textarea>
             z-index: 1000;
         }
 
-        .import-dialog {
+        .import-overlay[style*="flex"], .preview-overlay[style*="flex"], .export-overlay[style*="flex"] {
+            display: flex !important;
+        }
+
+        .import-dialog, .preview-dialog, .export-dialog {
             background: white;
             border-radius: 12px;
             padding: 30px;
-            max-width: 800px;
+            max-width: 900px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-tab {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .preview-tab.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .preview-tab:hover:not(.active) {
+            background: #e2e8f0;
         }
 
         .import-textarea {
@@ -2101,8 +2248,16 @@ Paid for by Martinez for Congress"></textarea>
 
         // Handle escape key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('import-overlay').style.display === 'flex') {
-                hideImportDialog();
+            if (e.key === 'Escape') {
+                if (document.getElementById('import-overlay').style.display === 'flex') {
+                    hideImportDialog();
+                }
+                if (document.getElementById('preview-overlay').style.display === 'flex') {
+                    hidePreviewDialog();
+                }
+                if (document.getElementById('export-overlay').style.display === 'flex') {
+                    hideExportDialog();
+                }
             }
         });
 
@@ -2328,6 +2483,276 @@ Paid for by Martinez for Congress"></textarea>
                 event.target.value = '';
             }
         }
+
+        // ===== PREVIEW FUNCTIONALITY =====
+
+        function showPreviewDialog() {
+            document.getElementById('preview-overlay').style.display = 'flex';
+            // Generate previews
+            generatePreviews();
+        }
+
+        function hidePreviewDialog() {
+            document.getElementById('preview-overlay').style.display = 'none';
+        }
+
+        function switchPreview(type) {
+            // Update tabs
+            document.querySelectorAll('.preview-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.preview-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(type + '-preview').style.display = 'block';
+        }
+
+        function generatePreviews() {
+            const data = window.pressReleaseCanvas.collectFieldsData();
+
+            // Generate HTML preview
+            generateHTMLPreview(data);
+
+            // Generate TXT preview
+            generateTXTPreview(data);
+
+            // Generate JSON-LD preview
+            generateJSONLDPreview(data);
+
+            // Generate Tracked Changes preview
+            generateTrackedChangesPreview(data);
+        }
+
+        function generateHTMLPreview(data) {
+            const html = generateHTMLOutput(data);
+            const iframe = document.getElementById('html-preview-frame');
+            iframe.srcdoc = html;
+        }
+
+        function generateTXTPreview(data) {
+            const txt = generateTXTOutput(data);
+            document.getElementById('txt-preview-content').textContent = txt;
+        }
+
+        function generateJSONLDPreview(data) {
+            const jsonld = generateJSONLDOutput(data);
+            document.getElementById('jsonld-preview-content').textContent = JSON.stringify(jsonld, null, 2);
+        }
+
+        function generateTrackedChangesPreview(data) {
+            if (!window.changeTracker || !window.changeTracker.isTracking) {
+                const iframe = document.getElementById('tracked-preview-frame');
+                iframe.srcdoc = '<div style="padding: 40px; text-align: center; color: #64748b;">No changes tracked yet. Import a draft to start tracking changes.</div>';
+                return;
+            }
+
+            const html = window.changeTracker.generateTrackedChangesHTML(data);
+            const iframe = document.getElementById('tracked-preview-frame');
+            iframe.srcdoc = html;
+        }
+
+        // ===== EXPORT FUNCTIONALITY =====
+
+        function showExportDialog() {
+            document.getElementById('export-overlay').style.display = 'flex';
+        }
+
+        function hideExportDialog() {
+            document.getElementById('export-overlay').style.display = 'none';
+        }
+
+        async function exportSelectedFiles() {
+            const data = window.pressReleaseCanvas.collectFieldsData();
+            const slug = generateSlug(data.headline || 'press-release');
+            const date = new Date().toISOString().split('T')[0];
+
+            const exportHTML = document.getElementById('export-html').checked;
+            const exportTXT = document.getElementById('export-txt').checked;
+            const exportJSONLD = document.getElementById('export-jsonld').checked;
+            const exportTracked = document.getElementById('export-tracked').checked;
+
+            if (!exportHTML && !exportTXT && !exportJSONLD && !exportTracked) {
+                alert('Please select at least one format to export');
+                return;
+            }
+
+            // Export each selected format
+            if (exportHTML) {
+                downloadFile(
+                    generateHTMLOutput(data),
+                    `release-${slug}-${date}.html`,
+                    'text/html'
+                );
+            }
+
+            if (exportTXT) {
+                downloadFile(
+                    generateTXTOutput(data),
+                    `release-${slug}-${date}.txt`,
+                    'text/plain'
+                );
+            }
+
+            if (exportJSONLD) {
+                downloadFile(
+                    JSON.stringify(generateJSONLDOutput(data), null, 2),
+                    `release-${slug}-${date}.jsonld`,
+                    'application/ld+json'
+                );
+            }
+
+            if (exportTracked && window.changeTracker && window.changeTracker.isTracking) {
+                downloadFile(
+                    window.changeTracker.generateTrackedChangesHTML(data),
+                    `release-${slug}-${date}-tracked.html`,
+                    'text/html'
+                );
+            }
+
+            // Close dialog
+            hideExportDialog();
+
+            // Show success message
+            alert(`✅ Files exported successfully!\n\nFiles downloaded: ${
+                [exportHTML && 'HTML', exportTXT && 'TXT', exportJSONLD && 'JSON-LD', exportTracked && 'Tracked Changes'].filter(Boolean).join(', ')
+            }`);
+        }
+
+        // ===== FILE GENERATION FUNCTIONS =====
+
+        function generateHTMLOutput(data) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(data.headline || 'Press Release')}</title>
+    <style>
+        body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.8; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #0066cc; padding-bottom: 20px; margin-bottom: 30px; }
+        h1 { font-size: 28px; margin-bottom: 10px; color: #0066cc; }
+        .subhead { font-size: 20px; color: #666; font-weight: normal; }
+        .dateline { font-weight: bold; margin-bottom: 20px; }
+        .quote { font-style: italic; margin: 20px 0; padding-left: 20px; border-left: 3px solid #0066cc; }
+        .contact { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; font-size: 14px; }
+        .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="font-weight: bold; font-size: 14px; margin-bottom: 10px;">${data.releaseType === 'immediate' ? 'FOR IMMEDIATE RELEASE' : 'FOR EMBARGOED RELEASE'}</div>
+        <h1>${escapeHtml(data.headline || '')}</h1>
+        ${data.subhead ? `<div class="subhead">${escapeHtml(data.subhead)}</div>` : ''}
+    </div>
+
+    ${data.location || data.releaseDate ? `<div class="dateline">${escapeHtml(data.location || '')}${data.location && data.releaseDate ? ' – ' : ''}${data.releaseDate || ''}</div>` : ''}
+
+    ${data.leadParagraph ? `<p>${escapeHtml(data.leadParagraph)}</p>` : ''}
+
+    ${data.quote1 && data.spokesperson1 ? `<div class="quote">"${escapeHtml(data.quote1)}" — ${escapeHtml(data.spokesperson1)}</div>` : ''}
+
+    ${data.supportingDetails ? `<p>${escapeHtml(data.supportingDetails)}</p>` : ''}
+
+    ${data.quote2 && data.spokesperson2 ? `<div class="quote">"${escapeHtml(data.quote2)}" — ${escapeHtml(data.spokesperson2)}</div>` : ''}
+
+    ${data.additionalInfo ? `<p>${escapeHtml(data.additionalInfo)}</p>` : ''}
+
+    ${data.boilerplate ? `<p>${escapeHtml(data.boilerplate)}</p>` : ''}
+
+    <div class="contact">
+        ${data.mediaContact ? `<strong>Media Contact:</strong><br>${escapeHtml(data.mediaContact).replace(/\\n/g, '<br>')}` : ''}
+    </div>
+
+    <div class="footer">
+        ${data.paidFor ? `Paid for by ${escapeHtml(data.paidFor)}` : ''}
+    </div>
+</body>
+</html>`;
+        }
+
+        function generateTXTOutput(data) {
+            let txt = '';
+
+            txt += (data.releaseType === 'immediate' ? 'FOR IMMEDIATE RELEASE' : 'FOR EMBARGOED RELEASE') + '\\n\\n';
+
+            if (data.location || data.releaseDate) {
+                txt += `${data.location || ''}${data.location && data.releaseDate ? ' – ' : ''}${data.releaseDate || ''}\\n\\n`;
+            }
+
+            if (data.headline) txt += `${data.headline}\\n\\n`;
+            if (data.subhead) txt += `${data.subhead}\\n\\n`;
+            if (data.leadParagraph) txt += `${data.leadParagraph}\\n\\n`;
+            if (data.quote1 && data.spokesperson1) txt += `"${data.quote1}" — ${data.spokesperson1}\\n\\n`;
+            if (data.supportingDetails) txt += `${data.supportingDetails}\\n\\n`;
+            if (data.quote2 && data.spokesperson2) txt += `"${data.quote2}" — ${data.spokesperson2}\\n\\n`;
+            if (data.additionalInfo) txt += `${data.additionalInfo}\\n\\n`;
+            if (data.boilerplate) txt += `${data.boilerplate}\\n\\n`;
+
+            txt += '###\\n\\n';
+
+            if (data.mediaContact) txt += `Media Contact:\\n${data.mediaContact}\\n\\n`;
+            if (data.paidFor) txt += `Paid for by ${data.paidFor}`;
+
+            return txt;
+        }
+
+        function generateJSONLDOutput(data) {
+            return {
+                "@context": "https://schema.org",
+                "@type": "NewsArticle",
+                "headline": data.headline || '',
+                "alternativeHeadline": data.subhead || '',
+                "datePublished": data.releaseDate || new Date().toISOString().split('T')[0],
+                "articleBody": [
+                    data.leadParagraph,
+                    data.supportingDetails,
+                    data.additionalInfo
+                ].filter(Boolean).join('\\n\\n'),
+                "author": {
+                    "@type": "Organization",
+                    "name": data.paidFor || "Campaign"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": data.paidFor || "Campaign"
+                },
+                "contentLocation": {
+                    "@type": "Place",
+                    "name": data.location || ''
+                }
+            };
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+
+        function generateSlug(text) {
+            return text
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .substring(0, 50);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
     </script>
     <!-- Optional: Override API base URL (defaults to same origin as this page) -->
     <!-- <script>window.CPO_API_BASE="http://127.0.0.1:5055";</script> -->
@@ -2336,10 +2761,12 @@ Paid for by Martinez for Congress"></textarea>
         // Parser Learning System Integration
         import { ParserFeedbackTracker } from './js/parser-feedback-tracker.js';
         import { SmartFieldSuggestions } from './js/smart-field-suggestions.js';
+        import { ChangeTracker } from './js/change-tracker.js';
 
-        // Global tracker instance
+        // Global tracker instances
         window.parserFeedbackTracker = new ParserFeedbackTracker();
         window.smartSuggestions = new SmartFieldSuggestions(window.parserFeedbackTracker);
+        window.changeTracker = new ChangeTracker();
 
         // Hook into import process
         const originalImportDraft = window.importDraft;
@@ -2357,8 +2784,53 @@ Paid for by Martinez for Congress"></textarea>
 
                 // Enable smart suggestions
                 window.smartSuggestions.enableAutoSuggestions();
+
+                // Start change tracking with initial parsed content
+                console.log('🔍 Starting change tracking...');
+                const initialContent = window.pressReleaseCanvas.collectFieldsData();
+                window.changeTracker.startTracking(initialContent);
+
+                // Set up auto-tracking for field changes
+                setupFieldChangeTracking();
             }
         };
+
+        // Function to track field edits
+        function setupFieldChangeTracking() {
+            const fields = document.querySelectorAll('#fields-surface input, #fields-surface textarea, #fields-surface select');
+
+            fields.forEach(field => {
+                // Store the initial value
+                let lastValue = field.value;
+
+                // Track changes on blur (when user leaves the field)
+                field.addEventListener('blur', function() {
+                    const currentValue = field.value;
+
+                    // Only track if value actually changed
+                    if (currentValue !== lastValue && lastValue !== undefined) {
+                        console.log(`📝 Field changed: ${field.id}`, {
+                            old: lastValue,
+                            new: currentValue
+                        });
+
+                        window.changeTracker.recordChange({
+                            field: field.id,
+                            oldValue: lastValue,
+                            newValue: currentValue,
+                            changeType: 'editor-manual',
+                            category: 'Editorial',
+                            reason: 'Manual edit by editor'
+                        });
+
+                        // Update last value
+                        lastValue = currentValue;
+                    }
+                });
+            });
+
+            console.log('✅ Field change tracking enabled for', fields.length, 'fields');
+        }
 
         // Store original text when parsing
         const originalParseText = window.parseTextImport;

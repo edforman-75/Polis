@@ -577,7 +577,6 @@
             display: none;
         }
     </style>
-  <link rel="stylesheet" href="./css/suggestion-highlighter.css">
 </head>
 <body>
     <div class="container">
@@ -1131,8 +1130,5 @@
         updateDistributionTime();
         updateRecipientCount();
     </script>
-<!-- Optional: Override API base URL (defaults to same origin as this page) -->
-<!-- <script>window.CPO_API_BASE="http://127.0.0.1:5055";</script> -->
-<script src="./js/prose-enhancer.js" type="module"></script>
 </body>
 </html>

@@ -80,13 +80,14 @@ Click "Export" or "Generate Files"
 
 ### Output - Final Deliverables
 
-**Three Production-Ready Files Generated:**
+**Four Production-Ready Files Generated:**
 
 1. **HTML File** (`release-[slug]-[date].html`)
    - Fully formatted for web publishing
    - Professional styling included
    - Semantic HTML5 markup
    - Ready for CMS upload
+   - **Can be previewed in browser before export**
 
 2. **Plain Text File** (`release-[slug]-[date].txt`)
    - Standard press release format
@@ -94,12 +95,37 @@ Click "Export" or "Generate Files"
    - Contact information block
    - ### footer
    - Ready for email distribution
+   - **Can be previewed in application before export**
 
 3. **JSON-LD File** (`release-[slug]-[date].jsonld`)
    - Schema.org NewsArticle format
    - CPO (Campaign Press Office) extensions
    - Quality scores and metadata
    - Structured data for AI/semantic processing
+   - **Can be viewed/validated in application**
+
+4. **Tracked Changes File** (`release-[slug]-[date]-tracked.html`) **NEW**
+   - **MS Word-style tracked changes markup**
+   - Shows original text vs. edited text
+   - Highlights all modifications:
+     - ~~Deletions~~ (strikethrough, red)
+     - **Additions** (underline, green)
+     - Formatting changes
+   - **Change annotations** explaining WHY each edit was made:
+     - "AP Style: Changed 'Sept.' to 'September'"
+     - "Voice consistency: Rephrased to match candidate tone"
+     - "Grammar: Fixed subject-verb agreement"
+     - "Enhancement: Strengthened lead paragraph"
+   - **Change metadata**:
+     - Timestamp of each change
+     - Type of change (AI-suggested, editor manual, auto-fix)
+     - Category (AP Style, Grammar, Voice, Enhancement, etc.)
+   - **Viewable side-by-side** with final version
+   - Essential for:
+     - Editorial review and learning
+     - Writer feedback and improvement
+     - Quality assurance auditing
+     - Training new editors
 
 ### Distribution
 
@@ -233,10 +259,11 @@ Click "Export" or "Generate Files"
 - Validate quality
 - Generate production formats
 
-**OUTPUT:** Three production-ready files
+**OUTPUT:** Four production-ready files
 1. HTML (web publishing)
 2. TXT (email distribution)
 3. JSON-LD (structured data)
+4. Tracked Changes (editorial markup showing before/after)
 
 **WHO USES THE OUTPUT:**
 - Web team (HTML)

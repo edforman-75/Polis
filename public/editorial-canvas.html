@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editorial Canvas - Press Secretary</title>
+    <title>Editorial Canvas - Block-Based Collaborative Editor</title>
+    <link rel="stylesheet" href="/css/collaborative-block-editor.css">
     <style>
         * {
             margin: 0;
@@ -392,456 +393,52 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-left">
-            <h1>✏️ Editorial Canvas</h1>
-            <select class="assignment-selector" id="assignment-selector">
-                <option value="A-2024-045">Healthcare Press Release</option>
-                <option value="A-2024-042">Economic Policy Statement</option>
-                <option value="URGENT-2024-003">Breaking: Opposition Response</option>
-            </select>
-        </div>
-        <div class="header-actions">
-            <button class="btn btn-secondary" onclick="saveDraft()">💾 Save</button>
-            <button class="btn btn-primary" onclick="runQualityCheck()">✅ Quality Check</button>
-            <button class="btn btn-danger" onclick="publishNow()">🚀 Publish Now</button>
-            <a href="/press-secretary" class="btn btn-secondary">📊 Dashboard</a>
-        </div>
-    </div>
+    <!-- Collaborative Block Editor Container -->
+    <div id="collaborative-editor-container"></div>
 
-    <div class="main-layout">
-        <div class="editor-area">
-            <div class="editor-toolbar">
-                <div class="toolbar-group">
-                    <button class="btn btn-small btn-secondary" onclick="formatBold()"><strong>B</strong></button>
-                    <button class="btn btn-small btn-secondary" onclick="formatItalic()"><em>I</em></button>
-                    <button class="btn btn-small btn-secondary" onclick="formatQuote()">❝</button>
-                </div>
-                <div class="toolbar-separator"></div>
-                <div class="toolbar-group">
-                    <button class="btn btn-small btn-secondary" onclick="improveHeadline()">📰 Headline</button>
-                    <button class="btn btn-small btn-secondary" onclick="strengthenLead()">📝 Lead</button>
-                    <button class="btn btn-small btn-secondary" onclick="addQuote()">💬 Quote</button>
-                </div>
-                <div class="toolbar-separator"></div>
-                <div class="toolbar-group">
-                    <button class="btn btn-small btn-secondary" onclick="checkAPStyle()">📋 AP Style</button>
-                    <button class="btn btn-small btn-secondary" onclick="checkGrammar()">✍️ Grammar</button>
-                    <button class="btn btn-small btn-secondary" onclick="checkFacts()">🔍 Facts</button>
-                </div>
-            </div>
-
-            <div class="editor-content">
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Headline:</label>
-                    <input type="text" id="headline-input" placeholder="Enter headline..."
-                           style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 18px; font-weight: 600;"
-                           value="New Healthcare Initiative Expands Access for Rural Communities">
-                </div>
-
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Content:</label>
-                    <textarea id="content-editor" class="editor-textarea" placeholder="Write your content here...">FOR IMMEDIATE RELEASE
-
-WASHINGTON — Today, the campaign announced a comprehensive healthcare initiative that will expand medical access to underserved rural communities across the nation, providing critical care to families who have been left behind by previous administrations.
-
-The Rural Healthcare Access Act will establish 50 new community health centers, add telehealth services to remote areas, and provide $2.3 billion in federal funding over five years to address the healthcare crisis in America's heartland.
-
-"Every American deserves access to quality healthcare, regardless of their zip code," said the candidate. "This initiative will bring doctors, nurses, and medical services directly to communities that need them most."
-
-Key provisions of the plan include:
-• Establishment of 50 new federally qualified health centers
-• Expansion of broadband infrastructure for telehealth services
-• Student loan forgiveness for medical professionals serving rural areas
-• Mobile health units for the most remote communities
-
-The proposal builds on successful models from Iowa and Montana, where similar programs have reduced emergency room visits by 35% and improved preventive care access by 60%.
-
-Opposition critics have questioned the funding mechanism, but budget analysts confirm the initiative will be fully offset through Medicare efficiency improvements and prescription drug savings.
-
-###</textarea>
-                </div>
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="sidebar-tabs">
-                <div class="sidebar-tab active" onclick="showSidebarTab('quality')">Quality</div>
-                <div class="sidebar-tab" onclick="showSidebarTab('ai')">AI Tools</div>
-                <div class="sidebar-tab" onclick="showSidebarTab('workflow')">Workflow</div>
-            </div>
-
-            <div class="sidebar-content">
-                <!-- Quality Checks Tab -->
-                <div id="quality-tab" class="sidebar-section" style="display: block;">
-                    <h3>📋 Quality Checks</h3>
-
-                    <div class="quality-check-item">
-                        <div class="quality-check-header">
-                            <span>AP Style Compliance</span>
-                            <span class="quality-status status-warning">Warning</span>
-                        </div>
-                        <div class="quality-check-desc">
-                            2 style issues found: Use "more than" instead of "over" for quantities. Check state abbreviation format.
-                        </div>
-                    </div>
-
-                    <div class="quality-check-item">
-                        <div class="quality-check-header">
-                            <span>Grammar Check</span>
-                            <span class="quality-status status-pass">Pass</span>
-                        </div>
-                        <div class="quality-check-desc">
-                            No grammar errors detected. Clear, professional writing style.
-                        </div>
-                    </div>
-
-                    <div class="quality-check-item">
-                        <div class="quality-check-header">
-                            <span>Fact Verification</span>
-                            <span class="quality-status status-warning">Pending</span>
-                        </div>
-                        <div class="quality-check-desc">
-                            3 claims require verification: $2.3B funding amount, 35% ER reduction stat, 60% preventive care stat.
-                        </div>
-                    </div>
-
-                    <div class="quality-check-item">
-                        <div class="quality-check-header">
-                            <span>Message Discipline</span>
-                            <span class="quality-status status-pass">Pass</span>
-                        </div>
-                        <div class="quality-check-desc">
-                            Messaging aligns with campaign priorities. Strong healthcare focus maintained.
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">🔍 Fact Check Results</h3>
-
-                    <div class="fact-check-result">
-                        <div class="fact-check-claim">"50 new community health centers"</div>
-                        <div class="fact-check-verdict">✅ Verified - Policy team confirmed</div>
-                    </div>
-
-                    <div class="fact-check-result">
-                        <div class="fact-check-claim">"$2.3 billion in federal funding"</div>
-                        <div class="fact-check-verdict">⏳ Pending verification</div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">💬 Message Discipline</h3>
-
-                    <div class="message-discipline">
-                        <div class="message-title">Core Message Alignment</div>
-                        <div class="message-text">
-                            Content strongly supports "Healthcare for All" pillar. Reinforces rural outreach strategy.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- AI Tools Tab -->
-                <div id="ai-tab" class="sidebar-section" style="display: none;">
-                    <h3>🤖 AI Editorial Assistant</h3>
-
-                    <div class="ai-suggestion">
-                        <div class="ai-suggestion-header">Headline Optimization</div>
-                        <div class="ai-suggestion-text">
-                            Suggested: "New Healthcare Plan Brings Doctors to Rural America's Doorstep"
-                        </div>
-                        <div class="ai-action-buttons">
-                            <button class="btn btn-small btn-primary" onclick="applyHeadline()">Apply</button>
-                            <button class="btn btn-small btn-secondary" onclick="dismissSuggestion()">Dismiss</button>
-                        </div>
-                    </div>
-
-                    <div class="ai-suggestion">
-                        <div class="ai-suggestion-header">Lead Strengthening</div>
-                        <div class="ai-suggestion-text">
-                            Consider adding specific impact numbers in opening paragraph for stronger hook.
-                        </div>
-                        <div class="ai-action-buttons">
-                            <button class="btn btn-small btn-primary" onclick="strengthenLead()">Apply</button>
-                            <button class="btn btn-small btn-secondary" onclick="dismissSuggestion()">Dismiss</button>
-                        </div>
-                    </div>
-
-                    <div class="ai-suggestion">
-                        <div class="ai-suggestion-header">Quote Enhancement</div>
-                        <div class="ai-suggestion-text">
-                            Current quote is strong. Consider adding emotional element about families helped.
-                        </div>
-                        <div class="ai-action-buttons">
-                            <button class="btn btn-small btn-primary" onclick="enhanceQuote()">Apply</button>
-                            <button class="btn btn-small btn-secondary" onclick="dismissSuggestion()">Dismiss</button>
-                        </div>
-                    </div>
-
-                    <h3 style="margin-top: 20px;">⚡ Quick Fixes</h3>
-
-                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="convertPassiveVoice()">
-                        Convert Passive Voice
-                    </button>
-
-                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="shortenSentences()">
-                        Shorten Long Sentences
-                    </button>
-
-                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="removeHedging()">
-                        Remove Hedging Language
-                    </button>
-
-                    <button class="btn btn-secondary" style="width: 100%;" onclick="strengthenVerbs()">
-                        Strengthen Weak Verbs
-                    </button>
-                </div>
-
-                <!-- Workflow Tab -->
-                <div id="workflow-tab" class="sidebar-section" style="display: none;">
-                    <div class="workflow-status">
-                        <h3>📊 Assignment Status</h3>
-                        <div class="status-indicator">
-                            <div class="status-dot status-review"></div>
-                            <span>In Editorial Review</span>
-                        </div>
-                        <div style="font-size: 13px; color: #64748b;">
-                            Due: 2 hours • Priority: High
-                        </div>
-                    </div>
-
-                    <h3>⚡ Override Actions</h3>
-
-                    <div class="override-panel">
-                        <div class="override-title">🚨 Emergency Override</div>
-                        <div class="override-actions">
-                            <button class="btn btn-override" onclick="emergencyPublish()">
-                                Emergency Publish
-                            </button>
-                            <button class="btn btn-override" onclick="skipApproval()">
-                                Skip Approval Chain
-                            </button>
-                            <button class="btn btn-override" onclick="extendDeadline()">
-                                Extend Deadline
-                            </button>
-                        </div>
-                    </div>
-
-                    <h3>↩️ Return Options</h3>
-
-                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="returnToWriter()">
-                        Return to Writer
-                    </button>
-
-                    <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="requestClarification()">
-                        Request Clarification
-                    </button>
-
-                    <button class="btn btn-secondary" style="width: 100%;" onclick="escalateToDirector()">
-                        Escalate to Director
-                    </button>
-
-                    <h3 style="margin-top: 20px;">📋 Assignment History</h3>
-
-                    <div style="font-size: 13px; line-height: 1.6; color: #64748b;">
-                        <div style="margin-bottom: 8px;">
-                            <strong>2:30 PM</strong> - Assigned to Senior Writer<br>
-                            <strong>3:45 PM</strong> - First draft submitted<br>
-                            <strong>4:15 PM</strong> - Sent for fact-checking<br>
-                            <strong>4:30 PM</strong> - In editorial review
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="floating-toolbar">
-        <button class="btn btn-primary" onclick="publishAssignment()">📤 Publish</button>
-        <button class="btn btn-secondary" onclick="saveProgress()">💾 Save</button>
-        <button class="btn btn-secondary" onclick="previewContent()">👁️ Preview</button>
-    </div>
-
+    <script src="/js/collaborative-block-editor.js"></script>
     <script>
-        function showSidebarTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.sidebar-section').forEach(section => {
-                section.style.display = 'none';
+        // Initialize the collaborative editor
+        let collaborativeEditor;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('assignment') || 'A-2024-045';
+            const assignmentType = getAssignmentType(assignmentId);
+
+            // Mock user - in production, this would come from authentication
+            const user = {
+                id: 'user-' + Math.random().toString(36).substr(2, 9),
+                userName: 'Editorial User',
+                role: 'communications_director'
+            };
+
+            collaborativeEditor = new CollaborativeBlockEditor({
+                container: document.getElementById('collaborative-editor-container'),
+                assignmentId: assignmentId,
+                assignmentType: assignmentType,
+                user: user,
+                apiBase: '/api'
             });
-
-            // Remove active class from all tabs
-            document.querySelectorAll('.sidebar-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show selected tab and mark as active
-            document.getElementById(tabName + '-tab').style.display = 'block';
-            event.target.classList.add('active');
-        }
-
-        // Quality Check Functions
-        function runQualityCheck() {
-            alert('Running comprehensive quality check...');
-            // API call to quality checker service
-        }
-
-        function checkAPStyle() {
-            alert('Checking AP Style compliance...');
-            // API call: POST /api/quality-checker/ap-style
-        }
-
-        function checkGrammar() {
-            alert('Running grammar check...');
-            // API call: POST /api/quality-checker/grammar
-        }
-
-        function checkFacts() {
-            alert('Requesting fact verification...');
-            // API call: POST /api/research/fact-check/submit
-        }
-
-        // AI Tools Functions
-        function improveHeadline() {
-            alert('Generating headline improvements...');
-            // API call: POST /api/editorial-ai/optimize-headline
-        }
-
-        function strengthenLead() {
-            alert('Analyzing lead paragraph...');
-            // API call: POST /api/editorial-ai/enhance-lead
-        }
-
-        function addQuote() {
-            alert('Suggesting quote enhancements...');
-            // API call: POST /api/editorial-ai/strengthen-quotes
-        }
-
-        function applyHeadline() {
-            document.getElementById('headline-input').value = "New Healthcare Plan Brings Doctors to Rural America's Doorstep";
-            alert('Headline updated');
-        }
-
-        function enhanceQuote() {
-            alert('Quote enhanced with emotional element');
-        }
-
-        function convertPassiveVoice() {
-            alert('Converting passive voice to active...');
-            // API call: POST /api/editorial-ai/quick-fix with type: 'passive_voice'
-        }
-
-        function shortenSentences() {
-            alert('Shortening long sentences...');
-            // API call: POST /api/editorial-ai/quick-fix with type: 'long_sentences'
-        }
-
-        function removeHedging() {
-            alert('Removing hedging language...');
-            // API call: POST /api/editorial-ai/quick-fix with type: 'hedging'
-        }
-
-        function strengthenVerbs() {
-            alert('Strengthening weak verbs...');
-            // API call: POST /api/editorial-ai/quick-fix with type: 'weak_verbs'
-        }
-
-        // Override Functions
-        function emergencyPublish() {
-            if (confirm('EMERGENCY PUBLISH: This will bypass all checks and publish immediately. Continue?')) {
-                alert('Content published with emergency override');
-                // API call: POST /api/assignments/:id/emergency-publish
-            }
-        }
-
-        function skipApproval() {
-            if (confirm('Skip normal approval workflow?')) {
-                alert('Approval workflow skipped');
-                // API call: PATCH /api/assignments/:id/status with override flag
-            }
-        }
-
-        function extendDeadline() {
-            const hours = prompt('Extend deadline by how many hours?');
-            if (hours) {
-                alert(`Deadline extended by ${hours} hours`);
-                // API call to extend deadline
-            }
-        }
-
-        function returnToWriter() {
-            const feedback = prompt('Feedback for writer:');
-            if (feedback) {
-                alert(`Assignment returned to writer with feedback: "${feedback}"`);
-                // API call: POST /api/assignments/:id/return-to-writer
-            }
-        }
-
-        function requestClarification() {
-            const clarification = prompt('What clarification is needed?');
-            if (clarification) {
-                alert(`Clarification requested: "${clarification}"`);
-                // API call: POST /api/assignments/:id/return-to-comms
-            }
-        }
-
-        function escalateToDirector() {
-            alert('Assignment escalated to Communications Director');
-            // Notification API call
-        }
-
-        // General Functions
-        function saveDraft() {
-            alert('Draft saved');
-            // API call to save content
-        }
-
-        function publishNow() {
-            if (confirm('Publish this content now?')) {
-                alert('Content published');
-                // API call: POST /api/content/publish
-            }
-        }
-
-        function saveProgress() {
-            alert('Progress saved');
-        }
-
-        function previewContent() {
-            window.open('/preview/' + document.getElementById('assignment-selector').value, '_blank');
-        }
-
-        function publishAssignment() {
-            if (confirm('Publish this assignment?')) {
-                alert('Assignment published successfully');
-                window.location.href = '/press-secretary';
-            }
-        }
-
-        function formatBold() {
-            document.execCommand('bold');
-        }
-
-        function formatItalic() {
-            document.execCommand('italic');
-        }
-
-        function formatQuote() {
-            const selection = window.getSelection().toString();
-            if (selection) {
-                document.execCommand('insertText', false, `"${selection}"`);
-            }
-        }
-
-        function dismissSuggestion() {
-            event.target.closest('.ai-suggestion').style.display = 'none';
-        }
-
-        // Auto-save functionality
-        let autoSaveTimeout;
-        document.getElementById('content-editor').addEventListener('input', function() {
-            clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(() => {
-                console.log('Auto-saving...');
-                // API call to auto-save content
-            }, 2000);
         });
+
+        // Determine assignment type from assignment ID
+        function getAssignmentType(assignmentId) {
+            if (assignmentId.startsWith('EDU') || assignmentId.includes('op-ed') || assignmentId.includes('opinion')) {
+                return 'op-ed';
+            } else if (assignmentId.startsWith('INF') || assignmentId.startsWith('VDB-2025-008') || assignmentId.includes('press-release')) {
+                return 'press-release';
+            } else if (assignmentId.startsWith('VSM') || assignmentId.startsWith('SOC') || assignmentId.includes('social')) {
+                return 'social-media';
+            } else if (assignmentId.startsWith('HCS') || assignmentId.startsWith('VDB-2025-007') || assignmentId.startsWith('SPE') || assignmentId.includes('speech')) {
+                return 'speech';
+            } else if (assignmentId.startsWith('TP') || assignmentId.startsWith('TKP') || assignmentId.includes('talking-points')) {
+                return 'talking-points';
+            } else {
+                // Default to press release for healthcare assignments
+                return 'press-release';
+            }
+        }
     </script>
 </body>
 </html>

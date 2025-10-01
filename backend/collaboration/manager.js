@@ -3,6 +3,8 @@
 
 const WebSocket = require('ws');
 const { requirePermission } = require('../middleware/authorization');
+const blockManager = require('./block-manager');
+const { getEditorialStructure } = require('./block-structures');
 
 class CollaborationManager {
     constructor() {
@@ -26,6 +28,14 @@ class CollaborationManager {
         this.wss.on('connection', (ws, req) => {
             this.handleConnection(ws, req);
         });
+
+        // Set up periodic cleanup of stale blocks (every 2 minutes)
+        setInterval(() => {
+            blockManager.releaseStaleBlocks();
+        }, 2 * 60 * 1000);
+
+        // Set up block manager event listeners
+        this.setupBlockManagerEvents();
 
         return this.wss;
     }
@@ -59,8 +69,14 @@ class CollaborationManager {
             case 'join':
                 await this.handleJoin(ws, data);
                 break;
-            case 'edit':
-                await this.handleEdit(ws, data);
+            case 'request-block-lock':
+                await this.handleBlockLockRequest(ws, data);
+                break;
+            case 'release-block-lock':
+                await this.handleBlockRelease(ws, data);
+                break;
+            case 'edit-block':
+                await this.handleBlockEdit(ws, data);
                 break;
             case 'cursor':
                 await this.handleCursor(ws, data);
@@ -115,10 +131,17 @@ class CollaborationManager {
         ws.send(JSON.stringify({
             type: 'document_state',
             assignmentId,
+            assignmentType: session.assignmentType,
+            editorialStructure: {
+                narrative: session.editorialStructure.narrative,
+                technicalBlocks: Object.keys(session.editorialStructure.technicalBlocks)
+            },
             content: session.document.content,
+            blocks: Array.from(session.blocks.entries()),
             version: session.document.version,
             activeUsers: Array.from(session.activeUsers.values()),
-            permissions: this.getUserPermissions(role, session.document.status)
+            permissions: this.getUserPermissions(role, session.document.status),
+            blockLocks: this.getBlockLocksForAssignment(assignmentId)
         }));
 
         // Notify other users of new participant
@@ -179,6 +202,126 @@ class CollaborationManager {
         } else {
             this.sendError(ws, result.error);
         }
+    }
+
+    // Handle block lock request
+    async handleBlockLockRequest(ws, data) {
+        const { assignmentId, userId, blockId, userName, role } = data;
+
+        const session = this.sessions.get(assignmentId);
+        if (!session) {
+            this.sendError(ws, 'Session not found');
+            return;
+        }
+
+        // Request block lock through BlockManager
+        const result = await blockManager.requestBlockLock(blockId, userId, { userName, role });
+
+        if (result.granted) {
+            // Notify all users in session about the lock
+            this.broadcastToSession(assignmentId, {
+                type: 'block_locked',
+                blockId,
+                lockedBy: { userId, userName, role }
+            });
+
+            // Send confirmation to requester
+            ws.send(JSON.stringify({
+                type: 'block_lock_granted',
+                blockId,
+                message: result.message
+            }));
+        } else if (result.queued) {
+            // Notify user they're in queue
+            ws.send(JSON.stringify({
+                type: 'block_lock_queued',
+                blockId,
+                queuePosition: result.queuePosition,
+                currentEditor: result.currentEditor,
+                message: result.message
+            }));
+
+            // Notify current editor about the request
+            const currentEditorConnection = this.userConnections.get(blockManager.blockSessions.get(blockId)?.lockedBy?.userId);
+            if (currentEditorConnection && currentEditorConnection.ws.readyState === WebSocket.OPEN) {
+                currentEditorConnection.ws.send(JSON.stringify({
+                    type: 'block_access_requested',
+                    blockId,
+                    requestingUser: { userId, userName, role },
+                    queueLength: blockManager.blockSessions.get(blockId)?.queue?.length || 1
+                }));
+            }
+        }
+
+        console.log(`🔒 Block lock request: ${userName} for block ${blockId} - ${result.granted ? 'GRANTED' : 'QUEUED'}`);
+    }
+
+    // Handle block release
+    async handleBlockRelease(ws, data) {
+        const { assignmentId, userId, blockId } = data;
+
+        const session = this.sessions.get(assignmentId);
+        if (!session) {
+            this.sendError(ws, 'Session not found');
+            return;
+        }
+
+        // Release block through BlockManager
+        const released = blockManager.unlockBlock(blockId, userId);
+
+        if (released) {
+            // Notify all users about the release
+            this.broadcastToSession(assignmentId, {
+                type: 'block_unlocked',
+                blockId,
+                releasedBy: userId
+            });
+
+            console.log(`🔓 Block ${blockId} released by user ${userId}`);
+        }
+    }
+
+    // Handle block content edit
+    async handleBlockEdit(ws, data) {
+        const { assignmentId, userId, blockId, content, operation } = data;
+
+        const session = this.sessions.get(assignmentId);
+        if (!session) {
+            this.sendError(ws, 'Session not found');
+            return;
+        }
+
+        // Check if user has lock on this block
+        const blockStatus = blockManager.getBlockStatus(blockId);
+        if (!blockStatus.isLocked || blockStatus.lockedBy.userId !== userId) {
+            this.sendError(ws, 'You must lock the block before editing');
+            return;
+        }
+
+        // Update block activity
+        blockManager.updateActivity(blockId, userId);
+
+        // Store block content in session
+        if (!session.blocks) {
+            session.blocks = new Map();
+        }
+        session.blocks.set(blockId, {
+            content,
+            lastModified: new Date(),
+            lastModifiedBy: userId,
+            version: (session.blocks.get(blockId)?.version || 0) + 1
+        });
+
+        // Broadcast block update to all users
+        this.broadcastToSession(assignmentId, {
+            type: 'block_updated',
+            blockId,
+            content,
+            version: session.blocks.get(blockId).version,
+            author: session.activeUsers.get(userId)
+        }, userId);
+
+        console.log(`✏️ Block ${blockId} edited by user ${userId}`);
     }
 
     async handleCursor(ws, data) {
@@ -330,11 +473,86 @@ class CollaborationManager {
         }
     }
 
+    // Set up event listeners for block manager events
+    setupBlockManagerEvents() {
+        blockManager.on('lock-granted', (data) => {
+            // Notify the granted user
+            const connection = this.userConnections.get(data.grantedTo.userId);
+            if (connection && connection.ws.readyState === WebSocket.OPEN) {
+                connection.ws.send(JSON.stringify({
+                    type: 'block_lock_granted',
+                    blockId: data.blockId,
+                    message: 'Block lock granted from queue'
+                }));
+            }
+
+            // Broadcast to all users in the session
+            const session = this.sessions.get(connection?.assignmentId);
+            if (session) {
+                this.broadcastToSession(connection.assignmentId, {
+                    type: 'block_locked',
+                    blockId: data.blockId,
+                    lockedBy: data.grantedTo
+                });
+            }
+        });
+
+        blockManager.on('stale-lock-released', (data) => {
+            // Find the assignment for this block and notify all users
+            for (const [assignmentId, session] of this.sessions.entries()) {
+                if (data.blockId.includes(assignmentId)) {
+                    this.broadcastToSession(assignmentId, {
+                        type: 'block_unlocked',
+                        blockId: data.blockId,
+                        reason: 'stale_lock_timeout',
+                        inactiveTime: data.inactiveTime
+                    });
+                    break;
+                }
+            }
+        });
+
+        blockManager.on('emergency-unlock', (data) => {
+            // Notify all users about emergency unlock
+            for (const [assignmentId, session] of this.sessions.entries()) {
+                if (data.blockId.includes(assignmentId)) {
+                    this.broadcastToSession(assignmentId, {
+                        type: 'emergency_unlock',
+                        blockId: data.blockId,
+                        unlockedBy: data.unlockedBy,
+                        previousEditor: data.previousEditor
+                    });
+                    break;
+                }
+            }
+        });
+    }
+
     // Utility methods
     async createSession(assignmentId) {
         // In a real implementation, load from database
+        // For now, assuming assignmentId contains type info (e.g., 'PR-2025-001' for press release)
+        let assignmentType = 'press-release'; // Default
+
+        if (assignmentId.startsWith('PR') || assignmentId.includes('press')) {
+            assignmentType = 'press-release';
+        } else if (assignmentId.startsWith('OP') || assignmentId.includes('op-ed')) {
+            assignmentType = 'op-ed';
+        } else if (assignmentId.startsWith('SPE') || assignmentId.includes('speech')) {
+            assignmentType = 'speech';
+        } else if (assignmentId.startsWith('SOC') || assignmentId.includes('social')) {
+            assignmentType = 'social-media';
+        } else if (assignmentId.startsWith('TP') || assignmentId.includes('talking')) {
+            assignmentType = 'talking-points';
+        }
+
+        // Get the editorial structure for this assignment type
+        const editorialStructure = getEditorialStructure(assignmentType);
+
         return {
             assignmentId,
+            assignmentType,
+            editorialStructure,
             document: {
                 content: '', // Load from database
                 version: 1,
@@ -342,6 +560,7 @@ class CollaborationManager {
                 lastModified: new Date(),
                 lastModifiedBy: null
             },
+            blocks: new Map(), // blockId -> block content
             activeUsers: new Map(),
             comments: [],
             pendingOperations: []
@@ -470,10 +689,49 @@ class CollaborationManager {
 
         return {
             assignmentId,
+            assignmentType: session.assignmentType,
             activeUsers: Array.from(session.activeUsers.values()),
             documentVersion: session.document.version,
             lastModified: session.document.lastModified,
-            status: session.document.status
+            status: session.document.status,
+            blockLocks: this.getBlockLocksForAssignment(assignmentId)
+        };
+    }
+
+    // Get all block locks for an assignment
+    getBlockLocksForAssignment(assignmentId) {
+        const locks = [];
+        for (const [blockId, blockSession] of blockManager.blockSessions.entries()) {
+            // Filter blocks by assignment (simple implementation - could be more sophisticated)
+            if (blockId.includes(assignmentId) || blockId.startsWith(assignmentId)) {
+                locks.push({
+                    blockId,
+                    isLocked: blockSession.isLocked,
+                    lockedBy: blockSession.lockedBy,
+                    queue: blockSession.queue.map(q => ({
+                        userId: q.userId,
+                        userName: q.userName,
+                        role: q.role,
+                        requestedAt: q.requestedAt
+                    })),
+                    lastActivity: blockSession.lastActivity
+                });
+            }
+        }
+        return locks;
+    }
+
+    // Get statistics including block locks
+    getStatistics() {
+        const basicStats = blockManager.getStatistics();
+        return {
+            ...basicStats,
+            activeSessions: this.sessions.size,
+            totalConnectedUsers: this.userConnections.size,
+            sessionTypes: Array.from(this.sessions.values()).reduce((acc, session) => {
+                acc[session.assignmentType] = (acc[session.assignmentType] || 0) + 1;
+                return acc;
+            }, {})
         };
     }
 }

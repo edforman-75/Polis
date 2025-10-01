@@ -87,6 +87,65 @@ router.post('/:type/generate-template', (req, res) => {
                 selectedTemplate = writerTemplates.talking_points_event;
                 break;
 
+            case 'press_release':
+                // Select template based on press release type and category
+                const category = briefData.press_release_category;
+                const prType = briefData.press_release_type;
+
+                // For now, use a basic press release template
+                // In production, you'd have category-specific templates
+                selectedTemplate = writerTemplates.press_release || {
+                    title: "Press Release Template",
+                    structure: [
+                        {
+                            name: "Header",
+                            template: "FOR {timing_classification}\n\nContact: {contact_information}",
+                            description: "Release timing and contact information"
+                        },
+                        {
+                            name: "Headline",
+                            template: "{headline_strategy}",
+                            description: "Main headline"
+                        },
+                        {
+                            name: "Dateline",
+                            template: "{geographic_focus} – [Date]",
+                            description: "Location and date"
+                        },
+                        {
+                            name: "Lead Paragraph",
+                            template: "{core_message}\n\n{supporting_points}",
+                            description: "Opening paragraph with core message"
+                        },
+                        {
+                            name: "Body Content",
+                            template: "{key_facts}\n\n{local_impact}\n\n{background_context}",
+                            description: "Supporting details and evidence"
+                        },
+                        {
+                            name: "Quote Section",
+                            template: "\"{candidate_quote}\" said [Candidate Name].\n\n{additional_sources}",
+                            description: "Primary quote and supporting quotes"
+                        },
+                        {
+                            name: "Supporting Evidence",
+                            template: "{supporting_evidence}",
+                            description: "Additional evidence and context"
+                        },
+                        {
+                            name: "Background",
+                            template: "[Candidate/Organization Background]",
+                            description: "Standard background paragraph"
+                        },
+                        {
+                            name: "Contact Information",
+                            template: "###\n\nMedia Contact:\n{contact_information}",
+                            description: "Media contact details"
+                        }
+                    ]
+                };
+                break;
+
             default:
                 return res.status(400).json({ error: 'Unknown template type' });
         }
