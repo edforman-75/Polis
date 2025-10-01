@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parser Reviewer Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+        }
+
+        .role-badge {
+            background: #f59e0b;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .queue-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+
+        .assignments-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .assignments-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .assignments-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .assignments-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-urgent {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-high {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .priority-normal {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .priority-low {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-needs_validation {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-validating {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #047857;
+        }
+
+        .action-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .time-ago {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .confidence-bar {
+            width: 100px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s;
+        }
+
+        .confidence-fill.low {
+            background: #ef4444;
+        }
+
+        .confidence-fill.medium {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🔍 Parser Reviewer Dashboard</h1>
+            <span class="role-badge">Parser Reviewer</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Needs Validation</div>
+                <div class="stat-value" id="stat-needs-validation">-</div>
+                <div class="stat-change">Assignments waiting</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value" id="stat-in-progress">-</div>
+                <div class="stat-change">Currently validating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completed Today</div>
+                <div class="stat-value" id="stat-completed-today">-</div>
+                <div class="stat-change">Validated assignments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg. Time</div>
+                <div class="stat-value" id="stat-avg-time">-</div>
+                <div class="stat-change">Per validation</div>
+            </div>
+        </div>
+
+        <!-- Queue -->
+        <div class="queue-section">
+            <div class="section-header">
+                <h2 class="section-title">Validation Queue</h2>
+                <button class="refresh-btn" onclick="loadQueue()">🔄 Refresh</button>
+            </div>
+
+            <table class="assignments-table" id="assignments-table">
+                <thead>
+                    <tr>
+                        <th>Priority</th>
+                        <th>Title</th>
+                        <th>Submitted By</th>
+                        <th>Submitted</th>
+                        <th>Parser Confidence</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="assignments-body">
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">⏳</div>
+                                <div>Loading assignments...</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = 'reviewer-1'; // TODO: Get from auth system
+
+        // Load queue data
+        async function loadQueue() {
+            try {
+                const response = await fetch('/api/assignments/needs-validation');
+                const assignments = await response.json();
+
+                const tbody = document.getElementById('assignments-body');
+
+                if (assignments.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">✅</div>
+                                    <div>No assignments need validation</div>
+                                    <div style="margin-top: 8px; font-size: 14px;">Check back later or refresh the page</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = assignments.map(a => `
+                    <tr>
+                        <td>
+                            <span class="priority-badge priority-${a.priority}">${a.priority}</span>
+                        </td>
+                        <td>
+                            <strong>${a.title}</strong><br>
+                            <span class="time-ago">${a.slug}</span>
+                        </td>
+                        <td>${a.submitted_by || 'Unknown'}</td>
+                        <td>${formatTimeAgo(a.submitted_at)}</td>
+                        <td>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill ${getConfidenceClass(a.parser_confidence)}"
+                                     style="width: ${(a.parser_confidence * 100).toFixed(0)}%"></div>
+                            </div>
+                            <span class="time-ago">${(a.parser_confidence * 100).toFixed(0)}%</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${a.status}">${formatStatus(a.status)}</span>
+                            ${a.validation_started_by && a.status === 'validating' ?
+                                `<br><span class="time-ago">by ${a.validation_started_by}</span>` : ''}
+                        </td>
+                        <td>
+                            ${a.status === 'needs_validation' ?
+                                `<button class="action-btn" onclick="startValidation(${a.id}, '${a.slug}')">Start Review</button>` :
+                                a.validation_started_by === currentUser ?
+                                    `<button class="action-btn" onclick="openAssignment('${a.slug}')">Continue</button>` :
+                                    `<button class="action-btn" disabled>In Use</button>`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading queue:', error);
+                document.getElementById('assignments-body').innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">❌</div>
+                                <div>Error loading assignments</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/assignments/statistics');
+                const stats = await response.json();
+
+                document.getElementById('stat-needs-validation').textContent = stats.needs_validation || 0;
+                document.getElementById('stat-in-progress').textContent = stats.in_progress || 0;
+                document.getElementById('stat-completed-today').textContent = stats.completed_today || 0;
+                document.getElementById('stat-avg-time').textContent = formatTime(stats.avg_validation_time);
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Start validation
+        async function startValidation(assignmentId, slug) {
+            try {
+                const response = await fetch(`/api/assignments/${assignmentId}/start-validation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser })
+                });
+
+                if (response.ok) {
+                    window.location.href = `/press-release-canvas?assignment=${slug}&mode=validation`;
+                } else {
+                    alert('Failed to start validation. Assignment may be claimed by another user.');
+                    loadQueue();
+                }
+            } catch (error) {
+                console.error('Error starting validation:', error);
+                alert('Error starting validation');
+            }
+        }
+
+        // Open assignment
+        function openAssignment(slug) {
+            window.location.href = `/press-release-canvas?assignment=${slug}&mode=validation`;
+        }
+
+        // Utility functions
+        function formatTimeAgo(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return `${Math.floor(seconds / 86400)}d ago`;
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function formatTime(seconds) {
+            if (!seconds) return '-';
+            if (seconds < 60) return `${Math.round(seconds)}s`;
+            return `${Math.round(seconds / 60)}m`;
+        }
+
+        function getConfidenceClass(confidence) {
+            if (confidence < 0.5) return 'low';
+            if (confidence < 0.75) return 'medium';
+            return '';
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadQueue();
+            loadStatistics();
+        }, 30000);
+
+        // Initial load
+        loadQueue();
+        loadStatistics();
+    </script>
+</body>
+</html>
