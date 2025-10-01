@@ -478,6 +478,7 @@
             <button class="btn-import" onclick="showImportDialog()">📋 Import Draft</button>
             <button class="btn-preview" onclick="showPreviewDialog()">👁️ Preview</button>
             <button class="btn-export" onclick="showExportDialog()">💾 Export</button>
+            <button class="btn-learning" onclick="exportParserLearning()" title="Export parser learning data">🧠 Submit Learning</button>
         </div>
     </div>
 
@@ -911,7 +912,7 @@ Paid for by Martinez for Congress"></textarea>
     </div>
 
     <style>
-        .btn-import, .btn-preview, .btn-export {
+        .btn-import, .btn-preview, .btn-export, .btn-learning {
             color: white !important;
             margin-left: 8px;
             padding: 8px 16px;
@@ -950,6 +951,14 @@ Paid for by Martinez for Congress"></textarea>
 
         .btn-export:hover {
             background: #7c3aed !important;
+        }
+
+        .btn-learning {
+            background: #f59e0b !important;
+        }
+
+        .btn-learning:hover {
+            background: #d97706 !important;
         }
 
         .import-overlay, .preview-overlay, .export-overlay {
@@ -2753,6 +2762,53 @@ Paid for by Martinez for Congress"></textarea>
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+
+        // Export parser learning data
+        async function exportParserLearning() {
+            if (!window.parserLearning) {
+                alert('No parser learning data available. Import a draft first.');
+                return;
+            }
+
+            const summary = window.parserLearning.getSummary();
+
+            if (summary.totalFieldMovements === 0 && summary.totalTextCleanups === 0 && summary.totalFieldExtractions === 0) {
+                alert('No learning data to export yet. Make some edits to the parsed content first.');
+                return;
+            }
+
+            // Show summary
+            const message = `📚 Parser Learning Summary:
+
+Field Movements: ${summary.totalFieldMovements}
+Text Cleanups: ${summary.totalTextCleanups}
+Field Extractions: ${summary.totalFieldExtractions}
+Improvement Suggestions: ${summary.suggestionsCount}
+
+This data will help improve parser accuracy for future releases.
+
+Submit this learning data?`;
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            // Export training data
+            const success = await window.parserLearning.exportTrainingData();
+
+            if (success) {
+                alert('✅ Parser learning data submitted successfully! The parser will learn from your corrections.');
+
+                // Also show top patterns
+                const topMovements = summary.topMovements.map(m => `  • ${m.movement} (${m.count}x)`).join('\\n');
+                const topCleanups = summary.topCleanups.map(c => `  • ${c.type} (${c.count}x)`).join('\\n');
+
+                console.log('📊 Top Field Movements:\\n' + topMovements);
+                console.log('📊 Top Cleanup Types:\\n' + topCleanups);
+            } else {
+                alert('❌ Failed to submit learning data. Check console for details.');
+            }
+        }
     </script>
     <!-- Optional: Override API base URL (defaults to same origin as this page) -->
     <!-- <script>window.CPO_API_BASE="http://127.0.0.1:5055";</script> -->
@@ -2762,11 +2818,13 @@ Paid for by Martinez for Congress"></textarea>
         import { ParserFeedbackTracker } from './js/parser-feedback-tracker.js';
         import { SmartFieldSuggestions } from './js/smart-field-suggestions.js';
         import { ChangeTracker } from './js/change-tracker.js';
+        import { ParserLearning } from './js/parser-learning.js';
 
         // Global tracker instances
         window.parserFeedbackTracker = new ParserFeedbackTracker();
         window.smartSuggestions = new SmartFieldSuggestions(window.parserFeedbackTracker);
         window.changeTracker = new ChangeTracker();
+        window.parserLearning = new ParserLearning(window.changeTracker);
 
         // Hook into import process
         const originalImportDraft = window.importDraft;
@@ -2790,8 +2848,18 @@ Paid for by Martinez for Congress"></textarea>
                 const initialContent = window.pressReleaseCanvas.collectFieldsData();
                 window.changeTracker.startTracking(initialContent);
 
+                // Start parser learning with initial parse
+                console.log('📚 Starting parser learning...');
+                window.parserLearning.recordInitialParse(
+                    window.parseResults,
+                    window.originalImportText
+                );
+
                 // Set up auto-tracking for field changes
                 setupFieldChangeTracking();
+
+                // Set up parser learning observers
+                setupParserLearningObservers();
             }
         };
 
@@ -2830,6 +2898,108 @@ Paid for by Martinez for Congress"></textarea>
             });
 
             console.log('✅ Field change tracking enabled for', fields.length, 'fields');
+        }
+
+        // Function to observe editor behavior for parser learning
+        function setupParserLearningObservers() {
+            const fields = document.querySelectorAll('#fields-surface input, #fields-surface textarea, #fields-surface select');
+
+            fields.forEach(field => {
+                let initialValue = field.value;
+                let lastClipboardContent = '';
+
+                // Detect paste events (potential field movement)
+                field.addEventListener('paste', function(e) {
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    lastClipboardContent = pastedText;
+
+                    console.log('📋 Paste detected in', field.id, ':', pastedText.substring(0, 50) + '...');
+
+                    // Check if this text came from another field (field movement)
+                    setTimeout(() => {
+                        detectFieldMovement(pastedText, field.id);
+                    }, 100);
+                });
+
+                // Detect text cleanup patterns
+                field.addEventListener('blur', function() {
+                    const currentValue = field.value;
+
+                    if (initialValue && currentValue && currentValue.length < initialValue.length) {
+                        // Text was deleted - potential cleanup
+                        console.log('🧹 Text cleanup detected in', field.id);
+
+                        window.parserLearning.detectTextCleanup(
+                            field.id,
+                            initialValue,
+                            currentValue
+                        );
+                    }
+
+                    // Check for field extraction (text removed from body, added to specific field)
+                    if (field.id.includes('body') && initialValue && currentValue.length < initialValue.length) {
+                        const removedText = findRemovedText(initialValue, currentValue);
+                        if (removedText) {
+                            console.log('📤 Possible extraction from body:', removedText.substring(0, 50));
+                            // Will be matched with paste events in other fields
+                        }
+                    }
+
+                    initialValue = currentValue;
+                });
+            });
+
+            console.log('✅ Parser learning observers enabled');
+        }
+
+        // Detect if pasted text came from another field
+        function detectFieldMovement(pastedText, targetFieldId) {
+            const allFields = document.querySelectorAll('#fields-surface input, #fields-surface textarea, #fields-surface select');
+
+            allFields.forEach(sourceField => {
+                if (sourceField.id === targetFieldId) return;
+
+                const fieldValue = sourceField.value || '';
+
+                // Check if this text was recently in the source field
+                if (fieldValue.includes(pastedText) ||
+                    window.parserLearning.originalParsedFields[sourceField.id]?.includes(pastedText)) {
+
+                    console.log(`🔄 Field movement detected: ${sourceField.id} → ${targetFieldId}`);
+
+                    window.parserLearning.detectFieldMovement(
+                        sourceField.id,
+                        targetFieldId,
+                        pastedText
+                    );
+
+                    // If moved from body to specific field, this is an extraction
+                    if (sourceField.id.includes('body') || sourceField.id.includes('details')) {
+                        window.parserLearning.detectFieldExtraction(
+                            sourceField.id,
+                            targetFieldId,
+                            pastedText
+                        );
+                    }
+                }
+            });
+        }
+
+        // Find text that was removed
+        function findRemovedText(original, current) {
+            if (original.length <= current.length) return null;
+
+            // Simple approach: find the longest substring in original not in current
+            const words = original.split(/\s+/);
+            let removedChunks = [];
+
+            for (let i = 0; i < words.length; i++) {
+                if (!current.includes(words[i])) {
+                    removedChunks.push(words[i]);
+                }
+            }
+
+            return removedChunks.length > 0 ? removedChunks.join(' ') : null;
         }
 
         // Store original text when parsing
