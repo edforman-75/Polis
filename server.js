@@ -471,6 +471,46 @@ app.get('/api/docs/design-patterns', (req, res) => {
     res.sendFile(filePath);
 });
 
+// Training data routes
+app.get('/api/training-data/dataset', (req, res) => {
+    const filePath = path.join(__dirname, 'training_data', 'press_release_training_dataset.csv');
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', 'attachment; filename="press_release_training_dataset.csv"');
+    res.sendFile(filePath);
+});
+
+app.get('/api/training-data/rubric', (req, res) => {
+    const filePath = path.join(__dirname, 'training_data', 'press_release_quality_rubric.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+app.get('/api/training-data/definitions', (req, res) => {
+    const filePath = path.join(__dirname, 'training_data', 'press_release_quality_definitions.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+app.get('/api/training-data/readme', (req, res) => {
+    const filePath = path.join(__dirname, 'training_data', 'README_TRAINING.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
+// Test data routes
+app.get('/api/test-data/adversarial', (req, res) => {
+    const filePath = path.join(__dirname, 'test_data', 'adversarial_mismatch_dataset.csv');
+    res.set('Content-Type', 'text/csv');
+    res.set('Content-Disposition', 'attachment; filename="adversarial_mismatch_dataset.csv"');
+    res.sendFile(filePath);
+});
+
+app.get('/api/test-data/readme', (req, res) => {
+    const filePath = path.join(__dirname, 'test_data', 'README_ADVERSARIAL.md');
+    res.set('Content-Type', 'text/markdown');
+    res.sendFile(filePath);
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({
