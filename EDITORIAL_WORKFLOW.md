@@ -70,18 +70,17 @@ Click "Run All Checks"
 → Overall Quality: 4/5
 ```
 
-**5. Export Production Files**
+**5. Generate & Deliver Production Files**
 ```
-Click "Export" dropdown
-→ Download HTML
-→ Download TXT
-→ Download JSON-LD
-→ Download All (ZIP)
+Click "Export" or "Generate Files"
+→ System creates three production files
+→ Files available for download/distribution
+→ Ready for immediate use by communications team
 ```
 
-### Output
+### Output - Final Deliverables
 
-**Three Production-Ready Files:**
+**Three Production-Ready Files Generated:**
 
 1. **HTML File** (`release-[slug]-[date].html`)
    - Fully formatted for web publishing
@@ -101,6 +100,19 @@ Click "Export" dropdown
    - CPO (Campaign Press Office) extensions
    - Quality scores and metadata
    - Structured data for AI/semantic processing
+
+### Distribution
+
+**These three files are the final deliverables:**
+- Produced by the editor using the application
+- Made available to whoever needs them:
+  - **Web team** → Uses HTML file for website/CMS
+  - **Communications team** → Uses TXT file for email distribution
+  - **Media outlets** → Can receive any format
+  - **Digital team** → Uses JSON-LD for structured data/SEO
+  - **Archive/database** → Stores all three for record-keeping
+
+**The editor's job is complete** once these three files are generated and quality-validated.
 
 ## Key Features
 
@@ -199,11 +211,38 @@ Click "Export" dropdown
 ## Quick Start for Editors
 
 1. **Open Canvas**: http://localhost:3001/press-release-canvas
-2. **Click Import**: Paste writer's draft
-3. **Review Fields**: Fix any parsing errors
+2. **Import Draft**: Paste writer's submission (via dialog or direct)
+3. **Review Fields**: Fix any parsing errors (system learns)
 4. **Apply AI Tools**: Enhance, check, verify
 5. **Run Validation**: Ensure all quality gates pass
-6. **Export Files**: Download HTML, TXT, JSON-LD
-7. **Distribute**: Upload to CMS, send to contacts
+6. **Generate Files**: Export HTML, TXT, JSON-LD
+7. **Deliver**: Make files available to teams who need them
 
-**That's it.** Draft to production in under 20 minutes.
+**That's it.** Draft to production files in under 20 minutes.
+
+---
+
+## What This Application Does
+
+**INPUT:** Raw text from writer (Google Docs, Word, email)
+
+**PROCESS:** AI-assisted editorial enhancement
+- Parse and structure content
+- Apply voice/tone corrections
+- Check AP Style, grammar, facts
+- Validate quality
+- Generate production formats
+
+**OUTPUT:** Three production-ready files
+1. HTML (web publishing)
+2. TXT (email distribution)
+3. JSON-LD (structured data)
+
+**WHO USES THE OUTPUT:**
+- Web team (HTML)
+- Communications team (TXT)
+- Digital/SEO team (JSON-LD)
+- Media outlets (any format)
+- Archive systems (all three)
+
+**Editor's role:** Transform draft → Deliver production files
