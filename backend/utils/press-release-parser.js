@@ -25,6 +25,32 @@ class PressReleaseParser {
             paragraph_breaks: /\n\s*\n/g,
             end_marker: /(?:###|---|-30-|END)/im
         };
+
+        // List of titles/offices - NOT first names
+        this.titles = [
+            'Governor', 'Lt. Governor', 'Lieutenant Governor',
+            'Senator', 'State Senator', 'U.S. Senator',
+            'Representative', 'Rep.', 'State Representative', 'U.S. Representative',
+            'Congressman', 'Congresswoman', 'Congressperson',
+            'Mayor',
+            'President', 'Vice President',
+            'Secretary',
+            'Attorney General',
+            'Delegate',
+            'Assemblyman', 'Assemblywoman', 'Assembly Member', 'Assembly Speaker',
+            'Council Member', 'Councilman', 'Councilwoman',
+            'Supervisor',
+            'Commissioner',
+            'Chief',
+            'Director',
+            'Chair', 'Chairman', 'Chairwoman', 'Chairperson',
+            'Speaker',
+            'Leader', 'Majority Leader', 'Minority Leader',
+            'Whip', 'Majority Whip', 'Minority Whip',
+            'Dr.', 'Doctor',
+            'Professor', 'Prof.',
+            'Mr.', 'Ms.', 'Mrs.', 'Miss'
+        ];
     }
 
     /**
@@ -119,20 +145,301 @@ class PressReleaseParser {
 
     /**
      * Extract all quotes and their attribution
+     * Find text between quotation marks, then extract speaker from surrounding context
+     * Uses ," to detect split quotes and ." to detect end of quote sequence
      */
     extractQuotes(text) {
-        const quotes = [];
+        const rawQuotes = [];
+
+        // Find all quoted text using quotation marks
+        const quotePattern = /"([^"]+)"/g;
         let match;
 
-        while ((match = this.releasePatterns.quotes.exec(text)) !== null) {
-            quotes.push({
-                text: match[1].trim(),
-                attribution: match[2].trim(),
-                full_context: match[0]
+        while ((match = quotePattern.exec(text)) !== null) {
+            const quoteText = match[1].trim();
+            const quoteStartPos = match.index;
+            const quoteEndPos = quoteStartPos + match[0].length;
+
+            // Check what character comes after the closing quote
+            const charAfterQuote = text.charAt(quoteEndPos);
+            const isMultiPartQuote = (charAfterQuote === ','); // ," means more quotes coming
+            const isEndOfQuote = (charAfterQuote === '.'); // ." means end of quote sequence
+
+            // Extract context after the quote (next ~200 characters)
+            const contextAfter = text.substring(quoteEndPos, quoteEndPos + 200);
+
+            // Extract context before the quote (previous ~200 characters)
+            const contextBefore = text.substring(Math.max(0, quoteStartPos - 200), quoteStartPos);
+
+            // Look for attribution patterns after the quote
+            // Handles: "quote," said Speaker at event
+            // Handles: "quote" said Speaker
+            // Handles: "quote", according to Speaker
+            const afterPattern = /^[,\s]*(said|according to|stated|announced|noted|explained|added|continued|emphasized)\s+([^."]+?)(?:\s+at\s|\s+in\s|\s+during\s|\.|$)/i;
+            const afterMatch = contextAfter.match(afterPattern);
+
+            let attribution = null;
+            let speaker_name = '';
+            let speaker_title = '';
+
+            if (afterMatch) {
+                attribution = afterMatch[2].trim();
+                speaker_name = this.extractSpeakerName(attribution, text);
+                speaker_title = this.extractSpeakerTitle(attribution, text);
+            } else {
+                // Look for attribution patterns before the quote
+                const beforePattern = /(?:according to|as)\s+([^,]+?)\s+(?:said|stated|noted|explained)[,:\s]*$/i;
+                const beforeMatch = contextBefore.match(beforePattern);
+
+                if (beforeMatch) {
+                    attribution = beforeMatch[1].trim();
+                    speaker_name = this.extractSpeakerName(attribution, text);
+                    speaker_title = this.extractSpeakerTitle(attribution, text);
+                } else {
+                    // Pattern: Speaker Name said "quote"
+                    const speakerBeforePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:said|stated|announced|noted|explained)[,:\s]*$/i;
+                    const speakerBeforeMatch = contextBefore.match(speakerBeforePattern);
+
+                    if (speakerBeforeMatch) {
+                        speaker_name = speakerBeforeMatch[1].trim();
+                        speaker_title = this.extractSpeakerTitle(speaker_name, text);
+                        attribution = speaker_name;
+                        // Try to find full name in document
+                        speaker_name = this.extractSpeakerName(speaker_name, text);
+                    }
+                }
+            }
+
+            rawQuotes.push({
+                quote_text: quoteText,
+                speaker_name: speaker_name,
+                speaker_title: speaker_title,
+                full_attribution: attribution || 'Unknown Speaker',
+                position: quoteStartPos,
+                isMultiPart: isMultiPartQuote,
+                isEnd: isEndOfQuote
             });
         }
 
-        return quotes;
+        // Combine multi-part quotes from the same speaker
+        // A multi-part quote is indicated by ," (comma before closing quote)
+        // The sequence ends with ." (period before closing quote)
+        const combinedQuotes = [];
+        let i = 0;
+
+        while (i < rawQuotes.length) {
+            const currentQuote = rawQuotes[i];
+            let combinedText = currentQuote.quote_text;
+            let j = i + 1;
+
+            // If this quote is part of a multi-part sequence (ends with ,")
+            if (currentQuote.isMultiPart) {
+                // Continue adding quotes until we find one that ends with ."
+                while (j < rawQuotes.length) {
+                    const nextQuote = rawQuotes[j];
+
+                    // Check if quotes are close together (within ~300 characters)
+                    const distance = nextQuote.position - (currentQuote.position + combinedText.length);
+
+                    // Must be same speaker and close proximity
+                    if (nextQuote.speaker_name === currentQuote.speaker_name &&
+                        currentQuote.speaker_name &&
+                        distance < 300) {
+                        // Combine with ellipsis
+                        combinedText += ' ... ' + nextQuote.quote_text;
+
+                        // If this is the end quote (ends with ."), stop combining
+                        if (nextQuote.isEnd) {
+                            j++;
+                            break;
+                        }
+                        j++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            combinedQuotes.push({
+                quote_text: combinedText,
+                speaker_name: currentQuote.speaker_name || '',
+                speaker_title: currentQuote.speaker_title || '',
+                full_attribution: currentQuote.full_attribution
+            });
+
+            i = j;
+        }
+
+        return combinedQuotes;
+    }
+
+    /**
+     * Extract speaker name from attribution text
+     * Example: "Mayor Wilson" + full text -> "James Wilson"
+     * Searches EARLIER in the document for the first full name reference
+     */
+    extractSpeakerName(attribution, fullText = '') {
+        if (!attribution) return '';
+
+        // Clean up common trailing phrases
+        let cleaned = attribution
+            .replace(/\s+at\s+.*/i, '')
+            .replace(/\s+in\s+.*/i, '')
+            .replace(/\s+during\s+.*/i, '')
+            .replace(/\s+this\s+.*/i, '')
+            .trim();
+
+        // Build regex pattern from titles list
+        const titlesPattern = this.titles.map(t => t.replace(/\./g, '\\.')).join('|');
+
+        // Extract title and last name from attribution
+        const titleLastPattern = new RegExp(`(${titlesPattern})\\s+([A-Z][a-z]+)`, 'i');
+        const titleLastMatch = cleaned.match(titleLastPattern);
+
+        let lastName = null;
+        let title = null;
+
+        if (titleLastMatch) {
+            title = titleLastMatch[1];
+            lastName = titleLastMatch[2];
+        } else {
+            // Try to extract any capitalized name (but verify it's not a title)
+            const namePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/;
+            const nameMatch = cleaned.match(namePattern);
+            if (nameMatch) {
+                const name = nameMatch[1];
+
+                // Check if this is actually a title
+                if (this.titles.some(t => name.toLowerCase().includes(t.toLowerCase()))) {
+                    return cleaned; // It's a title, return as-is
+                }
+
+                // If already has first and last name, return it
+                if (name.split(' ').length >= 2) {
+                    return name;
+                }
+                lastName = name;
+            }
+        }
+
+        // If we have a last name, search EARLIER in the document for the full name
+        if (lastName && fullText) {
+            // Look for "FirstName LastName" pattern
+            // Example: find "James Wilson" when we have lastName "Wilson"
+            const fullNamePattern = new RegExp(`\\b([A-Z][a-z]+)\\s+${lastName}\\b`, 'g');
+            const matches = [];
+            let match;
+
+            while ((match = fullNamePattern.exec(fullText)) !== null) {
+                const firstName = match[1];
+
+                // Make sure the first name is NOT a title
+                if (!this.titles.some(t => t.toLowerCase() === firstName.toLowerCase())) {
+                    matches.push({
+                        fullName: match[0],
+                        position: match.index
+                    });
+                }
+            }
+
+            // Return the FIRST occurrence (earliest in document)
+            if (matches.length > 0) {
+                matches.sort((a, b) => a.position - b.position);
+                return matches[0].fullName;
+            }
+
+            // Also try with title: "Title FirstName LastName"
+            if (title) {
+                const titleFullNamePattern = new RegExp(`${title}\\s+([A-Z][a-z]+)\\s+${lastName}\\b`, 'gi');
+                let titleMatch;
+                let earliestMatch = null;
+                let earliestPosition = Infinity;
+
+                while ((titleMatch = titleFullNamePattern.exec(fullText)) !== null) {
+                    if (titleMatch.index < earliestPosition) {
+                        earliestPosition = titleMatch.index;
+                        earliestMatch = titleMatch[0];
+                    }
+                }
+
+                if (earliestMatch) {
+                    // Extract just the name part (remove title)
+                    const nameOnly = earliestMatch.replace(new RegExp(title, 'i'), '').trim();
+
+                    // Verify first name is not a title
+                    const firstName = nameOnly.split(' ')[0];
+                    if (!this.titles.some(t => t.toLowerCase() === firstName.toLowerCase())) {
+                        return nameOnly;
+                    }
+                }
+            }
+        }
+
+        // Fallback: return what we have
+        if (lastName) {
+            return lastName;
+        }
+
+        return cleaned;
+    }
+
+    /**
+     * Extract speaker title from attribution text with enhanced context
+     * Example: "Mayor Wilson" -> "Mayor of Detroit" (using dateline)
+     * Example: "ElectricFuture CEO Martinez" -> "CEO of ElectricFuture"
+     */
+    extractSpeakerTitle(attribution, fullText = '') {
+        if (!attribution) return '';
+
+        // First, check for company name before title (e.g., "ElectricFuture CEO")
+        const companyTitlePattern = /([A-Z][a-zA-Z0-9&\s]*?)\s+(CEO|CFO|CTO|COO|President|Vice President|Chairman|Director|Manager|Spokesperson)\b/i;
+        const companyMatch = attribution.match(companyTitlePattern);
+
+        if (companyMatch) {
+            const company = companyMatch[1].trim();
+            const title = companyMatch[2].trim();
+            return `${title} of ${company}`;
+        }
+
+        // Government/political titles
+        const govTitlePatterns = [
+            /^(Governor|Lt\. Governor|Lieutenant Governor|Senator|State Senator|U\.S\. Senator|Representative|State Representative|U\.S\. Representative|Rep\.|Congressman|Congresswoman|Mayor|President|Vice President|Secretary|Delegate|Dr\.|Assembly Speaker)\s+/i,
+            /\s+(Governor|Lt\. Governor|Lieutenant Governor|Senator|State Senator|U\.S\. Senator|Representative|State Representative|U\.S\. Representative|Mayor|President|Vice President|Secretary)$/i
+        ];
+
+        for (const pattern of govTitlePatterns) {
+            const match = attribution.match(pattern);
+            if (match) {
+                const title = match[1].trim();
+
+                // For location-based titles (Mayor, Governor, Lt. Governor), append dateline location
+                const locationTitles = ['Mayor', 'Governor', 'Lt. Governor', 'Lieutenant Governor'];
+                if (locationTitles.some(t => title.toLowerCase() === t.toLowerCase()) && fullText) {
+                    const dateline = this.extractDatelineEnhanced(fullText);
+                    if (dateline.location) {
+                        // Extract city name from dateline (e.g., "DETROIT, MI" -> "Detroit")
+                        const cityMatch = dateline.location.match(/^([A-Z\s]+)(?:,\s*[A-Z]{2})?/);
+                        if (cityMatch) {
+                            const city = cityMatch[1].trim();
+                            // Convert to title case (DETROIT -> Detroit)
+                            const titleCaseCity = city.charAt(0) + city.slice(1).toLowerCase();
+                            return `${title} of ${titleCaseCity}`;
+                        }
+                    }
+                }
+
+                return title;
+            }
+        }
+
+        // Corporate titles without company name
+        const corporateTitlePattern = /\b(CEO|CFO|CTO|COO|President|Vice President|Chairman|Director|Manager|Spokesperson)\b/i;
+        const corpMatch = attribution.match(corporateTitlePattern);
+        if (corpMatch) {
+            return corpMatch[1].trim();
+        }
+
+        return '';
     }
 
     /**
@@ -561,57 +868,65 @@ class PressReleaseParser {
         const rawText = text.trim();
         const lines = rawText.split('\n');
 
-        // Look for common dateline patterns using indexOf to avoid regex issues
+        // Generic dateline patterns that work for ANY city/state combination
+        // Handles both UPPERCASE (DETROIT, MI) and Mixed Case (Detroit, MI)
         const datelinePatterns = [
-            'OAKLAND, CA —',
-            'CHICAGO, IL —',
-            'NEW YORK, NY —',
-            'WASHINGTON, DC —',
-            'LOS ANGELES, CA —',
-            'SACRAMENTO, CA —',
-            'ALBANY, NY —'
+            // Standard dash patterns with various separators (—, –, -)
+            // All caps: CITY, ST - Date
+            /([A-Z][A-Z\s,]+)\s*[–—-]\s*([A-Z][a-z]+\s+\d+,?\s+\d{4})/,
+            /([A-Z][A-Z\s,]+)\s*[–—-]\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})/,
+            /([A-Z][A-Z\s,]+)\s*[–—-]\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
+            // Mixed case: City, ST - Date
+            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*([A-Z][a-z]+\s+\d+,?\s+\d{4})/,
+            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})/,
+            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
+            // Parenthesis patterns like "City, ST (Date)"
+            /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})\s*\)/,
+            /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*\)/
         ];
 
-        // Find any dateline
-        let datelineIndex = -1;
+        // Look for dateline anywhere in text
         for (const pattern of datelinePatterns) {
-            datelineIndex = rawText.indexOf(pattern);
-            if (datelineIndex > 0) {
-                const beforeDateline = rawText.substring(0, datelineIndex).trim();
+            const match = rawText.match(pattern);
+            if (match) {
+                const datelineIndex = match.index;
+                if (datelineIndex > 0) {
+                    const beforeDateline = rawText.substring(0, datelineIndex).trim();
 
-                // For press releases with formal structure (FOR IMMEDIATE RELEASE, date, headline)
-                // Extract just the headline portion
-                const beforeLines = beforeDateline.split('\n');
+                    // For press releases with formal structure (FOR IMMEDIATE RELEASE, date, headline)
+                    // Extract just the headline portion
+                    const beforeLines = beforeDateline.split('\n');
 
-                // Skip "FOR IMMEDIATE RELEASE" and date lines, get the main headline
-                let headlineText = '';
-                for (let i = 0; i < beforeLines.length; i++) {
-                    const line = beforeLines[i].trim();
+                    // Skip "FOR IMMEDIATE RELEASE" and date lines, get the main headline
+                    let headlineText = '';
+                    for (let i = 0; i < beforeLines.length; i++) {
+                        const line = beforeLines[i].trim();
 
-                    // Skip empty lines, release type, and date lines
-                    if (!line ||
-                        line.includes('FOR IMMEDIATE RELEASE') ||
-                        line.includes('FOR RELEASE') ||
-                        /^\w+\s+\d+,?\s+\d{4}$/.test(line) || // Date pattern
-                        line.startsWith('"') && line.endsWith('"')) { // Quoted subheads
-                        continue;
+                        // Skip empty lines, release type, and date lines
+                        if (!line ||
+                            line.includes('FOR IMMEDIATE RELEASE') ||
+                            line.includes('FOR RELEASE') ||
+                            /^\w+\s+\d+,?\s+\d{4}$/.test(line) || // Date pattern
+                            line.startsWith('"') && line.endsWith('"')) { // Quoted subheads
+                            continue;
+                        }
+
+                        // This should be the main headline
+                        if (line.length > 10) {
+                            headlineText = line;
+                            break;
+                        }
                     }
 
-                    // This should be the main headline
-                    if (line.length > 10) {
-                        headlineText = line;
-                        break;
-                    }
+                    return headlineText || beforeDateline;
                 }
-
-                return headlineText || beforeDateline;
             }
         }
 
         // Fallback: look for generic dateline pattern with simple string operations
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            if (line.includes(' — ') && line.match(/[A-Z]{2,}/)) {
+            if ((line.includes(' — ') || line.includes(' – ') || line.includes(' - ')) && line.match(/[A-Z]{2,}/)) {
                 // Found potential dateline, get everything before it
                 const beforeLines = lines.slice(0, i);
 
@@ -661,10 +976,12 @@ class PressReleaseParser {
         for (const pattern of patterns) {
             const match = pattern.exec(text);
             if (match) {
+                // Preserve the original separator character from the text
+                const originalMatch = match[0];
                 return {
                     location: match[1].trim(),
                     date: match[2].trim(),
-                    full: `${match[1].trim()} — ${match[2].trim()}`
+                    full: originalMatch.trim()
                 };
             }
         }
@@ -695,27 +1012,16 @@ class PressReleaseParser {
             this.releasePatterns.paid_for
         ]);
 
-        // Remove the headline and dateline from content more carefully
+        // Remove only the headline from content, keep dateline as part of lead paragraph
         const headline = this.findHeadlineEnhanced(content);
         const dateline = this.extractDatelineEnhanced(content);
 
-        // More precise removal to avoid breaking content flow
-        if (headline && dateline.full) {
-            // Find the position after both headline and dateline
+        // Remove headline but keep everything after it (including dateline)
+        if (headline) {
             const headlineIndex = content.indexOf(headline);
-            const datelineIndex = content.indexOf(dateline.full);
-
-            if (headlineIndex >= 0 && datelineIndex >= 0) {
-                const afterDateline = datelineIndex + dateline.full.length;
-                content = content.substring(afterDateline).trim();
-                // Clean up any leading dashes or separators
-                content = content.replace(/^[—–-]\s*/, '').trim();
+            if (headlineIndex >= 0) {
+                content = content.substring(headlineIndex + headline.length).trim();
             }
-        } else if (headline) {
-            content = this.safeReplace(content, headline, '').trim();
-        } else if (dateline.full) {
-            content = this.safeReplace(content, dateline.full, '').trim();
-            content = content.replace(/^[—–-]\s*/, '').trim();
         }
 
         // Try to split by existing paragraph breaks first
@@ -776,13 +1082,43 @@ class PressReleaseParser {
 
     extractBoilerplate(text) {
         const paragraphs = this.extractParagraphs(text);
-        // Boilerplate is usually the last substantial paragraph before contact info
-        for (let i = paragraphs.length - 1; i >= 0; i--) {
+
+        // Look for actual boilerplate (candidate bio) - don't just grab the last paragraph
+        // Real boilerplate has biographical indicators
+        const bioIndicators = [
+            /is\s+(?:running|a\s+candidate)\s+for/i,
+            /(?:previously|currently)\s+served/i,
+            /(?:earned|graduated|received)\s+(?:a|his|her)\s+degree/i,
+            /lives\s+(?:in|with)/i,
+            /resides\s+in/i,
+            /is\s+(?:a|the)\s+(?:mother|father|parent)/i,
+            /native\s+of/i,
+            /grew\s+up\s+in/i,
+            /worked\s+as\s+a/i,
+            /background\s+in/i,
+            /experience\s+in/i,
+            /career\s+(?:in|as)/i
+        ];
+
+        // Check last few paragraphs for biographical content
+        for (let i = paragraphs.length - 1; i >= Math.max(0, paragraphs.length - 3); i--) {
             const paragraph = paragraphs[i];
-            if (paragraph.length > 100 && !paragraph.includes('"')) {
+
+            // Skip if too short or contains quotes
+            if (paragraph.length < 100 || paragraph.includes('"')) {
+                continue;
+            }
+
+            // Check for biographical indicators
+            const bioMatches = bioIndicators.filter(pattern => pattern.test(paragraph)).length;
+
+            // Must have at least 2 biographical indicators to be considered boilerplate
+            if (bioMatches >= 2) {
                 return paragraph;
             }
         }
+
+        // No boilerplate found
         return '';
     }
 

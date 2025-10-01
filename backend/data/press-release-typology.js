@@ -373,6 +373,308 @@ const pressReleaseTypology = {
         ],
 
         example_opening: "Rep. Martinez today announced $50 million in federal funding for Metro Rail expansion, bringing direct train service to working-class neighborhoods for the first time and cutting commute times by 45 minutes."
+    },
+
+    // Voting Record Highlight Releases
+    "voting_record": {
+        title: "Voting Record Highlight Releases",
+        icon: "📋",
+        strategic_purpose: "Establish credibility through documented actions, demonstrate consistency and commitment to constituents",
+        narrative_structure: "Proven Track Record",
+
+        narrative_steps: [
+            {
+                name: "Record Summary",
+                description: "Overview of voting history on key issues"
+            },
+            {
+                name: "Specific Votes Highlighted",
+                description: "3-5 most important votes with context"
+            },
+            {
+                name: "Constituent Impact",
+                description: "How these votes helped real people"
+            },
+            {
+                name: "Consistency Demonstrated",
+                description: "Pattern of reliable advocacy"
+            },
+            {
+                name: "Future Commitment",
+                description: "Pledge to continue fighting"
+            }
+        ],
+
+        briefing_requirements: [
+            "Complete voting record on relevant issues",
+            "Bill numbers, dates, vote margins",
+            "Co-sponsorship history and leadership roles",
+            "District-specific impact of legislation supported",
+            "Testimonials from affected constituents",
+            "Comparison data (if contrast intended)",
+            "Opponent's voting record (if available)",
+            "Independent verification sources",
+            "Committee assignments and participation",
+            "Attendance and engagement metrics"
+        ],
+
+        key_questions: [
+            "Which votes best demonstrate our values and effectiveness?",
+            "How have these votes tangibly helped our constituents?",
+            "What pattern of advocacy does this record show?",
+            "Are we prepared to defend every vote highlighted?"
+        ],
+
+        example_opening: "Over six years in Congress, Rep. Chen has voted 47 times to expand healthcare access, consistently fighting to lower prescription drug costs and protect coverage for pre-existing conditions—delivering real results for District 12 families."
+    },
+
+    // Opposition Attack Releases
+    "opposition_attack": {
+        title: "Opposition Attack Releases",
+        icon: "⚔️",
+        strategic_purpose: "Define opponent negatively, disqualify them in voters' minds, create doubt about fitness for office",
+        narrative_structure: "Exposure & Disqualification",
+
+        narrative_steps: [
+            {
+                name: "Credibility Establishment",
+                description: "Source credentials and documentation"
+            },
+            {
+                name: "Specific Allegation",
+                description: "Clear, verifiable claim with evidence"
+            },
+            {
+                name: "Impact Framework",
+                description: "Why this matters to voters/constituents"
+            },
+            {
+                name: "Pattern Building",
+                description: "Connect to broader character/judgment issues"
+            },
+            {
+                name: "Disqualifying Conclusion",
+                description: "Why opponent is unfit for office"
+            }
+        ],
+
+        briefing_requirements: [
+            "Ironclad documentation and primary sources",
+            "Legal review and fact-checking verification",
+            "Public records, voting records, court filings",
+            "Video/audio evidence when available",
+            "Opposition research file with full context",
+            "Anticipated opponent responses and rebuttals",
+            "Risk assessment and blowback preparation",
+            "Surrogate coordination and talking points",
+            "Media placement strategy and timing",
+            "Rapid response team readiness"
+        ],
+
+        key_questions: [
+            "Can we prove every single allegation beyond doubt?",
+            "What's the worst-case blowback and can we survive it?",
+            "Does this genuinely disqualify opponent or just wound them?",
+            "Will voters care, or does this look like politics as usual?",
+            "Are we prepared for multi-day media cycle on this?"
+        ],
+
+        example_opening: "Public records obtained by the Williams campaign reveal that opponent David Park accepted $250,000 from pharmaceutical companies while voting six times against prescription drug price controls—a pattern of putting corporate profits over patients."
+    },
+
+    // Contrast Communication Releases
+    "contrast_communication": {
+        title: "Contrast Communication Releases",
+        icon: "⚖️",
+        strategic_purpose: "Highlight clear choice for voters through substantive comparison, elevate our strengths while exposing opponent weaknesses",
+        narrative_structure: "Clear Choice Framework",
+
+        narrative_steps: [
+            {
+                name: "Issue Importance",
+                description: "Why this issue matters to voters"
+            },
+            {
+                name: "Our Position & Record",
+                description: "What we've done, what we'll do"
+            },
+            {
+                name: "Their Position & Record",
+                description: "What opponent has done/supports"
+            },
+            {
+                name: "Real-World Impact",
+                description: "How this difference affects constituents"
+            },
+            {
+                name: "Choice Crystallized",
+                description: "Clear statement of opposing paths"
+            }
+        ],
+
+        briefing_requirements: [
+            "Side-by-side comparison chart with citations",
+            "Verified voting records for both candidates",
+            "Position papers and public statements",
+            "District-specific impact modeling",
+            "Demographic analysis of who benefits from each position",
+            "Endorser perspectives on the contrast",
+            "Visual assets for social media comparison",
+            "Fact sheet for media with full sourcing",
+            "Q&A anticipating fact-checker scrutiny",
+            "Constituent testimonials illustrating impact"
+        ],
+
+        key_questions: [
+            "Is this a genuine substantive difference voters care about?",
+            "Are we presenting opponent's position fairly?",
+            "Does this contrast favor us or just clarify opponent's view?",
+            "Can we sustain this message through Election Day?"
+        ],
+
+        example_opening: "On education funding, the choice is clear: Lisa Thompson has fought for $200 million in new school funding and reduced class sizes to 22 students, while John Reynolds voted three times to cut education budgets and increase class sizes to 35."
+    },
+
+    // Accountability Demand Releases
+    "accountability_demand": {
+        title: "Accountability Demand Releases",
+        icon: "❓",
+        strategic_purpose: "Force opponent to address uncomfortable issue, create news cycle around their silence/evasion, demonstrate leadership through transparency",
+        narrative_structure: "Question & Exposure",
+
+        narrative_steps: [
+            {
+                name: "Issue Presentation",
+                description: "Clear explanation of situation requiring answer"
+            },
+            {
+                name: "Legitimate Questions",
+                description: "3-5 specific questions opponent must address"
+            },
+            {
+                name: "Public Interest",
+                description: "Why voters deserve answers now"
+            },
+            {
+                name: "Our Transparency",
+                description: "How we've already answered similar questions"
+            },
+            {
+                name: "Deadline & Consequences",
+                description: "Timeframe and implications of non-response"
+            }
+        ],
+
+        briefing_requirements: [
+            "Full documentation of underlying issue",
+            "Specific, answerable questions (not rhetorical)",
+            "Timeline of opponent's evasion/silence to date",
+            "Our own disclosure on similar issues",
+            "Media interest assessment and pitch strategy",
+            "Surrogate validators (good government groups, etc.)",
+            "Follow-up plan if opponent ignores demand",
+            "Prepared responses to likely opponent deflections",
+            "Earned media targets and scheduling",
+            "Social media amplification strategy"
+        ],
+
+        key_questions: [
+            "Are these genuinely answerable questions or just attacks?",
+            "Have we held ourselves to the same standard?",
+            "What if opponent actually provides good answers?",
+            "Does this create news cycle or fall flat?",
+            "Are we prepared to escalate if they ignore us?"
+        ],
+
+        example_opening: "After three weeks of silence, Senate candidate Maria Rodriguez is demanding answers: Why did opponent Tom Wilson accept campaign contributions from the same defense contractor he awarded a $50 million no-bid contract to as County Commissioner?"
+    }
+};
+
+// Tone Classification Rubric
+const toneClassification = {
+    "positive_celebratory": {
+        label: "Positive/Celebratory",
+        description: "Achievements, good news, victories, milestones reached",
+        keywords: ["success", "achievement", "proud", "delivered", "accomplished", "victory", "milestone", "celebrate", "thrilled", "pleased"],
+        indicators: [
+            "Announces accomplishments or wins",
+            "Celebrates milestones or victories",
+            "Shares good news for constituents",
+            "Positive framing throughout"
+        ],
+        example: "Today we celebrate a major victory for working families..."
+    },
+    "inspirational_visionary": {
+        label: "Inspirational/Visionary",
+        description: "Future-focused, hopeful, movement-building, aspirational",
+        keywords: ["future", "vision", "together", "movement", "hope", "dream", "imagine", "build", "forward", "believe"],
+        indicators: [
+            "Paints picture of better future",
+            "Calls for collective action",
+            "Uses aspirational language",
+            "Movement or coalition building"
+        ],
+        example: "Together, we can build a future where every family has access to..."
+    },
+    "neutral_informational": {
+        label: "Neutral/Informational",
+        description: "Factual updates, announcements, procedural information",
+        keywords: ["announce", "today", "will", "plans", "schedule", "details", "information", "update", "according"],
+        indicators: [
+            "Straightforward facts",
+            "Procedural or administrative",
+            "No emotional appeals",
+            "Objective tone"
+        ],
+        example: "Senator Martinez announced today that the committee will hold hearings on..."
+    },
+    "critical_concerned": {
+        label: "Critical/Concerned",
+        description: "Identifying problems, raising concerns (not about opponent)",
+        keywords: ["problem", "concern", "challenge", "crisis", "struggle", "difficult", "unfortunately", "troubled", "failing"],
+        indicators: [
+            "Identifies problems or challenges",
+            "Expresses concern about issues",
+            "Not attacking opponent",
+            "Focus on systemic problems"
+        ],
+        example: "Our healthcare system is failing families who can't afford..."
+    },
+    "attack_combative": {
+        label: "Attack/Combative",
+        description: "Direct criticism of opponent, accusations, exposing failures",
+        keywords: ["opponent", "failed", "wrong", "refuses", "dangerous", "lied", "hypocrite", "corrupt", "betrayed", "broken promise"],
+        indicators: [
+            "Direct opponent criticism",
+            "Questions opponent's character/record",
+            "Uses accusatory language",
+            "Aggressive framing"
+        ],
+        example: "Opponent Smith has repeatedly voted against the interests of working families..."
+    },
+    "defensive_responsive": {
+        label: "Defensive/Responsive",
+        description: "Responding to attacks, clarifying position, damage control",
+        keywords: ["response", "clarify", "false", "misleading", "truth", "fact", "record shows", "actually", "contrary"],
+        indicators: [
+            "Responding to criticism",
+            "Correcting misinformation",
+            "Defending record or position",
+            "Setting record straight"
+        ],
+        example: "In response to misleading claims, the facts are clear..."
+    },
+    "urgent_crisis": {
+        label: "Urgent/Crisis",
+        description: "Time-sensitive, emergency framing, immediate action required",
+        keywords: ["urgent", "immediately", "crisis", "emergency", "must act", "cannot wait", "now", "critical", "deadline"],
+        indicators: [
+            "Time-sensitive language",
+            "Sense of urgency or emergency",
+            "Calls for immediate action",
+            "Crisis framing"
+        ],
+        example: "We must act immediately to address this urgent crisis..."
     }
 };
 
@@ -414,5 +716,6 @@ const mandatoryFields = [
 
 module.exports = {
     pressReleaseTypology,
-    mandatoryFields
+    mandatoryFields,
+    toneClassification
 };

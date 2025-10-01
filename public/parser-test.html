@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Parser - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: calc(100vh - 400px);
+            padding: 15px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f3f5;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .parsed-field {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+
+        .parsed-field label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .parsed-field-value {
+            color: #212529;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .parsed-field input,
+        .parsed-field textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .parsed-field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .parsed-field input:focus,
+        .parsed-field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .feedback-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        .feedback-section label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .feedback-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .confidence-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .confidence-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .confidence-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .sample-texts {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .sample-texts h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #004085;
+        }
+
+        .sample-link {
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            padding: 6px 12px;
+            background: white;
+            color: #004085;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+            border: 1px solid #b8daff;
+            transition: all 0.2s;
+        }
+
+        .sample-link:hover {
+            background: #004085;
+            color: white;
+        }
+
+        .sample-link.active {
+            background: #004085;
+            color: white;
+            font-weight: 600;
+        }
+
+        .parsed-field select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .parsed-field select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        #resultsPanel {
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Press Release Parser - Test Interface</h1>
+            <p>Paste a press release or URL to see how the AI parser extracts structured fields</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- Input Panel -->
+            <div class="panel">
+                <h2>📝 Input</h2>
+
+                <div class="sample-texts">
+                    <h3>Quick Test Samples:</h3>
+                    <a href="#" class="sample-link" onclick="loadSample('healthcare'); return false;">Healthcare Expansion</a>
+                    <a href="#" class="sample-link" onclick="loadSample('education'); return false;">Education Funding</a>
+                    <a href="#" class="sample-link" onclick="loadSample('economy'); return false;">Jobs Announcement</a>
+                </div>
+
+                <textarea id="inputText" placeholder="Paste your press release text here or enter a URL...
+
+Example:
+BOSTON, MA - Governor Sarah Smith today announced a comprehensive plan to expand healthcare access to 150,000 uninsured Massachusetts residents.
+
+&quot;Too many families are forced to choose between paying rent and buying medicine,&quot; said Governor Smith at a press conference this morning.
+
+The plan includes three major components..."></textarea>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="parseText()">🚀 Parse Text</button>
+                    <button class="btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="panel">
+                <h2>📊 Parsed Results</h2>
+                <div id="resultsPanel">
+                    <div class="loading" style="color: #adb5bd;">
+                        <p>👆 Paste text and click "Parse Text" to see results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentParsedData = null;
+        let originalText = '';
+        let currentSample = null;
+
+        // Comprehensive political issue taxonomy
+        const ISSUES = [
+            "Healthcare & Medicare",
+            "Education & Schools",
+            "Economy & Jobs",
+            "Infrastructure & Transportation",
+            "Environment & Climate",
+            "Public Safety & Crime",
+            "Housing & Affordability",
+            "Immigration",
+            "Veterans Affairs",
+            "Civil Rights & Justice",
+            "Tax Policy",
+            "Small Business",
+            "Agriculture & Rural Development",
+            "Technology & Innovation",
+            "Energy Policy",
+            "Foreign Policy & Defense",
+            "Social Security & Retirement",
+            "Voting Rights & Democracy",
+            "Gun Policy",
+            "Women's Rights & Reproductive Health",
+            "LGBTQ+ Rights",
+            "Disability Rights",
+            "Labor & Workers' Rights",
+            "Criminal Justice Reform",
+            "Mental Health & Addiction",
+            "Childcare & Family Support",
+            "Senior Services",
+            "Youth & Children",
+            "Poverty & Economic Justice",
+            "Trade & Manufacturing",
+            "Other"
+        ];
+
+        const ANNOUNCEMENT_TYPES = [
+            "Campaign Launch",
+            "Policy Position",
+            "Legislative Achievement",
+            "Endorsement",
+            "Fundraising",
+            "Event Promotion",
+            "Crisis Response",
+            "Voting Record Highlight",
+            "Opposition Attack",
+            "Contrast Communication",
+            "Accountability Demand",
+            "General Announcement"
+        ];
+
+        const ANNOUNCEMENT_SUBTYPES = [
+            "Funding Announcement",
+            "Reform Proposal",
+            "Expansion Initiative",
+            "New Program Launch",
+            "Partnership Announcement",
+            "Achievement Celebration",
+            "Voting Record Release",
+            "Legislative Accomplishments Summary",
+            "Character Attack",
+            "Integrity Question",
+            "Ethics Violation",
+            "Hypocrisy Exposure",
+            "Broken Promise",
+            "Policy Flip-Flop",
+            "Special Interest Ties",
+            "Corruption Allegation",
+            "Record Contrast",
+            "Side-by-Side Comparison",
+            "Fact Check Response",
+            "Accountability Call",
+            "Statement"
+        ];
+
+        const TONE_OPTIONS = [
+            "Positive/Celebratory",
+            "Inspirational/Visionary",
+            "Neutral/Informational",
+            "Critical/Concerned",
+            "Attack/Combative",
+            "Defensive/Responsive",
+            "Urgent/Crisis"
+        ];
+
+        const samples = {
+            healthcare: `Governor Smith Unveils Plan to Expand Healthcare Access to 150,000 Uninsured Residents
+
+BOSTON, MA - October 1, 2025 - Governor Sarah Smith today unveiled a comprehensive plan to expand healthcare access to 150,000 uninsured Massachusetts residents. The initiative will provide affordable coverage and prescription drug benefits to working families across the Commonwealth.
+
+"Too many families in Massachusetts are forced to choose between paying rent and buying medicine," said Governor Smith at a press conference this morning. "That's wrong, and we can do better."
+
+The plan includes three major components: expanding Medicaid eligibility to families earning up to 200% of the federal poverty level, creating a prescription drug affordability board to negotiate lower prices, and establishing community health centers in underserved areas.
+
+Health policy experts estimate the program will cost $2.1 billion over five years, funded through a combination of federal matching funds and a small payroll tax on high earners. The initiative has broad support from healthcare advocates and business leaders.
+
+The healthcare expansion bill will be introduced in the state legislature next week. Governor Smith said she expects bipartisan support for the measure, which has been endorsed by the Massachusetts Medical Society and the Chamber of Commerce.`,
+
+            education: `California Announces Historic $5 Billion Investment in Public Schools
+
+SACRAMENTO, CA - October 1, 2025 - State legislators announced a historic $5 billion investment in California's public schools, the largest education funding increase in state history.
+
+"Every child deserves access to quality education, regardless of their zip code," said Assembly Speaker Maria Rodriguez. "This funding will reduce class sizes, hire more teachers, and upgrade aging school facilities."
+
+The education package allocates $2 billion for teacher recruitment and retention, $1.5 billion for school infrastructure improvements, $1 billion for special education programs, and $500 million for technology upgrades.
+
+Education advocates praised the announcement. "This is a game-changer for our schools," said Teachers Association President David Chen. "We've been advocating for these investments for years."
+
+The funding bill passed both chambers with bipartisan support and will take effect in the 2026 fiscal year.`,
+
+            economy: `Detroit Secures $800 Million Battery Plant, Creating 2,500 Good-Paying Jobs
+
+DETROIT, MI - October 1, 2025 - Mayor James Wilson announced that automotive manufacturer ElectricFuture Inc. will build a new $800 million battery plant in Detroit, creating 2,500 high-paying jobs over the next three years.
+
+"This is exactly the kind of good-paying, advanced manufacturing jobs Detroit needs," said Mayor Wilson at the groundbreaking ceremony. "Our city is leading the electric vehicle revolution."
+
+The new facility will produce lithium-ion batteries for electric vehicles and is expected to begin operations in early 2027. The company received $150 million in state tax incentives and workforce training grants.
+
+"Detroit's skilled workforce and strategic location make it the perfect home for our expansion," said ElectricFuture CEO Jennifer Martinez. "We're excited to be part of this city's comeback story."
+
+The project includes commitments to hire from local communities and provide apprenticeship programs for Detroit residents.`
+        };
+
+        function loadSample(type) {
+            document.getElementById('inputText').value = samples[type];
+            currentSample = type;
+
+            // Update active state on sample links
+            document.querySelectorAll('.sample-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            currentSample = null;
+            document.querySelectorAll('.sample-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.getElementById('resultsPanel').innerHTML = `
+                <div class="loading" style="color: #adb5bd;">
+                    <p>👆 Paste text and click "Parse Text" to see results</p>
+                </div>
+            `;
+        }
+
+        async function parseText() {
+            const text = document.getElementById('inputText').value.trim();
+            const resultsPanel = document.getElementById('resultsPanel');
+
+            if (!text) {
+                resultsPanel.innerHTML = '<div class="error">⚠️ Please enter some text to parse</div>';
+                return;
+            }
+
+            originalText = text;
+
+            // Show loading
+            resultsPanel.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Parsing content...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        contentType: 'press_release'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                currentParsedData = data;
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Parse error:', error);
+                resultsPanel.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Parsing Error</strong><br>
+                        ${error.message}
+                    </div>
+                    <p style="margin-top: 15px; color: #6c757d; font-size: 14px;">
+                        Make sure the server is running and the API endpoint is available.
+                    </p>
+                `;
+            }
+        }
+
+        function displayResults(data) {
+            const resultsPanel = document.getElementById('resultsPanel');
+
+            if (!data.parsed) {
+                resultsPanel.innerHTML = '<div class="error">No parsed data returned</div>';
+                return;
+            }
+
+            const parsed = data.parsed;
+            let html = '';
+            let fieldIndex = 0;
+
+            // Extract from actual parser structure
+            const content = parsed.content_structure || {};
+            const fields_data = parsed.fields_data || {};
+            const quotes = parsed.quotes || [];
+            const contact = parsed.contact_info || {};
+            const metadata = parsed.metadata || {};
+
+            // Helper to safely get string value
+            const getValue = (val) => {
+                if (!val) return '';
+                if (typeof val === 'string') return val;
+                if (typeof val === 'object' && val.full) return val.full;
+                return '';
+            };
+
+            // Infer announcement type, subtype, and tone
+            const announcementType = inferAnnouncementType(originalText, metadata);
+            const detectedTone = inferTone(originalText);
+
+            // Display editable fields
+            const displayEditableField = (label, value, fieldKey, isLong = false, confidence = 0.9) => {
+                const strValue = getValue(value);
+                const confidenceClass = confidence > 0.8 ? 'confidence-high' :
+                                      confidence > 0.5 ? 'confidence-medium' : 'confidence-low';
+                const confidenceLabel = confidence > 0.8 ? 'High' :
+                                      confidence > 0.5 ? 'Medium' : 'Low';
+
+                const inputElement = isLong
+                    ? `<textarea id="field_${fieldIndex}" data-key="${fieldKey}">${escapeHtml(strValue)}</textarea>`
+                    : `<input type="text" id="field_${fieldIndex}" data-key="${fieldKey}" value="${escapeHtml(strValue)}">`;
+
+                html += `
+                    <div class="parsed-field">
+                        <label>
+                            ${label}
+                            <span class="confidence-badge ${confidenceClass}">
+                                ${confidenceLabel} Confidence
+                            </span>
+                        </label>
+                        ${inputElement}
+                    </div>
+                `;
+                fieldIndex++;
+            };
+
+            // Issue Classification Dropdown
+            html += `
+                <div class="parsed-field" style="border-left-color: #17a2b8;">
+                    <label>Primary Issue Area</label>
+                    <select id="field_${fieldIndex}" data-key="primary_issue">
+                        ${ISSUES.map(issue =>
+                            `<option value="${escapeHtml(issue)}"${inferIssue(originalText) === issue ? ' selected' : ''}>${escapeHtml(issue)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            `;
+            fieldIndex++;
+
+            // Announcement Type Dropdown
+            html += `
+                <div class="parsed-field" style="border-left-color: #28a745;">
+                    <label>Announcement Type</label>
+                    <select id="field_${fieldIndex}" data-key="announcement_type">
+                        ${ANNOUNCEMENT_TYPES.map(type =>
+                            `<option value="${escapeHtml(type)}"${announcementType.type === type ? ' selected' : ''}>${escapeHtml(type)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            `;
+            fieldIndex++;
+
+            // Announcement Subtype Dropdown
+            html += `
+                <div class="parsed-field" style="border-left-color: #28a745;">
+                    <label>Announcement Subtype</label>
+                    <select id="field_${fieldIndex}" data-key="announcement_subtype">
+                        ${ANNOUNCEMENT_SUBTYPES.map(subtype =>
+                            `<option value="${escapeHtml(subtype)}"${announcementType.subtype === subtype ? ' selected' : ''}>${escapeHtml(subtype)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            `;
+            fieldIndex++;
+
+            // Tone Dropdown
+            html += `
+                <div class="parsed-field" style="border-left-color: #ff9800;">
+                    <label>Overall Tone</label>
+                    <select id="field_${fieldIndex}" data-key="tone">
+                        ${TONE_OPTIONS.map(tone =>
+                            `<option value="${escapeHtml(tone)}"${detectedTone === tone ? ' selected' : ''}>${escapeHtml(tone)}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            `;
+            fieldIndex++;
+
+            // Headline
+            if (content.headline || fields_data['headline']) {
+                displayEditableField('Headline', content.headline || fields_data['headline'], 'headline', false);
+            }
+
+            // Dateline
+            const dateline = content.dateline ?
+                (content.dateline.full || `${content.dateline.location} - ${content.dateline.date}`.trim()) :
+                fields_data['release-location'];
+            if (dateline) {
+                displayEditableField('Dateline', dateline, 'dateline', false);
+            }
+
+            // Lead Paragraph
+            if (content.lead_paragraph || fields_data['lead-paragraph']) {
+                displayEditableField('Lead Paragraph', content.lead_paragraph || fields_data['lead-paragraph'], 'lead_paragraph', true);
+            }
+
+            // Body paragraphs - split around quotes if present
+            if (content.body_paragraphs && content.body_paragraphs.length > 0) {
+                // If we have quotes, try to intelligently split body text
+                if (quotes.length > 0) {
+                    let bodyBlocks = [];
+                    let currentBlock = [];
+
+                    content.body_paragraphs.forEach(para => {
+                        // Check if this paragraph is actually a quote
+                        const isQuoteParagraph = quotes.some(q =>
+                            para.toLowerCase().includes(q.quote_text?.toLowerCase().substring(0, 30))
+                        );
+
+                        if (isQuoteParagraph) {
+                            // Save current block before the quote
+                            if (currentBlock.length > 0) {
+                                bodyBlocks.push(currentBlock.join('\n\n'));
+                                currentBlock = [];
+                            }
+                        } else {
+                            // Regular body paragraph
+                            currentBlock.push(para);
+                        }
+                    });
+
+                    // Add remaining paragraphs
+                    if (currentBlock.length > 0) {
+                        bodyBlocks.push(currentBlock.join('\n\n'));
+                    }
+
+                    // Display each body block
+                    bodyBlocks.forEach((block, idx) => {
+                        if (block.trim()) {
+                            const label = bodyBlocks.length > 1
+                                ? `Body Text Block ${idx + 1}`
+                                : 'Body Text';
+                            displayEditableField(label, block, `body_text_${idx + 1}`, true);
+                        }
+                    });
+                } else {
+                    // No quotes, just display all body text together
+                    const bodyText = content.body_paragraphs.join('\n\n');
+                    displayEditableField('Body Text', bodyText, 'body_text', true);
+                }
+            } else if (fields_data['supporting-details']) {
+                displayEditableField('Body Text', fields_data['supporting-details'], 'body_text', true);
+            }
+
+            // Quotes with speaker attribution
+            if (quotes.length > 0) {
+                quotes.forEach((quote, idx) => {
+                    if (quote.quote_text) {
+                        const quoteSpeaker = quote.speaker_name || quote.speaker_title || 'Unknown Speaker';
+                        displayEditableField(`Quote ${idx + 1}`, quote.quote_text, `quote_${idx + 1}_text`, true, 0.95);
+                        displayEditableField(`Quote ${idx + 1} - Speaker Name`, quoteSpeaker, `quote_${idx + 1}_speaker`, false, 0.9);
+                        if (quote.speaker_title) {
+                            displayEditableField(`Quote ${idx + 1} - Speaker Title`, quote.speaker_title, `quote_${idx + 1}_title`, false, 0.85);
+                        }
+                    }
+                });
+            } else {
+                // Check fields_data for quotes
+                if (fields_data['quote-1']) {
+                    displayEditableField('Quote 1', fields_data['quote-1'], 'quote_1', true);
+                }
+                if (fields_data['quote-2']) {
+                    displayEditableField('Quote 2', fields_data['quote-2'], 'quote_2', true);
+                }
+            }
+
+            // Additional Info / Closing
+            if (fields_data['additional-info']) {
+                displayEditableField('Additional Information', fields_data['additional-info'], 'additional_info', true);
+            }
+
+            // Boilerplate (only if detected as actual biographical boilerplate)
+            if (fields_data['boilerplate']) {
+                const boilerplateText = getValue(fields_data['boilerplate']);
+                const isActualBoilerplate = detectBoilerplate(boilerplateText);
+
+                if (isActualBoilerplate.isBoilerplate) {
+                    displayEditableField(
+                        'Boilerplate (Candidate Bio)',
+                        boilerplateText,
+                        'boilerplate',
+                        true,
+                        isActualBoilerplate.confidence
+                    );
+                } else {
+                    // It's event-specific or other content, label differently
+                    displayEditableField(
+                        'Closing Paragraph (Not Boilerplate)',
+                        boilerplateText,
+                        'closing_paragraph',
+                        true,
+                        0.8
+                    );
+                }
+            }
+
+            // Contact Info
+            const contactInfo = contact.media_contact || fields_data['media-contact'];
+            if (contactInfo) {
+                displayEditableField('Media Contact', contactInfo, 'media_contact', true);
+            }
+
+            // Metadata summary (read-only)
+            if (metadata.word_count) {
+                html += `
+                    <div class="parsed-field" style="border-left-color: #6c757d;">
+                        <label>Document Metadata (Read-Only)</label>
+                        <div class="parsed-field-value">
+                            <strong>Word Count:</strong> ${metadata.word_count}<br>
+                            <strong>Paragraphs:</strong> ${metadata.paragraph_count}<br>
+                            <strong>Has Quotes:</strong> ${metadata.has_quotes ? 'Yes' : 'No'}<br>
+                            <strong>Has Statistics:</strong> ${metadata.has_statistics ? 'Yes' : 'No'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Feedback section
+            html += `
+                <div class="feedback-section">
+                    <label>💬 Feedback & Comments</label>
+                    <textarea id="feedbackText" placeholder="Add your comments about the parsing quality. Note any errors or corrections needed..."></textarea>
+                    <div class="button-group">
+                        <button class="btn-success" onclick="saveFeedback()">💾 Save Corrections & Feedback</button>
+                        <button class="btn-secondary" onclick="parseText()">🔄 Re-Parse</button>
+                    </div>
+                </div>
+            `;
+
+            if (!html || fieldIndex === 0) {
+                html = '<div class="loading" style="color: #e67e22;"><p>⚠️ No fields were extracted. The text may be too short or not in press release format.</p></div>';
+            }
+
+            resultsPanel.innerHTML = html;
+        }
+
+        function detectBoilerplate(text) {
+            if (!text || text.trim().length < 50) {
+                return { isBoilerplate: false, confidence: 0 };
+            }
+
+            const lowerText = text.toLowerCase();
+            let score = 0;
+
+            // Biographical indicators (strong signals)
+            const bioIndicators = [
+                'is running for', 'is a candidate', 'previously served', 'has served',
+                'earned a degree', 'graduated from', 'lives with', 'resides in',
+                'is a lifelong', 'native of', 'grew up in', 'raised in',
+                'mother of', 'father of', 'parent', 'family',
+                'worked as', 'career', 'background in', 'experience in',
+                'currently serves', 'elected to', 'appointed to'
+            ];
+
+            const bioMatches = bioIndicators.filter(ind => lowerText.includes(ind)).length;
+            score += bioMatches * 3;
+
+            // Generic reusable phrases (medium signals)
+            const genericPhrases = [
+                'more information', 'visit', 'learn more at', 'website',
+                'about', 'biography', 'background'
+            ];
+
+            const genericMatches = genericPhrases.filter(phrase => lowerText.includes(phrase)).length;
+            score += genericMatches * 1;
+
+            // Non-boilerplate indicators (negative signals)
+            const eventSpecific = [
+                'town hall', 'will take place', 'rsvp', 'doors open',
+                'join us', 'event', 'rally', 'thursday', 'friday', 'monday', 'tuesday', 'wednesday',
+                'saturday', 'sunday', 'today', 'tomorrow', 'next week',
+                'location:', 'when:', 'where:', 'time:', 'register'
+            ];
+
+            const eventMatches = eventSpecific.filter(phrase => lowerText.includes(phrase)).length;
+            score -= eventMatches * 4;
+
+            // Third-person check (boilerplate often uses third person)
+            const thirdPersonIndicators = [' he ', ' she ', ' his ', ' her ', ' their '];
+            const hasThirdPerson = thirdPersonIndicators.some(pronoun => lowerText.includes(pronoun));
+            if (hasThirdPerson) score += 2;
+
+            // Determine if it's boilerplate
+            const isBoilerplate = score >= 5;
+            const confidence = Math.min(0.95, Math.max(0.3, score / 15));
+
+            return { isBoilerplate, confidence, score };
+        }
+
+        function inferTone(text) {
+            const lowerText = text.toLowerCase();
+
+            // Tone keyword mapping based on rubric
+            const toneKeywords = {
+                "Attack/Combative": ['opponent', 'failed', 'wrong', 'refuses', 'dangerous', 'lied', 'hypocrite', 'corrupt', 'betrayed', 'broken promise'],
+                "Defensive/Responsive": ['response', 'clarify', 'false', 'misleading', 'truth', 'fact', 'record shows', 'actually', 'contrary'],
+                "Urgent/Crisis": ['urgent', 'immediately', 'crisis', 'emergency', 'must act', 'cannot wait', 'now', 'critical', 'deadline'],
+                "Positive/Celebratory": ['success', 'achievement', 'proud', 'delivered', 'accomplished', 'victory', 'milestone', 'celebrate', 'thrilled', 'pleased'],
+                "Inspirational/Visionary": ['future', 'vision', 'together', 'movement', 'hope', 'dream', 'imagine', 'build', 'forward', 'believe'],
+                "Critical/Concerned": ['problem', 'concern', 'challenge', 'crisis', 'struggle', 'difficult', 'unfortunately', 'troubled', 'failing'],
+                "Neutral/Informational": ['announce', 'today', 'will', 'plans', 'schedule', 'details', 'information', 'update', 'according']
+            };
+
+            let maxScore = 0;
+            let detectedTone = "Neutral/Informational";
+
+            // Score each tone
+            for (const [tone, keywords] of Object.entries(toneKeywords)) {
+                const score = keywords.filter(kw => lowerText.includes(kw)).length;
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedTone = tone;
+                }
+            }
+
+            return detectedTone;
+        }
+
+        function inferIssue(text) {
+            const lowerText = text.toLowerCase();
+
+            // Issue keyword mapping
+            const issueKeywords = {
+                "Healthcare & Medicare": ['healthcare', 'health', 'medical', 'hospital', 'medicaid', 'medicare', 'insurance', 'prescription', 'drug'],
+                "Education & Schools": ['education', 'school', 'university', 'student', 'teacher', 'classroom', 'college'],
+                "Economy & Jobs": ['jobs', 'employment', 'economic', 'economy', 'manufacturing', 'unemployment', 'workforce'],
+                "Infrastructure & Transportation": ['infrastructure', 'construction', 'build', 'highway', 'bridge', 'transit', 'road', 'rail'],
+                "Environment & Climate": ['environment', 'climate', 'renewable', 'pollution', 'conservation', 'green', 'emissions'],
+                "Public Safety & Crime": ['police', 'crime', 'safety', 'emergency', 'fire', 'security', 'law enforcement'],
+                "Housing & Affordability": ['housing', 'afford', 'rent', 'mortgage', 'homeless', 'shelter'],
+                "Immigration": ['immigration', 'immigrant', 'border', 'visa', 'refugee', 'asylum'],
+                "Tax Policy": ['tax', 'taxes', 'irs', 'revenue', 'deduction', 'credit']
+            };
+
+            let maxScore = 0;
+            let detectedIssue = "Other";
+
+            for (const [issue, keywords] of Object.entries(issueKeywords)) {
+                const score = keywords.filter(kw => lowerText.includes(kw)).length;
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedIssue = issue;
+                }
+            }
+
+            return detectedIssue;
+        }
+
+        function inferAnnouncementType(text, metadata) {
+            const lowerText = text.toLowerCase();
+
+            // Simple keyword-based inference - check attack types first (usually more specific)
+            const types = {
+                'Opposition Attack': ['opponent', 'opponent\'s', 'attack', 'failed', 'wrong', 'dangerous', 'lied', 'lying', 'misleading', 'hypocrite'],
+                'Contrast Communication': ['while', 'whereas', 'unlike', 'difference', 'contrast', 'record shows', 'on the other hand'],
+                'Accountability Demand': ['must answer', 'owes', 'explain', 'accountability', 'responsible for', 'answer for', 'demand'],
+                'Voting Record Highlight': ['voted', 'voting record', 'record of', 'legislative record', 'consistently voted', 'supported', 'opposed'],
+                'Policy Position': ['bill', 'legislation', 'policy', 'law', 'regulation', 'propose', 'introduce', 'plan'],
+                'Campaign Launch': ['campaign', 'running for', 'candidacy', 'announce'],
+                'Legislative Achievement': ['passed', 'signed', 'enacted', 'approved', 'delivered', 'secured'],
+                'Endorsement': ['endorse', 'support', 'backing'],
+                'Fundraising': ['raised', 'donors', 'contributions', 'fundraising'],
+                'Event Promotion': ['town hall', 'event', 'join us', 'attend', 'rally'],
+                'Crisis Response': ['response to', 'statement regarding', 'clarify', 'address']
+            };
+
+            const subtypes = {
+                // Attack subtypes
+                'Character Attack': ['character', 'integrity', 'dishonest', 'untrustworthy', 'unfit', 'temperament'],
+                'Ethics Violation': ['ethics', 'violation', 'misconduct', 'conflict of interest', 'improper'],
+                'Corruption Allegation': ['corrupt', 'corruption', 'bribe', 'payoff', 'quid pro quo', 'self-dealing'],
+                'Hypocrisy Exposure': ['hypocrite', 'hypocrisy', 'said one thing', 'does another', 'double standard'],
+                'Broken Promise': ['promised', 'broke promise', 'failed to deliver', 'never delivered', 'empty promise'],
+                'Policy Flip-Flop': ['flip-flop', 'changed position', 'now says', 'previously supported', 'reversed'],
+                'Special Interest Ties': ['special interest', 'lobbyist', 'dark money', 'big donors', 'corporate donors'],
+                'Integrity Question': ['questionable', 'raises questions', 'concerns about', 'troubling'],
+
+                // Record subtypes
+                'Voting Record Release': ['voted', 'voting record', 'legislative record'],
+                'Legislative Accomplishments Summary': ['delivered', 'passed', 'accomplished', 'fought for'],
+                'Record Contrast': ['record shows', 'while opponent', 'unlike opponent', 'difference'],
+                'Side-by-Side Comparison': ['compare', 'comparison', 'side by side', 'versus'],
+
+                // Other subtypes
+                'Fact Check Response': ['fact check', 'false claim', 'misleading', 'debunk', 'truth'],
+                'Accountability Call': ['must answer', 'owe', 'explain', 'demands answers'],
+                'Funding Announcement': ['funding', 'budget', 'invest', 'million', 'billion', 'allocate', 'grant'],
+                'Reform Proposal': ['reform', 'change', 'improve', 'modernize', 'transform'],
+                'Expansion Initiative': ['expand', 'increase', 'grow', 'more', 'additional'],
+                'New Program Launch': ['new', 'launch', 'unveil', 'introduce', 'create', 'establish'],
+                'Partnership Announcement': ['partner', 'collaboration', 'together', 'joint'],
+                'Achievement Celebration': ['success', 'milestone', 'accomplish', 'achieve', 'complete']
+            };
+
+            let detectedType = 'General Announcement';
+            let detectedSubtype = 'Statement';
+            let maxScore = 0;
+
+            // Detect type
+            for (const [type, keywords] of Object.entries(types)) {
+                const score = keywords.filter(kw => lowerText.includes(kw)).length;
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedType = type;
+                }
+            }
+
+            // Detect subtype
+            maxScore = 0;
+            for (const [subtype, keywords] of Object.entries(subtypes)) {
+                const score = keywords.filter(kw => lowerText.includes(kw)).length;
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedSubtype = subtype;
+                }
+            }
+
+            return { type: detectedType, subtype: detectedSubtype };
+        }
+
+        async function saveFeedback() {
+            const feedback = document.getElementById('feedbackText').value;
+            const correctedFields = {};
+
+            // Collect all field values
+            let fieldIndex = 0;
+            while (true) {
+                const field = document.getElementById(`field_${fieldIndex}`);
+                if (!field) break;
+
+                const key = field.getAttribute('data-key');
+                correctedFields[key] = field.tagName === 'SELECT' ? field.options[field.selectedIndex].value : field.value;
+                fieldIndex++;
+            }
+
+            const payload = {
+                original_text: originalText,
+                original_parsed: currentParsedData?.parsed,
+                corrected_fields: correctedFields,
+                feedback: feedback,
+                sample_used: currentSample,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                // Save to console for now (can be sent to server later)
+                console.log('Parser Feedback:', payload);
+
+                // Show floating save indicator (top right corner)
+                const saveIndicator = document.createElement('div');
+                saveIndicator.className = 'save-indicator';
+                saveIndicator.innerHTML = '✅ Corrections Saved!';
+                document.body.appendChild(saveIndicator);
+
+                // Also show in-panel success message
+                const resultsPanel = document.getElementById('resultsPanel');
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.innerHTML = `
+                    <strong>✅ Feedback and corrections saved successfully!</strong><br>
+                    <small>Timestamp: ${new Date().toLocaleString()}</small>
+                `;
+                resultsPanel.insertBefore(successMsg, resultsPanel.firstChild);
+
+                // Auto-remove after 4 seconds
+                setTimeout(() => {
+                    saveIndicator.remove();
+                    successMsg.remove();
+                }, 4000);
+
+            } catch (error) {
+                console.error('Error saving feedback:', error);
+                alert('❌ Error saving feedback: ' + error.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
