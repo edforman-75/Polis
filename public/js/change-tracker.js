@@ -9,6 +9,68 @@ export class ChangeTracker {
         this.changes = [];
         this.isTracking = false;
         this.changeId = 0;
+        this.currentStage = 'validation'; // 'validation' | 'editing' | 'final'
+        this.currentRole = 'parser-reviewer'; // 'parser-reviewer' | 'content-editor' | 'both'
+        this.validatedFields = new Set();
+        this.stageTransitions = [];
+    }
+
+    /**
+     * Set the current workflow stage
+     * @param {string} stage - 'validation', 'editing', or 'final'
+     */
+    setStage(stage) {
+        const oldStage = this.currentStage;
+        this.currentStage = stage;
+
+        this.stageTransitions.push({
+            from: oldStage,
+            to: stage,
+            timestamp: new Date().toISOString(),
+            role: this.currentRole
+        });
+
+        console.log(`📍 Stage changed: ${oldStage} → ${stage}`);
+    }
+
+    /**
+     * Set the current user role
+     * @param {string} role - 'parser-reviewer', 'content-editor', or 'both'
+     */
+    setRole(role) {
+        this.currentRole = role;
+        console.log(`👤 Role set to: ${role}`);
+    }
+
+    /**
+     * Mark a field as validated (Stage 1 complete for this field)
+     * @param {string} fieldId - The field that was validated
+     */
+    markFieldValidated(fieldId) {
+        this.validatedFields.add(fieldId);
+        console.log(`✅ Field validated: ${fieldId} (${this.validatedFields.size} total)`);
+    }
+
+    /**
+     * Check if all fields are validated
+     * @param {Array} requiredFields - List of field IDs that must be validated
+     */
+    allFieldsValidated(requiredFields) {
+        return requiredFields.every(field => this.validatedFields.has(field));
+    }
+
+    /**
+     * Get validation progress
+     * @param {Array} requiredFields - List of field IDs that must be validated
+     */
+    getValidationProgress(requiredFields) {
+        const validated = requiredFields.filter(field => this.validatedFields.has(field)).length;
+        return {
+            validated,
+            total: requiredFields.length,
+            percentage: Math.round((validated / requiredFields.length) * 100),
+            remaining: requiredFields.filter(field => !this.validatedFields.has(field))
+        };
     }
 
     /**
@@ -59,7 +121,12 @@ export class ChangeTracker {
             isRecommendation: change.isRecommendation || false, // AI recommendation not yet accepted
             recommendationId: change.recommendationId || null,
             accepted: change.isRecommendation ? false : true, // Recommendations start as not accepted
-            undone: false // Track if this change has been undone
+            undone: false, // Track if this change has been undone
+            // Role and stage tracking
+            stage: this.currentStage, // validation | editing | final
+            role: this.currentRole, // parser-reviewer | content-editor | both
+            isValidationChange: this.currentStage === 'validation',
+            isEditorialChange: this.currentStage === 'editing'
         };
 
         this.changes.push(changeRecord);
