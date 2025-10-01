@@ -33,10 +33,12 @@ export class ChangeTracker {
      * @param {string} change.field - Field name that changed
      * @param {string} change.oldValue - Original value
      * @param {string} change.newValue - New value
-     * @param {string} change.changeType - Type: 'ai-suggested', 'editor-manual', 'auto-fix'
-     * @param {string} change.category - Category: 'AP Style', 'Grammar', 'Voice', 'Enhancement', etc.
+     * @param {string} change.changeType - Type: 'ai-suggested', 'editor-manual', 'auto-fix', 'parser-correction'
+     * @param {string} change.category - Category: 'AP Style', 'Grammar', 'Voice', 'Enhancement', 'Parser Correction', etc.
      * @param {string} change.reason - Why the change was made
      * @param {Object} change.textRange - Optional: specific text range that changed {start, end, originalText}
+     * @param {boolean} change.isRecommendation - If true, this is an AI recommendation awaiting acceptance
+     * @param {string} change.recommendationId - ID to track recommendation acceptance/rejection
      */
     recordChange(change) {
         if (!this.isTracking) {
@@ -54,6 +56,9 @@ export class ChangeTracker {
             category: change.category || 'Editorial',
             reason: change.reason || 'Manual edit by editor',
             textRange: change.textRange || null, // For tracking specific text segments
+            isRecommendation: change.isRecommendation || false, // AI recommendation not yet accepted
+            recommendationId: change.recommendationId || null,
+            accepted: change.isRecommendation ? false : true, // Recommendations start as not accepted
             undone: false // Track if this change has been undone
         };
 
@@ -61,6 +66,78 @@ export class ChangeTracker {
         console.log('📝 Change recorded:', changeRecord);
 
         return changeRecord;
+    }
+
+    /**
+     * Accept an AI recommendation
+     * @param {number} changeId - The ID of the recommendation to accept
+     */
+    acceptRecommendation(changeId) {
+        const change = this.changes.find(c => c.id === changeId);
+        if (!change) {
+            console.warn('⚠️ Change not found:', changeId);
+            return null;
+        }
+
+        if (!change.isRecommendation) {
+            console.warn('⚠️ Change is not a recommendation:', changeId);
+            return null;
+        }
+
+        if (change.accepted) {
+            console.warn('⚠️ Recommendation already accepted:', changeId);
+            return null;
+        }
+
+        change.accepted = true;
+        change.acceptedAt = new Date().toISOString();
+        console.log('✅ Recommendation accepted:', change);
+
+        return change;
+    }
+
+    /**
+     * Reject an AI recommendation
+     * @param {number} changeId - The ID of the recommendation to reject
+     */
+    rejectRecommendation(changeId) {
+        const change = this.changes.find(c => c.id === changeId);
+        if (!change) {
+            console.warn('⚠️ Change not found:', changeId);
+            return null;
+        }
+
+        if (!change.isRecommendation) {
+            console.warn('⚠️ Change is not a recommendation:', changeId);
+            return null;
+        }
+
+        if (change.accepted) {
+            console.warn('⚠️ Cannot reject accepted recommendation:', changeId);
+            return null;
+        }
+
+        change.undone = true;
+        change.rejectedAt = new Date().toISOString();
+        console.log('❌ Recommendation rejected:', change);
+
+        return change;
+    }
+
+    /**
+     * Record a parser correction (when editor fixes a parsing error)
+     * @param {Object} correction - Correction details
+     */
+    recordParserCorrection(correction) {
+        return this.recordChange({
+            field: correction.field,
+            oldValue: correction.parsedValue, // What parser extracted
+            newValue: correction.correctedValue, // What editor corrected to
+            changeType: 'parser-correction',
+            category: 'Parser Correction',
+            reason: `Parser extracted "${this.truncateText(correction.parsedValue, 50)}" but editor corrected to match original intent`,
+            textRange: correction.textRange
+        });
     }
 
     /**
@@ -483,9 +560,7 @@ export class ChangeTracker {
         }
 
         /* Undo functionality styles */
-        .undo-btn {
-            background: #f97316;
-            color: white;
+        .undo-btn, .accept-btn, .reject-btn {
             border: none;
             padding: 4px 10px;
             border-radius: 4px;
@@ -494,6 +569,11 @@ export class ChangeTracker {
             cursor: pointer;
             transition: all 0.2s;
             margin-left: 8px;
+            color: white;
+        }
+
+        .undo-btn {
+            background: #f97316;
         }
 
         .undo-btn:hover {
@@ -501,7 +581,25 @@ export class ChangeTracker {
             transform: translateY(-1px);
         }
 
-        .undo-btn:active {
+        .accept-btn {
+            background: #10b981;
+        }
+
+        .accept-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: #ef4444;
+        }
+
+        .reject-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .undo-btn:active, .accept-btn:active, .reject-btn:active {
             transform: translateY(0);
         }
 
@@ -510,14 +608,30 @@ export class ChangeTracker {
             border-left: 3px solid #f97316;
         }
 
-        .undone-badge {
-            background: #f97316;
-            color: white;
+        .undone-badge, .accepted-badge, .pending-badge {
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 500;
             margin-left: 8px;
+            color: white;
+        }
+
+        .undone-badge {
+            background: #f97316;
+        }
+
+        .accepted-badge {
+            background: #10b981;
+        }
+
+        .pending-badge {
+            background: #eab308;
+        }
+
+        .recommendation-pending {
+            border-left: 3px solid #eab308;
+            background: #fffbeb;
         }
 
         .field-changes-group {
@@ -699,8 +813,105 @@ export class ChangeTracker {
             });
         };
 
+        // Accept recommendation functionality
+        window.acceptRecommendationFromHTML = function(changeId) {
+            // Show confirmation
+            if (!confirm('Accept this AI recommendation? This will apply the suggested change to your document.')) {
+                return;
+            }
+
+            // Find the change element
+            const changeElement = document.querySelector(\`[data-change-id="\${changeId}"]\`);
+            if (!changeElement) {
+                alert('Change not found');
+                return;
+            }
+
+            // Remove pending styling
+            changeElement.classList.remove('recommendation-pending');
+
+            // Replace accept/reject buttons with accepted badge and undo
+            const header = changeElement.querySelector('.change-header > div:last-child');
+            const categoryBadge = header.querySelector('.change-category');
+            const acceptBtn = header.querySelector('.accept-btn');
+            const rejectBtn = header.querySelector('.reject-btn');
+
+            if (acceptBtn) acceptBtn.remove();
+            if (rejectBtn) rejectBtn.remove();
+
+            const acceptedSpan = document.createElement('span');
+            acceptedSpan.className = 'accepted-badge';
+            acceptedSpan.textContent = '✓ ACCEPTED';
+            header.appendChild(acceptedSpan);
+
+            const undoBtn = document.createElement('button');
+            undoBtn.className = 'undo-btn';
+            undoBtn.textContent = '↩️ Undo';
+            undoBtn.onclick = () => window.undoChangeFromHTML(changeId);
+            header.appendChild(undoBtn);
+
+            // Update timestamp
+            const timestamp = changeElement.querySelector('.change-timestamp');
+            if (timestamp) {
+                timestamp.textContent += \` • Accepted at \${new Date().toLocaleString()}\`;
+            }
+
+            // Remove pending badge
+            const pendingBadge = changeElement.querySelector('.pending-badge');
+            if (pendingBadge) pendingBadge.remove();
+
+            // Show success message
+            alert('✅ Recommendation accepted! This change will be applied when you export the tracked changes file.');
+        };
+
+        // Reject recommendation functionality
+        window.rejectRecommendationFromHTML = function(changeId) {
+            // Show confirmation
+            if (!confirm('Reject this AI recommendation? This will discard the suggested change.')) {
+                return;
+            }
+
+            // Find the change element
+            const changeElement = document.querySelector(\`[data-change-id="\${changeId}"]\`);
+            if (!changeElement) {
+                alert('Change not found');
+                return;
+            }
+
+            // Mark as rejected visually
+            changeElement.classList.add('undone-change');
+            changeElement.classList.remove('recommendation-pending');
+
+            // Replace accept/reject buttons with rejected badge
+            const header = changeElement.querySelector('.change-header > div:last-child');
+            const acceptBtn = header.querySelector('.accept-btn');
+            const rejectBtn = header.querySelector('.reject-btn');
+
+            if (acceptBtn) acceptBtn.remove();
+            if (rejectBtn) rejectBtn.remove();
+
+            const rejectedSpan = document.createElement('span');
+            rejectedSpan.className = 'undone-badge';
+            rejectedSpan.textContent = '✗ REJECTED';
+            header.appendChild(rejectedSpan);
+
+            // Update timestamp
+            const timestamp = changeElement.querySelector('.change-timestamp');
+            if (timestamp) {
+                timestamp.textContent += \` • Rejected at \${new Date().toLocaleString()}\`;
+            }
+
+            // Remove pending badge
+            const pendingBadge = changeElement.querySelector('.pending-badge');
+            if (pendingBadge) pendingBadge.remove();
+
+            // Show info message
+            alert('❌ Recommendation rejected. This change will not be applied to your document.');
+        };
+
         console.log('📋 Tracked Changes HTML loaded successfully');
         console.log('💡 Tip: Use browser print (Ctrl/Cmd+P) to print or save as PDF');
+        console.log('✅ Accept/Reject buttons enabled for AI recommendations');
     </script>
 </body>
 </html>`;
@@ -732,19 +943,42 @@ export class ChangeTracker {
             const changesHtml = fieldChanges.map((change, index) => {
                 const categoryClass = this.getCategoryClass(change.category);
                 const undoneClass = change.undone ? ' undone-change' : '';
+                const recommendationClass = change.isRecommendation && !change.accepted ? ' recommendation-pending' : '';
                 const stepLabel = fieldChanges.length > 1 ? `Step ${index + 1} of ${fieldChanges.length}` : '';
 
+                // Determine action buttons based on change state
+                let actionButtons = '';
+                if (change.isRecommendation && !change.accepted && !change.undone) {
+                    // AI Recommendation awaiting decision
+                    actionButtons = `
+                        <button class="accept-btn" onclick="window.acceptRecommendationFromHTML(${change.id})">✓ Accept</button>
+                        <button class="reject-btn" onclick="window.rejectRecommendationFromHTML(${change.id})">✗ Reject</button>
+                    `;
+                } else if (change.isRecommendation && change.accepted) {
+                    // Accepted recommendation can be undone
+                    actionButtons = `
+                        <span class="accepted-badge">✓ ACCEPTED</span>
+                        <button class="undo-btn" onclick="window.undoChangeFromHTML(${change.id})">↩️ Undo</button>
+                    `;
+                } else if (change.undone) {
+                    // Already undone/rejected
+                    actionButtons = `<span class="undone-badge">${change.rejectedAt ? '✗ REJECTED' : '↩️ UNDONE'}</span>`;
+                } else {
+                    // Regular change (manual edit, auto-fix, parser correction)
+                    actionButtons = `<button class="undo-btn" onclick="window.undoChangeFromHTML(${change.id})">↩️ Undo</button>`;
+                }
+
                 return `
-            <div class="change-item${undoneClass}" data-change-id="${change.id}">
+            <div class="change-item${undoneClass}${recommendationClass}" data-change-id="${change.id}">
                 <div class="change-header">
                     <div>
                         <span class="change-field">${this.formatFieldName(change.field)}</span>
                         ${stepLabel ? `<span style="color: #64748b; font-size: 12px; margin-left: 8px;">${stepLabel}</span>` : ''}
+                        ${change.isRecommendation && !change.accepted && !change.undone ? '<span class="pending-badge">⏳ PENDING</span>' : ''}
                     </div>
                     <div>
                         <span class="change-category ${categoryClass}">${change.category}</span>
-                        ${change.undone ? '<span class="undone-badge">UNDONE</span>' :
-                            '<button class="undo-btn" onclick="window.undoChangeFromHTML(' + change.id + ')">↩️ Undo</button>'}
+                        ${actionButtons}
                     </div>
                 </div>
                 <div class="change-reason">${this.escapeHtml(change.reason)}</div>
@@ -760,6 +994,8 @@ export class ChangeTracker {
                 </div>
                 <div class="change-timestamp">
                     ${new Date(change.timestamp).toLocaleString()} • ${change.changeType}
+                    ${change.acceptedAt ? ` • Accepted at ${new Date(change.acceptedAt).toLocaleString()}` : ''}
+                    ${change.rejectedAt ? ` • Rejected at ${new Date(change.rejectedAt).toLocaleString()}` : ''}
                     ${change.undoneAt ? ` • Undone at ${new Date(change.undoneAt).toLocaleString()}` : ''}
                 </div>
             </div>`;
