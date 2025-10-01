@@ -1,0 +1,190 @@
+{
+  "system": "You are a campaign communications assistant. Write concise, factual, single-sentence suggestions. Align with the requested tone. Avoid attacks; prefer evidence, time, and place details when appropriate.",
+  "styles": {
+    "neutral": "Straightforward, impartial, no slogans.",
+    "campaign": "Optimistic, action-forward, motivating supporters; one sentence, no attacks.",
+    "journalistic": "AP-style clarity; facts-first; avoid hype; one sentence.",
+    "concise": "As short as possible without losing meaning.",
+    "confident": "Assertive and assured while remaining factual."
+  },
+  "defaultToneBySubtypeFamily": {
+    "ANN": "campaign",
+    "POLICY": "journalistic",
+    "ENDORSEMENT": "campaign",
+    "FUNDRAISING": "campaign",
+    "CRISIS": "neutral",
+    "MOBILIZATION": "campaign",
+    "OPS": "neutral",
+    "NEWS": "journalistic"
+  },
+  "templates": {
+    "default": {
+      "neutral": [
+        "State clearly in one sentence the missing {{key}} ({{value}}) relevant to {{subtype}}."
+      ],
+      "campaign": [
+        "In one motivating sentence, address the missing {{key}} ({{value}}) relevant to {{subtype}}."
+      ]
+    },
+
+    "ENDORSEMENT": {
+      "default": {
+        "neutral": [
+          "Today, {{value}} announced its endorsement of Jane Smith, recognizing her record of service."
+        ],
+        "campaign": [
+          "{{value}} endorsed Jane Smith - momentum is building behind her campaign."
+        ]
+      },
+      "endorser": {
+        "neutral": [
+          "Today, {{value}} announced its endorsement of Jane Smith, recognizing her record of service."
+        ],
+        "journalistic": [
+          "{{value}} endorsed congressional candidate Jane Smith, citing her record as Cleveland's mayor."
+        ]
+      },
+      "cpo:claims": {
+        "neutral": [
+          "According to cited sources, this endorsement reflects confidence in Jane Smith's policy positions."
+        ]
+      }
+    },
+
+    "ANN": {
+      "default": {
+        "neutral": [
+          "Jane Smith announced {{headline}}; details are on the campaign site."
+        ],
+        "campaign": [
+          "Jane Smith announced {{headline}} - join us and be part of the launch."
+        ]
+      },
+      "Event": {
+        "neutral": [
+          "Jane Smith will appear at {{value}}; RSVP on the campaign site."
+        ],
+        "campaign": [
+          "Join Jane Smith at {{value}} - RSVP now."
+        ]
+      },
+      "location": {
+        "neutral": [
+          "In Cleveland, Jane Smith outlined the announcement for local supporters."
+        ]
+      }
+    },
+
+    "POLICY": {
+      "default": {
+        "neutral": [
+          "Jane Smith released a policy update related to {{headline}}; supporting sources are cited."
+        ],
+        "journalistic": [
+          "Jane Smith released a policy proposal titled '{{headline}}' and cited supporting sources."
+        ]
+      },
+      "cpo:claims": {
+        "neutral": [
+          "According to cited research, the proposal addresses the issue with evidence-based steps."
+        ],
+        "confident": [
+          "Evidence-backed analysis supports the proposal's expected impact."
+        ]
+      }
+    },
+
+    "FUNDRAISING": {
+      "default": {
+        "campaign": [
+          "Chip in now to power this campaign forward - donate on the campaign site."
+        ],
+        "concise": [
+          "Donate now on the campaign site."
+        ]
+      },
+      "cpo:cta": {
+        "campaign": [
+          "Make your contribution today on the campaign site to help us hit our goal."
+        ]
+      }
+    },
+
+    "CRISIS": {
+      "default": {
+        "neutral": [
+          "The campaign released a statement addressing recent developments; read the details on the site."
+        ],
+        "journalistic": [
+          "The campaign issued a statement responding to recent events and provided details online."
+        ]
+      },
+      "cpo:claims": {
+        "neutral": [
+          "Cited sources clarify key facts addressed in the statement."
+        ]
+      }
+    },
+
+    "MOBILIZATION": {
+      "default": {
+        "campaign": [
+          "Volunteer with us this week - sign up on the campaign site."
+        ],
+        "concise": [
+          "Sign up to volunteer on the campaign site."
+        ]
+      },
+      "Event": {
+        "campaign": [
+          "Join the canvass at {{value}} - RSVP on the campaign site."
+        ]
+      }
+    },
+
+    "OPS": {
+      "default": {
+        "neutral": [
+          "The campaign announced an operational update related to {{headline}}; details are available online."
+        ]
+      }
+    },
+
+    "NEWS": {
+      "default": {
+        "journalistic": [
+          "The campaign published a news-style update titled '{{headline}}' with additional context online."
+        ]
+      }
+    },
+
+    "endorser": {
+      "neutral": [
+        "Today, {{value}} announced its endorsement of Jane Smith, recognizing her record of service."
+      ]
+    },
+    "Event": {
+      "neutral": [
+        "Jane Smith will appear at {{value}}; details are available on the campaign site."
+      ]
+    },
+    "cpo:claims": {
+      "neutral": [
+        "According to cited sources, the campaign's claims are supported by current research."
+      ]
+    },
+    "cpo:cta": {
+      "campaign": [
+        "Take action now on the campaign site."
+      ],
+      "neutral": [
+        "Learn more on the campaign site."
+      ]
+    },
+    "location": {
+      "neutral": [
+        "In Cleveland, Jane Smith addressed supporters about district priorities."
+      ]
+    }
+  }
+}

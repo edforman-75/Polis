@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domain Allowlist Editor — CPO</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.wrap{max-width:980px;margin:24px auto;padding:0 16px}
+h1{margin:16px 0 6px 0}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+input[type=text]{padding:10px;border-radius:10px;border:1px solid #1f4366;background:#0a1220;color:#e6edf3}
+button{padding:10px 14px;border-radius:10px;background:#0e2a42;border:1px solid #1f4366;color:#e6edf3;cursor:pointer}
+button.secondary{background:#0b1220}
+.bad{color:#ff7b7b}
+.good{color:#7dfca5}
+.list{margin-top:12px;display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:#111a2e;border:1px solid #182544;border-radius:10px;padding:8px 10px}
+.item input{flex:1}
+.small{color:#9fb3c8}
+pre{background:#0b1220;padding:12px;border-radius:10px;border:1px dashed #2b3a55;overflow:auto}
+.footer{padding:24px;color:#9fb3c8;text-align:center}
+kbd{background:#111a2e;border:1px solid #182544;border-radius:6px;padding:2px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Domain Allowlist Editor</h1>
+  <p class="small">Edit and validate <code>domain_allowlist.json</code>. No data leaves your browser.</p>
+
+  <div class="tools">
+    <input id="file" type="file" accept=".json">
+    <button id="loadReplace">Load (Replace)</button>
+    <button id="loadMerge">Load (Merge)</button>
+    <button id="new">New</button>
+    <button id="save">Download JSON</button>
+    <button id="copy">Copy JSON</button>
+    <span class="small" id="status"></span>
+  </div>
+
+  <div class="tools">
+    <input id="domain" type="text" placeholder="example.org">
+    <button id="add">Add Domain</button>
+    <button id="sort">Sort & Dedupe</button>
+    <button id="clear">Clear All</button>
+  </div>
+
+  <div id="warnings" class="small"></div>
+  <div class="list" id="list"></div>
+
+  <h2>Raw JSON</h2>
+  <pre id="json"></pre>
+
+  <div class="footer">Tip: paste with <kbd>⌘</kbd><kbd>V</kbd>, save with <kbd>⌘</kbd><kbd>S</kbd> (browser may prompt).</div>
+  <div style="text-align:center;padding:20px"><a href="index.html" style="color:#7dfca5">← Back to Portal Home</a></div>
+</div>
+
+<script>
+const listEl = document.getElementById('list');
+const jsonEl = document.getElementById('json');
+const statusEl = document.getElementById('status');
+const warnEl = document.getElementById('warnings');
+let model = { version: 1, updated: new Date().toISOString(), notes: "", allowed_domains: ["janesmithforcongress.org"] };
+const domainRe = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+function render(){
+  model.updated = new Date().toISOString();
+  listEl.innerHTML = "";
+  (model.allowed_domains||[]).forEach((d,i)=>{
+    const row = document.createElement('div');
+    row.className = 'item';
+    const inp = document.createElement('input');
+    inp.value = d;
+    inp.addEventListener('input', ()=>{ model.allowed_domains[i] = inp.value.trim(); refresh(); });
+    const del = document.createElement('button'); del.textContent = 'Delete';
+    del.addEventListener('click', ()=>{ model.allowed_domains.splice(i,1); refresh(); });
+    const ok = document.createElement('span');
+    ok.textContent = domainRe.test(d) ? '✓' : '⚠';
+    ok.className = domainRe.test(d) ? 'good' : 'bad';
+    row.appendChild(inp); row.appendChild(ok); row.appendChild(del);
+    listEl.appendChild(row);
+  });
+  const bads = (model.allowed_domains||[]).filter(d=>!domainRe.test(d));
+  const dups = findDups(model.allowed_domains||[]);
+  warnEl.innerHTML = "";
+  if(bads.length){ warnEl.innerHTML += `<div class="bad">Invalid: ${bads.join(', ')}</div>`; }
+  if(dups.length){ warnEl.innerHTML += `<div class="bad">Duplicates: ${dups.join(', ')}</div>`; }
+  jsonEl.textContent = JSON.stringify(model, null, 2);
+}
+function findDups(arr){ const seen={}, d=[]; arr.forEach(x=>{ const k=x.toLowerCase(); if(seen[k]) d.push(x); seen[k]=1; }); return d; }
+function refresh(){ render(); status(''); }
+function status(msg){ statusEl.textContent = msg; }
+
+document.getElementById('add').onclick = ()=>{
+  const val = document.getElementById('domain').value.trim();
+  if(!val){ status('Enter a domain'); return; }
+  model.allowed_domains = model.allowed_domains || [];
+  model.allowed_domains.push(val);
+  document.getElementById('domain').value = '';
+  refresh();
+};
+document.getElementById('sort').onclick = ()=>{
+  model.allowed_domains = Array.from(new Set((model.allowed_domains||[]).map(x=>x.trim()))).sort((a,b)=>a.localeCompare(b));
+  refresh();
+};
+document.getElementById('clear').onclick = ()=>{ if(confirm('Clear all domains?')){ model.allowed_domains = []; refresh(); } };
+document.getElementById('new').onclick = ()=>{ model = { version: 1, updated: new Date().toISOString(), notes: "", allowed_domains: [] }; refresh(); };
+document.getElementById('save').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(model,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'domain_allowlist.json'; a.click(); URL.revokeObjectURL(a.href);
+  status('Downloaded domain_allowlist.json');
+};
+document.getElementById('copy').onclick = async ()=>{ await navigator.clipboard.writeText(JSON.stringify(model,null,2)); status('Copied JSON'); };
+
+function loadFile(mode){
+  const fileInput = document.getElementById('file');
+  const f = fileInput.files[0];
+  if(!f){ status('No file selected'); return; }
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const data = JSON.parse(rd.result);
+      // Extract allowed_domains from various schema formats
+      let domains = [];
+      if(Array.isArray(data.allowed_domains)) domains = data.allowed_domains;
+      else if(data.categories && typeof data.categories === 'object'){
+        // Handle tier1_sources.json format with categories
+        Object.values(data.categories).forEach(arr=>{ if(Array.isArray(arr)) domains.push(...arr); });
+      }
+      if(domains.length === 0){ throw new Error('No allowed_domains found in file'); }
+
+      if(mode === 'replace'){
+        model.allowed_domains = domains;
+        status(`Loaded ${domains.length} domains (replaced)`);
+      } else if(mode === 'merge'){
+        const existing = new Set(model.allowed_domains.map(d=>d.toLowerCase()));
+        const newDomains = domains.filter(d=>!existing.has(d.toLowerCase()));
+        model.allowed_domains.push(...newDomains);
+        status(`Merged ${newDomains.length} new domains (${domains.length - newDomains.length} duplicates skipped)`);
+      }
+      refresh();
+      fileInput.value = ''; // Reset file input
+    }catch(e){ status('Error: '+e.message); }
+  };
+  rd.readAsText(f);
+}
+
+document.getElementById('loadReplace').onclick = ()=>loadFile('replace');
+document.getElementById('loadMerge').onclick = ()=>loadFile('merge');
+
+render();
+</script>
+</body></html>

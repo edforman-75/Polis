@@ -1,0 +1,37 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/<slug>",
+  "headline": "<Write a clear, specific headline>",
+  "datePublished": "2025-09-30",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "<Dateline \u2014 Lead. Body paragraphs with specifics, quotes, and CTA.>",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "<announcement|policy|endorsement|fundraising|contrast|crisis|mobilization|operations>",
+  "cpo:subtype": "<TAXONOMY_CODE>",
+  "cpo:tone": "<positive|neutral|contrast>",
+  "cpo:issueArea": "<economy|healthcare|education|environment|public-safety|immigration|other>",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "<rsvp|donate|volunteer|share|learn>",
+    "url": "https://janesmithforcongress.org/<path>"
+  }
+}

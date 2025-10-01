@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CPO Portal — Templates, Examples, Tools</title>
+<link rel="stylesheet" href="/cpo/docs/styles.css"/>
+<style>
+.searchbar{margin-top:10px;display:flex;gap:8px}
+.searchbar input{flex:1;padding:10px;border-radius:10px;border:1px solid #1e2a44;background:#0a1220;color:#e6edf3}
+.section-list a[data-hidden="true"]{display:none !important}
+.counter{font-size:12px;color:#9fb3c8;margin-left:8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>CPO Portal</h1>
+  <p class="small">Campaign Press Office — templates, examples, docs & tools</p>
+  <div class="searchbar">
+    <input id="q" placeholder="Search templates & examples (filename, type)…" aria-label="Search templates and examples"/>
+    <span class="counter" id="count"></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Documentation</h2>
+    <p>Start here to understand structure and workflow.</p>
+    <div class="grid">
+      <a class="btn" href="/docs/README.md">Top-level Docs (docs/README.md)</a>
+      <a class="btn" href="/cpo/templates/README.md">Templates README</a>
+      <a class="btn" href="/cpo/examples/README.md">Examples README</a>
+      <a class="btn" href="/cpo/docs/TOOLS_README.md">Tools README</a>
+      <a class="btn" href="/cpo/docs/TOOLS_USER_GUIDE.md">Tools User Guide</a>
+    </div>
+    <p class="small">Tip: Open these in GitHub or your code viewer to see the Markdown rendered.</p>
+  </div>
+
+  <div class="card section-list" id="templates">
+    <h2>Authoring Templates</h2>
+    <p>JSON-LD scaffolds for each release type.</p>
+    <div class="grid">
+      <a class="btn" data-kind="template" data-type="generic" data-file="press_release_template.jsonld" href="/cpo/templates/press_release_template.jsonld">Generic PressRelease</a>
+      <a class="btn" data-kind="template" data-type="statement" data-file="statement_template.jsonld" href="/cpo/templates/statement_template.jsonld">Statement</a>
+      <a class="btn" data-kind="template" data-type="policy" data-file="policy_release.jsonld" href="/cpo/templates/policy_release.jsonld">Policy Rollout</a>
+      <a class="btn" data-kind="template" data-type="endorsement" data-file="endorsement_release.jsonld" href="/cpo/templates/endorsement_release.jsonld">Endorsement</a>
+      <a class="btn" data-kind="template" data-type="fundraising" data-file="fundraising_release.jsonld" href="/cpo/templates/fundraising_release.jsonld">Fundraising</a>
+      <a class="btn" data-kind="template" data-type="crisis" data-file="crisis_release.jsonld" href="/cpo/templates/crisis_release.jsonld">Crisis/Clarification</a>
+      <a class="btn" data-kind="template" data-type="mobilization" data-file="mobilization_release.jsonld" href="/cpo/templates/mobilization_release.jsonld">Mobilization</a>
+      <a class="btn" data-kind="template" data-type="operations" data-file="operations_release.jsonld" href="/cpo/templates/operations_release.jsonld">Operations</a>
+      <a class="btn" data-kind="template" data-type="news" data-file="news_article_variant.jsonld" href="/cpo/templates/news_article_variant.jsonld">NewsArticle variant</a>
+      <a class="btn" data-kind="template" data-type="claimreview" data-file="claimreview_template.jsonld" href="/cpo/templates/claimreview_template.jsonld">ClaimReview</a>
+    </div>
+  </div>
+
+  <div class="card section-list" id="examples">
+    <h2>Examples</h2>
+    <p>Reference implementations to test linting/validation.</p>
+    <div class="grid">
+      <a class="btn" data-kind="example" data-type="announcement rally" data-file="rally_release.jsonld" href="/cpo/examples/rally_release.jsonld">Rally (ANN.EVT.RALLY)</a>
+      <a class="btn" data-kind="example" data-type="contrast" data-file="contrast_release.jsonld" href="/cpo/examples/contrast_release.jsonld">Contrast (ATT.OPP.CHAR)</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Interactive Tools</h2>
+    <p>Create releases, edit allowlist & explore subtype profiles.</p>
+    <div class="grid">
+      <a class="btn" href="/cpo/tools/press_release_editor.html">Press Release Editor</a>
+      <a class="btn" href="/cpo/tools/prose_editor.html">Prose Suggestion Editor</a>
+      <a class="btn" href="/cpo/tools/allowlist_editor_github.html">Domain Allowlist Editor (GitHub)</a>
+      <a class="btn" href="/cpo/tools/allowlist_editor.html">Domain Allowlist Editor (Local)</a>
+      <a class="btn" href="/cpo/tools/profiles_viewer.html">Subtype Profiles Viewer</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>CI Status</h2>
+    <p class="small">Badge location in repo (renders on GitHub README from <code>main</code>):</p>
+    <div class="badge">badges/adversarial_badge.svg</div>
+    <p class="small">Workflow: <code>.github/workflows/adversarial-tests.yml</code></p>
+  </div>
+
+</div>
+
+<div class="footer">
+  Updated 2025-09-30 · CPO Portal
+</div>
+
+<script>
+(function(){
+  const q = document.getElementById('q');
+  const count = document.getElementById('count');
+  const lists = Array.from(document.querySelectorAll('.section-list .grid a'));
+
+  function applyFilter() {{
+    const term = (q.value || '').toLowerCase().trim();
+    let visible = 0;
+    lists.forEach(a => {{
+      const hay = (a.textContent + ' ' + (a.dataset.type||'') + ' ' + (a.dataset.file||'') + ' ' + (a.dataset.kind||'')).toLowerCase();
+      const show = !term || hay.includes(term);
+      a.dataset.hidden = show ? 'false' : 'true';
+      if (show) visible++;
+    }});
+    count.textContent = term ? `${{visible}} shown` : '';
+  }}
+
+  q.addEventListener('input', applyFilter);
+  applyFilter();
+})();
+</script>
+
+</body></html>

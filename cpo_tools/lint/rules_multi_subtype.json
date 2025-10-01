@@ -1,0 +1,12 @@
+{
+  "requires": {
+    "ANN.EVT.*": ["subjectOf[].@type=Event", "subjectOf[].name", "subjectOf[].startDate"],
+    "POLICY.*": ["cpo:claims[].text", "cpo:claims[].evidence[].url"],
+    "FUNDRAISING.*": ["cpo:cta.url"]
+  },
+  "toneDefaults": {
+    "ANN": "neutral", "POLICY": "journalistic", "ENDORSEMENT": "neutral",
+    "FUNDRAISING": "campaign", "CRISIS": "journalistic", "MOBILIZATION": "campaign",
+    "OPS": "neutral", "NEWS": "journalistic"
+  }
+}

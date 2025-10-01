@@ -1,0 +1,38 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/contrast-education",
+  "headline": "Jane Smith Responds to John Doe\u2019s Attacks on Teachers",
+  "datePublished": "2025-09-30",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "CLEVELAND \u2014 After John Doe belittled local teachers at a rally, Jane Smith condemned the rhetoric and thanked educators for their service. She invited voters to a schools-focused forum next week.",
+  "cpo:releaseType": "contrast",
+  "cpo:subtype": "ATT.OPP.CHAR",
+  "cpo:claims": [
+    {
+      "@type": "cpo:Claim",
+      "@id": "claim:opp-remarks",
+      "cpo:claimText": "John Doe belittled local teachers at a rally last night.",
+      "cpo:evidence": [
+        {
+          "@type": "CreativeWork",
+          "url": "https://news.example.com/story"
+        }
+      ]
+    }
+  ]
+}

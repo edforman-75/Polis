@@ -375,6 +375,67 @@ if (process.env.NODE_ENV === 'development') {
             res.redirect(`/?assignment=${assignmentId}`);
         }
     });
+
+    // CPO Portal Routes
+    // Serve CPO portal index
+    app.get('/cpo', (req, res) => {
+        res.set({
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        res.sendFile(path.join(__dirname, 'cpo_docs', 'index.html'));
+    });
+
+    // Serve CPO documentation files (HTML and CSS)
+    app.use('/cpo/docs', express.static(path.join(__dirname, 'cpo_docs'), {
+        setHeaders: (res) => {
+            res.set({
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }));
+
+    // Serve CPO tool HTML files
+    app.use('/cpo/tools', express.static(path.join(__dirname, 'cpo_docs'), {
+        setHeaders: (res) => {
+            res.set({
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }));
+
+    // Serve CPO templates (JSON-LD files)
+    app.use('/cpo/templates', express.static(path.join(__dirname, 'cpo_templates'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.jsonld')) {
+                res.set('Content-Type', 'application/ld+json');
+            }
+            res.set({
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }));
+
+    // Serve CPO examples (JSON-LD files)
+    app.use('/cpo/examples', express.static(path.join(__dirname, 'cpo_examples'), {
+        setHeaders: (res, filePath) => {
+            if (filePath.endsWith('.jsonld')) {
+                res.set('Content-Type', 'application/ld+json');
+            }
+            res.set({
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }));
 } else {
     // Production mode - serve static files with caching
     app.use(express.static(path.join(__dirname, 'public'), {
@@ -426,6 +487,7 @@ db.initialize().then(async () => {
         console.log(`📱 Social Media Editor at http://localhost:${PORT}/social`);
         console.log(`💬 Talking Points Editor at http://localhost:${PORT}/talking-points`);
         console.log(`📸 Photo Library at http://localhost:${PORT}/photos`);
+        console.log(`🏢 CPO Portal at http://localhost:${PORT}/cpo`);
         console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
 
         // Initialize collaboration manager

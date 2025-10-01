@@ -1,0 +1,14 @@
+{
+  "ANN.EVT.RALLY": {
+    "required": [
+      "headline",
+      "datePublished",
+      "articleBody",
+      "cpo:cta"
+    ],
+    "embedded": [
+      "Event(startDate,location)"
+    ],
+    "notes": "(placeholder) provide subtype profiles file for full set."
+  }
+}

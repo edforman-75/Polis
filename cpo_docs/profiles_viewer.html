@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subtype Profiles Viewer — CPO</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+.grid{display:grid;gap:14px;grid-template-columns: 320px 1fr}
+.sidebar{background:#111a2e;border:1px solid #182544;border-radius:12px;padding:12px;max-height:70vh;overflow:auto}
+.main{background:#111a2e;border:1px solid #182544;border-radius:12px;padding:12px}
+input[type=text], textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #1f4366;background:#0a1220;color:#e6edf3}
+code,pre{background:#0b1220;border:1px dashed #2b3a55;border-radius:10px;padding:10px;display:block;overflow:auto}
+.tag{display:inline-block;padding:4px 8px;border-radius:8px;background:#0e2a42;border:1px solid #1f4366;margin:2px}
+.small{color:#9fb3c8}
+.btn{display:inline-block;padding:8px 12px;border-radius:10px;background:#0e2a42;border:1px solid #1f4366;color:#e6edf3;cursor:pointer}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Subtype Profiles Viewer</h1>
+  <p class="small">Open your <code>cpo_subtype_profiles.json</code> to browse subtypes, see required fields, and validate a sample JSON-LD snippet.</p>
+
+  <div class="grid">
+    <div class="sidebar">
+      <div class="row">
+        <input id="search" type="text" placeholder="Search subtype code or label…">
+        <input id="file" type="file" accept=".json">
+      </div>
+      <div id="list"></div>
+    </div>
+
+    <div class="main">
+      <h2 id="title">No subtype selected</h2>
+      <div id="meta" class="small"></div>
+      <h3>Required Fields</h3>
+      <div id="req"></div>
+      <h3>Recommended Fields</h3>
+      <div id="rec"></div>
+
+      <h3>Validate Sample JSON-LD</h3>
+      <p class="small">Paste a sample PressRelease JSON-LD below. We’ll check high-level schema and subtype requirements.</p>
+      <textarea id="sample" rows="12" placeholder='{"@context":["https://schema.org","https://campaign-press-ontology.org/ns/v1#"],"@type":["PressRelease"],"headline":"...","cpo:subtype":"ANN.EVT.RALLY","subjectOf":[{"@type":"Event","name":"..."}]}'></textarea>
+      <div class="row">
+        <button class="btn" id="validate">Validate</button>
+        <span id="vstatus" class="small"></span>
+      </div>
+      <pre id="vresults"></pre>
+    </div>
+  </div>
+  <div style="text-align:center;padding:20px"><a href="index.html" style="color:#7dfca5">← Back to Portal Home</a></div>
+</div>
+
+<script>
+let profiles = []; let view = []; let selected = null;
+const listEl = document.getElementById('list');
+const reqEl = document.getElementById('req');
+const recEl = document.getElementById('rec');
+const metaEl = document.getElementById('meta');
+const titleEl = document.getElementById('title');
+const sampleEl = document.getElementById('sample');
+const vstatusEl = document.getElementById('vstatus');
+const vresEl = document.getElementById('vresults');
+
+function renderList(){
+  listEl.innerHTML = "";
+  view.forEach(p => {
+    const a = document.createElement('a');
+    a.href = "javascript:void(0)";
+    a.className = "btn";
+    a.style.display = "block";
+    a.textContent = `${p.code} — ${p.label || ''}`;
+    a.onclick = ()=> select(p);
+    listEl.appendChild(a);
+  });
+  if(view.length === 0){ listEl.innerHTML = "<p class='small'>No results.</p>"; }
+}
+function select(p){
+  selected = p;
+  titleEl.textContent = `${p.code} — ${p.label || ''}`;
+  metaEl.textContent = p.family ? `Family: ${p.family}` : "";
+  reqEl.innerHTML = p.required && p.required.length ? p.required.map(f=>`<span class="tag">${f}</span>`).join(" ") : "<span class='small'>None specified</span>";
+  recEl.innerHTML = p.recommended && p.recommended.length ? p.recommended.map(f=>`<span class="tag">${f}</span>`).join(" ") : "<span class='small'>None specified</span>";
+  vstatusEl.textContent = ""; vresEl.textContent = "";
+}
+function applySearch(term){
+  term = (term||"").toLowerCase().trim();
+  view = profiles.filter(p => (p.code||"").toLowerCase().includes(term) || (p.label||"").toLowerCase().includes(term));
+  renderList();
+}
+function loadProfiles(obj){
+  if(!Array.isArray(obj)){ throw new Error("Expected an array of subtype profiles"); }
+  profiles = obj.map(x=>({code:x.code||"",label:x.label||"",family:x.family||"",required:x.required||[],recommended:x.recommended||[]}));
+  view = profiles.slice();
+  renderList();
+}
+document.getElementById('file').addEventListener('change', (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = ()=>{ try{ loadProfiles(JSON.parse(rd.result)); }catch(e){ alert("Error: "+e.message); } };
+  rd.readAsText(f);
+});
+document.getElementById('search').addEventListener('input', (e)=> applySearch(e.target.value));
+
+document.getElementById('validate').onclick = ()=>{
+  vstatusEl.textContent = "Validating…"; vresEl.textContent = "";
+  try{
+    const doc = JSON.parse(sampleEl.value); const errs = [];
+    const at = Array.isArray(doc["@type"]) ? doc["@type"] : [doc["@type"]].filter(Boolean);
+    if(!at.includes("PressRelease")) errs.push("Missing @type PressRelease");
+    if(!doc.headline) errs.push("Missing headline");
+    if(!doc["datePublished"]) errs.push("Missing datePublished");
+    if(!doc["cpo:subtype"]) errs.push("Missing cpo:subtype");
+    const sub = doc["cpo:subtype"];
+    let p = profiles.find(x=>x.code === sub);
+    if(selected && selected.code === sub){ p = selected; }
+    if(p){
+      (p.required || []).forEach(f => {
+        if(f === "Event"){
+          const hasEvent = Array.isArray(doc.subjectOf) && doc.subjectOf.some(x=>x && (x["@type"]==="Event" || (Array.isArray(x["@type"]) && x["@type"].includes("Event"))));
+          if(!hasEvent) errs.push("Required Event not found in subjectOf[]");
+        } else if(f === "Claim"){
+          const claims = doc["cpo:claims"];
+          if(!Array.isArray(claims) || claims.length===0) errs.push("Required cpo:claims[] missing/empty");
+        } else if(f === "CTA"){
+          const cta = doc["cpo:cta"];
+          if(!cta || !cta.url) errs.push("Required cpo:cta.url missing");
+        } else {
+          if(!(f in doc)) errs.push(`Required field missing: ${f}`);
+        }
+      });
+    } else {
+      errs.push("Unknown subtype (load your cpo_subtype_profiles.json)");
+    }
+    if(errs.length){ vstatusEl.textContent = "Errors found"; vresEl.textContent = "- " + errs.join("\n- "); }
+    else { vstatusEl.textContent = "All checks passed"; vresEl.textContent = JSON.stringify({ok:true, subtype: sub}, null, 2); }
+  }catch(e){ vstatusEl.textContent = "Error parsing JSON"; vresEl.textContent = e.message; }
+};
+</script>
+</body></html>

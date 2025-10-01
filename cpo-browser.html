@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPO Document Browser</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 10px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .content-area {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .file-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .file-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .json-viewer {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .initialize-section {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .initialize-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .initialize-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📁 CPO Document Browser</h1>
+        <p>Browse and manage Campaign Press Office documents, templates, and schemas</p>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('templates')">📄 Templates</button>
+        <button class="nav-tab" onclick="switchTab('schemas')">📋 Schemas</button>
+        <button class="nav-tab" onclick="switchTab('examples')">📝 Examples</button>
+        <button class="nav-tab" onclick="switchTab('docs')">📚 Documentation</button>
+        <button class="nav-tab" onclick="switchTab('tools')">🔧 Tools & Portal</button>
+        <button class="nav-tab" onclick="switchTab('training')">🎓 Training Data</button>
+    </div>
+
+    <div class="content-area">
+        <div id="loading" class="loading">
+            <div>Loading CPO documents...</div>
+        </div>
+
+        <div id="not-initialized" class="initialize-section" style="display: none;">
+            <h3>CPO Framework Not Initialized</h3>
+            <p>The CPO framework needs to be initialized before you can browse documents.</p>
+            <button class="initialize-btn" onclick="initializeCPO()">🚀 Initialize CPO Framework</button>
+        </div>
+
+        <div id="templates-content" class="file-grid" style="display: none;"></div>
+        <div id="schemas-content" class="file-grid" style="display: none;"></div>
+        <div id="examples-content" class="file-grid" style="display: none;"></div>
+        <div id="docs-content" class="file-grid" style="display: none;"></div>
+        <div id="tools-content" style="display: none;">
+            <h2>🔧 CPO Tools & Interactive Portal</h2>
+            <div style="margin-top: 20px;">
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3>📖 Documentation Portal</h3>
+                    <p>Interactive documentation with tools for managing CPO workflows</p>
+                    <button class="btn btn-primary" onclick="window.open('/cpo_docs/index.html', '_blank')">
+                        🚀 Open CPO Docs Portal
+                    </button>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 15px;">
+                    <h3>✏️ Interactive Tools</h3>
+                    <p>Edit allowlists, view profiles, and manage CPO configurations</p>
+                    <button class="btn btn-secondary" onclick="window.open('/cpo/docs/allowlist_editor.html', '_blank')" style="margin-right: 10px;">
+                        📝 Allowlist Editor
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/cpo/docs/profiles_viewer.html', '_blank')" style="margin-right: 10px;">
+                        👁️ Profiles Viewer
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/cpo/docs/index.html', '_blank')">
+                        🏠 Tools Index
+                    </button>
+                </div>
+                <div style="background: #e8f5e9; padding: 20px; border-radius: 10px;">
+                    <h3>🧪 Validation & Linting</h3>
+                    <p>Python linter for validating CPO press releases</p>
+                    <pre style="background: white; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 13px;">python cpo/cpo_linter.py my_release.jsonld \
+  --schema cpo/cpo_jsonschema_v1.json \
+  --profiles cpo/cpo_subtype_profiles.json \
+  --allowed $(jq -r '.allowed_domains|join(",")' cpo/domain_allowlist.json) \
+  --min-evidence 2</pre>
+                    <div style="margin-top: 15px;" id="tools-files"></div>
+                </div>
+            </div>
+        </div>
+        <div id="training-content" style="display: none;">
+            <h2>🎓 ML Training Dataset</h2>
+            <div id="training-stats" style="margin-top: 20px;">
+                <div class="loading">Loading training data statistics...</div>
+            </div>
+            <div id="training-files" class="file-grid" style="margin-top: 30px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing file content -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">File Content</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody" class="json-viewer"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'templates';
+        let documents = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocuments();
+        });
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch('/api/cpo/documents');
+                const data = await response.json();
+
+                if (data.success) {
+                    documents = data.documents;
+                    displayCurrentTab();
+                    document.getElementById('loading').style.display = 'none';
+                } else {
+                    throw new Error(data.error || 'Failed to load documents');
+                }
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                document.getElementById('loading').style.display = 'none';
+
+                // Check if it's because CPO is not initialized
+                if (error.message.includes('ENOENT') || Object.values(documents).every(arr => arr.length === 0)) {
+                    document.getElementById('not-initialized').style.display = 'block';
+                } else {
+                    showError('Failed to load CPO documents: ' + error.message);
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            currentTab = tab;
+            displayCurrentTab();
+        }
+
+        function displayCurrentTab() {
+            // Hide all content areas
+            document.querySelectorAll('[id$="-content"]').forEach(el => el.style.display = 'none');
+
+            const contentArea = document.getElementById(currentTab + '-content');
+            contentArea.style.display = 'block';
+
+            // Special handling for tabs with static content
+            if (currentTab === 'training') {
+                loadTrainingData();
+                return;
+            }
+
+            if (currentTab === 'tools') {
+                // Tools tab has static HTML content, just show it
+                return;
+            }
+
+            const files = documents[currentTab] || [];
+
+            if (files.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No ${currentTab} found</h3>
+                        <p>No ${currentTab} are currently available in the CPO framework.</p>
+                        ${currentTab === 'templates' ? '<p>Initialize the CPO framework to create basic templates.</p>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            contentArea.innerHTML = files.map(file => `
+                <div class="file-card">
+                    <div class="file-name">
+                        ${getFileIcon(file.name)} ${file.name}
+                    </div>
+                    <div class="file-meta">
+                        Modified: ${new Date(file.modified).toLocaleDateString()}
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-primary" onclick="viewFile('${file.path}', '${file.name}')">
+                            👁️ View
+                        </button>
+                        <button class="btn btn-secondary" onclick="downloadFile('${file.path}', '${file.name}')">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getFileIcon(filename) {
+            if (filename.includes('template')) return '📄';
+            if (filename.includes('schema')) return '📋';
+            if (filename.includes('example')) return '📝';
+            return '📄';
+        }
+
+        async function viewFile(filePath, fileName) {
+            try {
+                // Use API endpoint to read the file content
+                const response = await fetch(`/api/cpo/file?path=${encodeURIComponent(filePath)}`);
+                const content = await response.text();
+
+                document.getElementById('modalTitle').textContent = fileName;
+                document.getElementById('modalBody').textContent = content;
+                document.getElementById('fileModal').style.display = 'block';
+            } catch (error) {
+                alert('Error loading file: ' + error.message);
+            }
+        }
+
+        function downloadFile(filePath, fileName) {
+            // Download via API endpoint
+            window.open(`/api/cpo/file?path=${encodeURIComponent(filePath)}&download=true`, '_blank');
+        }
+
+        function closeModal() {
+            document.getElementById('fileModal').style.display = 'none';
+        }
+
+        async function initializeCPO() {
+            try {
+                const response = await fetch('/api/initialize-cpo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('CPO framework initialized successfully!');
+                    document.getElementById('not-initialized').style.display = 'none';
+                    document.getElementById('loading').style.display = 'block';
+                    await loadDocuments();
+                } else {
+                    alert('CPO initialization failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error initializing CPO: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            const contentArea = document.querySelector('.content-area');
+            contentArea.innerHTML = `
+                <div class="empty-state">
+                    <h3>❌ Error</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="loadDocuments()">🔄 Retry</button>
+                </div>
+            `;
+        }
+
+        // Load training data statistics and files
+        async function loadTrainingData() {
+            try {
+                // Load training statistics
+                const statsResponse = await fetch('/api/training-data/stats');
+                const statsData = await statsResponse.json();
+
+                // Load adversarial statistics
+                const advResponse = await fetch('/api/adversarial-data/stats');
+                const advData = await advResponse.json();
+
+                if (statsData.success) {
+                    displayTrainingStats(statsData, advData.success ? advData : null);
+                }
+
+                // Load training files
+                const files = documents.training || [];
+                const filesContainer = document.getElementById('training-files');
+
+                if (files.length === 0) {
+                    filesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No training files found</h3>
+                            <p>Training dataset files should be in the cpo/training directory.</p>
+                        </div>
+                    `;
+                } else {
+                    filesContainer.innerHTML = files.map(file => `
+                        <div class="file-card">
+                            <div class="file-name">
+                                📊 ${file.name}
+                            </div>
+                            <div class="file-meta">
+                                Size: ${(file.size / 1024).toFixed(1)} KB<br>
+                                Modified: ${new Date(file.modified).toLocaleDateString()}
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-primary" onclick="viewFile('${file.path}', '${file.name}')">
+                                    👁️ View
+                                </button>
+                                <button class="btn btn-secondary" onclick="downloadFile('${file.path}', '${file.name}')">
+                                    ⬇️ Download
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('training-stats').innerHTML = `
+                    <div class="empty-state">
+                        <h3>❌ Error loading training data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayTrainingStats(data, advData) {
+            const container = document.getElementById('training-stats');
+            const { stats, subtypes } = data;
+
+            let advSection = '';
+            if (advData && advData.success) {
+                const advStats = advData.stats;
+                advSection = `
+                    <div style="background: #fff3e0; padding: 25px; border-radius: 15px; margin-top: 20px; border: 2px solid #ff9800;">
+                        <h3 style="margin-top: 0;">⚠️ Adversarial Testing Dataset</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: rgba(255, 152, 0, 0.1); padding: 20px; border-radius: 10px;">
+                                <h4 style="margin: 0 0 10px 0; font-size: 2rem;">${advStats.totalCases}</h4>
+                                <p style="margin: 0; color: #666;">Test Cases</p>
+                            </div>
+                            <div style="background: rgba(255, 152, 0, 0.1); padding: 20px; border-radius: 10px;">
+                                <h4 style="margin: 0 0 10px 0; font-size: 2rem;">${advStats.scenarios.length}</h4>
+                                <p style="margin: 0; color: #666;">Mismatch Scenarios</p>
+                            </div>
+                        </div>
+                        <h4>🎯 Test Scenarios:</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                            ${advStats.scenarios.map(scenario => `
+                                <span style="background: rgba(255, 152, 0, 0.15); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-family: monospace;">
+                                    ${scenario} <span style="color: #666;">(${advStats.byScenario[scenario]})</span>
+                                </span>
+                            `).join('')}
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <strong>Purpose:</strong> Stress-test CPO validators by introducing intentional markup–prose mismatches (headline conflicts, missing CTAs, domain violations, insufficient evidence, etc.)
+                        </div>
+                        <div style="background: #fff; padding: 20px; border-radius: 10px; margin-top: 20px; border: 2px solid #ff9800;">
+                            <h4 style="margin-top: 0;">🧪 Pytest Test Suite (162 HTML Pages)</h4>
+                            <p>Automated validation testing with pytest - each adversarial case has a generated HTML page with embedded JSON-LD.</p>
+
+                            <h5 style="margin-top: 20px;">📦 Basic Commands</h5>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin: 15px 0;">
+# Install dependencies<br>
+pip install pytest jsonschema<br><br>
+# Run adversarial tests (first 200 cases)<br>
+pytest -q adversarial_tests/test_adversarial.py<br><br>
+# Run all tests (remove [:200] limit in test_adversarial.py)<br>
+pytest -v adversarial_tests/test_adversarial.py
+                            </div>
+
+                            <h5 style="margin-top: 20px;">🎯 Scenario Markers - Targeted Testing</h5>
+                            <p style="font-size: 0.9rem; color: #666;">Filter tests by specific mismatch scenarios:</p>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin: 15px 0;">
+# Test only headline mismatches<br>
+pytest -q adversarial_tests/test_adversarial.py -m headline_mismatch<br><br>
+# Test CTA domain violations<br>
+pytest -q adversarial_tests/test_adversarial.py -m cta_domain_bad<br><br>
+# Test evidence insufficiency (ATT.*, CRI.* subtypes)<br>
+pytest -q adversarial_tests/test_adversarial.py -m evidence_insufficient<br><br>
+# Available markers:<br>
+# headline_mismatch, date_mismatch, cta_absent_in_prose, cta_domain_bad,<br>
+# claim_not_in_prose, evidence_insufficient, event_missing,<br>
+# poll_methodology_missing, contact_personal_email
+                            </div>
+
+                            <h5 style="margin-top: 20px;">🔧 Renderer Tool - Quick Fixes</h5>
+                            <p style="font-size: 0.9rem; color: #666;">Generate or fix individual test pages on-demand:</p>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 0.9rem; margin: 15px 0;">
+# Inject an Event for ANN.EVT.* cases<br>
+python adversarial_tests/render_adversarial_page.py \\<br>
+&nbsp;&nbsp;ADV-ANN.EVT.RALLY-HEADLINE_MISMATCH-01 --inject-event<br><br>
+# Fix personal email to role address<br>
+python adversarial_tests/render_adversarial_page.py \\<br>
+&nbsp;&nbsp;ADV-ATT.OPP.PERS-CONTACT_PERSONAL_EMAIL-01 --fix-contact<br><br>
+# Swap CTA domain to allowed domain<br>
+python adversarial_tests/render_adversarial_page.py \\<br>
+&nbsp;&nbsp;ADV-ANN.EVT.RALLY-CTA_DOMAIN_BAD-02 \\<br>
+&nbsp;&nbsp;--fix-cta-domain janesmithforcongress.org
+                            </div>
+
+                            <h5 style="margin-top: 20px;">⚙️ GitHub Actions CI Workflow</h5>
+                            <p style="font-size: 0.9rem; color: #666;">Automated testing on every PR and push:</p>
+                            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>✅ Workflow: <code>.github/workflows/adversarial-tests.yml</code></strong><br>
+                                <span style="font-size: 0.9rem; color: #2e7d32;">Runs on: pull_request, push (main/master branches)</span><br>
+                                <span style="font-size: 0.9rem; color: #666;">Platform: ubuntu-latest, Python 3.11</span>
+                            </div>
+                            <p style="font-size: 0.9rem; color: #666;">When you commit and open a PR, GitHub Actions will automatically run the full adversarial test suite to validate CPO linter behavior.</p>
+
+                            <h5 style="margin-top: 20px;">📊 JUnit XML Output & Badge Generation</h5>
+                            <p style="font-size: 0.9rem; color: #666;">CI workflow now generates structured test reports and visual badges:</p>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>📁 Artifacts Generated:</strong><br>
+                                <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9rem;">
+                                    <li><code>junit/adversarial.xml</code> — JUnit XML format for CI dashboard integration</li>
+                                    <li><code>badges/adversarial_badge.svg</code> — Visual badge showing passed/total test ratio</li>
+                                </ul>
+                                <strong>🎨 Badge Color Scale:</strong><br>
+                                <span style="font-size: 0.9rem;">
+                                    <span style="background: #2e7d32; color: white; padding: 2px 8px; border-radius: 3px; margin-right: 8px;">≥95% Green</span>
+                                    <span style="background: #f9a825; color: white; padding: 2px 8px; border-radius: 3px; margin-right: 8px;">≥85% Yellow</span>
+                                    <span style="background: #c62828; color: white; padding: 2px 8px; border-radius: 3px;">&lt;85% Red</span>
+                                </span>
+                            </div>
+
+                            <h5 style="margin-top: 20px;">🔄 Auto-Commit Badge & PR Comments</h5>
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>✨ New CI Features:</strong>
+                                <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9rem;">
+                                    <li><strong>Badge Commit to Main:</strong> On push to main/master, badge auto-commits to <code>badges/adversarial_badge.svg</code></li>
+                                    <li><strong>Badge Commit to PR Branch:</strong> For internal PRs (not forks), badge commits to the PR branch</li>
+                                    <li><strong>Sticky PR Comment:</strong> Automatic PR comment with badge that updates on every run</li>
+                                    <li><strong>Artifacts:</strong> JUnit XML + badge uploaded as downloadable artifacts</li>
+                                </ul>
+                                <strong>🔐 Required Permissions:</strong><br>
+                                <span style="font-size: 0.9rem; font-family: monospace;">
+                                    contents: write, pull-requests: write
+                                </span>
+                            </div>
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>📝 Auto-Add Badge to README (one-time script):</strong>
+                                <div style="font-family: monospace; font-size: 0.85rem; margin-top: 10px; background: white; padding: 10px; border-radius: 5px; overflow-x: auto;">
+# Auto-detect repo and insert badge below first H1<br>
+REPO_PATH="$(git config --get remote.origin.url | sed -E 's#(git@|https://)github\.com[:/](.+)(\.git)?#\2#')"<br>
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"<br>
+BADGE_URL="https://raw.githubusercontent.com/${REPO_PATH}/${DEFAULT_BRANCH}/badges/adversarial_badge.svg"<br>
+<br>
+# Use single quotes to avoid zsh history expansion (!)<br>
+BADGE_MD='!\[Adversarial\]('"$BADGE_URL"')'<br>
+<br>
+mkdir -p badges<br>
+[ -f README.md ] || printf "# %s\\n\\n" "${REPO_PATH##*/}" > README.md<br>
+<br>
+if ! grep -q 'adversarial_badge\\.svg' README.md; then<br>
+&nbsp;&nbsp;if grep -nE '^# ' README.md >/dev/null; then<br>
+&nbsp;&nbsp;&nbsp;&nbsp;line="$(grep -nE '^# ' README.md | head -1 | cut -d: -f1)"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;awk -v n="$line" -v badge="$BADGE_MD" 'NR==n{print;print "";print badge;print "";next}1' README.md > README.md.tmp && mv README.md.tmp README.md<br>
+&nbsp;&nbsp;else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;printf "%s\\n\\n%s\\n" "$BADGE_MD" "$(cat README.md)" > README.md.tmp && mv README.md.tmp README.md<br>
+&nbsp;&nbsp;fi<br>
+&nbsp;&nbsp;echo "✅ Added badge to README.md"<br>
+else<br>
+&nbsp;&nbsp;echo "ℹ️ README already contains the adversarial badge."<br>
+fi
+                                </div>
+                                <span style="font-size: 0.85rem; color: #666;">Or manually add: <code>\![Adversarial](https://raw.githubusercontent.com/OWNER/REPO/main/badges/adversarial_badge.svg)</code></span><br>
+                                <span style="font-size: 0.85rem; color: #f57c00;">⚠️ Note: Escape the <code>!</code> as <code>\!</code> to avoid zsh history expansion errors</span>
+                            </div>
+                            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <strong>🔧 Local Badge Generation:</strong>
+                                <div style="font-family: monospace; font-size: 0.9rem; margin-top: 10px;">
+# Generate badge from local test run<br>
+mkdir -p badges<br>
+pytest -q adversarial_tests/test_adversarial.py --junitxml=junit/adversarial.xml<br>
+python adversarial_tests/make_badge.py \\<br>
+&nbsp;&nbsp;--junit junit/adversarial.xml \\<br>
+&nbsp;&nbsp;--out badges/adversarial_badge.svg \\<br>
+&nbsp;&nbsp;--label adversarial
+                                </div>
+                            </div>
+                            <p style="font-size: 0.9rem; color: #666;">
+                                <strong>💡 How It Works:</strong> The workflow uses <code>stefanzweifel/git-auto-commit-action@v5</code> to commit badges
+                                and <code>marocchino/sticky-pull-request-comment@v2</code> for PR comments. The badge URL dynamically points to the PR branch
+                                for internal PRs, or main branch for forks (via artifacts).
+                            </p>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="viewFile('/Users/edf/campaign-content-editor-v2/adversarial_tests/test_adversarial.py', 'test_adversarial.py')">
+                                    📄 View Test Code
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewFile('/Users/edf/campaign-content-editor-v2/adversarial_tests/render_adversarial_page.py', 'render_adversarial_page.py')">
+                                    🔧 View Renderer
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewFile('/Users/edf/campaign-content-editor-v2/adversarial_tests/make_badge.py', 'make_badge.py')">
+                                    🎨 View Badge Generator
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewFile('/Users/edf/campaign-content-editor-v2/.github/workflows/adversarial-tests.yml', 'adversarial-tests.yml')">
+                                    ⚙️ View CI Workflow
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewFile('/Users/edf/campaign-content-editor-v2/adversarial_tests/README.md', 'README.md')">
+                                    📖 Documentation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 2.5rem;">${stats.totalSamples}</h3>
+                        <p style="margin: 0; opacity: 0.9;">Total Training Samples</p>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 2.5rem;">${subtypes.length}</h3>
+                        <p style="margin: 0; color: #666;">Content Subtypes</p>
+                    </div>
+                    <div style="background: #e8f5e9; padding: 25px; border-radius: 15px;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 2.5rem;">1-5</h3>
+                        <p style="margin: 0; color: #2e7d32;">Quality Score Range</p>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                    <h3 style="margin-top: 0;">📊 Score Distribution</h3>
+                    <div style="display: flex; gap: 10px; align-items: flex-end; height: 200px;">
+                        ${stats.scoreDistribution.map(item => `
+                            <div style="flex: 1; text-align: center;">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                           height: ${(item.count / stats.totalSamples) * 180}px;
+                                           border-radius: 8px 8px 0 0;
+                                           margin-bottom: 10px;
+                                           display: flex;
+                                           align-items: flex-end;
+                                           justify-content: center;
+                                           color: white;
+                                           font-weight: bold;
+                                           padding-bottom: 10px;">
+                                    ${item.count}
+                                </div>
+                                <div style="font-weight: 600;">Score ${item.score}</div>
+                                <div style="font-size: 0.85rem; color: #666;">${item.percentage}%</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                    <h3 style="margin-top: 0;">🏷️ Content Subtypes (${subtypes.length})</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${subtypes.map(subtype => `
+                            <span style="background: #f0f0f0; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-family: monospace;">
+                                ${subtype} <span style="color: #666;">(${stats.bySubtype[subtype]})</span>
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                    <h3 style="margin-top: 0;">🚀 Quick Start Guide</h3>
+                    <ol style="line-height: 1.8;">
+                        <li>Load <code>press_release_training_dataset.csv</code> for model training</li>
+                        <li>Stratify by <code>primary_label_id</code> and <code>score</code> for balanced training</li>
+                        <li>Use <code>annotator_notes</code> as feature hints or weak labels</li>
+                        <li>Split by subtype or doc_id prefix to avoid data leakage</li>
+                        <li>Align taxonomy with <code>cpo_subtype_profiles.json</code></li>
+                    </ol>
+                </div>
+                ${advSection}
+            `;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('fileModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

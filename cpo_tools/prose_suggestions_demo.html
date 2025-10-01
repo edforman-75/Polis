@@ -1,0 +1,22 @@
+<!doctype html><meta charset='utf-8'><title>Prose Suggestions — Demo</title>
+<link rel="stylesheet" href="../cpo_docs/styles.css">
+<div class="wrap">
+  <h1>Prose Suggestion Engine — Demo</h1>
+  <textarea id="prose">CLEVELAND — Jane Smith announced a weekend of action to mobilize volunteers across the district.</textarea>
+  <textarea id="jsonld">{"@context":["https://schema.org","https://campaign-press-ontology.org/ns/v1#"],"@type":["PressRelease"],"headline":"Weekend of Action: Canvass Launch 10 AM Saturday","datePublished":"2025-09-30","cpo:subtype":"GRA.VOL.CANV","author":{"@type":"Organization","name":"Jane Smith for Congress"},"cpo:cta":{"@type":"cpo:CTA","url":"https://janesmithforcongress.org/volunteer/canvass"},"subjectOf":[{"@type":"Event","name":"Canvass Launch","startDate":"2025-10-04T10:00:00-04:00"}]}</textarea>
+  <button onclick="runProseSuggestions()">Suggest Prose</button>
+  <div id="suggestions"></div>
+  <div class="footer"><a href="../cpo_docs/index.html">← Back to Portal Home</a></div>
+</div>
+<script type="module">
+import { generateSuggestions } from './prose_suggestion_engine.js';
+async function runProseSuggestions(){
+  const proseText = document.getElementById('prose').value;
+  const jsonld = JSON.parse(document.getElementById('jsonld').value);
+  const prompts = await (await fetch('./prose_prompts/prompts.json')).json();
+  const results = await generateSuggestions({ proseText, jsonld, prompts, llmFn: null });
+  const out = document.getElementById('suggestions'); out.innerHTML='';
+  results.forEach(r=>{ const div=document.createElement('div'); div.innerHTML=`<h4>${r.missing_field}</h4><pre>${JSON.stringify(r.suggestions,null,2)}</pre>`; out.appendChild(div); });
+}
+window.runProseSuggestions = runProseSuggestions;
+</script>

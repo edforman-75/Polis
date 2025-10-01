@@ -1,0 +1,25 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/correction-quote",
+  "headline": "Correction Regarding Recent Media Coverage",
+  "datePublished": "2025-09-30",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "CLEVELAND \u2014 Correction: a quote was misattributed to Jane Smith in recent coverage; the source was a 2018 forum speaker. The campaign requested an update from the outlet.",
+  "cpo:releaseType": "crisis",
+  "cpo:subtype": "CRI.CLR.MEDIA"
+}

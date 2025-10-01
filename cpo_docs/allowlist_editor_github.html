@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Domain Allowlist Editor (GitHub) — CPO</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.wrap{max-width:980px;margin:24px auto;padding:0 16px}
+h1{margin:16px 0 6px 0}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+input[type=text],input[type=password]{padding:10px;border-radius:10px;border:1px solid #1f4366;background:#0a1220;color:#e6edf3;font-family:monospace}
+button{padding:10px 14px;border-radius:10px;background:#0e2a42;border:1px solid #1f4366;color:#e6edf3;cursor:pointer}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button.primary{background:#1f4366;border:1px solid #2d5a8a}
+.bad{color:#ff7b7b}
+.good{color:#7dfca5}
+.warn{color:#ffb86c}
+.list{margin-top:12px;display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:#111a2e;border:1px solid #182544;border-radius:10px;padding:8px 10px}
+.item input{flex:1}
+.small{color:#9fb3c8;font-size:13px}
+pre{background:#0b1220;padding:12px;border-radius:10px;border:1px dashed #2b3a55;overflow:auto;max-height:400px}
+.footer{padding:24px;color:#9fb3c8;text-align:center}
+kbd{background:#111a2e;border:1px solid #182544;border-radius:6px;padding:2px 6px}
+.config{background:#111a2e;border:1px solid #182544;border-radius:10px;padding:16px;margin:16px 0}
+.config input{width:100%;margin-top:8px}
+.status-bar{padding:8px 12px;border-radius:10px;margin:10px 0;background:#0b1220;border:1px solid #182544}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Domain Allowlist Editor (GitHub API)</h1>
+  <p class="small">Edit <code>domain_allowlist.json</code> via GitHub API. All changes commit directly to your repository.</p>
+
+  <div class="config">
+    <label class="small"><strong>GitHub Configuration</strong></label>
+    <input id="token" type="password" placeholder="Fine-grained GitHub token (stored in browser session only)" />
+    <div class="small" style="margin-top:8px">
+      <strong>Create a fine-grained token:</strong>
+      <ol style="margin:8px 0;padding-left:20px">
+        <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" style="color:#7dd3fc">Go to token settings</a></li>
+        <li>Token name: <code>CPO Allowlist Editor</code></li>
+        <li>Repository access: <strong>Only select repositories</strong> → <code>edforman-75/campaign-ai-editor</code></li>
+        <li>Permissions → Repository permissions → <strong>Contents</strong>: <code>Read and write</code></li>
+        <li>Click "Generate token" and copy it here</li>
+      </ol>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <input type="checkbox" id="rememberToken" />
+        <span>Remember token (stored in browser localStorage - less secure but convenient)</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span class="small" id="status">Ready. Click "Load from GitHub" to start.</span>
+    <span class="small" id="unsavedIndicator" style="color:#ffb86c;display:none;margin-left:16px">● Unsaved changes</span>
+  </div>
+
+  <div class="tools">
+    <button id="loadGH" class="primary">Load from GitHub</button>
+    <button id="commitGH" class="primary" disabled>Commit to GitHub</button>
+    <button id="add">Add Domain</button>
+    <button id="sort">Sort & Dedupe</button>
+    <button id="clear">Clear All</button>
+  </div>
+
+  <div class="tools">
+    <input id="domain" type="text" placeholder="example.org">
+  </div>
+
+  <div id="warnings" class="small"></div>
+  <div class="list" id="list"></div>
+
+  <h2>Raw JSON <span class="small" id="domainCount"></span></h2>
+  <pre id="json"></pre>
+
+  <div class="footer">
+    <div>Changes are saved to GitHub when you click "Commit to GitHub".</div>
+    <div style="margin-top:10px"><a href="index.html" style="color:#7dfca5">← Back to Portal Home</a></div>
+  </div>
+</div>
+
+<script>
+const REPO_OWNER = 'edforman-75';
+const REPO_NAME = 'campaign-ai-editor';
+const FILE_PATH = 'domain_allowlist.json';
+const BRANCH = 'main';
+
+const listEl = document.getElementById('list');
+const jsonEl = document.getElementById('json');
+const statusEl = document.getElementById('status');
+const warnEl = document.getElementById('warnings');
+const countEl = document.getElementById('domainCount');
+const tokenInput = document.getElementById('token');
+const loadBtn = document.getElementById('loadGH');
+const commitBtn = document.getElementById('commitGH');
+const unsavedIndicator = document.getElementById('unsavedIndicator');
+
+let model = { version: 1, updated: new Date().toISOString(), notes: "", allowed_domains: [] };
+let fileSha = null; // GitHub file SHA for updates
+const domainRe = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+
+// Load token from localStorage only if "remember" was checked
+const rememberCheckbox = document.getElementById('rememberToken');
+if(localStorage.getItem('gh_token')) {
+  tokenInput.value = localStorage.getItem('gh_token');
+  rememberCheckbox.checked = true;
+}
+
+function getToken(){
+  const token = tokenInput.value.trim();
+  if(!token){ status('Enter GitHub token', 'bad'); return null; }
+
+  // Only store if remember checkbox is checked
+  if(rememberCheckbox.checked) {
+    localStorage.setItem('gh_token', token);
+  } else {
+    localStorage.removeItem('gh_token');
+  }
+
+  return token;
+}
+
+function status(msg, type=''){
+  statusEl.textContent = msg;
+  statusEl.className = 'small ' + type;
+}
+
+function markUnsaved(){
+  commitBtn.disabled = false;
+  unsavedIndicator.style.display = 'inline';
+}
+
+function markSaved(){
+  unsavedIndicator.style.display = 'none';
+}
+
+function render(){
+  model.updated = new Date().toISOString();
+  listEl.innerHTML = "";
+  (model.allowed_domains||[]).forEach((d,i)=>{
+    const row = document.createElement('div');
+    row.className = 'item';
+    const inp = document.createElement('input');
+    inp.value = d;
+    inp.addEventListener('input', ()=>{
+      model.allowed_domains[i] = inp.value.trim();
+      refresh();
+      markUnsaved();
+      status('Changed: ' + d + ' → ' + inp.value.trim(), 'warn');
+    });
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.addEventListener('click', ()=>{
+      model.allowed_domains.splice(i,1);
+      refresh();
+      markUnsaved();
+      status('Deleted: ' + d, 'warn');
+    });
+    const ok = document.createElement('span');
+    ok.textContent = domainRe.test(d) ? '✓' : '⚠';
+    ok.className = domainRe.test(d) ? 'good' : 'bad';
+    row.appendChild(inp); row.appendChild(ok); row.appendChild(del);
+    listEl.appendChild(row);
+  });
+
+  const bads = (model.allowed_domains||[]).filter(d=>!domainRe.test(d));
+  const dups = findDups(model.allowed_domains||[]);
+  warnEl.innerHTML = "";
+  if(bads.length){ warnEl.innerHTML += `<div class="bad">Invalid: ${bads.join(', ')}</div>`; }
+  if(dups.length){ warnEl.innerHTML += `<div class="bad">Duplicates: ${dups.join(', ')}</div>`; }
+
+  jsonEl.textContent = JSON.stringify(model, null, 2);
+  countEl.textContent = `(${model.allowed_domains.length} domains)`;
+}
+
+function findDups(arr){
+  const seen={}, d=[];
+  arr.forEach(x=>{
+    const k=x.toLowerCase();
+    if(seen[k]) d.push(x);
+    seen[k]=1;
+  });
+  return d;
+}
+
+function refresh(){ render(); }
+
+// Load from GitHub
+loadBtn.onclick = async ()=>{
+  const token = getToken();
+  if(!token) return;
+
+  loadBtn.disabled = true;
+  status('Loading from GitHub...', 'warn');
+
+  try {
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}?ref=${BRANCH}`;
+    const res = await fetch(url, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if(!res.ok) throw new Error(`GitHub API error: ${res.status} ${res.statusText}`);
+
+    const data = await res.json();
+    fileSha = data.sha; // Store for updates
+
+    const content = atob(data.content); // Decode base64
+    const json = JSON.parse(content);
+
+    if(!Array.isArray(json.allowed_domains)){
+      throw new Error('allowed_domains must be an array');
+    }
+
+    model = Object.assign({version:1, notes:""}, json);
+    refresh();
+    commitBtn.disabled = false;
+    markSaved();
+    status(`Loaded ${model.allowed_domains.length} domains from GitHub`, 'good');
+  } catch(e) {
+    status('Error: ' + e.message, 'bad');
+  } finally {
+    loadBtn.disabled = false;
+  }
+};
+
+// Commit to GitHub
+commitBtn.onclick = async ()=>{
+  const token = getToken();
+  if(!token) return;
+  if(!fileSha){ status('Load from GitHub first', 'bad'); return; }
+
+  const commitMsg = prompt('Commit message:', 'Update domain allowlist via web editor');
+  if(!commitMsg) return;
+
+  commitBtn.disabled = true;
+  status('Committing to GitHub...', 'warn');
+
+  try {
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+    const content = btoa(JSON.stringify(model, null, 2)); // Encode to base64
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: commitMsg,
+        content: content,
+        sha: fileSha,
+        branch: BRANCH
+      })
+    });
+
+    if(!res.ok) {
+      const err = await res.json();
+      throw new Error(`GitHub API error: ${res.status} - ${err.message || res.statusText}`);
+    }
+
+    const data = await res.json();
+    fileSha = data.content.sha; // Update SHA
+
+    markSaved();
+    status(`✓ Saved to GitHub! Commit: ${fileSha.substring(0,7)}`, 'good');
+  } catch(e) {
+    status('Error: ' + e.message, 'bad');
+    commitBtn.disabled = false;
+  }
+};
+
+// Add domain
+document.getElementById('add').onclick = ()=>{
+  const val = document.getElementById('domain').value.trim();
+  if(!val){ status('Enter a domain', 'warn'); return; }
+  model.allowed_domains = model.allowed_domains || [];
+  model.allowed_domains.push(val);
+  document.getElementById('domain').value = '';
+  refresh();
+  markUnsaved();
+  status('Added: ' + val, 'warn');
+};
+
+// Sort & dedupe
+document.getElementById('sort').onclick = ()=>{
+  const before = model.allowed_domains.length;
+  model.allowed_domains = Array.from(new Set((model.allowed_domains||[]).map(x=>x.trim())))
+    .sort((a,b)=>a.localeCompare(b));
+  const removed = before - model.allowed_domains.length;
+  refresh();
+  if(removed > 0) {
+    markUnsaved();
+    status(`Sorted and removed ${removed} duplicate(s)`, 'warn');
+  } else {
+    status('Sorted (no duplicates found)', '');
+  }
+};
+
+// Clear all
+document.getElementById('clear').onclick = ()=>{
+  if(confirm('Clear all domains?')){
+    const count = model.allowed_domains.length;
+    model.allowed_domains = [];
+    refresh();
+    markUnsaved();
+    status(`Cleared ${count} domain(s)`, 'warn');
+  }
+};
+
+// Allow Enter key in domain input
+document.getElementById('domain').addEventListener('keypress', (e)=>{
+  if(e.key === 'Enter') document.getElementById('add').click();
+});
+
+render();
+</script>
+</body></html>

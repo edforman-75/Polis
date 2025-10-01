@@ -1,0 +1,1727 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Press Release Editor — CPO</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{background:#111a2e;border:1px solid #182544;border-radius:16px;padding:20px}
+.form-group{margin-bottom:16px}
+label{display:block;margin-bottom:6px;color:#9fb3c8;font-size:13px;font-weight:500}
+input[type=text],input[type=date],input[type=url],textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid #1f4366;background:#0a1220;color:#e6edf3;font-family:inherit;font-size:14px}
+textarea{min-height:100px;font-family:monospace;resize:vertical}
+button{padding:10px 16px;border-radius:8px;background:#0e2a42;border:1px solid #1f4366;color:#e6edf3;cursor:pointer;font-size:14px}
+button.primary{background:#1f4366;border:1px solid #2d5a8a}
+button:hover{opacity:0.9}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+pre{background:#0b1220;padding:16px;border-radius:10px;border:1px dashed #2b3a55;overflow:auto;max-height:600px;font-size:12px;line-height:1.5}
+.validation{margin-top:12px;padding:12px;border-radius:8px;font-size:13px}
+.validation.success{background:#0d2818;border:1px solid #1a4d2e;color:#7dfca5}
+.validation.error{background:#2d1515;border:1px solid#4d1a1a;color:#ff7b7b}
+.validation.warning{background:#2d2415;border:1px solid #4d3d1a;color:#ffb86c}
+.claim-item{background:#0b1220;padding:12px;border-radius:8px;border:1px solid #182544;margin-bottom:12px}
+.claim-item button{font-size:12px;padding:6px 10px}
+.add-btn{margin-top:8px}
+h2{margin:0 0 16px 0;font-size:18px}
+.small{font-size:12px;color:#9fb3c8}
+.tabs{display:flex;gap:0;border-bottom:2px solid #182544;margin-bottom:16px}
+.tab{padding:10px 16px;cursor:pointer;border:none;background:transparent;color:#9fb3c8;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:14px}
+.tab.active{color:#7dfca5;border-bottom-color:#7dfca5}
+.tab:hover{color:#e6edf3}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.ai-score{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500}
+.ai-score.high{background:#0d2818;border:1px solid #1a4d2e;color:#7dfca5}
+.ai-score.medium{background:#2d2415;border:1px solid #4d3d1a;color:#ffb86c}
+.ai-score.low{background:#2d1515;border:1px solid #4d1a1a;color:#ff7b7b}
+.suggestion-item{background:#0b1220;padding:12px;border-radius:8px;border:1px solid #182544;margin-bottom:12px}
+.suggestion-item .category{color:#7dd3fc;font-size:11px;font-weight:500;text-transform:uppercase;margin-bottom:4px}
+.suggestion-item .title{color:#e6edf3;font-size:14px;font-weight:500;margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.suggestion-item .title:hover{color:#7dfca5}
+.suggestion-item .prose{background:#0a1220;padding:10px;border-radius:6px;border:1px solid #1f4366;margin-top:8px;color:#9fb3c8;font-size:13px;line-height:1.5;display:none}
+.suggestion-item .prose.expanded{display:block}
+.suggestion-item .reason{color:#9fb3c8;font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Press Release Editor</h1>
+  <p class="small">Create and validate press releases using CPO templates.</p>
+
+  <div class="layout">
+    <!-- LEFT: Form -->
+    <div class="panel">
+      <h2>Edit Release</h2>
+
+      <div class="form-group">
+        <label>Template Type</label>
+        <select id="templateType">
+          <option value="press_release">Generic Press Release</option>
+          <option value="statement">Statement</option>
+          <option value="policy">Policy Rollout</option>
+          <option value="endorsement">Endorsement</option>
+          <option value="fundraising">Fundraising</option>
+          <option value="crisis">Crisis/Clarification</option>
+          <option value="mobilization">Mobilization</option>
+          <option value="operations">Operations</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Headline *</label>
+        <input type="text" id="headline" placeholder="Jane Smith Releases Clean Energy Plan" />
+      </div>
+
+      <div class="form-group">
+        <label>Date Published *</label>
+        <input type="date" id="datePublished" />
+      </div>
+
+      <div class="form-group">
+        <label>Campaign Name *</label>
+        <input type="text" id="campaignName" placeholder="Jane Smith for Congress" />
+      </div>
+
+      <div class="form-group">
+        <label>Campaign URL *</label>
+        <input type="url" id="campaignUrl" placeholder="https://janesmithforcongress.org" />
+      </div>
+
+      <div class="form-group">
+        <label>Press Contact Email *</label>
+        <input type="text" id="pressEmail" placeholder="press@janesmithforcongress.org" />
+      </div>
+
+      <div class="form-group">
+        <label>Article Body *</label>
+        <textarea id="articleBody" placeholder="CLEVELAND — Jane Smith today announced..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Issue Areas (optional) - Select all that apply</label>
+        <div id="issueCheckboxes" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="healthcare"> Healthcare</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="economy"> Economy</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="environment"> Environment</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="education"> Education</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="housing"> Housing</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="immigration"> Immigration</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="justice"> Justice</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="labor"> Labor</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="infrastructure"> Infrastructure</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="civil_rights"> Civil Rights</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="foreign_policy"> Foreign Policy</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" value="other"> Other</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Subtype (optional) - Select all that apply (primary first)</label>
+        <div id="subtypeCheckboxes" style="display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px;max-height:300px;overflow-y:auto;padding:8px;background:#0a1220;border-radius:8px;border:1px solid #1f4366">
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="ANN.EVT.RALLY"> <span style="font-size:13px">ANN.EVT.RALLY - Announcement - Event - Rally</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="ANN.EVT.TOWN"> <span style="font-size:13px">ANN.EVT.TOWN - Announcement - Event - Town Hall</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="ANN.CMP.LAUNCH"> <span style="font-size:13px">ANN.CMP.LAUNCH - Announcement - Campaign Launch</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="POL.ROL.CE"> <span style="font-size:13px">POL.ROL.CE - Policy Rollout - Clean Energy</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="POL.ROL.HC"> <span style="font-size:13px">POL.ROL.HC - Policy Rollout - Healthcare</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="POL.ROL.ED"> <span style="font-size:13px">POL.ROL.ED - Policy Rollout - Education</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="POL.ROL.EC"> <span style="font-size:13px">POL.ROL.EC - Policy Rollout - Economy</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="END.ORG"> <span style="font-size:13px">END.ORG - Endorsement - Organization</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="END.IND"> <span style="font-size:13px">END.IND - Endorsement - Individual</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="END.ELECT"> <span style="font-size:13px">END.ELECT - Endorsement - Elected Official</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="ATT.OPP.CHAR"> <span style="font-size:13px">ATT.OPP.CHAR - Attack - Opponent - Character</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="ATT.OPP.REC"> <span style="font-size:13px">ATT.OPP.REC - Attack - Opponent - Record</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="FUN.HAUL"> <span style="font-size:13px">FUN.HAUL - Fundraising - Haul Announcement</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="FUN.GOAL"> <span style="font-size:13px">FUN.GOAL - Fundraising - Goal/Deadline</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="CRI.CLAR"> <span style="font-size:13px">CRI.CLAR - Crisis - Clarification</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="CRI.RESP"> <span style="font-size:13px">CRI.RESP - Crisis - Response</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="MOB.VOL"> <span style="font-size:13px">MOB.VOL - Mobilization - Volunteer</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="MOB.VOTE"> <span style="font-size:13px">MOB.VOTE - Mobilization - Vote</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="OPS.STAFF"> <span style="font-size:13px">OPS.STAFF - Operations - Staff Hire</span></label>
+          <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" value="OPS.OFFICE"> <span style="font-size:13px">OPS.OFFICE - Operations - Office Opening</span></label>
+        </div>
+        <p class="small" style="margin-top:8px;color:#9fb3c8">💡 First selected becomes primary subtype for template selection</p>
+      </div>
+
+      <div class="form-group">
+        <label>Endorser Organization (optional)</label>
+        <input type="text" id="endorserName" placeholder="American Federation of Teachers" />
+      </div>
+
+      <div class="form-group">
+        <label>Endorser Representative (optional)</label>
+        <input type="text" id="endorserRep" placeholder="Randi Weingarten" />
+      </div>
+
+      <div class="form-group">
+        <label>Endorser Representative Title (optional)</label>
+        <input type="text" id="endorserRepTitle" placeholder="President" />
+      </div>
+
+      <div class="form-group">
+        <label>Endorser Quote (optional)</label>
+        <textarea id="endorserQuote" placeholder="Quote from endorser representative..." style="min-height:80px"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Candidate Quote (optional)</label>
+        <textarea id="candidateQuote" placeholder="Quote from candidate..." style="min-height:80px"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Claims & Evidence (optional)</label>
+        <div id="detectedClaimsInfo" style="display:none;margin-bottom:12px;padding:10px;background:#0d2818;border:1px solid #1a4d2e;border-radius:8px;font-size:13px;color:#7dfca5">
+          <strong>🔍 Detected <span id="claimCount">0</span> claims that may need evidence</strong>
+          <button onclick="autoPopulateClaims()" style="margin-left:10px;font-size:12px;padding:4px 8px">Add All to Form</button>
+        </div>
+        <div id="claimsContainer"></div>
+        <button class="add-btn" onclick="addClaim()">+ Add Claim</button>
+      </div>
+
+      <div class="form-group">
+        <label>Call to Action URL (optional)</label>
+        <input type="url" id="ctaUrl" placeholder="https://janesmithforcongress.org/plan" />
+      </div>
+
+      <div class="form-group">
+        <label>Or Paste Text Press Release</label>
+        <textarea id="pasteArea" placeholder="Paste your plain text press release here and click 'Parse'..." style="min-height:150px"></textarea>
+        <button class="add-btn" onclick="parsePastedRelease()">Parse & Fill Form</button>
+      </div>
+
+      <div class="btn-group">
+        <button class="primary" onclick="generateRelease()">Generate JSON-LD</button>
+        <button onclick="validateRelease()">Validate</button>
+        <button onclick="downloadRelease()">Download</button>
+        <button onclick="clearForm()">Clear</button>
+      </div>
+
+      <div id="validation"></div>
+    </div>
+
+    <!-- RIGHT: Tabbed Interface -->
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('preview')">JSON-LD Preview</button>
+        <button class="tab" onclick="switchTab('ai-optimization')">AI Optimization</button>
+      </div>
+
+      <!-- Tab: JSON-LD Preview -->
+      <div id="tab-preview" class="tab-content active">
+        <pre id="jsonPreview">{
+  "Click 'Generate JSON-LD' to see preview"
+}</pre>
+      </div>
+
+      <!-- Tab: AI Optimization -->
+      <div id="tab-ai-optimization" class="tab-content">
+        <!-- Section 1: Context Analysis -->
+        <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #182544">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span class="small"><strong>1. Context Analysis</strong> - Missing AI-friendly context</span>
+            <span id="aiScore" class="ai-score medium">
+              <span>⚡ Score: --</span>
+            </span>
+          </div>
+          <button onclick="analyzeAIOptimization()" class="primary" style="width:100%">Analyze Context</button>
+
+          <div id="aiSuggestions" style="margin-top:16px">
+            <p class="small" style="color:#9fb3c8;text-align:center;padding:20px">Click "Analyze Context" to see suggestions</p>
+          </div>
+        </div>
+
+        <!-- Section 2: Prose Coherence -->
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span class="small"><strong>2. Prose Coherence</strong> - JSON-LD data not in prose</span>
+            <span id="coherenceStatus" class="ai-score medium" style="display:none">
+              <span id="coherenceCount">0 gaps</span>
+            </span>
+          </div>
+          <button onclick="analyzeProseCoherence()" class="primary" style="width:100%">Analyze Prose Coherence</button>
+
+          <div id="coherenceSuggestions" style="margin-top:16px">
+            <p class="small" style="color:#9fb3c8;text-align:center;padding:20px">Click "Analyze Prose Coherence" to find missing elements</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px">
+    <a href="index.html" style="color:#7dfca5">← Back to Portal Home</a>
+  </div>
+</div>
+
+<script>
+let claimCounter = 0;
+
+// Set today's date by default
+document.getElementById('datePublished').valueAsDate = new Date();
+
+function addClaim() {
+  const container = document.getElementById('claimsContainer');
+  const id = ++claimCounter;
+
+  const div = document.createElement('div');
+  div.className = 'claim-item';
+  div.id = `claim-${id}`;
+  div.innerHTML = `
+    <div style="margin-bottom:8px">
+      <input type="text" id="claimText-${id}" placeholder="Claim text" style="margin-bottom:8px" />
+      <input type="url" id="evidenceUrl-${id}" placeholder="Evidence URL" style="margin-bottom:8px" />
+      <input type="text" id="evidenceExcerpt-${id}" placeholder="Evidence excerpt (optional)" />
+    </div>
+    <button onclick="removeClaim(${id})">Remove</button>
+  `;
+  container.appendChild(div);
+}
+
+function removeClaim(id) {
+  document.getElementById(`claim-${id}`).remove();
+}
+
+function autoPopulateClaims() {
+  const claims = window.detectedClaimsForEvidence || [];
+  if (claims.length === 0) {
+    showValidation('No claims detected to populate', 'warn');
+    return;
+  }
+
+  // Add each detected claim
+  claims.forEach(claim => {
+    const container = document.getElementById('claimsContainer');
+    const id = ++claimCounter;
+
+    const div = document.createElement('div');
+    div.className = 'claim-item';
+    div.id = `claim-${id}`;
+    div.innerHTML = `
+      <div style="margin-bottom:8px">
+        <input type="text" id="claimText-${id}" placeholder="Claim text" style="margin-bottom:8px" value="${claim.text.replace(/"/g, '&quot;')}" />
+        <input type="url" id="evidenceUrl-${id}" placeholder="Evidence URL (click 'Search' to find)" style="margin-bottom:8px" />
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button onclick="findEvidence(${id}, '${claim.searchQuery.replace(/'/g, "\\'")}', '${claim.type}')" style="flex:1">🔍 Find Evidence URL</button>
+          <button onclick="window.open('${claim.suggestedSearch}', '_blank')" style="flex:0.5">Manual Search</button>
+        </div>
+        <div id="evidence-status-${id}" style="font-size:11px;color:#9fb3c8;margin-bottom:6px"></div>
+        <input type="text" id="evidenceExcerpt-${id}" placeholder="Evidence excerpt (optional)" />
+      </div>
+      <button onclick="removeClaim(${id})">Remove</button>
+    `;
+    container.appendChild(div);
+  });
+
+  // Hide the info banner
+  document.getElementById('detectedClaimsInfo').style.display = 'none';
+
+  showValidation(`Added ${claims.length} detected claims. Click "Find Evidence URL" to automatically search for sources.`, 'success');
+}
+
+async function findEvidence(claimId, searchQuery, claimType) {
+  const statusEl = document.getElementById(`evidence-status-${claimId}`);
+  const urlInput = document.getElementById(`evidenceUrl-${claimId}`);
+  const claimText = document.getElementById(`claimText-${claimId}`).value.trim();
+  const excerptInput = document.getElementById(`evidenceExcerpt-${claimId}`);
+
+  statusEl.innerHTML = '<span style="color:#ffb86c">🔄 Searching for evidence via API...</span>';
+
+  try {
+    // Try to use the Evidence Finder API first
+    const apiUrl = 'http://localhost:3002/api/find-evidence';
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        claim: claimText,
+        claimType: claimType,
+        searchQuery: searchQuery
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      if (data.success && data.bestMatch) {
+        // Auto-fill the evidence URL
+        urlInput.value = data.bestMatch.url;
+
+        // Auto-fill excerpt if available
+        if (data.bestMatch.excerpt && !excerptInput.value) {
+          excerptInput.value = data.bestMatch.excerpt;
+        }
+
+        // Display confidence score with color-coding
+        const conf = data.confidence;
+        let confidenceColor = '#7dfca5'; // green for high
+        let confidenceIcon = '✓';
+
+        if (conf) {
+          if (conf.level === 'high') {
+            confidenceColor = '#7dfca5'; // green
+            confidenceIcon = '✓';
+          } else if (conf.level === 'medium') {
+            confidenceColor = '#ffb86c'; // yellow
+            confidenceIcon = '⚠';
+          } else if (conf.level === 'low') {
+            confidenceColor = '#ff9f5a'; // orange
+            confidenceIcon = '⚠';
+          } else {
+            confidenceColor = '#ff7b7b'; // red
+            confidenceIcon = '✗';
+          }
+        }
+
+        statusEl.innerHTML = `
+          <div style="color:${confidenceColor}">
+            ${confidenceIcon} Found: <strong>${data.bestMatch.source || 'Source'}</strong><br>
+            ${conf && conf.assertiveness && conf.assertiveness.isHedged ? `<span style="font-size:10px;color:#ffb86c">ℹ ${conf.assertiveness.description}</span><br>` : ''}
+            ${conf ? `<span style="font-size:11px">Confidence: ${(conf.score * 100).toFixed(0)}% (${conf.level}) - Threshold: ${(conf.threshold * 100).toFixed(0)}%</span><br>` : ''}
+            ${conf && !data.meetsThreshold ? `<span style="color:#ff7b7b;font-size:10px">⚠ Below threshold - additional sources recommended</span><br>` : ''}
+            ${data.bestMatch.reliability ? `<span style="font-size:10px">${data.bestMatch.reliability}</span>` : ''}
+            ${conf && conf.factors ? `<details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer">Confidence factors</summary><ul style="margin:4px 0;padding-left:20px">${conf.factors.map(f => `<li>${f}</li>`).join('')}</ul></details>` : ''}
+            ${conf && conf.assertiveness && conf.assertiveness.evidenceGuidance ? `<details style="font-size:10px;margin-top:4px"><summary style="cursor:pointer">Evidence guidance</summary><div style="margin:4px 0">${conf.assertiveness.evidenceGuidance}</div></details>` : ''}
+          </div>
+        `;
+
+        if (data.meetsThreshold) {
+          showValidation('Evidence URL found and added!', 'success');
+        } else {
+          showValidation('Evidence found but confidence is below threshold - consider additional sources', 'warning');
+        }
+      } else {
+        throw new Error('No results from API');
+      }
+    } else {
+      throw new Error('API not available');
+    }
+
+  } catch (error) {
+    // Fallback to manual search if API is not running
+    console.log('Evidence Finder API not available, falling back to manual search:', error.message);
+
+    statusEl.innerHTML = `<span style="color:#ffb86c">⚠ API offline - opening manual search...</span>`;
+
+    // Construct smart search URL based on claim type
+    let targetUrl = '';
+
+    if (claimType === 'experience') {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' site:linkedin.com OR site:*.com/about')}`;
+    } else if (claimType === 'org_description' || claimType === 'org_composition') {
+      const orgName = searchQuery.replace('official website', '').trim();
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(orgName + ' official website')}`;
+    } else if (claimType === 'policy_document') {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' site:politifact.com OR site:factcheck.org OR site:*.gov')}`;
+    } else if (claimType === 'voting_record') {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' site:congress.gov OR site:votesmart.org')}`;
+    } else if (claimType === 'statistic') {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery + ' site:*.gov OR site:brookings.edu OR site:pewresearch.org')}`;
+    } else {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+    }
+
+    // Open manual search
+    window.open(targetUrl, '_blank');
+
+    setTimeout(() => {
+      statusEl.innerHTML = `
+        <div style="color:#7dd3fc">
+          ℹ Manual search opened. Suggested sources:<br>
+          ${getSourceSuggestions(claimType)}
+        </div>
+      `;
+    }, 500);
+  }
+}
+
+function getSourceSuggestions(claimType) {
+  const suggestions = {
+    'experience': '→ LinkedIn profiles, campaign bio pages, news articles',
+    'org_description': '→ Official .org website, Wikipedia, news coverage',
+    'org_composition': '→ Organization\'s "About" or "Members" page',
+    'policy_document': '→ Politifact.com, FactCheck.org, official policy docs',
+    'voting_record': '→ Congress.gov, VoteSmart.org, official voting records',
+    'policy_claim': '→ Congressional Budget Office, policy analysis from .gov or .edu',
+    'factual_claim': '→ Fact-checking sites, reputable news sources',
+    'statistic': '→ Census.gov, BLS.gov, Pew Research, government statistics'
+  };
+
+  return suggestions[claimType] || '→ Reputable news sources, .gov/.edu sites';
+}
+
+function generateRelease() {
+  const type = document.getElementById('templateType').value;
+  const headline = document.getElementById('headline').value.trim();
+  const datePublished = document.getElementById('datePublished').value;
+  const campaignName = document.getElementById('campaignName').value.trim();
+  const campaignUrl = document.getElementById('campaignUrl').value.trim();
+  const pressEmail = document.getElementById('pressEmail').value.trim();
+  const articleBody = document.getElementById('articleBody').value.trim();
+
+  // Collect checked issue areas
+  const issueCheckboxes = document.querySelectorAll('#issueCheckboxes input[type="checkbox"]:checked');
+  const issueAreas = Array.from(issueCheckboxes).map(cb => cb.value).join(', ');
+
+  // Collect checked subtypes (as array, order matters - first is primary)
+  const subtypeCheckboxes = document.querySelectorAll('#subtypeCheckboxes input[type="checkbox"]:checked');
+  const subtypes = Array.from(subtypeCheckboxes).map(cb => cb.value);
+
+  const ctaUrl = document.getElementById('ctaUrl').value.trim();
+
+  // Get endorsement details
+  const endorserName = document.getElementById('endorserName').value.trim();
+  const endorserRep = document.getElementById('endorserRep').value.trim();
+  const endorserRepTitle = document.getElementById('endorserRepTitle').value.trim();
+  const endorserQuote = document.getElementById('endorserQuote').value.trim();
+  const candidateQuote = document.getElementById('candidateQuote').value.trim();
+
+  // Validate required fields
+  if (!headline || !datePublished || !campaignName || !campaignUrl || !pressEmail || !articleBody) {
+    showValidation('Please fill in all required fields (*)', 'error');
+    return;
+  }
+
+  // Build release object
+  const release = {
+    "@context": [
+      "https://schema.org",
+      "https://campaign-press-ontology.org/ns/v1#"
+    ],
+    "@type": ["PressRelease", "NewsArticle"],
+    "@id": campaignUrl + "/press/" + datePublished.replace(/-/g, ''),
+    "headline": headline,
+    "datePublished": datePublished,
+    "author": {
+      "@type": "Organization",
+      "name": campaignName,
+      "url": campaignUrl,
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "press",
+        "email": pressEmail
+      }
+    },
+    "articleBody": articleBody,
+    "cpo:releaseType": type
+  };
+
+  // Add optional fields
+  if (issueAreas) {
+    release["cpo:issueArea"] = issueAreas;
+
+    // Add structured issue positions with stances
+    const issuesList = issueAreas.split(',').map(i => i.trim());
+    if (issuesList.length > 0) {
+      const issueStances = window.detectedIssueStances || {};
+
+      release["about"] = issuesList.map(issue => ({
+        "@type": "Thing",
+        "name": issue.replace(/_/g, ' '),
+        "identifier": issue
+      }));
+
+      // Add policy positions
+      release["cpo:policyPositions"] = issuesList.map(issue => {
+        const stance = issueStances[issue] || 'support';
+        return {
+          "@type": "cpo:PolicyPosition",
+          "cpo:issue": issue.replace(/_/g, ' '),
+          "cpo:stance": stance,
+          "cpo:mentioned": true
+        };
+      });
+    }
+  }
+  // Add subtypes as array if multiple, single value if one, or omit if none
+  if (subtypes.length > 1) {
+    release["cpo:subtype"] = subtypes;
+  } else if (subtypes.length === 1) {
+    release["cpo:subtype"] = subtypes[0];
+  }
+
+  // Add claims
+  const claims = [];
+  const claimItems = document.querySelectorAll('.claim-item');
+  claimItems.forEach((item, idx) => {
+    const id = item.id.split('-')[1];
+    const claimText = document.getElementById(`claimText-${id}`).value.trim();
+    const evidenceUrl = document.getElementById(`evidenceUrl-${id}`).value.trim();
+    const evidenceExcerpt = document.getElementById(`evidenceExcerpt-${id}`).value.trim();
+
+    if (claimText && evidenceUrl) {
+      const claim = {
+        "@type": "cpo:Claim",
+        "@id": `claim:${idx + 1}`,
+        "cpo:claimText": claimText,
+        "cpo:evidence": [{
+          "@type": "CreativeWork",
+          "url": evidenceUrl
+        }]
+      };
+      if (evidenceExcerpt) {
+        claim["cpo:evidence"][0]["cpo:excerpt"] = evidenceExcerpt;
+      }
+      claims.push(claim);
+    }
+  });
+  if (claims.length > 0) release["cpo:claims"] = claims;
+
+  // Add CTA
+  if (ctaUrl) {
+    release["cpo:cta"] = {
+      "@type": "cpo:CTA",
+      "cpo:type": "learn",
+      "url": ctaUrl
+    };
+  }
+
+  // Add endorsement details
+  if (endorserName || endorserRep) {
+    const endorsement = {
+      "@type": "EndorseAction"
+    };
+
+    if (endorserName) {
+      endorsement.agent = {
+        "@type": "Organization",
+        "name": endorserName
+      };
+
+      // Add representative as member of organization
+      if (endorserRep) {
+        endorsement.agent.member = {
+          "@type": "Person",
+          "name": endorserRep
+        };
+        if (endorserRepTitle) {
+          endorsement.agent.member.jobTitle = endorserRepTitle;
+        }
+      }
+    } else if (endorserRep) {
+      endorsement.agent = {
+        "@type": "Person",
+        "name": endorserRep
+      };
+      if (endorserRepTitle) {
+        endorsement.agent.jobTitle = endorserRepTitle;
+      }
+    }
+
+    release["cpo:endorsement"] = endorsement;
+  }
+
+  // Add quotes as structured data
+  const quotes = [];
+
+  if (endorserQuote && (endorserName || endorserRep)) {
+    quotes.push({
+      "@type": "Quotation",
+      "text": endorserQuote,
+      "spokenByCharacter": {
+        "@type": endorserRep ? "Person" : "Organization",
+        "name": endorserRep || endorserName,
+        ...(endorserRepTitle && endorserRep ? { "jobTitle": endorserRepTitle } : {})
+      }
+    });
+  }
+
+  if (candidateQuote) {
+    // Extract candidate name from campaign name
+    const candidateName = campaignName.replace(/\s+for\s+(Congress|Senate|Governor|Mayor|Assembly|City Council).*/i, '').trim();
+    quotes.push({
+      "@type": "Quotation",
+      "text": candidateQuote,
+      "spokenByCharacter": {
+        "@type": "Person",
+        "name": candidateName,
+        "memberOf": {
+          "@type": "Organization",
+          "name": campaignName
+        }
+      }
+    });
+  }
+
+  if (quotes.length > 0) {
+    release["cpo:quotes"] = quotes;
+  }
+
+  // Display
+  const json = JSON.stringify(release, null, 2);
+  document.getElementById('jsonPreview').textContent = json;
+  showValidation('JSON-LD generated successfully!', 'success');
+}
+
+function validateRelease() {
+  const preview = document.getElementById('jsonPreview').textContent;
+
+  try {
+    const release = JSON.parse(preview);
+
+    // Basic validation
+    const errors = [];
+    const warnings = [];
+
+    if (!release["@context"]) errors.push("Missing @context");
+    if (!release["@type"]) errors.push("Missing @type");
+    if (!release.headline) errors.push("Missing headline");
+    if (!release.datePublished) errors.push("Missing datePublished");
+    if (!release.author) errors.push("Missing author");
+    if (!release.articleBody) errors.push("Missing articleBody");
+
+    if (release["cpo:claims"]) {
+      release["cpo:claims"].forEach((claim, idx) => {
+        if (!claim["cpo:claimText"]) errors.push(`Claim ${idx + 1}: missing claimText`);
+        if (!claim["cpo:evidence"] || claim["cpo:evidence"].length === 0) {
+          errors.push(`Claim ${idx + 1}: missing evidence`);
+        }
+      });
+    }
+
+    if (errors.length > 0) {
+      showValidation('Validation errors:\n' + errors.join('\n'), 'error');
+    } else if (warnings.length > 0) {
+      showValidation('Validation passed with warnings:\n' + warnings.join('\n'), 'warning');
+    } else {
+      showValidation('✓ Validation passed! Ready to publish.', 'success');
+    }
+  } catch (e) {
+    showValidation('Invalid JSON: ' + e.message, 'error');
+  }
+}
+
+function downloadRelease() {
+  const preview = document.getElementById('jsonPreview').textContent;
+  const headline = document.getElementById('headline').value.trim() || 'release';
+  const filename = headline.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jsonld';
+
+  const blob = new Blob([preview], {type: 'application/ld+json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  showValidation('Downloaded: ' + filename, 'success');
+}
+
+function clearForm() {
+  if (!confirm('Clear all fields?')) return;
+  document.getElementById('headline').value = '';
+  document.getElementById('articleBody').value = '';
+  document.getElementById('campaignName').value = '';
+  document.getElementById('campaignUrl').value = '';
+  document.getElementById('pressEmail').value = '';
+  document.querySelectorAll('#issueCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.querySelectorAll('#subtypeCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('endorserName').value = '';
+  document.getElementById('endorserRep').value = '';
+  document.getElementById('endorserRepTitle').value = '';
+  document.getElementById('endorserQuote').value = '';
+  document.getElementById('candidateQuote').value = '';
+  document.getElementById('ctaUrl').value = '';
+  document.getElementById('claimsContainer').innerHTML = '';
+  document.getElementById('jsonPreview').textContent = '{\n  "Click \'Generate JSON-LD\' to see preview"\n}';
+  showValidation('Form cleared', '');
+}
+
+function showValidation(message, type) {
+  const div = document.getElementById('validation');
+  div.textContent = message;
+  div.className = 'validation ' + type;
+  div.style.display = message ? 'block' : 'none';
+}
+
+function parsePastedRelease() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) {
+    showValidation('Please paste a press release first', 'error');
+    return;
+  }
+
+  // Extract headline (usually first line or in caps/bold)
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  let headline = lines[0];
+
+  // Look for "FOR IMMEDIATE RELEASE" pattern and skip it
+  if (headline.toUpperCase().includes('FOR IMMEDIATE RELEASE')) {
+    headline = lines[1] || lines[0];
+  }
+
+  // Extract date (look for patterns like "January 15, 2025" or "2025-01-15")
+  let datePublished = '';
+  const datePatterns = [
+    /(\w+\s+\d{1,2},\s+\d{4})/,  // January 15, 2025
+    /(\d{4}-\d{2}-\d{2})/,        // 2025-01-15
+    /(\d{1,2}\/\d{1,2}\/\d{4})/   // 1/15/2025
+  ];
+
+  for (const line of lines) {
+    for (const pattern of datePatterns) {
+      const match = line.match(pattern);
+      if (match) {
+        const dateStr = match[1];
+        const parsed = new Date(dateStr);
+        if (!isNaN(parsed)) {
+          datePublished = parsed.toISOString().split('T')[0];
+          break;
+        }
+      }
+    }
+    if (datePublished) break;
+  }
+
+  // Extract campaign name and email (look for patterns)
+  let campaignName = '';
+  let pressEmail = '';
+  let campaignUrl = '';
+
+  for (const line of lines) {
+    // Look for "Contact:" or email patterns
+    if (line.toLowerCase().includes('contact')) {
+      const emailMatch = line.match(/[\w.-]+@[\w.-]+\.\w+/);
+      if (emailMatch) pressEmail = emailMatch[0];
+
+      // Try to extract name before contact
+      const nameMatch = line.match(/^(.+?)\s*[-—:]\s*Contact/i);
+      if (nameMatch) campaignName = nameMatch[1].trim();
+    }
+
+    // Look for "Press:" or "Media:" patterns
+    if ((line.toLowerCase().includes('press:') || line.toLowerCase().includes('media:')) && !pressEmail) {
+      const emailMatch = line.match(/[\w.-]+@[\w.-]+\.\w+/);
+      if (emailMatch) pressEmail = emailMatch[0];
+    }
+
+    // Look for URLs
+    const urlMatch = line.match(/https?:\/\/[\w.-]+\.\w+[\w\/.?=&-]*/);
+    if (urlMatch && !campaignUrl) {
+      campaignUrl = urlMatch[0].split(/[,\s]/)[0]; // Take first URL, remove trailing punctuation
+    }
+
+    // Look for "for Congress", "for Senate", etc.
+    const forMatch = line.match(/(.+?)\s+for\s+(Congress|Senate|Governor|Mayor|Assembly|City Council)/i);
+    if (forMatch && !campaignName) {
+      campaignName = forMatch[0].trim();
+    }
+  }
+
+  // Auto-detect issue areas with enhanced keyword matching
+  const issueKeywords = {
+    healthcare: {
+      primary: ['healthcare', 'health care', 'medicare', 'medicaid', 'affordable care act', 'aca', 'obamacare'],
+      secondary: ['health', 'medical', 'hospital', 'doctor', 'insurance', 'prescription', 'drug costs', 'mental health']
+    },
+    economy: {
+      primary: ['economy', 'economic growth', 'jobs plan', 'employment', 'unemployment', 'wages', 'minimum wage'],
+      secondary: ['income', 'tax', 'inflation', 'small business', 'manufacturing', 'trade']
+    },
+    environment: {
+      primary: ['climate change', 'climate crisis', 'clean energy', 'renewable energy', 'carbon emissions', 'green new deal'],
+      secondary: ['environment', 'pollution', 'solar', 'wind power', 'sustainability', 'epa']
+    },
+    education: {
+      primary: ['education', 'public schools', 'teachers', 'student debt', 'college affordability', 'pell grant'],
+      secondary: ['school', 'student', 'classroom', 'university', 'community college', 'education funding']
+    },
+    housing: {
+      primary: ['affordable housing', 'housing crisis', 'homelessness', 'rent control', 'housing costs'],
+      secondary: ['housing', 'rent', 'homeowner', 'eviction', 'foreclosure', 'mortgage']
+    },
+    immigration: {
+      primary: ['immigration reform', 'border security', 'path to citizenship', 'daca', 'dreamers'],
+      secondary: ['immigration', 'immigrant', 'border', 'refugee', 'asylum', 'visa']
+    },
+    justice: {
+      primary: ['criminal justice reform', 'police reform', 'mass incarceration', 'sentencing reform', 'bail reform'],
+      secondary: ['justice', 'police', 'prison', 'incarceration', 'law enforcement', 'crime']
+    },
+    labor: {
+      primary: ['labor rights', 'union', 'collective bargaining', 'right to organize', 'pro act', 'workers rights'],
+      secondary: ['labor', 'worker', 'workplace', 'organizing', 'strike', 'wage theft']
+    },
+    infrastructure: {
+      primary: ['infrastructure', 'infrastructure plan', 'roads and bridges', 'public transit', 'broadband access'],
+      secondary: ['road', 'bridge', 'transit', 'transportation', 'internet access', 'water system']
+    },
+    civil_rights: {
+      primary: ['civil rights', 'voting rights', 'voter suppression', 'equality act', 'racial justice'],
+      secondary: ['equality', 'discrimination', 'lgbtq', 'reproductive rights', 'voter access']
+    },
+    foreign_policy: {
+      primary: ['foreign policy', 'national security', 'defense spending', 'military', 'diplomacy'],
+      secondary: ['international', 'overseas', 'nato', 'china', 'veterans']
+    }
+  };
+
+  const textLower = text.toLowerCase();
+  const detectedIssues = [];
+  const issueScores = {};
+
+  for (const [issue, keywords] of Object.entries(issueKeywords)) {
+    let score = 0;
+    // Primary keywords worth 3 points each
+    keywords.primary.forEach(kw => {
+      if (textLower.includes(kw)) score += 3;
+    });
+    // Secondary keywords worth 1 point each
+    keywords.secondary.forEach(kw => {
+      if (textLower.includes(kw)) score += 1;
+    });
+
+    // Include if score >= 2 (e.g., 1 primary or 2 secondary mentions)
+    if (score >= 2) {
+      detectedIssues.push(issue);
+      issueScores[issue] = score;
+    }
+  }
+
+  // Detect stance/position on issues (support vs oppose)
+  const stancePatterns = {
+    support: ['support', 'fight for', 'champion', 'advocate', 'back', 'stand with', 'commit to', 'will protect', 'expand', 'strengthen'],
+    oppose: ['oppose', 'fight against', 'reject', 'stand against', 'vote against', 'block', 'prevent', 'stop']
+  };
+
+  const issueStances = {};
+  detectedIssues.forEach(issue => {
+    const issueTerms = [...issueKeywords[issue].primary, ...issueKeywords[issue].secondary];
+
+    // Look for stance indicators near issue terms
+    for (const term of issueTerms) {
+      if (textLower.includes(term)) {
+        const termIndex = textLower.indexOf(term);
+        const contextStart = Math.max(0, termIndex - 100);
+        const contextEnd = Math.min(text.length, termIndex + 100);
+        const context = textLower.substring(contextStart, contextEnd);
+
+        // Check for support indicators
+        if (stancePatterns.support.some(s => context.includes(s))) {
+          issueStances[issue] = 'support';
+          break;
+        }
+        // Check for oppose indicators
+        if (stancePatterns.oppose.some(s => context.includes(s))) {
+          issueStances[issue] = 'oppose';
+          break;
+        }
+      }
+    }
+
+    // Default to support if no clear stance found (most releases are positive)
+    if (!issueStances[issue]) {
+      issueStances[issue] = 'support';
+    }
+  });
+
+  // Store stances for use in JSON-LD generation
+  window.detectedIssueStances = issueStances;
+
+  // Check the checkboxes for detected issues
+  document.querySelectorAll('#issueCheckboxes input[type="checkbox"]').forEach(cb => {
+    cb.checked = detectedIssues.includes(cb.value);
+  });
+
+  // Detect factual claims that need evidence
+  const claimPatterns = [
+    // Experience/credentials claims
+    { pattern: /(extensive|significant|proven|decades of)\s+(?:experience|record|background)\s+(?:in|with|on)\s+([^.,]+)/gi, type: 'experience' },
+    { pattern: /(has|have)\s+(served|worked|led|managed|directed)\s+(?:as|in|at|for)\s+([^.,]+)/gi, type: 'experience' },
+
+    // Policy/voting record claims
+    { pattern: /(voted|supported|opposed|championed|blocked|passed)\s+([^.,]+)/gi, type: 'voting_record' },
+    { pattern: /(will|would)\s+(slash|cut|reduce|eliminate|increase|expand|protect)\s+([^.,]+)/gi, type: 'policy_claim' },
+
+    // Factual assertions about opponents/policies
+    { pattern: /(Project 2025|agenda|plan|proposal)\s+(?:that|which)\s+([^.,]+)/gi, type: 'policy_document' },
+    { pattern: /(rejects?|rejects? the results of|denies)\s+([^.,]+)/gi, type: 'factual_claim' },
+
+    // Organization/coalition descriptions
+    { pattern: /(coalition|organization|group)\s+of\s+([^.,]+)/gi, type: 'org_description' },
+    { pattern: /(representing|comprises?|includes?)\s+([^.,]+)/gi, type: 'org_composition' },
+
+    // Statistical/numerical claims
+    { pattern: /(\d+(?:,\d+)?(?:\.\d+)?(?:%|percent|million|billion|thousand))\s+([^.,]+)/gi, type: 'statistic' }
+  ];
+
+  const detectedClaims = [];
+
+  claimPatterns.forEach(({ pattern, type }) => {
+    let match;
+    pattern.lastIndex = 0; // Reset regex
+    while ((match = pattern.exec(text)) !== null) {
+      const claimText = match[0].trim();
+      const context = match[1] + ' ' + (match[2] || '');
+
+      // Skip very short matches
+      if (claimText.length < 20) continue;
+
+      // Generate suggested search query
+      let searchQuery = '';
+      if (type === 'experience') {
+        searchQuery = campaignName ? `${campaignName.split(' for ')[0]} ${context}` : context;
+      } else if (type === 'policy_document') {
+        searchQuery = claimText;
+      } else if (type === 'voting_record') {
+        searchQuery = `${context} voting record site:congress.gov OR site:votesmart.org`;
+      } else if (type === 'org_description') {
+        searchQuery = context + ' official website';
+      } else {
+        searchQuery = claimText;
+      }
+
+      detectedClaims.push({
+        text: claimText,
+        type: type,
+        searchQuery: searchQuery,
+        suggestedSearch: `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`
+      });
+    }
+  });
+
+  // Remove duplicates
+  const uniqueClaims = [];
+  const seen = new Set();
+  detectedClaims.forEach(claim => {
+    const key = claim.text.toLowerCase().substring(0, 50);
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueClaims.push(claim);
+    }
+  });
+
+  // Store for auto-population
+  window.detectedClaimsForEvidence = uniqueClaims;
+
+  // Show detected claims info
+  if (uniqueClaims.length > 0) {
+    document.getElementById('claimCount').textContent = uniqueClaims.length;
+    document.getElementById('detectedClaimsInfo').style.display = 'block';
+  } else {
+    document.getElementById('detectedClaimsInfo').style.display = 'none';
+  }
+
+  // Extract quotes (look for quoted text)
+  const quotePattern = /"([^"]+)"/g;
+  const quotes = [];
+  let match;
+  while ((match = quotePattern.exec(text)) !== null) {
+    quotes.push(match[1]);
+  }
+
+  // Try to identify speakers for quotes
+  let endorserQuote = '';
+  let candidateQuote = '';
+  let endorserName = '';
+  let endorserRep = '';
+  let endorserRepTitle = '';
+
+  // Look for endorsement patterns
+  const endorsementPatterns = [
+    /(?:endorsed by|endorsement from|support of)\s+(?:the\s+)?([A-Z][A-Za-z\s&]+?)(?:\s+\(|,|\.|$)/,
+    /([A-Z][A-Za-z\s&]+?)\s+(?:announced|today announced|endorsed|is endorsing)/
+  ];
+
+  for (const pattern of endorsementPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const potentialName = match[1].trim();
+      // Check if it looks like an organization (not the candidate)
+      if (!campaignName || !potentialName.includes(campaignName.split(' ')[0])) {
+        endorserName = potentialName;
+        break;
+      }
+    }
+  }
+
+  // Extract spokesperson patterns like "said John Smith, President of Organization"
+  const spokesPattern = /said\s+([A-Z][a-z]+\s+[A-Z][a-z]+)(?:,\s+([^."]+?)(?:\s+of\s+([^."]+?))?)?[."]/gi;
+  const speakers = [];
+  while ((match = spokesPattern.exec(text)) !== null) {
+    speakers.push({
+      name: match[1].trim(),
+      title: match[2] ? match[2].trim() : '',
+      org: match[3] ? match[3].trim() : ''
+    });
+  }
+
+  // Assign quotes to speakers based on proximity
+  if (quotes.length > 0 && speakers.length > 0) {
+    // First quote often from endorser/organization representative
+    if (speakers.length >= 1) {
+      endorserQuote = quotes[0] || '';
+      endorserRep = speakers[0].name;
+      endorserRepTitle = speakers[0].title;
+      if (speakers[0].org && !endorserName) {
+        endorserName = speakers[0].org;
+      }
+    }
+
+    // Second quote often from candidate
+    if (quotes.length > 1 && speakers.length >= 2) {
+      candidateQuote = quotes[1] || '';
+    } else if (quotes.length > 1 && speakers.length === 1) {
+      // If only one speaker identified, second quote might be candidate
+      candidateQuote = quotes[1] || '';
+    }
+  }
+
+  // Article body is everything after the first few header lines
+  let bodyStartIdx = 1;
+  if (lines[0].toUpperCase().includes('FOR IMMEDIATE RELEASE')) bodyStartIdx++;
+  if (lines[bodyStartIdx] && lines[bodyStartIdx].match(/\w+\s+\d{1,2},\s+\d{4}/)) bodyStartIdx++;
+
+  const articleBody = lines.slice(bodyStartIdx).join('\n\n');
+
+  // Fill form
+  document.getElementById('headline').value = headline;
+  if (datePublished) document.getElementById('datePublished').value = datePublished;
+  if (campaignName) document.getElementById('campaignName').value = campaignName;
+  if (campaignUrl) document.getElementById('campaignUrl').value = campaignUrl;
+  if (pressEmail) document.getElementById('pressEmail').value = pressEmail;
+  document.getElementById('articleBody').value = articleBody;
+
+  // Fill endorsement fields
+  if (endorserName) document.getElementById('endorserName').value = endorserName;
+  if (endorserRep) document.getElementById('endorserRep').value = endorserRep;
+  if (endorserRepTitle) document.getElementById('endorserRepTitle').value = endorserRepTitle;
+  if (endorserQuote) document.getElementById('endorserQuote').value = endorserQuote;
+  if (candidateQuote) document.getElementById('candidateQuote').value = candidateQuote;
+
+  // Clear paste area
+  document.getElementById('pasteArea').value = '';
+
+  // Scroll to top of form
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  showValidation('Parsed! Review and adjust fields as needed, then click Generate JSON-LD', 'success');
+}
+
+// Tab switching
+function switchTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  event.target.classList.add('active');
+
+  // Update tab content
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  document.getElementById(`tab-${tabName}`).classList.add('active');
+}
+
+// AI Optimization Analysis
+async function analyzeAIOptimization() {
+  const suggestions = [];
+  let score = 100; // Start with perfect score, deduct for issues
+
+  const headline = document.getElementById('headline').value.trim();
+  const campaignName = document.getElementById('campaignName').value.trim();
+  const articleBody = document.getElementById('articleBody').value.trim();
+  const endorserName = document.getElementById('endorserName').value.trim();
+  const endorserRep = document.getElementById('endorserRep').value.trim();
+  const endorserRepTitle = document.getElementById('endorserRepTitle').value.trim();
+
+  // Extract candidate name from campaign name
+  const candidateName = campaignName.replace(/ for .*/i, '').trim();
+
+  // Check 1: Candidate context in first sentence
+  if (articleBody) {
+    const firstSentence = articleBody.split('.')[0];
+    const hasTitle = /\b(candidate|representative|senator|congressman|congresswoman)\b/i.test(firstSentence);
+    const hasJurisdiction = /\b(district|state|county|city)\b/i.test(firstSentence);
+    const hasParty = /\b(democrat|republican|democratic|independent)\b/i.test(firstSentence);
+
+    if (!hasTitle || !hasJurisdiction) {
+      score -= 15;
+
+      // Extract the actual first sentence
+      const currentFirstSentence = firstSentence.trim();
+
+      // Generate improved version with context
+      let improved = currentFirstSentence;
+      if (candidateName && improved.includes(candidateName)) {
+        // Add context after the candidate name
+        improved = improved.replace(
+          candidateName,
+          `${candidateName}, Democratic candidate for [District/State]`
+        );
+      } else if (campaignName) {
+        improved = `${campaignName.replace(' for ', ', Democratic candidate for ')}, announced today...`;
+      }
+
+      suggestions.push({
+        category: 'Candidate Context',
+        title: 'Add electoral context in opening sentence',
+        current: currentFirstSentence,
+        improved: improved,
+        reason: 'AI systems perform better when political context (title, jurisdiction, party) is explicit in the first sentence.',
+        points: 15,
+        evidence: null
+      });
+    }
+  }
+
+  // Check 2: Organization name-drops without explanation
+  const orgPatterns = /\b([A-Z][A-Za-z]+(?: [A-Z][A-Za-z]+){1,5})\b/g;
+  const orgs = articleBody.match(orgPatterns) || [];
+  const uniqueOrgs = [...new Set(orgs)].filter(org =>
+    org.length > 10 &&
+    !candidateName.includes(org) &&
+    !/^(Today|This|That|Which|Could|Would|Should|October|November|December|January|February|March|April|May|June|July|August|September|IMMEDIATE|RELEASE)$/.test(org)
+  );
+
+  if (uniqueOrgs.length > 0) {
+    const exampleOrg = uniqueOrgs[0];
+
+    // Check if org has explanation nearby (within 50 chars)
+    const orgIndex = articleBody.indexOf(exampleOrg);
+    const contextWindow = articleBody.substring(orgIndex, orgIndex + exampleOrg.length + 150);
+    const hasExplanation = /,\s*(?:a|an|the)\s+(?:bipartisan|nonpartisan|coalition|organization|group|association)/i.test(contextWindow);
+
+    if (!hasExplanation) {
+      score -= 20;
+
+      // Find the sentence containing the org
+      const sentences = articleBody.split(/[.!?]+/);
+      const orgSentence = sentences.find(s => s.includes(exampleOrg))?.trim() || exampleOrg;
+
+      // Generate improved version
+      const improved = orgSentence.replace(
+        exampleOrg,
+        `${exampleOrg}, a [bipartisan/nonpartisan] organization of [number] [professionals/members] representing [constituency]`
+      );
+
+      suggestions.push({
+        category: 'Organization Context',
+        title: `"${exampleOrg}" mentioned without explanation`,
+        current: orgSentence,
+        improved: improved,
+        reason: 'LLMs cannot reliably identify all organizations. First-mention descriptions with member count and constituency improve AI understanding.',
+        points: 20,
+        evidence: `Search for: "${exampleOrg} official website about" or "${exampleOrg} membership"`
+      });
+    }
+  }
+
+  // Check 3: Policy positions without explicit stance
+  const issueCheckboxes = document.querySelectorAll('#issueCheckboxes input:checked');
+  const selectedIssues = Array.from(issueCheckboxes).map(cb => cb.value);
+
+  if (selectedIssues.length > 0) {
+    const hasExplicitPosition = /\b(supports?|opposes?|will|proposes?|plans? to)\b/i.test(articleBody);
+
+    if (!hasExplicitPosition) {
+      score -= 15;
+      suggestions.push({
+        category: 'Policy Position',
+        title: 'Issue areas detected but no explicit position stated',
+        prose: `Add explicit stance for ${selectedIssues[0]}. Example:\n\n"[Candidate] supports protecting and expanding [policy area], including [specific action]..."`,
+        reason: 'Schema.org "position" field and explicit stances enable better AI retrieval and accurate summaries.',
+        points: 15
+      });
+    }
+  }
+
+  // Check 4: Statistics without context
+  const stats = articleBody.match(/\b\d+(?:,\d+)*(?:\.\d+)?(?:%| percent| million| billion| thousand)?\b/g);
+  if (stats && stats.length > 0) {
+    const hasContext = /\bsince|from|compared to|more than|less than\b/i.test(articleBody);
+
+    if (!hasContext) {
+      score -= 10;
+      suggestions.push({
+        category: 'Statistical Context',
+        title: 'Numbers lack comparison or timeframe',
+        prose: `Add context to statistics. Example:\n\n"Over ${stats[0]} jobs created in [jurisdiction] since [year], compared to..."`,
+        reason: 'Specific numbers with temporal/comparative context are more retrievable and verifiable by AI systems.',
+        points: 10
+      });
+    }
+  }
+
+  // Check 5: Endorser without credentials
+  if (endorserRep && !endorserRepTitle) {
+    score -= 10;
+    suggestions.push({
+      category: 'Endorser Credentials',
+      title: 'Endorser title/credentials missing',
+      prose: `Add title in first mention of ${endorserRep}. Example:\n\n"${endorserRep}, [Title/Rank] and [credentials], said..."`,
+      reason: 'LLMs weight credentialed sources higher. Include title, rank, or expertise in first mention.',
+      points: 10
+    });
+  }
+
+  // Check 6: Opponent references without explanation
+  const hasOpponent = /\bopponent|republican|project 2025|extreme|maga\b/i.test(articleBody);
+  const hasOpponentExplanation = /\bwould|wants to|plans to|opposes\b/i.test(articleBody);
+
+  if (hasOpponent && !hasOpponentExplanation) {
+    score -= 10;
+    suggestions.push({
+      category: 'Comparative Context',
+      title: 'Opponent mentioned without explaining their position',
+      prose: 'When referencing opponent or opposing policy, explain what they support. Example:\n\n"Unlike [opponent], who supports [specific policy], [candidate] will..."',
+      reason: 'AI generates better summaries when both sides are explicitly stated, reducing hallucination risk.',
+      points: 10
+    });
+  }
+
+  // Check 7: Evidence-to-claim ratio
+  const claimCount = document.querySelectorAll('.claim-item').length;
+  const evidencedClaims = Array.from(document.querySelectorAll('.claim-item')).filter(item => {
+    const urlInput = item.querySelector('input[id^="evidenceUrl-"]');
+    return urlInput && urlInput.value.trim();
+  }).length;
+
+  if (claimCount > 0) {
+    const ratio = evidencedClaims / claimCount;
+    if (ratio < 0.5) {
+      score -= 20;
+      suggestions.push({
+        category: 'Evidence Density',
+        title: `Only ${evidencedClaims}/${claimCount} claims have evidence`,
+        prose: `AI systems are more confident with evidence URLs. Consider adding sources for:\n• [List unevidenced claims]`,
+        reason: 'Higher evidence-to-claim ratio increases AI confidence and reduces hallucination in generated summaries.',
+        points: 20
+      });
+    }
+  }
+
+  // Store suggestions globally for copy function
+  currentSuggestions = suggestions;
+
+  // Display results
+  displayAIOptimizationResults(score, suggestions);
+}
+
+function displayAIOptimizationResults(score, suggestions) {
+  const scoreEl = document.getElementById('aiScore');
+  const suggestionsEl = document.getElementById('aiSuggestions');
+
+  // Update score display
+  let scoreClass = 'high';
+  let scoreLabel = 'Excellent';
+  if (score < 75) {
+    scoreClass = 'medium';
+    scoreLabel = 'Good';
+  }
+  if (score < 60) {
+    scoreClass = 'low';
+    scoreLabel = 'Needs Work';
+  }
+
+  scoreEl.className = `ai-score ${scoreClass}`;
+  scoreEl.innerHTML = `<span>⚡ ${score}/100 (${scoreLabel})</span>`;
+
+  // Display suggestions
+  if (suggestions.length === 0) {
+    suggestionsEl.innerHTML = `
+      <div style="text-align:center;padding:40px">
+        <div style="font-size:48px;margin-bottom:16px">🎉</div>
+        <div style="color:#7dfca5;font-size:16px;font-weight:500;margin-bottom:8px">Perfect AI Optimization!</div>
+        <div class="small">AI chatbots and search will have all the context they need.</div>
+      </div>
+    `;
+  } else {
+    suggestionsEl.innerHTML = `
+      <div class="small" style="margin-bottom:12px;color:#9fb3c8">
+        <strong>${suggestions.length} suggestion${suggestions.length > 1 ? 's' : ''}</strong> to improve AI understanding:
+      </div>
+    ` + suggestions.map((s, i) => `
+      <div class="suggestion-item">
+        <div class="category">${s.category}</div>
+        <div class="title" onclick="toggleSuggestion(${i})">
+          <span style="flex:1">${s.title}</span>
+          <span style="color:#ffb86c">+${s.points} pts</span>
+          <span id="toggle-${i}">▶</span>
+        </div>
+        <div id="prose-${i}" class="prose">
+          ${s.current ? `
+            <div style="margin-bottom:12px">
+              <div style="color:#9fb3c8;font-size:11px;font-weight:500;margin-bottom:4px">CURRENT:</div>
+              <div style="background:#1a1f2e;padding:8px;border-radius:4px;border-left:3px solid #ff7b7b">
+                "${s.current}"
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="color:#7dfca5;font-size:11px;font-weight:500;margin-bottom:4px">IMPROVED:</div>
+              <div style="background:#1a1f2e;padding:8px;border-radius:4px;border-left:3px solid #7dfca5">
+                "${s.improved}"
+              </div>
+            </div>
+          ` : s.prose ? s.prose.replace(/\n/g, '<br>') : ''}
+          ${s.evidence ? `
+            <div style="margin-top:12px;padding:8px;background:#0e1a2b;border-radius:4px;border:1px dashed #2d5a8a">
+              <div style="color:#7dd3fc;font-size:11px;font-weight:500;margin-bottom:4px">📎 EVIDENCE NEEDED:</div>
+              <div style="font-size:12px">${s.evidence}</div>
+            </div>
+          ` : ''}
+          <button onclick="copyImprovedText(${i})" style="margin-top:8px;font-size:11px;padding:4px 8px">
+            📋 Copy Improved Text
+          </button>
+        </div>
+        <div class="reason">
+          💡 <strong>Why this matters:</strong> ${s.reason}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Store suggestions globally for copy function
+let currentSuggestions = [];
+
+function copyImprovedText(index) {
+  const suggestion = currentSuggestions[index];
+  if (suggestion && suggestion.improved) {
+    navigator.clipboard.writeText(suggestion.improved).then(() => {
+      // Show brief confirmation
+      const btn = event.target;
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.style.background = '#0d2818';
+      btn.style.color = '#7dfca5';
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2000);
+    });
+  }
+}
+
+function toggleSuggestion(index) {
+  const proseEl = document.getElementById(`prose-${index}`);
+  const toggleEl = document.getElementById(`toggle-${index}`);
+
+  if (proseEl.classList.contains('expanded')) {
+    proseEl.classList.remove('expanded');
+    toggleEl.textContent = '▶';
+  } else {
+    proseEl.classList.add('expanded');
+    toggleEl.textContent = '▼';
+  }
+}
+
+// ===== PROSE COHERENCE ANALYSIS =====
+// Inline version of prose_suggestion_engine.js
+
+const proseTemplates = {
+  "endorser": "Today, {{value}} announced its endorsement, recognizing the candidate's record of service.",
+  "location": "Speaking in {{value}}, the candidate emphasized commitment to the community.",
+  "Event": "The candidate will speak at {{value}}, with details available on the campaign website.",
+  "cpo:cta": "Learn more and take action at the campaign website.",
+  "cpo:claims": "According to cited sources, the campaign's plan is supported by current research.",
+  "headline": "{{value}}",
+  "datePublished": "The announcement was made on {{value}}.",
+  "cpo:subtype": "This {{value}} highlights the campaign's commitment."
+};
+
+function proseCovers(text, fieldKey, entityValue) {
+  const t = (text || "").toLowerCase();
+  if (!t) return false;
+
+  // Cue words for different fields
+  const cues = {
+    headline: ["announces", "statement", "today"],
+    datePublished: ["today", "on ", "dated"],
+    endorser: ["endorses", "endorsement", "backed by"],
+    location: [" in ", " at "],
+    "cpo:claims": ["according to", "cites", "research", "study"],
+    "cpo:cta": ["RSVP", "donate", "volunteer", "learn more", "visit"],
+    Event: ["event", "rally", "town hall", "will speak"]
+  };
+
+  const fieldCues = cues[fieldKey] || [];
+  const cuesFound = fieldCues.some(c => t.includes(c.toLowerCase()));
+
+  let literalFound = false;
+  if (typeof entityValue === "string") {
+    literalFound = t.includes(entityValue.toLowerCase());
+  }
+
+  return cuesFound || literalFound;
+}
+
+function analyzeProseCoherence() {
+  // Get current prose and JSON-LD
+  const articleBody = document.getElementById('articleBody').value.trim();
+  const headline = document.getElementById('headline').value.trim();
+  const datePublished = document.getElementById('datePublished').value.trim();
+  const endorserName = document.getElementById('endorserName').value.trim();
+
+  // Get generated JSON-LD if available
+  let jsonld = {};
+  try {
+    const jsonPreview = document.getElementById('jsonPreview').textContent;
+    jsonld = JSON.parse(jsonPreview);
+  } catch (e) {
+    // If no JSON generated yet, build minimal one from form
+    const subtypeCheckboxes = document.querySelectorAll('#subtypeCheckboxes input[type="checkbox"]:checked');
+    const subtypes = Array.from(subtypeCheckboxes).map(cb => cb.value);
+
+    jsonld = {
+      headline,
+      datePublished,
+      "cpo:subtype": subtypes.length > 1 ? subtypes : (subtypes[0] || ""),
+      endorser: endorserName ? { name: endorserName } : null
+    };
+  }
+
+  const gaps = [];
+
+  // Check required fields
+  if (headline && !proseCovers(articleBody, 'headline', headline)) {
+    gaps.push({
+      key: 'headline',
+      value: headline,
+      required: true,
+      suggestion: `The headline "${headline}" should be referenced in the prose.`
+    });
+  }
+
+  if (datePublished && !proseCovers(articleBody, 'datePublished', datePublished)) {
+    gaps.push({
+      key: 'datePublished',
+      value: datePublished,
+      required: true,
+      suggestion: `The date should be mentioned (e.g., "announced today" or specific date).`
+    });
+  }
+
+  // Check optional fields
+  if (endorserName && !proseCovers(articleBody, 'endorser', endorserName)) {
+    const template = proseTemplates['endorser'].replace('{{value}}', endorserName);
+    gaps.push({
+      key: 'endorser',
+      value: endorserName,
+      required: false,
+      suggestion: template
+    });
+  }
+
+  // Check for events from JSON-LD
+  if (jsonld.subjectOf && Array.isArray(jsonld.subjectOf)) {
+    const events = jsonld.subjectOf.filter(x => {
+      const types = Array.isArray(x["@type"]) ? x["@type"] : [x["@type"]];
+      return types.includes("Event");
+    });
+
+    events.forEach(event => {
+      if (event.name && !proseCovers(articleBody, 'Event', event.name)) {
+        const template = proseTemplates['Event'].replace('{{value}}', event.name);
+        gaps.push({
+          key: 'Event',
+          value: event.name,
+          required: false,
+          suggestion: template
+        });
+      }
+    });
+  }
+
+  // Check for CTA
+  if (jsonld["cpo:cta"] && jsonld["cpo:cta"].url && !proseCovers(articleBody, 'cpo:cta', '')) {
+    gaps.push({
+      key: 'cpo:cta',
+      value: 'Call to Action',
+      required: false,
+      suggestion: proseTemplates['cpo:cta']
+    });
+  }
+
+  // Display results
+  displayProseCoherenceResults(gaps);
+}
+
+function displayProseCoherenceResults(gaps) {
+  const statusEl = document.getElementById('coherenceStatus');
+  const countEl = document.getElementById('coherenceCount');
+  const suggestionsEl = document.getElementById('coherenceSuggestions');
+
+  // Update status
+  if (gaps.length === 0) {
+    statusEl.style.display = 'inline-flex';
+    statusEl.className = 'ai-score high';
+    countEl.textContent = '✓ Complete';
+
+    suggestionsEl.innerHTML = `
+      <div style="text-align:center;padding:40px">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <div style="color:#7dfca5;font-size:16px;font-weight:500;margin-bottom:8px">Prose-JSON Coherence Perfect!</div>
+        <div class="small">All JSON-LD data is reflected in the prose.</div>
+      </div>
+    `;
+  } else {
+    const requiredGaps = gaps.filter(g => g.required).length;
+    statusEl.style.display = 'inline-flex';
+    statusEl.className = requiredGaps > 0 ? 'ai-score low' : 'ai-score medium';
+    countEl.textContent = `${gaps.length} gap${gaps.length > 1 ? 's' : ''}`;
+
+    suggestionsEl.innerHTML = `
+      <div class="small" style="margin-bottom:12px;color:#9fb3c8">
+        <strong>${gaps.length} element${gaps.length > 1 ? 's' : ''}</strong> from JSON-LD not found in prose:
+      </div>
+    ` + gaps.map((g, i) => `
+      <div class="suggestion-item">
+        <div class="category">${g.required ? 'REQUIRED' : 'OPTIONAL'}</div>
+        <div class="title" onclick="toggleCoherenceSuggestion(${i})">
+          <span style="flex:1">${g.key}: ${g.value}</span>
+          <span id="coherence-toggle-${i}">▶</span>
+        </div>
+        <div id="coherence-prose-${i}" class="prose">
+          <div style="margin-bottom:12px">
+            <div style="color:#7dfca5;font-size:11px;font-weight:500;margin-bottom:4px">SUGGESTED PROSE:</div>
+            <div style="background:#1a1f2e;padding:8px;border-radius:4px;border-left:3px solid #7dfca5">
+              "${g.suggestion}"
+            </div>
+          </div>
+          <button onclick="insertProseAtCursor(${i})" style="margin-top:8px;font-size:11px;padding:4px 8px">
+            ➕ Insert at Cursor
+          </button>
+          <button onclick="copyCoherenceText(${i})" style="margin-top:8px;font-size:11px;padding:4px 8px;margin-left:4px">
+            📋 Copy Text
+          </button>
+        </div>
+        <div class="reason">
+          💡 <strong>Why this matters:</strong> JSON-LD metadata should be reflected in human-readable prose for both SEO and user clarity.
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Store coherence gaps globally
+let currentCoherenceGaps = [];
+
+function toggleCoherenceSuggestion(index) {
+  const proseEl = document.getElementById(`coherence-prose-${index}`);
+  const toggleEl = document.getElementById(`coherence-toggle-${index}`);
+
+  if (proseEl.classList.contains('expanded')) {
+    proseEl.classList.remove('expanded');
+    toggleEl.textContent = '▶';
+  } else {
+    proseEl.classList.add('expanded');
+    toggleEl.textContent = '▼';
+  }
+}
+
+function insertProseAtCursor(index) {
+  const gaps = currentCoherenceGaps;
+  if (!gaps || !gaps[index]) return;
+
+  const textarea = document.getElementById('articleBody');
+  const text = gaps[index].suggestion;
+
+  // Get cursor position
+  const startPos = textarea.selectionStart;
+  const endPos = textarea.selectionEnd;
+  const before = textarea.value.substring(0, startPos);
+  const after = textarea.value.substring(endPos);
+
+  // Insert text at cursor with spacing
+  const needsSpaceBefore = before && !before.endsWith('\n') && !before.endsWith(' ');
+  const needsSpaceAfter = after && !after.startsWith('\n') && !after.startsWith(' ');
+
+  const insertion = (needsSpaceBefore ? ' ' : '') + text + (needsSpaceAfter ? ' ' : '');
+  textarea.value = before + insertion + after;
+
+  // Move cursor to end of inserted text
+  const newPos = startPos + insertion.length;
+  textarea.selectionStart = newPos;
+  textarea.selectionEnd = newPos;
+  textarea.focus();
+
+  // Show confirmation
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = '✓ Inserted!';
+  btn.style.background = '#0d2818';
+  btn.style.color = '#7dfca5';
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 2000);
+}
+
+function copyCoherenceText(index) {
+  const gaps = currentCoherenceGaps;
+  if (!gaps || !gaps[index]) return;
+
+  navigator.clipboard.writeText(gaps[index].suggestion).then(() => {
+    const btn = event.target;
+    const original = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#0d2818';
+    btn.style.color = '#7dfca5';
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+
+// Update displayProseCoherenceResults to store gaps
+function displayProseCoherenceResults(gaps) {
+  currentCoherenceGaps = gaps; // Store for insert/copy functions
+
+  const statusEl = document.getElementById('coherenceStatus');
+  const countEl = document.getElementById('coherenceCount');
+  const suggestionsEl = document.getElementById('coherenceSuggestions');
+
+  // [Rest of function stays the same as above]
+  if (gaps.length === 0) {
+    statusEl.style.display = 'inline-flex';
+    statusEl.className = 'ai-score high';
+    countEl.textContent = '✓ Complete';
+
+    suggestionsEl.innerHTML = `
+      <div style="text-align:center;padding:40px">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <div style="color:#7dfca5;font-size:16px;font-weight:500;margin-bottom:8px">Prose-JSON Coherence Perfect!</div>
+        <div class="small">All JSON-LD data is reflected in the prose.</div>
+      </div>
+    `;
+  } else {
+    const requiredGaps = gaps.filter(g => g.required).length;
+    statusEl.style.display = 'inline-flex';
+    statusEl.className = requiredGaps > 0 ? 'ai-score low' : 'ai-score medium';
+    countEl.textContent = `${gaps.length} gap${gaps.length > 1 ? 's' : ''}`;
+
+    suggestionsEl.innerHTML = `
+      <div class="small" style="margin-bottom:12px;color:#9fb3c8">
+        <strong>${gaps.length} element${gaps.length > 1 ? 's' : ''}</strong> from JSON-LD not found in prose:
+      </div>
+    ` + gaps.map((g, i) => `
+      <div class="suggestion-item">
+        <div class="category">${g.required ? 'REQUIRED' : 'OPTIONAL'}</div>
+        <div class="title" onclick="toggleCoherenceSuggestion(${i})">
+          <span style="flex:1">${g.key}: ${g.value}</span>
+          <span id="coherence-toggle-${i}">▶</span>
+        </div>
+        <div id="coherence-prose-${i}" class="prose">
+          <div style="margin-bottom:12px">
+            <div style="color:#7dfca5;font-size:11px;font-weight:500;margin-bottom:4px">SUGGESTED PROSE:</div>
+            <div style="background:#1a1f2e;padding:8px;border-radius:4px;border-left:3px solid #7dfca5">
+              "${g.suggestion}"
+            </div>
+          </div>
+          <button onclick="insertProseAtCursor(${i})" style="margin-top:8px;font-size:11px;padding:4px 8px">
+            ➕ Insert at Cursor
+          </button>
+          <button onclick="copyCoherenceText(${i})" style="margin-top:8px;font-size:11px;padding:4px 8px;margin-left:4px">
+            📋 Copy Text
+          </button>
+        </div>
+        <div class="reason">
+          💡 <strong>Why this matters:</strong> JSON-LD metadata should be reflected in human-readable prose for both SEO and user clarity.
+        </div>
+      </div>
+    `).join('');
+  }
+}
+</script>
+</body></html>

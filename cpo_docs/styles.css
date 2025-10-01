@@ -1,0 +1,14 @@
+
+:root { --bg:#0b1220; --card:#111a2e; --muted:#9fb3c8; --accent:#7dd3fc; --text:#e6edf3; }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
+a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+.header{padding:32px 24px;border-bottom:1px solid #14213d}
+.container{padding:24px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--card);border:1px solid #182544;border-radius:16px;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.card h2{margin:0 0 8px 0;font-size:18px}
+.card p{color:var(--muted);margin:0 0 10px 0}
+.btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#0e2a42;border:1px solid #1f4366}
+.grid{display:grid;gap:10px}
+.small{font-size:12px;color:var(--muted)}
+.footer{padding:24px;color:var(--muted);text-align:center;border-top:1px solid #14213d}
+.badge{display:inline-block;border:1px dashed #2b3a55;border-radius:10px;padding:8px 10px;margin-right:8px}

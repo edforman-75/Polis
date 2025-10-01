@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prose Suggestion Editor — CPO</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{--bg:#0a1220;--panel:#111a2e;--line:#182544;--text:#e6edf3;--muted:#9fb3c8}
+body{background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+.flex{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+textarea{width:100%;min-height:200px;padding:10px;border-radius:10px;border:1px solid #1f4366;background:var(--bg);color:var(--text)}
+.controls{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+select,input[type=checkbox]{padding:8px;border-radius:8px;background:var(--bg);border:1px solid #1f4366;color:var(--text)}
+button{padding:8px 12px;border-radius:8px;background:#0e2a42;border:1px solid #1f4366;color:var(--text);cursor:pointer}
+button.secondary{background:#0a1220}
+.small{color:var(--muted)}
+.meter{height:10px;border-radius:999px;background:#0f1a2c;border:1px solid #1b3154;overflow:hidden}
+.meter>span{display:block;height:100%;width:0%;transition:width .3s}
+.meter.red>span{background:#b74a4a}
+.meter.amber>span{background:#b79a4a}
+.meter.green>span{background:#3aa76d}
+.badge{border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.table{width:100%;border-collapse:collapse;margin-top:10px}
+.table th,.table td{border:1px solid #1f4366;padding:6px 8px;font-size:14px}
+.table th{background:#0f1a2c;text-align:left}
+.ok{color:#3aa76d}.miss{color:#b74a4a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Prose Suggestion Editor</h1>
+  <p class="small">Strengthen prose to match JSON-LD. Weighted coverage + checklist shows where to add lines.</p>
+
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label class="small">Tone
+          <select id="style">
+            <option value="neutral">neutral</option>
+            <option value="campaign">campaign</option>
+            <option value="journalistic">journalistic</option>
+            <option value="concise">concise</option>
+            <option value="confident">confident</option>
+          </select>
+        </label>
+        <label class="small"><input type="checkbox" id="autoTone" checked> Auto tone by subtype</label>
+        <label class="small"><input type="checkbox" id="useLLM" checked> Use LLM proxy if available</label>
+      </div>
+      <div>
+        <div class="small">Markup–Prose Parity</div>
+        <div class="meter" id="meter"><span></span></div>
+        <div class="small"><span class="badge" id="parityLabel">Score: —</span> <span class="badge" id="familyLabel">Family: —</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btnSuggest">Suggest Prose</button>
+      <span id="status" class="small"></span>
+    </div>
+  </div>
+
+  <div class="flex">
+    <div class="card">
+      <h3>Prose Draft</h3>
+      <textarea id="prose">CLEVELAND — Jane Smith announced a weekend of action to mobilize volunteers across the district.</textarea>
+    </div>
+    <div class="card">
+      <h3>JSON-LD</h3>
+      <textarea id="jsonld">{
+  "@context": ["https://schema.org", "https://campaign-press-ontology.org/ns/v1#"],
+  "@type": ["PressRelease"],
+  "headline": "Weekend of Action: Canvass Launch 10 AM Saturday",
+  "datePublished": "2025-09-30",
+  "cpo:subtype": "GRA.VOL.CANV",
+  "author": {"@type":"Organization","name":"Jane Smith for Congress"},
+  "cpo:cta": {"@type":"cpo:CTA","url":"https://janesmithforcongress.org/volunteer/canvass"},
+  "subjectOf": [{"@type":"Event","name":"Canvass Launch","startDate":"2025-10-04T10:00:00-04:00"}]
+}</textarea>
+    </div>
+  </div>
+
+  <div class="card" id="checklistCard">
+    <h3>Parity Checklist</h3>
+    <table class="table" id="checklist">
+      <thead><tr><th>Field</th><th>Status</th><th>Weight</th><th>Contribution</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="suggestions" class="card"></div>
+
+  <div class="card">
+    <a href="./index.html">← Back to Portal Home</a>
+  </div>
+</div>
+
+<script type="module">
+import { generateSuggestions, scoreCoverage, subtypeFamily } from "../cpo_tools/prose_suggestion_engine.js";
+import { llmInvoke, llmFallback } from "../cpo_tools/llm_client.js";
+
+const $ = (s)=>document.querySelector(s);
+const status = $("#status");
+const out = $("#suggestions");
+const meter = $("#meter");
+const meterFill = meter.querySelector("span");
+const parityLabel = $("#parityLabel");
+const familyLabel = $("#familyLabel");
+const styleSel = $("#style");
+const autoTone = $("#autoTone");
+let weightsMap = null;
+
+function setMeter(score){
+  meter.classList.remove("red","amber","green");
+  let color = "red";
+  if (score >= 90) color = "green";
+  else if (score >= 60) color = "amber";
+  meter.classList.add(color);
+  meterFill.style.width = Math.max(0,Math.min(100,score)) + "%";
+  parityLabel.textContent = "Score: " + score + "/100";
+}
+
+function renderChecklist(report, totalWeight){
+  const tbody = document.querySelector("#checklist tbody");
+  tbody.innerHTML = "";
+  report.forEach(r=>{
+    const tr = document.createElement("tr");
+    const contribution = (r.covered ? (r.weight/totalWeight*100) : 0);
+    tr.innerHTML = `
+      <td>${r.key}</td>
+      <td class="${r.covered?'ok':'miss'}">${r.covered ? 'covered' : 'missing'}</td>
+      <td>${r.weight.toFixed(2)}</td>
+      <td>${contribution.toFixed(1)}%</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function insertAtPosition(text, where){
+  const area = $("#prose");
+  let val = area.value;
+  const p = val.split(/\n\n/);
+  const line = text.trim();
+
+  if (where === "headline"){
+    val = line + "\n\n" + val;
+  } else if (where === "lede"){
+    if (p.length > 0){ p.splice(1, 0, line); val = p.join("\n\n"); }
+    else { val = line + "\n\n" + val; }
+  } else if (where === "close"){
+    if (val.endsWith("\n\n")) val += line; else val = val + "\n\n" + line;
+  } else {
+    if (p.length > 1){ p.splice(2, 0, line); val = p.join("\n\n"); }
+    else { val = val + "\n\n" + line; }
+  }
+  area.value = val;
+}
+
+function renderSuggestions(items){
+  out.innerHTML = "";
+  if (!items.length){
+    out.innerHTML = "<p class='small'>No gaps detected or all covered in prose.</p>";
+    return;
+  }
+  items.forEach((r, idx) => {
+    const div = document.createElement("div");
+    div.className = "suggestion";
+    const list = (r.suggestions || []).map((s, i) => `
+      <div style="margin:6px 0">
+        <textarea id="sugg_${idx}_${i}">${s}</textarea>
+        <div class="controls">
+          <span class="small">Placement: <strong>${r.placement || "body"}</strong></span>
+          <button data-insert="${idx}_${i}" data-where="${r.placement||'body'}">Insert at ${r.placement||'body'}</button>
+          <button class="secondary" data-insert="${idx}_${i}" data-where="lede">Insert at lede</button>
+          <button class="secondary" data-insert="${idx}_${i}" data-where="body">Insert at body</button>
+          <button class="secondary" data-insert="${idx}_${i}" data-where="close">Insert at close</button>
+          <button data-copy="${idx}_${i}">Copy</button>
+        </div>
+      </div>`).join("");
+    div.innerHTML = `<h4>${r.missing_field} ${r.required ? "(required)" : ""}</h4>${list}`;
+    out.appendChild(div);
+  });
+
+  out.onclick = (ev)=>{
+    const t = ev.target;
+    if (t.matches("[data-insert]")){
+      const key = t.getAttribute("data-insert");
+      const where = t.getAttribute("data-where") || "body";
+      const ta = document.getElementById("sugg_" + key);
+      if (ta && ta.value.trim()){
+        insertAtPosition(ta.value.trim(), where);
+        status.textContent = "Inserted at " + where + ".";
+      }
+    } else if (t.matches("[data-copy]")){
+      const key = t.getAttribute("data-copy");
+      const ta = document.getElementById("sugg_" + key);
+      if (ta){
+        navigator.clipboard.writeText(ta.value).then(()=> status.textContent = "Copied to clipboard.");
+      }
+    }
+  };
+}
+
+async function llmFn({ system, prompt }){
+  if (!document.getElementById("useLLM").checked) return llmFallback({ prompt });
+  try {
+    return await llmInvoke({ system, prompt, temperature: 0.3, maxTokens: 120 });
+  } catch (e) {
+    console.warn("LLM proxy not available, using fallback:", e.message);
+    return llmFallback({ prompt });
+  }
+}
+
+function pickAutoTone(subtypes, map){
+  if(!subtypes||!subtypes.length) return null;
+  const fam = subtypeFamily(subtypes[0]);
+  return map && map[fam] ? map[fam] : null;
+}
+
+async function suggest(){
+  status.textContent = "Analyzing…";
+  try {
+    const prose = $("#prose").value;
+    const json = JSON.parse($("#jsonld").value);
+    const prompts = await (await fetch("../cpo_tools/prose_prompts/prompts.json")).json();
+    if (!weightsMap){
+      try { weightsMap = await (await fetch("../cpo_tools/lint/weights.json")).json(); }
+      catch(e){ console.warn("weights.json not found; using engine defaults"); }
+    }
+
+    // coverage: weighted
+    const cov = scoreCoverage({ proseText: prose, jsonld: json, weightsMap });
+    setMeter(cov.score);
+    familyLabel.textContent = "Family: " + (cov.family || "default");
+    renderChecklist(cov.report, cov.totalWeight);
+
+    // auto tone
+    const st = Array.isArray(json["cpo:subtype"])? json["cpo:subtype"] : (json["cpo:subtype"]?[json["cpo:subtype"]]:[]);
+    if (autoTone && autoTone.checked){
+      const auto = pickAutoTone(st, prompts.defaultToneBySubtypeFamily || {});
+      if (auto) document.getElementById("style").value = auto;
+    }
+
+    const results = await generateSuggestions({
+      proseText: prose,
+      jsonld: json,
+      prompts,
+      llmFn,
+      style: document.getElementById("style").value
+    });
+    renderSuggestions(results);
+    status.textContent = "Suggestions ready.";
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+  }
+}
+
+document.getElementById("btnSuggest").addEventListener("click", suggest);
+</script>
+</body></html>

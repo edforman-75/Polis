@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/cleveland-rally",
+  "headline": "Rally Saturday 3 PM at Mall B",
+  "datePublished": "2025-09-30",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "CLEVELAND \u2014 Jane Smith will headline a rally this Saturday at Mall B at 3:00 PM. Doors open 2:15 PM; ASL available; press check-in on Lakeside Ave.",
+  "subjectOf": [
+    {
+      "@type": "Event",
+      "name": "Cleveland Rally",
+      "startDate": "2025-10-04T15:00:00-04:00",
+      "location": {
+        "@type": "Place",
+        "name": "Mall B",
+        "address": "300 Lakeside Ave, Cleveland, OH"
+      }
+    }
+  ],
+  "cpo:releaseType": "announcement",
+  "cpo:subtype": "ANN.EVT.RALLY",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "rsvp",
+    "url": "https://janesmithforcongress.org/rsvp/cleveland-rally"
+  }
+}

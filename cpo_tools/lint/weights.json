@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "notes": "Weights sum to ~1.0 per family. Required/critical fields have higher weights. Editor normalizes to 100.",
+  "families": {
+    "ANN": {
+      "headline": 0.20,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "Event": 0.35,
+      "location": 0.10,
+      "cpo:cta": 0.10,
+      "endorser": 0.05
+    },
+    "POLICY": {
+      "headline": 0.15,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "cpo:claims": 0.35,
+      "location": 0.05,
+      "cpo:cta": 0.10,
+      "endorser": 0.05,
+      "Event": 0.10
+    },
+    "ENDORSEMENT": {
+      "headline": 0.15,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "endorser": 0.35,
+      "location": 0.10,
+      "cpo:cta": 0.10,
+      "cpo:claims": 0.10
+    },
+    "FUNDRAISING": {
+      "headline": 0.15,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "cpo:cta": 0.40,
+      "location": 0.10,
+      "cpo:claims": 0.10,
+      "endorser": 0.05
+    },
+    "CRISIS": {
+      "headline": 0.15,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "cpo:claims": 0.35,
+      "location": 0.10,
+      "Event": 0.10,
+      "cpo:cta": 0.10
+    },
+    "MOBILIZATION": {
+      "headline": 0.15,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "Event": 0.35,
+      "cpo:cta": 0.20,
+      "location": 0.10
+    },
+    "OPS": {
+      "headline": 0.20,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.15,
+      "location": 0.15,
+      "cpo:claims": 0.20,
+      "cpo:cta": 0.20
+    },
+    "NEWS": {
+      "headline": 0.25,
+      "datePublished": 0.15,
+      "cpo:subtype": 0.15,
+      "location": 0.15,
+      "cpo:claims": 0.15,
+      "cpo:cta": 0.15
+    },
+    "default": {
+      "headline": 0.20,
+      "datePublished": 0.10,
+      "cpo:subtype": 0.10,
+      "location": 0.10,
+      "cpo:claims": 0.25,
+      "cpo:cta": 0.15,
+      "endorser": 0.10
+    }
+  }
+}

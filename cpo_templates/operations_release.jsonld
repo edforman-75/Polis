@@ -1,0 +1,38 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/internal-poll-toplines",
+  "headline": "Internal Poll Toplines: Smith 49%, Doe 45% (MOE \u00b14%)",
+  "datePublished": "2025-09-30",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "CLEVELAND \u2014 Internal poll (n=612 LV, MOE \u00b14%, Sep 27\u201329) shows Smith 49%, Doe 45%. Toplines and methodology available on our research page.",
+  "cpo:releaseType": "operations",
+  "cpo:subtype": "OPS.POLL.INT",
+  "cpo:claims": [
+    {
+      "@type": "cpo:Claim",
+      "@id": "claim:poll-topline",
+      "cpo:claimText": "Smith 49%, Doe 45%, n=612, MOE \u00b14%, Sep 27\u201329.",
+      "cpo:evidence": [
+        {
+          "@type": "CreativeWork",
+          "url": "https://janesmithforcongress.org/research/toplines.pdf"
+        }
+      ]
+    }
+  ]
+}

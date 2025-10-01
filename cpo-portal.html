@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Press Office (CPO) Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0.5rem 0 0 0;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .portal-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .portal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-features {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+
+        .card-features li {
+            color: #555;
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .card-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+
+        .status-active {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-beta {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-planned {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .system-status {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .system-status h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .status-item {
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .status-online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏛️ Campaign Press Office Portal</h1>
+        <p>Integrated ML Training & Content Management System</p>
+    </div>
+
+    <div class="container">
+        <div class="portal-grid">
+            <!-- Decision Tree Training Interface -->
+            <div class="portal-card">
+                <span class="card-icon">🌳</span>
+                <h2 class="card-title">
+                    Decision Tree Training
+                    <span class="status-indicator status-active">Active</span>
+                </h2>
+                <p class="card-description">
+                    Professional ML training interface with hierarchical taxonomy for press release classification.
+                </p>
+                <ul class="card-features">
+                    <li>Question-driven classification workflow</li>
+                    <li>Hierarchical label system (ATT.OPP.PERS)</li>
+                    <li>Secondary attributes capture</li>
+                    <li>Breadcrumb navigation</li>
+                    <li>Training data export</li>
+                </ul>
+                <a href="/decision-tree-interface.html" class="btn">🎯 Start Training</a>
+                <a href="/api/decision-tree-training-data" class="btn btn-secondary">📊 View Data</a>
+            </div>
+
+            <!-- Original Training Interface -->
+            <div class="portal-card">
+                <span class="card-icon">📋</span>
+                <h2 class="card-title">
+                    Legacy Training Interface
+                    <span class="status-indicator status-active">Active</span>
+                </h2>
+                <p class="card-description">
+                    Original dropdown-based interface for basic content classification and training.
+                </p>
+                <ul class="card-features">
+                    <li>4-level dropdown taxonomy</li>
+                    <li>Content type filtering</li>
+                    <li>Basic classification workflow</li>
+                    <li>26 content subtypes</li>
+                </ul>
+                <a href="/training-interface.html" class="btn">📝 Legacy Interface</a>
+            </div>
+
+            <!-- CPO Document Management -->
+            <div class="portal-card">
+                <span class="card-icon">📚</span>
+                <h2 class="card-title">
+                    CPO Document Management
+                    <span class="status-indicator status-beta">Beta</span>
+                </h2>
+                <p class="card-description">
+                    Manage campaign press office documents, templates, and schema validation.
+                </p>
+                <ul class="card-features">
+                    <li>Document template library</li>
+                    <li>Schema validation tools</li>
+                    <li>Press release templates</li>
+                    <li>Content formatting tools</li>
+                </ul>
+                <button onclick="initializeCPO()" class="btn">🚀 Initialize CPO</button>
+                <a href="#" class="btn btn-secondary" onclick="showCPOBrowser()">📁 Browse Docs</a>
+            </div>
+
+            <!-- Integration Tools -->
+            <div class="portal-card">
+                <span class="card-icon">🔧</span>
+                <h2 class="card-title">
+                    Integration Tools
+                    <span class="status-indicator status-planned">Planned</span>
+                </h2>
+                <p class="card-description">
+                    Advanced tools for integrating CPO workflows with ML training and content validation.
+                </p>
+                <ul class="card-features">
+                    <li>Automated content validation</li>
+                    <li>Batch processing tools</li>
+                    <li>API integration endpoints</li>
+                    <li>Workflow automation</li>
+                </ul>
+                <button onclick="showIntegrationTools()" class="btn">⚙️ Tools</button>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="system-status">
+            <h3>🖥️ System Status</h3>
+            <div class="status-grid">
+                <div class="status-item status-online">
+                    <strong>Server</strong><br>
+                    <span id="server-status">●</span> Online
+                </div>
+                <div class="status-item status-online">
+                    <strong>Decision Tree API</strong><br>
+                    <span id="dt-api-status">●</span> Ready
+                </div>
+                <div class="status-item status-online">
+                    <strong>Training Data</strong><br>
+                    <span id="training-status">●</span> Available
+                </div>
+                <div class="status-item" id="cpo-status-item">
+                    <strong>CPO Integration</strong><br>
+                    <span id="cpo-status">○</span> Pending
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check system status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSystemStatus();
+        });
+
+        async function checkSystemStatus() {
+            try {
+                // Check decision tree API
+                const dtResponse = await fetch('/api/decision-tree-training-data');
+                if (dtResponse.ok) {
+                    document.getElementById('dt-api-status').textContent = '●';
+                }
+
+                // Check training data count
+                const data = await dtResponse.json();
+                if (data && data.length > 0) {
+                    document.getElementById('training-status').innerHTML = `● ${data.length} entries`;
+                }
+            } catch (error) {
+                console.log('API check failed:', error);
+                document.getElementById('dt-api-status').textContent = '○';
+                document.getElementById('dt-api-status').parentElement.className = 'status-item status-offline';
+            }
+        }
+
+        function initializeCPO() {
+            if (confirm('Initialize CPO framework with basic templates and schemas?')) {
+                fetch('/api/initialize-cpo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('CPO framework initialized successfully!');
+                        document.getElementById('cpo-status').textContent = '●';
+                        document.getElementById('cpo-status-item').className = 'status-item status-online';
+                    } else {
+                        alert('CPO initialization failed: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('CPO initialization error: ' + error.message);
+                });
+            }
+        }
+
+        function showCPOBrowser() {
+            window.open('/cpo-browser.html', '_blank');
+        }
+
+        function showIntegrationTools() {
+            alert('Integration tools coming soon!\n\nPlanned features:\n• Content validation pipeline\n• Batch classification tools\n• API workflow automation\n• Advanced analytics dashboard');
+        }
+    </script>
+</body>
+</html>
