@@ -92,27 +92,62 @@ class AssignmentsManager {
     }
 
     // Get assignments for Parser Reviewer dashboard
-    async getAssignmentsNeedingValidation() {
+    async getAssignmentsNeedingValidation(filters = {}) {
         return new Promise((resolve, reject) => {
-            const sql = `
+            let sql = `
                 SELECT
                     id, title, slug, status, priority,
-                    submitted_by, submitted_at,
+                    submitted_by, submitted_at, due_date, validation_due_date,
                     parsed_at, parser_confidence,
-                    validation_started_by, validation_started_at
+                    validation_started_by, validation_started_at,
+                    CASE
+                        WHEN validation_due_date < CURRENT_TIMESTAMP THEN 1
+                        WHEN due_date < CURRENT_TIMESTAMP THEN 1
+                        ELSE 0
+                    END as is_overdue
                 FROM assignments
                 WHERE status IN ('needs_validation', 'validating')
-                ORDER BY
+            `;
+
+            const params = [];
+
+            // Add filters
+            if (filters.priority) {
+                sql += ` AND priority = ?`;
+                params.push(filters.priority);
+            }
+
+            if (filters.submittedBy) {
+                sql += ` AND submitted_by LIKE ?`;
+                params.push(`%${filters.submittedBy}%`);
+            }
+
+            if (filters.overdueOnly) {
+                sql += ` AND (validation_due_date < CURRENT_TIMESTAMP OR due_date < CURRENT_TIMESTAMP)`;
+            }
+
+            // Add sorting
+            const sortBy = filters.sortBy || 'priority';
+            const sortOrder = filters.sortOrder || 'ASC';
+
+            if (sortBy === 'priority') {
+                sql += ` ORDER BY
                     CASE priority
                         WHEN 'urgent' THEN 1
                         WHEN 'high' THEN 2
                         WHEN 'normal' THEN 3
                         WHEN 'low' THEN 4
-                    END,
-                    submitted_at DESC
-            `;
+                    END ${sortOrder},
+                    submitted_at DESC`;
+            } else if (sortBy === 'submitted') {
+                sql += ` ORDER BY submitted_at ${sortOrder}`;
+            } else if (sortBy === 'due_date') {
+                sql += ` ORDER BY COALESCE(validation_due_date, due_date) ${sortOrder} NULLS LAST`;
+            } else if (sortBy === 'confidence') {
+                sql += ` ORDER BY parser_confidence ${sortOrder}`;
+            }
 
-            this.db.all(sql, [], (err, rows) => {
+            this.db.all(sql, params, (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows);
             });
@@ -120,29 +155,64 @@ class AssignmentsManager {
     }
 
     // Get assignments for Content Editor dashboard
-    async getAssignmentsNeedingEditing() {
+    async getAssignmentsNeedingEditing(filters = {}) {
         return new Promise((resolve, reject) => {
-            const sql = `
+            let sql = `
                 SELECT
                     id, title, slug, status, priority,
-                    submitted_by, submitted_at,
+                    submitted_by, submitted_at, due_date, editing_due_date,
                     validation_completed_by, validation_completed_at,
                     validation_corrections_count,
                     editing_started_by, editing_started_at,
-                    quality_score
+                    quality_score,
+                    CASE
+                        WHEN editing_due_date < CURRENT_TIMESTAMP THEN 1
+                        WHEN due_date < CURRENT_TIMESTAMP THEN 1
+                        ELSE 0
+                    END as is_overdue
                 FROM assignments
                 WHERE status IN ('validated', 'editing')
-                ORDER BY
+            `;
+
+            const params = [];
+
+            // Add filters
+            if (filters.priority) {
+                sql += ` AND priority = ?`;
+                params.push(filters.priority);
+            }
+
+            if (filters.validatedBy) {
+                sql += ` AND validation_completed_by LIKE ?`;
+                params.push(`%${filters.validatedBy}%`);
+            }
+
+            if (filters.overdueOnly) {
+                sql += ` AND (editing_due_date < CURRENT_TIMESTAMP OR due_date < CURRENT_TIMESTAMP)`;
+            }
+
+            // Add sorting
+            const sortBy = filters.sortBy || 'priority';
+            const sortOrder = filters.sortOrder || 'ASC';
+
+            if (sortBy === 'priority') {
+                sql += ` ORDER BY
                     CASE priority
                         WHEN 'urgent' THEN 1
                         WHEN 'high' THEN 2
                         WHEN 'normal' THEN 3
                         WHEN 'low' THEN 4
-                    END,
-                    validation_completed_at DESC
-            `;
+                    END ${sortOrder},
+                    validation_completed_at DESC`;
+            } else if (sortBy === 'validated_at') {
+                sql += ` ORDER BY validation_completed_at ${sortOrder}`;
+            } else if (sortBy === 'due_date') {
+                sql += ` ORDER BY COALESCE(editing_due_date, due_date) ${sortOrder} NULLS LAST`;
+            } else if (sortBy === 'corrections') {
+                sql += ` ORDER BY validation_corrections_count ${sortOrder}`;
+            }
 
-            this.db.all(sql, [], (err, rows) => {
+            this.db.all(sql, params, (err, rows) => {
                 if (err) reject(err);
                 else resolve(rows);
             });
@@ -214,6 +284,70 @@ class AssignmentsManager {
                     resolve();
                 }
             }.bind(this));
+        });
+    }
+
+    // Rate parser quality (after validation)
+    async rateParserQuality(assignmentId, userId, rating, feedback) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                UPDATE assignments
+                SET parser_quality_rating = ?,
+                    parser_quality_feedback = ?,
+                    parser_quality_rated_by = ?,
+                    parser_quality_rated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `;
+
+            this.db.run(sql, [rating, feedback, userId, assignmentId], (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log(`⭐ Parser rated ${rating}/5 for assignment ${assignmentId}`);
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // Get parser quality statistics
+    async getParserQualityStats() {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT
+                    AVG(parser_quality_rating) as avg_rating,
+                    COUNT(parser_quality_rating) as total_ratings,
+                    SUM(CASE WHEN parser_quality_rating >= 4 THEN 1 ELSE 0 END) as good_ratings,
+                    SUM(CASE WHEN parser_quality_rating <= 2 THEN 1 ELSE 0 END) as poor_ratings,
+                    AVG(validation_corrections_count) as avg_corrections
+                FROM assignments
+                WHERE parser_quality_rating IS NOT NULL
+            `;
+
+            this.db.get(sql, [], (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+    }
+
+    // Get recent parser ratings with feedback
+    async getRecentParserRatings(limit = 10) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT
+                    id, title, parser_quality_rating, parser_quality_feedback,
+                    parser_quality_rated_at, validation_corrections_count
+                FROM assignments
+                WHERE parser_quality_rating IS NOT NULL
+                ORDER BY parser_quality_rated_at DESC
+                LIMIT ?
+            `;
+
+            this.db.all(sql, [limit], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
         });
     }
 
@@ -423,10 +557,17 @@ class AssignmentsManager {
             const sql = `
                 SELECT
                     COUNT(*) as total,
+                    -- Parser Reviewer stats
                     SUM(CASE WHEN status IN ('needs_validation', 'validating') THEN 1 ELSE 0 END) as needs_validation,
-                    SUM(CASE WHEN status IN ('validated', 'editing') THEN 1 ELSE 0 END) as needs_editing,
+                    SUM(CASE WHEN status = 'validating' THEN 1 ELSE 0 END) as in_progress,
+                    -- Content Editor stats (only validated/editing, NOT anything before validation)
+                    SUM(CASE WHEN status = 'validated' THEN 1 ELSE 0 END) as needs_editing,
+                    SUM(CASE WHEN status = 'editing' THEN 1 ELSE 0 END) as editing_in_progress,
+                    SUM(CASE WHEN status = 'reviewed' AND DATE(editing_completed_at) = DATE('now') THEN 1 ELSE 0 END) as completed_today,
+                    -- Overall completion stats
                     SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed,
                     SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) as published,
+                    -- Performance metrics
                     AVG(validation_time_seconds) as avg_validation_time,
                     AVG(editing_time_seconds) as avg_editing_time,
                     AVG(quality_score) as avg_quality_score

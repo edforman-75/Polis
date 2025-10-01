@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Editor with Readability Analysis</title>
+    <link rel="stylesheet" href="/css/readability-panel.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100vh - 60px);
+        }
+
+        .editor-area {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .editor-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .field-group {
+            margin-bottom: 24px;
+        }
+
+        .field-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 15px;
+            font-family: inherit;
+        }
+
+        .field-textarea {
+            width: 100%;
+            min-height: 200px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 15px;
+            line-height: 1.6;
+            font-family: Georgia, serif;
+            resize: vertical;
+        }
+
+        .field-input:focus,
+        .field-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .sidebar {
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #e2e8f0;
+            background: white;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .sidebar-tab:hover {
+            background: #f1f5f9;
+        }
+
+        .sidebar-tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: white;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .tab-panel {
+            display: none;
+            height: 100%;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* Quality Tab Styles */
+        .quality-section {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .quality-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+
+        .quality-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .quality-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .quality-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pass {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-fail {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .quality-desc {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* AI Tab Styles */
+        .ai-section {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .ai-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+
+        .ai-suggestion-card {
+            background: #e0f2fe;
+            border: 1px solid #7dd3fc;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .ai-suggestion-text {
+            font-size: 13px;
+            color: #0369a1;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Press Release Editor</h1>
+        <div class="header-actions">
+            <button class="btn btn-secondary">💾 Save Draft</button>
+            <button class="btn btn-primary">🚀 Publish</button>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <!-- Editor Area -->
+        <div class="editor-area">
+            <div class="editor-content">
+                <div class="field-group">
+                    <label class="field-label">Headline</label>
+                    <input type="text"
+                           class="field-input"
+                           id="headline"
+                           placeholder="Enter headline..."
+                           value="Governor Smith Announces Historic Healthcare Expansion">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Dateline</label>
+                    <input type="text"
+                           class="field-input"
+                           id="dateline"
+                           placeholder="CITY, STATE - Date"
+                           value="BOSTON, MA - October 1, 2025">
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Lead Paragraph</label>
+                    <textarea class="field-textarea"
+                              id="lead-paragraph"
+                              placeholder="Enter opening paragraph...">Governor Sarah Smith today unveiled a comprehensive plan to expand healthcare access to 150,000 uninsured Massachusetts residents. The initiative will provide affordable coverage and prescription drug benefits to working families across the Commonwealth.</textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Body Text</label>
+                    <textarea class="field-textarea"
+                              id="body-text"
+                              placeholder="Enter body paragraphs..."
+                              style="min-height: 300px;">"Too many families in Massachusetts are forced to choose between paying rent and buying medicine," said Governor Smith at a press conference this morning. "That's wrong, and we can do better."
+
+The plan includes three major components: expanding Medicaid eligibility to families earning up to 200% of the federal poverty level, creating a prescription drug affordability board to negotiate lower prices, and establishing community health centers in underserved areas.
+
+Health policy experts estimate the program will cost $2.1 billion over five years, funded through a combination of federal matching funds and a small payroll tax on high earners. The initiative has broad support from healthcare advocates and business leaders.</textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Quote</label>
+                    <textarea class="field-textarea"
+                              id="quote"
+                              placeholder="Enter quote...">Healthcare is a right, not a privilege. This plan ensures that every family in Massachusetts can access quality medical care without going bankrupt.</textarea>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Closing Context</label>
+                    <textarea class="field-textarea"
+                              id="closing"
+                              placeholder="Enter closing paragraph...">The healthcare expansion bill will be introduced in the state legislature next week. Governor Smith said she expects bipartisan support for the measure, which has been endorsed by the Massachusetts Medical Society and the Chamber of Commerce.</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Tabs -->
+        <div class="sidebar">
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active" onclick="switchTab('readability')">
+                    📚 Readability
+                </div>
+                <div class="sidebar-tab" onclick="switchTab('quality')">
+                    ✅ Quality
+                </div>
+                <div class="sidebar-tab" onclick="switchTab('ai')">
+                    🤖 AI Assist
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Readability Tab Panel -->
+                <div id="readability-panel" class="tab-panel active">
+                    <!-- Readability component will be inserted here -->
+                </div>
+
+                <!-- Quality Tab Panel -->
+                <div id="quality-panel" class="tab-panel">
+                    <div class="quality-section">
+                        <h3>✅ Content Quality Checks</h3>
+
+                        <div class="quality-item">
+                            <div class="quality-header">
+                                <span>Headline Length</span>
+                                <span class="quality-badge badge-pass">PASS</span>
+                            </div>
+                            <div class="quality-desc">
+                                52 characters (recommended: 40-70)
+                            </div>
+                        </div>
+
+                        <div class="quality-item">
+                            <div class="quality-header">
+                                <span>Quote Quality</span>
+                                <span class="quality-badge badge-pass">PASS</span>
+                            </div>
+                            <div class="quality-desc">
+                                Strong, active voice. Clear message.
+                            </div>
+                        </div>
+
+                        <div class="quality-item">
+                            <div class="quality-header">
+                                <span>Paragraph Length</span>
+                                <span class="quality-badge badge-warning">REVIEW</span>
+                            </div>
+                            <div class="quality-desc">
+                                Some paragraphs exceed 100 words. Consider breaking up.
+                            </div>
+                        </div>
+
+                        <div class="quality-item">
+                            <div class="quality-header">
+                                <span>Run-on Sentences</span>
+                                <span class="quality-badge badge-pass">PASS</span>
+                            </div>
+                            <div class="quality-desc">
+                                No run-on sentences detected.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quality-section">
+                        <h3>📊 Statistics</h3>
+                        <div class="quality-desc" style="line-height: 1.8;">
+                            <strong>Words:</strong> 287<br>
+                            <strong>Sentences:</strong> 12<br>
+                            <strong>Paragraphs:</strong> 4<br>
+                            <strong>Avg Sentence:</strong> 23.9 words
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assist Tab Panel -->
+                <div id="ai-panel" class="tab-panel">
+                    <div class="ai-section">
+                        <h3>🤖 AI Suggestions</h3>
+
+                        <div class="ai-suggestion-card">
+                            <div class="ai-suggestion-text">
+                                Consider adding a specific statistic about current uninsured rates to strengthen the opening.
+                            </div>
+                            <button class="btn btn-small btn-primary">Apply</button>
+                            <button class="btn btn-small btn-secondary">Dismiss</button>
+                        </div>
+
+                        <div class="ai-suggestion-card">
+                            <div class="ai-suggestion-text">
+                                The quote is strong but could include a specific example or personal story for more impact.
+                            </div>
+                            <button class="btn btn-small btn-primary">Enhance</button>
+                            <button class="btn btn-small btn-secondary">Dismiss</button>
+                        </div>
+
+                        <div class="ai-suggestion-card">
+                            <div class="ai-suggestion-text">
+                                Consider adding information about implementation timeline to address "when" questions.
+                            </div>
+                            <button class="btn btn-small btn-primary">Add Context</button>
+                            <button class="btn btn-small btn-secondary">Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/readability-panel.js"></script>
+    <script>
+        let readabilityPanel;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-panel`).classList.add('active');
+
+            // If switching to readability, trigger analysis
+            if (tabName === 'readability' && readabilityPanel) {
+                analyzeAllContent();
+            }
+        }
+
+        // Collect all text from editor
+        function getAllEditorText() {
+            const headline = document.getElementById('headline').value;
+            const lead = document.getElementById('lead-paragraph').value;
+            const body = document.getElementById('body-text').value;
+            const quote = document.getElementById('quote').value;
+            const closing = document.getElementById('closing').value;
+
+            // Combine all text for analysis
+            return `${headline}\n\n${lead}\n\n${body}\n\n${quote}\n\n${closing}`;
+        }
+
+        // Analyze content
+        async function analyzeAllContent() {
+            const text = getAllEditorText();
+            if (text.trim() && readabilityPanel) {
+                await readabilityPanel.analyzeText(text);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize readability panel
+            readabilityPanel = new ReadabilityPanel({
+                container: document.getElementById('readability-panel'),
+                apiBase: '/api',
+                defaultTargetGrade: 8,
+                defaultContentType: 'press_release',
+                onAnalyze: analyzeAllContent
+            });
+
+            // Auto-analyze on load
+            setTimeout(analyzeAllContent, 500);
+
+            // Auto-analyze on any field change (debounced)
+            let analyzeTimeout;
+            const fields = ['headline', 'lead-paragraph', 'body-text', 'quote', 'closing'];
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function() {
+                        clearTimeout(analyzeTimeout);
+                        analyzeTimeout = setTimeout(analyzeAllContent, 1500);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

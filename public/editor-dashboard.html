@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parser Reviewer Dashboard</title>
+    <title>Content Editor Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -37,7 +37,7 @@
         }
 
         .role-badge {
-            background: #f59e0b;
+            background: #8b5cf6;
             color: white;
             padding: 6px 12px;
             border-radius: 6px;
@@ -182,18 +182,18 @@
             font-weight: 600;
         }
 
-        .status-needs_validation {
-            background: #fef3c7;
-            color: #92400e;
+        .status-validated {
+            background: #d1fae5;
+            color: #065f46;
         }
 
-        .status-validating {
+        .status-editing {
             background: #dbeafe;
             color: #1e40af;
         }
 
         .action-btn {
-            background: #059669;
+            background: #8b5cf6;
             color: white;
             border: none;
             padding: 6px 12px;
@@ -204,7 +204,7 @@
         }
 
         .action-btn:hover {
-            background: #047857;
+            background: #7c3aed;
         }
 
         .action-btn:disabled {
@@ -228,34 +228,49 @@
             font-size: 12px;
         }
 
-        .confidence-bar {
-            width: 100px;
+        .quality-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-bar {
+            width: 80px;
             height: 6px;
             background: #e2e8f0;
             border-radius: 3px;
             overflow: hidden;
         }
 
-        .confidence-fill {
+        .score-fill {
             height: 100%;
             background: #10b981;
             transition: width 0.3s;
         }
 
-        .confidence-fill.low {
+        .score-fill.low {
             background: #ef4444;
         }
 
-        .confidence-fill.medium {
+        .score-fill.medium {
             background: #f59e0b;
+        }
+
+        .corrections-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            background: #e0e7ff;
+            color: #3730a3;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>🔍 Parser Reviewer Dashboard</h1>
-            <span class="role-badge">Parser Reviewer</span>
+            <h1>✏️ Content Editor Dashboard</h1>
+            <span class="role-badge">Content Editor</span>
         </div>
     </div>
 
@@ -263,31 +278,31 @@
         <!-- Statistics -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Needs Validation</div>
-                <div class="stat-value" id="stat-needs-validation">-</div>
-                <div class="stat-change">Assignments waiting</div>
+                <div class="stat-label">Ready to Edit</div>
+                <div class="stat-value" id="stat-ready-to-edit">-</div>
+                <div class="stat-change">Validated assignments</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">In Progress</div>
                 <div class="stat-value" id="stat-in-progress">-</div>
-                <div class="stat-change">Currently validating</div>
+                <div class="stat-change">Currently editing</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Completed Today</div>
                 <div class="stat-value" id="stat-completed-today">-</div>
-                <div class="stat-change">Validated assignments</div>
+                <div class="stat-change">Reviewed assignments</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Avg. Time</div>
-                <div class="stat-value" id="stat-avg-time">-</div>
-                <div class="stat-change">Per validation</div>
+                <div class="stat-label">Avg. Quality</div>
+                <div class="stat-value" id="stat-avg-quality">-</div>
+                <div class="stat-change">Overall score</div>
             </div>
         </div>
 
         <!-- Queue -->
         <div class="queue-section">
             <div class="section-header">
-                <h2 class="section-title">Validation Queue</h2>
+                <h2 class="section-title">Editorial Queue</h2>
                 <button class="refresh-btn" onclick="loadQueue()">🔄 Refresh</button>
             </div>
 
@@ -300,8 +315,8 @@
                     <select id="sort-by" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
                         <option value="priority">Priority</option>
                         <option value="due_date">Due Date</option>
-                        <option value="submitted">Submitted Date</option>
-                        <option value="confidence">Parser Confidence</option>
+                        <option value="validated_at">Validated Date</option>
+                        <option value="corrections">Parser Corrections</option>
                     </select>
                 </div>
 
@@ -330,9 +345,9 @@
 
                 <div style="flex: 1; min-width: 200px;">
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px;">
-                        Submitted By
+                        Validated By
                     </label>
-                    <input type="text" id="submitted-by-filter" placeholder="Filter by name..." onchange="applyFilters()"
+                    <input type="text" id="validated-by-filter" placeholder="Filter by reviewer..." onchange="applyFilters()"
                            style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
                 </div>
 
@@ -349,17 +364,17 @@
                     <tr>
                         <th>Priority</th>
                         <th>Title</th>
-                        <th>Submitted By</th>
-                        <th>Submitted</th>
+                        <th>Validated By</th>
+                        <th>Validated</th>
                         <th>Due Date</th>
-                        <th>Parser Confidence</th>
+                        <th>Corrections</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="assignments-body">
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-state">
                                 <div class="empty-state-icon">⏳</div>
                                 <div>Loading assignments...</div>
@@ -372,7 +387,7 @@
     </div>
 
     <script>
-        let currentUser = 'reviewer-1'; // TODO: Get from auth system
+        let currentUser = 'editor-1'; // TODO: Get from auth system
 
         // Apply filters and reload queue
         function applyFilters() {
@@ -380,7 +395,7 @@
                 sortBy: document.getElementById('sort-by').value,
                 sortOrder: document.getElementById('sort-order').value,
                 priority: document.getElementById('priority-filter').value,
-                submittedBy: document.getElementById('submitted-by-filter').value.trim(),
+                validatedBy: document.getElementById('validated-by-filter').value.trim(),
                 overdueOnly: document.getElementById('overdue-only').checked
             };
 
@@ -398,7 +413,7 @@
                     }
                 });
 
-                const response = await fetch(`/api/assignments/needs-validation?${params}`);
+                const response = await fetch(`/api/assignments/needs-editing?${params}`);
                 const assignments = await response.json();
 
                 const tbody = document.getElementById('assignments-body');
@@ -409,7 +424,7 @@
                             <td colspan="8">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">✅</div>
-                                    <div>No assignments need validation</div>
+                                    <div>No assignments need editing</div>
                                     <div style="margin-top: 8px; font-size: 14px;">Check back later or refresh the page</div>
                                 </div>
                             </td>
@@ -427,25 +442,21 @@
                             <strong>${a.title}</strong><br>
                             <span class="time-ago">${a.slug}</span>
                         </td>
-                        <td>${a.submitted_by || 'Unknown'}</td>
-                        <td>${formatTimeAgo(a.submitted_at)}</td>
-                        <td>${formatDueDate(a.validation_due_date || a.due_date, a.is_overdue)}</td>
+                        <td>${a.validation_completed_by || 'Unknown'}</td>
+                        <td>${formatTimeAgo(a.validation_completed_at)}</td>
+                        <td>${formatDueDate(a.editing_due_date || a.due_date, a.is_overdue)}</td>
                         <td>
-                            <div class="confidence-bar">
-                                <div class="confidence-fill ${getConfidenceClass(a.parser_confidence)}"
-                                     style="width: ${(a.parser_confidence * 100).toFixed(0)}%"></div>
-                            </div>
-                            <span class="time-ago">${(a.parser_confidence * 100).toFixed(0)}%</span>
+                            <span class="corrections-badge">${a.validation_corrections_count || 0} corrections</span>
                         </td>
                         <td>
                             <span class="status-badge status-${a.status}">${formatStatus(a.status)}</span>
-                            ${a.validation_started_by && a.status === 'validating' ?
-                                `<br><span class="time-ago">by ${a.validation_started_by}</span>` : ''}
+                            ${a.editing_started_by && a.status === 'editing' ?
+                                `<br><span class="time-ago">by ${a.editing_started_by}</span>` : ''}
                         </td>
                         <td>
-                            ${a.status === 'needs_validation' ?
-                                `<button class="action-btn" onclick="startValidation(${a.id}, '${a.slug}')">Start Review</button>` :
-                                a.validation_started_by === currentUser ?
+                            ${a.status === 'validated' ?
+                                `<button class="action-btn" onclick="startEditing(${a.id}, '${a.slug}')">Start Editing</button>` :
+                                a.editing_started_by === currentUser ?
                                     `<button class="action-btn" onclick="openAssignment('${a.slug}')">Continue</button>` :
                                     `<button class="action-btn" disabled>In Use</button>`
                             }
@@ -473,39 +484,44 @@
                 const response = await fetch('/api/assignments/statistics');
                 const stats = await response.json();
 
-                document.getElementById('stat-needs-validation').textContent = stats.needs_validation || 0;
-                document.getElementById('stat-in-progress').textContent = stats.in_progress || 0;
+                // Ready to edit = validated status only (not needs_validation or validating)
+                document.getElementById('stat-ready-to-edit').textContent = stats.needs_editing || 0;
+                // In progress = currently being edited
+                document.getElementById('stat-in-progress').textContent = stats.editing_in_progress || 0;
+                // Completed today = reviewed status with today's date
                 document.getElementById('stat-completed-today').textContent = stats.completed_today || 0;
-                document.getElementById('stat-avg-time').textContent = formatTime(stats.avg_validation_time);
+
+                const avgQuality = stats.avg_quality_score ? stats.avg_quality_score.toFixed(1) : '-';
+                document.getElementById('stat-avg-quality').textContent = avgQuality;
             } catch (error) {
                 console.error('Error loading statistics:', error);
             }
         }
 
-        // Start validation
-        async function startValidation(assignmentId, slug) {
+        // Start editing
+        async function startEditing(assignmentId, slug) {
             try {
-                const response = await fetch(`/api/assignments/${assignmentId}/start-validation`, {
+                const response = await fetch(`/api/assignments/${assignmentId}/start-editing`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: currentUser })
                 });
 
                 if (response.ok) {
-                    window.location.href = `/press-release-canvas?assignment=${slug}&mode=validation`;
+                    window.location.href = `/press-release-canvas?assignment=${slug}&mode=editing`;
                 } else {
-                    alert('Failed to start validation. Assignment may be claimed by another user.');
+                    alert('Failed to start editing. Assignment may be claimed by another user.');
                     loadQueue();
                 }
             } catch (error) {
-                console.error('Error starting validation:', error);
-                alert('Error starting validation');
+                console.error('Error starting editing:', error);
+                alert('Error starting editing');
             }
         }
 
         // Open assignment
         function openAssignment(slug) {
-            window.location.href = `/press-release-canvas?assignment=${slug}&mode=validation`;
+            window.location.href = `/press-release-canvas?assignment=${slug}&mode=editing`;
         }
 
         // Utility functions
@@ -524,12 +540,6 @@
             return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
-        function formatTime(seconds) {
-            if (!seconds) return '-';
-            if (seconds < 60) return `${Math.round(seconds)}s`;
-            return `${Math.round(seconds / 60)}m`;
-        }
-
         function formatDueDate(dueDate, isOverdue) {
             if (!dueDate) {
                 return '<span class="time-ago">No deadline</span>';
@@ -546,9 +556,9 @@
             return `<span style="color: ${color}; font-weight: ${weight};">${relativeTime}</span>`;
         }
 
-        function getConfidenceClass(confidence) {
-            if (confidence < 0.5) return 'low';
-            if (confidence < 0.75) return 'medium';
+        function getScoreClass(score) {
+            if (score < 3) return 'low';
+            if (score < 4) return 'medium';
             return '';
         }
 

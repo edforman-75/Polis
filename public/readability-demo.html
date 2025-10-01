@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Readability Analysis Demo</title>
+    <link rel="stylesheet" href="/css/readability-panel.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: calc(100vh - 72px);
+        }
+
+        .editor-section {
+            background: white;
+            padding: 24px;
+            overflow-y: auto;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .editor-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+            font-family: Georgia, serif;
+            resize: vertical;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .sample-texts {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .sample-texts h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .sample-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn-sample {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sample:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .readability-section {
+            overflow-y: auto;
+        }
+
+        .info-banner {
+            background: #e0f2fe;
+            border: 1px solid #7dd3fc;
+            padding: 12px 16px;
+            margin: 16px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #0369a1;
+        }
+
+        .info-banner strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .readability-section {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📚 Readability Analysis Demo</h1>
+        <p>Test the grade-level analyzer with your campaign content</p>
+    </div>
+
+    <div class="main-container">
+        <div class="editor-section">
+            <div class="editor-label">Enter or paste your text:</div>
+            <textarea id="text-input" class="editor-textarea" placeholder="Enter text to analyze...">BOSTON, MA - State Senator John Smith announced his plan to expand healthcare access today. The plan will help working families afford coverage and prescription drugs.
+
+"Too many families choose between paying rent and buying medicine," said Smith. "That's wrong. We can do better."
+
+Smith's plan expands Medicaid to cover 150,000 more people. It also caps prescription drug costs at $50 per month for seniors.</textarea>
+
+            <div class="sample-texts">
+                <h3>📝 Load Sample Text:</h3>
+                <div class="sample-buttons">
+                    <button class="btn-sample" onclick="loadSample('simple')">Simple Press Release</button>
+                    <button class="btn-sample" onclick="loadSample('complex')">Complex Press Release</button>
+                    <button class="btn-sample" onclick="loadSample('social')">Social Media Post</button>
+                    <button class="btn-sample" onclick="loadSample('policy')">Policy Document</button>
+                </div>
+            </div>
+
+            <div class="info-banner">
+                <strong>💡 How it works:</strong>
+                Edit the text on the left and click "Analyze Readability" to see grade-level scores,
+                statistics, and specific suggestions to hit your target reading level.
+            </div>
+        </div>
+
+        <div class="readability-section">
+            <div id="readability-panel-container"></div>
+        </div>
+    </div>
+
+    <script src="/js/readability-panel.js"></script>
+    <script>
+        // Sample texts
+        const sampleTexts = {
+            simple: `We need better healthcare. Families struggle to afford care. I will expand Medicaid. This will help 50,000 people access doctors and hospitals. Every person deserves quality care.`,
+
+            complex: `The comprehensive healthcare reform initiative encompasses multifaceted provisions designed to facilitate enhanced accessibility to medical services for economically disadvantaged populations. Through implementation of expanded Medicaid eligibility criteria and establishment of community-based healthcare facilities, we endeavor to ameliorate the systemic inadequacies that perpetuate healthcare disparities.`,
+
+            social: `Healthcare is a right! Join us Saturday at City Hall. We're fighting for families who can't afford care. Together, we can win! #HealthcareForAll`,
+
+            policy: `This legislation establishes a framework for healthcare expansion through three mechanisms: enhanced federal matching rates for state Medicaid programs, creation of health insurance cooperatives in underserved markets, and implementation of cost-sharing subsidies for individuals earning between 138% and 400% of the federal poverty level. The projected fiscal impact over ten years approximates $847 billion, offset partially through revenue provisions including adjustments to the Medicare payroll tax threshold.`
+        };
+
+        // Initialize readability panel
+        let readabilityPanel;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            readabilityPanel = new ReadabilityPanel({
+                container: document.getElementById('readability-panel-container'),
+                apiBase: '/api',
+                defaultTargetGrade: 8,
+                defaultContentType: 'press_release',
+                onAnalyze: async function() {
+                    const text = document.getElementById('text-input').value;
+                    await readabilityPanel.analyzeText(text);
+                }
+            });
+
+            // Auto-analyze on load with default text
+            setTimeout(() => {
+                const text = document.getElementById('text-input').value;
+                if (text.trim()) {
+                    readabilityPanel.analyzeText(text);
+                }
+            }, 500);
+
+            // Auto-analyze on text change (debounced)
+            let analyzeTimeout;
+            document.getElementById('text-input').addEventListener('input', function() {
+                clearTimeout(analyzeTimeout);
+                analyzeTimeout = setTimeout(() => {
+                    const text = this.value;
+                    if (text.trim()) {
+                        readabilityPanel.analyzeText(text);
+                    }
+                }, 1000);
+            });
+        });
+
+        // Load sample text
+        function loadSample(type) {
+            const textarea = document.getElementById('text-input');
+            textarea.value = sampleTexts[type];
+
+            // Auto-analyze the sample
+            readabilityPanel.analyzeText(sampleTexts[type]);
+
+            // Update content type based on sample
+            if (type === 'simple' || type === 'complex') {
+                readabilityPanel.updateContentType('press_release');
+            } else if (type === 'social') {
+                readabilityPanel.updateContentType('social_media');
+            } else if (type === 'policy') {
+                readabilityPanel.updateContentType('policy_document');
+            }
+        }
+    </script>
+</body>
+</html>

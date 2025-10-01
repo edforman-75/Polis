@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+        }
+
+        .header-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="url"],
+        select,
+        textarea {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            text-transform: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .save-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .save-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #86efac;
+            color: #065f46;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>⚙️ Campaign Settings</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="alert-container"></div>
+
+        <form id="settings-form">
+            <!-- Candidate Information -->
+            <div class="settings-card">
+                <h2 class="card-title">Candidate Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="candidate-name">Full Name *</label>
+                        <input type="text" id="candidate-name" required>
+                        <span class="hint">e.g., Jane Smith</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="candidate-title">Current Title</label>
+                        <input type="text" id="candidate-title">
+                        <span class="hint">e.g., State Senator, Former Governor</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="candidate-pronouns">Pronouns</label>
+                        <select id="candidate-pronouns">
+                            <option value="">Select...</option>
+                            <option value="she/her">she/her</option>
+                            <option value="he/him">he/him</option>
+                            <option value="they/them">they/them</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Organization -->
+            <div class="settings-card">
+                <h2 class="card-title">Campaign Organization</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="organization-name">Campaign Name *</label>
+                        <input type="text" id="organization-name" required>
+                        <span class="hint">e.g., Smith for Senate</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="campaign-website">Campaign Website</label>
+                        <input type="url" id="campaign-website">
+                        <span class="hint">e.g., https://smithforsenate.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Race Information -->
+            <div class="settings-card">
+                <h2 class="card-title">Race Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="office-sought">Office Sought</label>
+                        <input type="text" id="office-sought">
+                        <span class="hint">e.g., U.S. Senate, Governor of California</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="district">District/State</label>
+                        <input type="text" id="district">
+                        <span class="hint">e.g., California, District 5</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="party-affiliation">Party Affiliation</label>
+                        <select id="party-affiliation">
+                            <option value="">Select...</option>
+                            <option value="Democratic">Democratic</option>
+                            <option value="Republican">Republican</option>
+                            <option value="Independent">Independent</option>
+                            <option value="Green">Green</option>
+                            <option value="Libertarian">Libertarian</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="election-date">Election Date</label>
+                        <input type="date" id="election-date">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="campaign-tagline">Campaign Tagline</label>
+                        <input type="text" id="campaign-tagline">
+                        <span class="hint">e.g., "A Voice for Working Families"</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Press Contact -->
+            <div class="settings-card">
+                <h2 class="card-title">Press Contact Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="press-contact-name">Contact Name</label>
+                        <input type="text" id="press-contact-name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="press-contact-title">Contact Title</label>
+                        <input type="text" id="press-contact-title">
+                        <span class="hint">e.g., Communications Director</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="press-contact-email">Contact Email</label>
+                        <input type="email" id="press-contact-email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="press-contact-phone">Contact Phone</label>
+                        <input type="text" id="press-contact-phone">
+                        <span class="hint">e.g., (555) 123-4567</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boilerplate -->
+            <div class="settings-card">
+                <h2 class="card-title">Boilerplate Text</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="boilerplate-short">Short Bio (100 words)</label>
+                        <textarea id="boilerplate-short" rows="4"></textarea>
+                        <span class="hint">Used at the end of shorter press releases</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="boilerplate-long">Full Bio (200-300 words)</label>
+                        <textarea id="boilerplate-long" rows="6"></textarea>
+                        <span class="hint">Used at the end of major announcements</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voice & Tone -->
+            <div class="settings-card">
+                <h2 class="card-title">Voice & Tone Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="voice-profile">Voice Profile</label>
+                        <select id="voice-profile">
+                            <option value="professional">Professional</option>
+                            <option value="conversational">Conversational</option>
+                            <option value="bold">Bold & Direct</option>
+                            <option value="inspiring">Inspiring</option>
+                            <option value="technical">Technical/Policy-Focused</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preferred-quote-style">Quote Style</label>
+                        <select id="preferred-quote-style">
+                            <option value="conversational">Conversational</option>
+                            <option value="formal">Formal</option>
+                            <option value="bold">Bold & Punchy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="tone-guidelines">Tone Guidelines</label>
+                        <textarea id="tone-guidelines" rows="3"></textarea>
+                        <span class="hint">Specific guidance for AI on how to write in your voice</span>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="ap-style-strict" checked>
+                            <label for="ap-style-strict">Enforce AP Style strictly</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parser Settings -->
+            <div class="settings-card">
+                <h2 class="card-title">Parser Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="auto-extract-context">
+                            <label for="auto-extract-context">Auto-extract context from each press release (slower, but validates settings)</label>
+                        </div>
+                        <span class="hint" style="margin-left: 28px;">Usually leave this off - context is set here once</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="save-button">💾 Save Campaign Settings</button>
+        </form>
+    </div>
+
+    <script>
+        // Load current settings
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/campaign/settings');
+                const settings = await response.json();
+
+                if (settings && settings.candidate_name !== 'Not Configured') {
+                    populateForm(settings);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Populate form with settings
+        function populateForm(settings) {
+            document.getElementById('candidate-name').value = settings.candidate_name || '';
+            document.getElementById('candidate-title').value = settings.candidate_title || '';
+            document.getElementById('candidate-pronouns').value = settings.candidate_pronouns || '';
+            document.getElementById('organization-name').value = settings.organization_name || '';
+            document.getElementById('campaign-website').value = settings.campaign_website || '';
+            document.getElementById('office-sought').value = settings.office_sought || '';
+            document.getElementById('district').value = settings.district || '';
+            document.getElementById('party-affiliation').value = settings.party_affiliation || '';
+            document.getElementById('election-date').value = settings.election_date || '';
+            document.getElementById('campaign-tagline').value = settings.campaign_tagline || '';
+            document.getElementById('press-contact-name').value = settings.press_contact_name || '';
+            document.getElementById('press-contact-title').value = settings.press_contact_title || '';
+            document.getElementById('press-contact-email').value = settings.press_contact_email || '';
+            document.getElementById('press-contact-phone').value = settings.press_contact_phone || '';
+            document.getElementById('boilerplate-short').value = settings.boilerplate_short || '';
+            document.getElementById('boilerplate-long').value = settings.boilerplate_long || '';
+            document.getElementById('voice-profile').value = settings.voice_profile || 'professional';
+            document.getElementById('preferred-quote-style').value = settings.preferred_quote_style || 'conversational';
+            document.getElementById('tone-guidelines').value = settings.tone_guidelines || '';
+            document.getElementById('ap-style-strict').checked = settings.ap_style_strict !== 0;
+            document.getElementById('auto-extract-context').checked = settings.auto_extract_context === 1;
+        }
+
+        // Save settings
+        async function saveSettings(e) {
+            e.preventDefault();
+
+            const settings = {
+                candidate_name: document.getElementById('candidate-name').value,
+                candidate_title: document.getElementById('candidate-title').value,
+                candidate_pronouns: document.getElementById('candidate-pronouns').value,
+                organization_name: document.getElementById('organization-name').value,
+                campaign_website: document.getElementById('campaign-website').value,
+                office_sought: document.getElementById('office-sought').value,
+                district: document.getElementById('district').value,
+                party_affiliation: document.getElementById('party-affiliation').value,
+                election_date: document.getElementById('election-date').value,
+                campaign_tagline: document.getElementById('campaign-tagline').value,
+                press_contact_name: document.getElementById('press-contact-name').value,
+                press_contact_title: document.getElementById('press-contact-title').value,
+                press_contact_email: document.getElementById('press-contact-email').value,
+                press_contact_phone: document.getElementById('press-contact-phone').value,
+                boilerplate_short: document.getElementById('boilerplate-short').value,
+                boilerplate_long: document.getElementById('boilerplate-long').value,
+                voice_profile: document.getElementById('voice-profile').value,
+                preferred_quote_style: document.getElementById('preferred-quote-style').value,
+                tone_guidelines: document.getElementById('tone-guidelines').value,
+                ap_style_strict: document.getElementById('ap-style-strict').checked ? 1 : 0,
+                auto_extract_context: document.getElementById('auto-extract-context').checked ? 1 : 0,
+                last_modified_by: 'user' // TODO: Get from auth
+            };
+
+            try {
+                const response = await fetch('/api/campaign/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+
+                if (response.ok) {
+                    showAlert('success', '✅ Campaign settings saved successfully!');
+                } else {
+                    showAlert('warning', '⚠️ Failed to save settings. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('warning', '⚠️ Error saving settings. Please try again.');
+            }
+        }
+
+        // Show alert message
+        function showAlert(type, message) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+
+            // Scroll to top to show alert
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        document.getElementById('settings-form').addEventListener('submit', saveSettings);
+        loadSettings();
+    </script>
+</body>
+</html>

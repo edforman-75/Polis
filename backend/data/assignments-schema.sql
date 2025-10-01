@@ -15,12 +15,21 @@ CREATE TABLE IF NOT EXISTS assignments (
     original_text TEXT NOT NULL,            -- Raw text from writer
     submitted_by TEXT,                      -- Writer name/email
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    due_date DATETIME,                      -- When this assignment is due
+    validation_due_date DATETIME,           -- When validation should be complete by
+    editing_due_date DATETIME,              -- When editing should be complete by
 
     -- Parser stage
     parsed_at DATETIME,
     parsed_by TEXT,                         -- System or user who ran parser
     parsed_fields JSON,                     -- Extracted fields as JSON
     parser_confidence REAL,                 -- Overall confidence score
+
+    -- Parser quality rating (after validation)
+    parser_quality_rating INTEGER,          -- 1-5 stars rated by validator
+    parser_quality_feedback TEXT,           -- Why rating was given
+    parser_quality_rated_by TEXT,
+    parser_quality_rated_at DATETIME
 
     -- Validation stage (Parser Reviewer)
     validation_started_at DATETIME,
@@ -161,6 +170,10 @@ CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
 CREATE INDEX IF NOT EXISTS idx_assignments_validation_by ON assignments(validation_completed_by);
 CREATE INDEX IF NOT EXISTS idx_assignments_editing_by ON assignments(editing_completed_by);
 CREATE INDEX IF NOT EXISTS idx_assignments_created_at ON assignments(created_at);
+CREATE INDEX IF NOT EXISTS idx_assignments_submitted_at ON assignments(submitted_at);
+CREATE INDEX IF NOT EXISTS idx_assignments_due_date ON assignments(due_date);
+CREATE INDEX IF NOT EXISTS idx_assignments_validation_due ON assignments(validation_due_date);
+CREATE INDEX IF NOT EXISTS idx_assignments_editing_due ON assignments(editing_due_date);
 CREATE INDEX IF NOT EXISTS idx_assignment_history_assignment ON assignment_history(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_versions_assignment ON assignment_versions(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_parser_feedback_assignment ON parser_feedback(assignment_id);

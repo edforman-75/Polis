@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parser Validation Demo</title>
+    <link rel="stylesheet" href="/css/validation-panel.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .demo-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+        }
+
+        .demo-header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #1e293b;
+        }
+
+        .demo-info {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            padding: 12px 16px;
+            margin: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>🔍 Parser Validation Interface - Side-by-Side Demo</h1>
+    </div>
+
+    <div class="demo-info">
+        <strong>Demo Instructions:</strong> This shows the validation interface. Left pane = original text (searchable). Right pane = parsed fields with validation controls. Mark each field as correct, edit it, move it to another field, or delete it.
+    </div>
+
+    <div id="validation-container"></div>
+
+    <script type="module">
+        import { ValidationPanel } from './js/validation-panel.js';
+
+        // Sample original text
+        const originalText = `FOR IMMEDIATE RELEASE
+
+Acme Corporation Launches Revolutionary AI-Powered Widget
+
+SAN FRANCISCO, CA - March 15, 2024 - Acme Corporation, a leading innovator in widget technology, today announced the launch of WidgetAI™, the world's first artificial intelligence-powered widget designed to revolutionize the manufacturing industry.
+
+"This is a game-changer for our industry," said Jane Smith, CEO of Acme Corporation. "WidgetAI™ combines decades of widget expertise with cutting-edge machine learning to deliver unprecedented efficiency and accuracy."
+
+The new product features include:
+- Real-time performance monitoring
+- Predictive maintenance algorithms
+- 99.9% uptime guarantee
+- Seamless integration with existing systems
+
+WidgetAI™ will be available for purchase starting April 1, 2024, with pricing starting at $9,999 for the base model. Enterprise customers can contact Acme's sales team for customized solutions.
+
+About Acme Corporation
+Founded in 1985, Acme Corporation has been at the forefront of widget innovation for nearly four decades. With over 500 employees worldwide, Acme serves customers in 45 countries across manufacturing, healthcare, and technology sectors.
+
+For more information, contact:
+John Doe
+Director of Public Relations
+Acme Corporation
+press@acme.com
+(555) 123-4567
+
+###`;
+
+        // Sample parsed fields (simulating parser output)
+        const parsedFields = {
+            headline: "Acme Corporation Launches Revolutionary AI-Powered Widget",
+            location: "SAN FRANCISCO, CA",
+            date: "March 15, 2024",
+            organization: "Acme Corporation",
+            lead_paragraph: "Acme Corporation, a leading innovator in widget technology, today announced the launch of WidgetAI™, the world's first artificial intelligence-powered widget designed to revolutionize the manufacturing industry.",
+            quote_1: "This is a game-changer for our industry. WidgetAI™ combines decades of widget expertise with cutting-edge machine learning to deliver unprecedented efficiency and accuracy.",
+            quote_1_attribution: "Jane Smith, CEO of Acme Corporation",
+            body_text: "The new product features include:\\n- Real-time performance monitoring\\n- Predictive maintenance algorithms\\n- 99.9% uptime guarantee\\n- Seamless integration with existing systems\\n\\nWidgetAI™ will be available for purchase starting April 1, 2024, with pricing starting at $9,999 for the base model.",
+            boilerplate: "Founded in 1985, Acme Corporation has been at the forefront of widget innovation for nearly four decades. With over 500 employees worldwide, Acme serves customers in 45 countries across manufacturing, healthcare, and technology sectors.",
+            contact_name: "John Doe",
+            contact_title: "Director of Public Relations",
+            contact_organization: "Acme Corporation",
+            contact_email: "press@acme.com",
+            contact_phone: "(555) 123-4567"
+        };
+
+        // Confidence scores (simulating parser confidence)
+        const confidenceScores = {
+            headline: 0.98,
+            location: 0.95,
+            date: 0.99,
+            organization: 0.97,
+            lead_paragraph: 0.92,
+            quote_1: 0.88,
+            quote_1_attribution: 0.85,
+            body_text: 0.75,
+            boilerplate: 0.91,
+            contact_name: 0.94,
+            contact_title: 0.89,
+            contact_organization: 0.96,
+            contact_email: 0.99,
+            contact_phone: 0.97
+        };
+
+        // Initialize validation panel
+        const validationPanel = new ValidationPanel();
+        window.validationPanel = validationPanel; // For dialog callbacks
+
+        validationPanel.initialize(originalText, parsedFields, confidenceScores);
+
+        // Listen for validation complete event
+        document.addEventListener('validation-complete', (e) => {
+            console.log('Validation complete!', e.detail);
+            alert(`Validation complete! ${e.detail.correctionsCount} corrections made. In a real app, this would proceed to the editing stage.`);
+        });
+    </script>
+</body>
+</html>

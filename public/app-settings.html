@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 0 24px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: #1e293b;
+            background: #f8fafc;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Settings Cards */
+        .settings-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        /* Setting Item */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .setting-description {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .setting-control {
+            flex-shrink: 0;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Number Input */
+        .number-input {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Select */
+        .select-input {
+            min-width: 150px;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        /* Category Toggle */
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-header:hover {
+            background: #f1f5f9;
+        }
+
+        .category-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .category-toggle-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-checks {
+            margin-left: 16px;
+        }
+
+        /* Save Button */
+        .save-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .save-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #86efac;
+            color: #065f46;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+        }
+
+        /* Stats Card */
+        .stats-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>⚙️ Application Settings</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="alert-container"></div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="parser">Parser Settings</button>
+            <button class="tab" data-tab="editor">Editor Settings</button>
+            <button class="tab" data-tab="campaign">Campaign Settings</button>
+        </div>
+
+        <!-- Parser Settings Tab -->
+        <div id="parser-tab" class="tab-content active">
+            <div class="settings-section">
+                <h2 class="section-title">Parser Quality Metrics</h2>
+                <div class="stats-card" id="parser-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Avg Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Total Rated</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Good Ratings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Avg Corrections</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 class="section-title">Context Extraction</h2>
+                <p class="section-description">Control how the parser identifies campaign context from press releases.</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-extract context each time</div>
+                        <div class="setting-description">Extract candidate/campaign info from each press release (slower, validates campaign settings)</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-auto-extract-context">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Validate against campaign settings</div>
+                        <div class="setting-description">Check if extracted context matches configured campaign settings</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-validate-settings" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Context confidence threshold</div>
+                        <div class="setting-description">Minimum confidence (0-1) to use extracted context</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="parser-context-threshold" class="number-input"
+                               min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 class="section-title">Field Extraction</h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Extract quotes</div>
+                        <div class="setting-description">Automatically identify and extract quotes from text</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-extract-quotes" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Extract contact information</div>
+                        <div class="setting-description">Identify press contacts at end of release</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-extract-contacts" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Extract boilerplate</div>
+                        <div class="setting-description">Detect standard campaign bio text</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-extract-boilerplate" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Extract dates and locations</div>
+                        <div class="setting-description">Identify datelines and geographic references</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-extract-dates" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 class="section-title">Text Cleanup</h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Remove excess whitespace</div>
+                        <div class="setting-description">Clean up extra spaces, tabs, and line breaks</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-cleanup-whitespace" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Field movement detection</div>
+                        <div class="setting-description">Track when content is moved between fields (for learning)</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="parser-movement-detection" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="save-button" onclick="saveParserSettings()">💾 Save Parser Settings</button>
+        </div>
+
+        <!-- Editor Settings Tab -->
+        <div id="editor-tab" class="tab-content">
+            <div class="settings-section">
+                <h2 class="section-title">AI Assistance</h2>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">AI assistance level</div>
+                        <div class="setting-description">How aggressively should AI suggest changes</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="editor-assistance-level" class="select-input">
+                            <option value="minimal">Minimal - Only critical issues</option>
+                            <option value="balanced" selected>Balanced - Reasonable suggestions</option>
+                            <option value="aggressive">Aggressive - Many suggestions</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Real-time suggestions</div>
+                        <div class="setting-description">Show suggestions as you type (may slow editing)</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-realtime" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Track all changes</div>
+                        <div class="setting-description">Record every edit made (for tracked changes output)</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-track-changes" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 class="section-title">Suggestions Display & Sorting</h2>
+                <p class="section-description">Control how suggestions are organized and displayed in the editor.</p>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Sort suggestions by</div>
+                        <div class="setting-description">How to order suggestions in the panel</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="editor-sort-order" class="select-input">
+                            <option value="severity" selected>Severity (Errors → Warnings → Suggestions)</option>
+                            <option value="field-order">Field Order (Top to Bottom in document)</option>
+                            <option value="category">Category (AP Style, Grammar, Voice, etc.)</option>
+                            <option value="confidence">Confidence (Highest confidence first)</option>
+                            <option value="alphabetical">Alphabetical (By field name)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Group suggestions by</div>
+                        <div class="setting-description">How to organize suggestions into sections</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="editor-group-by" class="select-input">
+                            <option value="category" selected>Category (AP Style, Grammar, etc.)</option>
+                            <option value="field">Field (All suggestions per field together)</option>
+                            <option value="severity">Severity (Errors, Warnings, Suggestions)</option>
+                            <option value="none">None (Flat list)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Show accepted suggestions</div>
+                        <div class="setting-description">Keep accepted suggestions visible (grayed out) for reference</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-show-accepted">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-scroll to suggestion</div>
+                        <div class="setting-description">Scroll to suggestion when clicking a field</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-auto-scroll" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-collapse low priority</div>
+                        <div class="setting-description">Collapse enhancement suggestions by default (focus on errors)</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-collapse-low" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Show inline highlights</div>
+                        <div class="setting-description">Display underlines in content fields</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="editor-inline-highlights" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Minimum confidence threshold</div>
+                        <div class="setting-description">Don't show AI suggestions below this confidence (0-1)</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="editor-min-confidence" class="number-input"
+                               min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h2 class="section-title">Edit Checks</h2>
+                <p class="section-description">Enable or disable specific quality checks. Uncheck to streamline your workflow.</p>
+
+                <!-- AP Style Checks -->
+                <div class="category-header" onclick="toggleCategory('ap-style')">
+                    <span class="category-title">📝 AP Style Checks</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-ap-style" checked onchange="toggleCategoryAll('ap-style', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-ap-style-checks" class="category-checks"></div>
+
+                <!-- Grammar Checks -->
+                <div class="category-header" onclick="toggleCategory('grammar')">
+                    <span class="category-title">✍️ Grammar & Spelling</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-grammar" checked onchange="toggleCategoryAll('grammar', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-grammar-checks" class="category-checks"></div>
+
+                <!-- Voice Checks -->
+                <div class="category-header" onclick="toggleCategory('voice')">
+                    <span class="category-title">🎤 Voice & Tone</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-voice" checked onchange="toggleCategoryAll('voice', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-voice-checks" class="category-checks"></div>
+
+                <!-- Enhancement Checks -->
+                <div class="category-header" onclick="toggleCategory('enhancement')">
+                    <span class="category-title">✨ Content Enhancement</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-enhancement" checked onchange="toggleCategoryAll('enhancement', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-enhancement-checks" class="category-checks"></div>
+
+                <!-- Political Content Checks -->
+                <div class="category-header" onclick="toggleCategory('political')">
+                    <span class="category-title">🏛️ Political Content</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-political" checked onchange="toggleCategoryAll('political', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-political-checks" class="category-checks"></div>
+
+                <!-- SEO Checks -->
+                <div class="category-header" onclick="toggleCategory('seo')">
+                    <span class="category-title">🔍 SEO & Distribution</span>
+                    <div class="category-toggle-all">
+                        <span style="font-size: 13px; color: #64748b;">Enable All</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="category-seo" checked onchange="toggleCategoryAll('seo', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div id="category-seo-checks" class="category-checks"></div>
+            </div>
+
+            <button class="save-button" onclick="saveEditorSettings()">💾 Save Editor Settings</button>
+        </div>
+
+        <!-- Campaign Settings Tab -->
+        <div id="campaign-tab" class="tab-content">
+            <div class="alert alert-info">
+                Campaign settings are managed separately. <a href="/campaign-settings.html" style="color: #2563eb; font-weight: 600;">Go to Campaign Settings →</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app-settings.js"></script>
+</body>
+</html>

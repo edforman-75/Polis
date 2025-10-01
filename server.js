@@ -28,6 +28,10 @@ const editorialAIRoutes = require('./backend/routes/editorial-ai');
 const collaborationRoutes = require('./backend/routes/collaboration');
 const pressReleaseTypologyRoutes = require('./backend/routes/press-release-typology');
 const pressReleaseParserRoutes = require('./backend/routes/press-release-parser');
+const editorAnalysisRoutes = require('./backend/routes/editor-analysis');
+const boilerplateRoutes = require('./backend/routes/boilerplate');
+const quotesRoutes = require('./backend/routes/quotes');
+const textAnalysisRoutes = require('./backend/routes/text-analysis');
 
 // Import database
 const db = require('./backend/database/init');
@@ -123,6 +127,10 @@ app.use('/api/editorial-ai', editorialAIRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/press-release-typology', pressReleaseTypologyRoutes);
 app.use('/api/press-release-parser', pressReleaseParserRoutes);
+app.use('/api/editor', editorAnalysisRoutes);
+app.use('/api/boilerplate', boilerplateRoutes);
+app.use('/api/quotes', quotesRoutes);
+app.use('/api/text-analysis', textAnalysisRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');
