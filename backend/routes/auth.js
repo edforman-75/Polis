@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/init');
 const { verifyPassword, generateToken } = require('../middleware/auth');
+const UserManager = require('../data/user-manager');
+
+// Create manager instance
+const userManager = new UserManager(db);
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -13,10 +17,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Find user
-        const user = await db.get(
-            'SELECT * FROM users WHERE email = ?',
-            [email]
-        );
+        const user = await userManager.getUserByEmail(email);
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -29,10 +30,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Update last login
-        await db.run(
-            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-            [user.id]
-        );
+        await userManager.updateLastLogin(user.id);
 
         // Set session
         req.session.userId = user.id;
@@ -89,10 +87,7 @@ if (process.env.NODE_ENV === 'development') {
         const { role = 'writer' } = req.body;
 
         // Get a user with the specified role
-        const user = await db.get(
-            'SELECT * FROM users WHERE role = ? LIMIT 1',
-            [role]
-        );
+        const user = await userManager.getUserByRole(role);
 
         if (!user) {
             return res.status(404).json({ error: 'No user found with that role' });

@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/init');
+const PoliticalContentManager = require('../data/political-content-manager');
+
+// Create manager instance
+const politicalContentManager = new PoliticalContentManager(db);
 
 // Unified content management for all political content types
 const CONTENT_TYPES = {
@@ -58,47 +62,14 @@ router.get('/:contentType', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        let query = `SELECT * FROM ${config.table} WHERE created_by = ?`;
-        let params = [userId];
-
-        if (assignment_id) {
-            query += ' AND assignment_id = ?';
-            params.push(assignment_id);
-        }
-
-        if (status) {
-            query += ' AND status = ?';
-            params.push(status);
-        }
-
-        query += ` ORDER BY updated_at DESC LIMIT ?`;
-        params.push(parseInt(limit));
-
-        const items = await db.all(query, params);
-
-        // Process items through their specific processor if available
-        const processedItems = items.map(item => {
-            try {
-                const processed = { ...item };
-                if (processed.metadata) {
-                    processed.metadata = JSON.parse(processed.metadata);
-                }
-                if (processed.key_points) {
-                    processed.key_points = JSON.parse(processed.key_points);
-                }
-                if (processed.hashtags) {
-                    processed.hashtags = JSON.parse(processed.hashtags);
-                }
-                if (processed.media_urls) {
-                    processed.media_urls = JSON.parse(processed.media_urls);
-                }
-                return processed;
-            } catch (e) {
-                return item;
-            }
+        const items = await politicalContentManager.getAll(config.table, {
+            userId,
+            assignmentId: assignment_id,
+            status,
+            limit
         });
 
-        res.json(processedItems);
+        res.json(items);
     } catch (error) {
         console.error(`Error fetching ${req.params.contentType}:`, error);
         res.status(500).json({ error: `Failed to fetch ${req.params.contentType}` });
@@ -116,28 +87,13 @@ router.get('/:contentType/:id', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        const item = await db.get(
-            `SELECT * FROM ${config.table} WHERE id = ? AND created_by = ?`,
-            [id, userId]
-        );
+        const item = await politicalContentManager.getById(config.table, id, userId);
 
         if (!item) {
             return res.status(404).json({ error: 'Content not found' });
         }
 
-        // Parse JSON fields
-        const processedItem = { ...item };
-        ['metadata', 'key_points', 'hashtags', 'media_urls', 'sources', 'tags'].forEach(field => {
-            if (processedItem[field]) {
-                try {
-                    processedItem[field] = JSON.parse(processedItem[field]);
-                } catch (e) {
-                    // Leave as string if not valid JSON
-                }
-            }
-        });
-
-        res.json(processedItem);
+        res.json(item);
     } catch (error) {
         console.error(`Error fetching ${req.params.contentType}/${req.params.id}:`, error);
         res.status(500).json({ error: 'Failed to fetch content' });
@@ -173,31 +129,9 @@ router.post('/:contentType', async (req, res) => {
             }
         }
 
-        // Prepare data for insertion
-        const insertData = { ...processedData, created_by: userId };
+        const createdItem = await politicalContentManager.create(config.table, processedData, userId);
 
-        // Stringify JSON fields
-        ['metadata', 'key_points', 'hashtags', 'media_urls', 'sources', 'tags'].forEach(field => {
-            if (insertData[field] && typeof insertData[field] === 'object') {
-                insertData[field] = JSON.stringify(insertData[field]);
-            }
-        });
-
-        // Build dynamic INSERT query
-        const fields = Object.keys(insertData);
-        const placeholders = fields.map(() => '?').join(', ');
-        const values = fields.map(field => insertData[field]);
-
-        const query = `INSERT INTO ${config.table} (${fields.join(', ')}) VALUES (${placeholders})`;
-        const result = await db.run(query, values);
-
-        // Return created item
-        const createdItem = await db.get(`SELECT * FROM ${config.table} WHERE id = ?`, [result.id]);
-
-        res.status(201).json({
-            id: result.id,
-            ...createdItem
-        });
+        res.status(201).json(createdItem);
     } catch (error) {
         console.error(`Error creating ${req.params.contentType}:`, error);
         res.status(500).json({ error: `Failed to create ${req.params.contentType}` });
@@ -216,11 +150,8 @@ router.put('/:contentType/:id', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        // Verify ownership
-        const existing = await db.get(
-            `SELECT * FROM ${config.table} WHERE id = ? AND created_by = ?`,
-            [id, userId]
-        );
+        // Get existing item for processor
+        const existing = await politicalContentManager.getById(config.table, id, userId);
 
         if (!existing) {
             return res.status(404).json({ error: 'Content not found or unauthorized' });
@@ -236,33 +167,8 @@ router.put('/:contentType/:id', async (req, res) => {
             }
         }
 
-        // Prepare update data
-        const updateData = { ...processedData, updated_at: 'CURRENT_TIMESTAMP' };
-        delete updateData.id;
-        delete updateData.created_by;
-        delete updateData.created_at;
+        const updatedItem = await politicalContentManager.update(config.table, id, processedData, userId);
 
-        // Stringify JSON fields
-        ['metadata', 'key_points', 'hashtags', 'media_urls', 'sources', 'tags'].forEach(field => {
-            if (updateData[field] && typeof updateData[field] === 'object') {
-                updateData[field] = JSON.stringify(updateData[field]);
-            }
-        });
-
-        // Build dynamic UPDATE query
-        const fields = Object.keys(updateData);
-        const setClause = fields.map(field => `${field} = ?`).join(', ');
-        const values = [...fields.map(field => updateData[field]), id, userId];
-
-        const query = `UPDATE ${config.table} SET ${setClause} WHERE id = ? AND created_by = ?`;
-        const result = await db.run(query, values);
-
-        if (result.changes === 0) {
-            return res.status(404).json({ error: 'Content not found or no changes made' });
-        }
-
-        // Return updated item
-        const updatedItem = await db.get(`SELECT * FROM ${config.table} WHERE id = ?`, [id]);
         res.json(updatedItem);
     } catch (error) {
         console.error(`Error updating ${req.params.contentType}/${req.params.id}:`, error);
@@ -281,16 +187,9 @@ router.delete('/:contentType/:id', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        const result = await db.run(
-            `DELETE FROM ${config.table} WHERE id = ? AND created_by = ?`,
-            [id, userId]
-        );
+        const result = await politicalContentManager.delete(config.table, id, userId);
 
-        if (result.changes === 0) {
-            return res.status(404).json({ error: 'Content not found or unauthorized' });
-        }
-
-        res.json({ deleted: true, id: parseInt(id) });
+        res.json(result);
     } catch (error) {
         console.error(`Error deleting ${req.params.contentType}/${req.params.id}:`, error);
         res.status(500).json({ error: 'Failed to delete content' });
@@ -312,23 +211,13 @@ router.post('/:contentType/bulk', async (req, res) => {
         let result;
         switch (action) {
             case 'delete':
-                const placeholders = ids.map(() => '?').join(',');
-                result = await db.run(
-                    `DELETE FROM ${config.table} WHERE id IN (${placeholders}) AND created_by = ?`,
-                    [...ids, userId]
-                );
-                res.json({ deleted: result.changes, ids });
+                result = await politicalContentManager.bulkDelete(config.table, ids, userId);
+                res.json(result);
                 break;
 
             case 'update':
-                // Update multiple items with same data
-                for (const id of ids) {
-                    await db.run(
-                        `UPDATE ${config.table} SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND created_by = ?`,
-                        [data.status, id, userId]
-                    );
-                }
-                res.json({ updated: ids.length, ids });
+                result = await politicalContentManager.bulkUpdate(config.table, ids, data, userId);
+                res.json(result);
                 break;
 
             default:
@@ -352,23 +241,13 @@ router.get('/:contentType/search/:query', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        const searchTerm = `%${query}%`;
-
         // Dynamic search across different fields based on content type
         let searchFields = ['title', 'content', 'description'];
         if (contentType === 'social_posts') searchFields = ['content', 'hashtags'];
         if (contentType === 'media_relations') searchFields = ['outlet_name', 'contact_name'];
         if (contentType === 'opposition_research') searchFields = ['subject', 'content', 'tags'];
 
-        const conditions = searchFields.map(field => `${field} LIKE ?`).join(' OR ');
-        const searchParams = searchFields.map(() => searchTerm);
-
-        const items = await db.all(
-            `SELECT * FROM ${config.table}
-             WHERE created_by = ? AND (${conditions})
-             ORDER BY updated_at DESC LIMIT ?`,
-            [userId, ...searchParams, parseInt(limit)]
-        );
+        const items = await politicalContentManager.search(config.table, query, searchFields, userId, parseInt(limit));
 
         res.json(items);
     } catch (error) {
@@ -388,35 +267,9 @@ router.get('/:contentType/analytics', async (req, res) => {
             return res.status(400).json({ error: 'Invalid content type' });
         }
 
-        // Get basic analytics
-        const stats = await db.all(`
-            SELECT
-                status,
-                COUNT(*) as count,
-                DATE(created_at) as date
-            FROM ${config.table}
-            WHERE created_by = ?
-            GROUP BY status, DATE(created_at)
-            ORDER BY date DESC
-            LIMIT 30
-        `, [userId]);
+        const analytics = await politicalContentManager.getAnalytics(config.table, userId);
 
-        const totalCount = await db.get(
-            `SELECT COUNT(*) as total FROM ${config.table} WHERE created_by = ?`,
-            [userId]
-        );
-
-        const recentActivity = await db.all(
-            `SELECT * FROM ${config.table} WHERE created_by = ? ORDER BY updated_at DESC LIMIT 10`,
-            [userId]
-        );
-
-        res.json({
-            stats,
-            total: totalCount.total,
-            recentActivity,
-            contentType
-        });
+        res.json(analytics);
     } catch (error) {
         console.error(`Error getting analytics for ${req.params.contentType}:`, error);
         res.status(500).json({ error: 'Failed to get analytics' });
