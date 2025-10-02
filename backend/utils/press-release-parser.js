@@ -422,6 +422,9 @@ class PressReleaseParser {
     extractRegularQuotes(text, skipPositions = []) {
         const rawQuotes = [];
 
+        // Track the most recent speaker for continuation patterns ("she added", "he continued")
+        let previousSpeaker = null;
+
         // Find all quoted text using quotation marks
         // Supports both straight quotes (") and curly/smart quotes (\u201C \u201D)
         const quotePattern = /"([^"]+?)"|\u201C([^\u201C\u201D]+?)\u201D/g;
@@ -459,8 +462,15 @@ class PressReleaseParser {
             // Handles: "quote" said Speaker
             // Handles: "quote", according to Speaker
             // NEW: Also handles pronouns and generic titles
-            const afterPattern = /^[,\s]*(said|according to|stated|announced|noted|explained|added|continued|emphasized)\s+([^."]+?)(?:\s+at\s|\s+in\s|\s+during\s|\s+on\s|\.|$)/i;
+            // UPDATED: Allow periods in names for abbreviated titles like "Rep. Dave Min"
+            const afterPattern = /^[,\s]*(said|according to|stated|announced|noted|explained|added|continued|emphasized)\s+([A-Z][^,]+?)(?:\s+at\s|\s+in\s|\s+during\s|\s+on\s|\.$|$)/i;
             const afterMatch = contextAfter.match(afterPattern);
+
+            // Also handle reversed attribution: "quote," Name verb.
+            // Handles: "quote," Porter continued. or "quote," Smith added.
+            // Note: NOT case-insensitive to avoid matching pronouns like "she"/"he"
+            const reversedPattern = /^[,\s]*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(said|stated|announced|noted|explained|added|continued|emphasized|told)/;
+            const reversedMatch = contextAfter.match(reversedPattern);
 
             // Also check for simple pronoun attribution: "quote," she said. or "quote," he said.
             const pronounPattern = /^[,\s]*(she|he|they)\s+(said|stated|announced|noted|explained|added|told)/i;
@@ -474,21 +484,42 @@ class PressReleaseParser {
                 attribution = afterMatch[2].trim();
                 speaker_name = this.extractSpeakerName(attribution, text);
                 speaker_title = this.extractSpeakerTitle(attribution, text);
+            } else if (reversedMatch) {
+                // Handle "Name verb" pattern (e.g., "Porter continued")
+                const name = reversedMatch[1].trim();
+                const verb = reversedMatch[2].trim();
+                attribution = `${name} ${verb}`;
+                speaker_name = name;
+                speaker_title = this.extractSpeakerTitle(name, text);
             } else if (pronounMatch) {
                 // Handle pronoun attribution - try to find the actual speaker from context
                 const pronoun = pronounMatch[1];
-                attribution = `${pronoun} ${pronounMatch[2]}`;
-                // Try to find the actual name referenced by the pronoun in nearby text
-                const contextWindow = text.substring(Math.max(0, quoteStartPos - 500), quoteStartPos);
-                const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g;
-                const names = [];
-                let nameMatch;
-                while ((nameMatch = namePattern.exec(contextWindow)) !== null) {
-                    names.push(nameMatch[1]);
-                }
-                // Use the most recent name found before the quote
-                if (names.length > 0) {
-                    speaker_name = names[names.length - 1];
+                const verb = pronounMatch[2];
+                attribution = `${pronoun} ${verb}`;
+
+                // If we have a previous speaker, use it for pronoun resolution
+                // This handles both continuation verbs (added, continued) and simple verbs (said, stated)
+                if (previousSpeaker) {
+                    speaker_name = previousSpeaker;
+                } else {
+                    // Only search for names if we don't have a previous speaker
+                    const contextWindow = text.substring(Math.max(0, quoteStartPos - 500), quoteStartPos);
+                    const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g;
+                    const names = [];
+                    let nameMatch;
+                    while ((nameMatch = namePattern.exec(contextWindow)) !== null) {
+                        // Filter out institutions and role phrases
+                        const name = nameMatch[1];
+                        const isInstitution = /University|Institute|College|Convention|Convocation|Conference|Summit|Forum|School|Department|Office|Law|Committee|Commission|Association|Foundation|Center|Board/i.test(name);
+                        const isRolePhrase = /^As\s+(Governor|President|Senator|Representative|Congressman|Congresswoman|Mayor|Attorney|Secretary|Director|Chief)/i.test(name);
+                        if (!isInstitution && !isRolePhrase) {
+                            names.push(name);
+                        }
+                    }
+                    // Use the most recent name found before the quote
+                    if (names.length > 0) {
+                        speaker_name = names[names.length - 1];
+                    }
                 }
             } else {
                 // IMPROVEMENT #007: Check for narrative attribution with colon before quote
@@ -526,9 +557,9 @@ class PressReleaseParser {
                             const names = [];
                             let nameMatch;
                             while ((nameMatch = namePattern.exec(contextWindow)) !== null) {
-                                // Filter out likely non-person names (University, Institute, Convention, etc.)
+                                // Filter out likely non-person names (University, Institute, School, Law, etc.)
                                 const name = nameMatch[1];
-                                if (!/University|Institute|College|Convention|Convocation|Conference|Summit|Forum/i.test(name)) {
+                                if (!/University|Institute|College|Convention|Convocation|Conference|Summit|Forum|School|Department|Office|Law|Committee|Commission|Association|Foundation|Center|Board/i.test(name)) {
                                     names.push(name);
                                 }
                             }
@@ -588,6 +619,11 @@ class PressReleaseParser {
                 isMultiPart: isMultiPartQuote,
                 isEnd: isEndOfQuote
             });
+
+            // Update previousSpeaker for next quote's continuation verb resolution
+            if (speaker_name) {
+                previousSpeaker = speaker_name;
+            }
         }
 
         // Combine multi-part quotes from the same speaker
@@ -618,8 +654,14 @@ class PressReleaseParser {
                                        nextQuote.speaker_name === '' ||
                                        nextQuote.full_attribution === 'Unknown Speaker';
 
-                    // Combine if close proximity AND same speaker
-                    if (distance < 300 && sameSpeaker) {
+                    // Don't combine if next quote has its own separate attribution
+                    // (e.g., "Porter continued", "she added" - these are separate quotes)
+                    const nextHasSeparateAttribution = nextQuote.full_attribution &&
+                                                      nextQuote.full_attribution !== 'Unknown Speaker' &&
+                                                      nextQuote.full_attribution !== currentQuote.full_attribution;
+
+                    // Combine if close proximity AND same speaker AND no separate attribution
+                    if (distance < 300 && sameSpeaker && !nextHasSeparateAttribution) {
                         // Combine with space (not ellipsis - these are continuous quotes)
                         let nextText = nextQuote.quote_text;
 
@@ -725,8 +767,9 @@ class PressReleaseParser {
         // Build regex pattern from titles list
         const titlesPattern = this.titles.map(t => t.replace(/\./g, '\\.')).join('|');
 
-        // Extract title and last name from attribution
-        const titleLastPattern = new RegExp(`(${titlesPattern})\\s+([A-Z][a-z]+)`, 'i');
+        // Extract title and full name from attribution
+        // Captures one or more capitalized words after title (e.g., "Rep. Dave Min")
+        const titleLastPattern = new RegExp(`(${titlesPattern})\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)`, 'i');
         const titleLastMatch = cleaned.match(titleLastPattern);
 
         let lastName = null;
@@ -1349,13 +1392,17 @@ class PressReleaseParser {
             // Skip standalone quotes (these are part of body, not subhead)
             if (/^[""]/.test(line) && !/[""].*[""]/.test(line)) continue;
 
+            // Skip complete quoted statements with attribution (these are body quotes, not subheads)
+            // If line contains both quotes AND attribution verbs, it's a body quote not a subhead
+            if (/"[^"]+"/i.test(line) && /\b(said|stated|announced|noted|explained|added|continued|told)\b/i.test(line)) continue;
+
             // Valid subhead criteria:
             // - Has reasonable length (15-200 chars)
             // - Not too long (< 2x headline length)
-            // - Often contains quotes or colons (messaging element)
+            // - Often contains colons (messaging element)
             if (line.length >= 15 && line.length <= 200) {
-                // Prefer lines with quotes or colons (common in subheads)
-                if (line.includes('"') || line.includes(':') || line.includes('"')) {
+                // Prefer lines with colons (common in subheads)
+                if (line.includes(':')) {
                     return line;
                 }
                 // Also accept plain text subheads if they're shorter than headline
@@ -1605,6 +1652,80 @@ class PressReleaseParser {
             confidence: 'none',
             issues: []
         };
+
+        // STRATEGY -1: Check for Porter-style separated lines (after FOR IMMEDIATE RELEASE)
+        // Format: Line 1: FOR IMMEDIATE RELEASE
+        //         Line 2: March 11, 2025
+        //         Line 3: CALIFORNIA or IRVINE, CA
+        const lines = text.split('\n');
+        let lineIdx = 0;
+
+        // Find FOR IMMEDIATE RELEASE line
+        for (let i = 0; i < Math.min(lines.length, 5); i++) {
+            if (/FOR\s+IMMEDIATE\s+RELEASE/i.test(lines[i])) {
+                lineIdx = i;
+                break;
+            }
+        }
+
+        if (lineIdx >= 0 && lineIdx + 1 < lines.length) {
+            // Get first non-blank line after FOR IMMEDIATE RELEASE
+            let nextNonBlank1 = '';
+            let nextNonBlank2 = '';
+            let foundLines = 0;
+
+            for (let i = lineIdx + 1; i < Math.min(lines.length, lineIdx + 5); i++) {
+                const trimmed = lines[i].trim();
+                if (trimmed.length > 0) {
+                    if (foundLines === 0) {
+                        nextNonBlank1 = trimmed;
+                        foundLines++;
+                    } else if (foundLines === 1) {
+                        nextNonBlank2 = trimmed;
+                        break;
+                    }
+                }
+            }
+
+            // Check if first non-blank line after FOR IMMEDIATE RELEASE is a date
+            const standaloneDatePattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}$/i;
+            const dateMatch = nextNonBlank1.match(standaloneDatePattern);
+
+            if (dateMatch) {
+                // Found Porter-style format date
+                result.date = nextNonBlank1;
+
+                // Check if second non-blank line is a location (all caps or CITY, ST format)
+                if (nextNonBlank2.length > 0) {
+                    const locPatterns = [
+                        /^([A-Z][A-Z\s]+),\s*([A-Z]{2}|[A-Z][a-z]{1,3}\.?)$/,  // IRVINE, CA
+                        /^([A-Z]{3,}[\sA-Z]*)$/  // CALIFORNIA (all caps, at least 3 chars)
+                    ];
+
+                    for (const pattern of locPatterns) {
+                        const locMatch = nextNonBlank2.match(pattern);
+                        if (locMatch) {
+                            if (locMatch[2]) {
+                                // Has state
+                                result.location = `${locMatch[1].trim()}, ${locMatch[2]}`;
+                            } else {
+                                // All caps location (likely state or city)
+                                result.location = locMatch[1].trim();
+                            }
+                            result.confidence = 'high';
+                            result.full = `${result.location} - ${result.date}`;
+                            return result;
+                        }
+                    }
+                }
+
+                // If we have date but no location, still return with medium confidence
+                result.confidence = 'medium';
+                if (result.date) {
+                    result.full = result.date;
+                }
+            }
+        }
 
         // STRATEGY 0: Check for ISO date format (Sherrill-style releases)
         const isoDate = this.extractISODate(text);
