@@ -234,48 +234,219 @@ class PressReleaseParser {
 
     /**
      * Extract all quotes and their attribution
-     * Find text between quotation marks, then extract speaker from surrounding context
-     * Uses ," to detect split quotes and ." to detect end of quote sequence
-     * Enhanced to support statement format where all quotes belong to one speaker
+     * Handles both standard quotes and multi-paragraph journalism-style quotes
+     * Multi-paragraph format: Each paragraph starts with " but only last has closing "
      * @param {string} text - The press release text
      * @param {string} headline - The headline (to filter out false positive quotes)
      * @param {string} subhead - The subheadline (to filter out false positive quotes)
      */
     extractQuotes(text, headline = '', subhead = '') {
-        const rawQuotes = [];
+        const quotes = [];
 
-        // First, check if this is a statement format release
-        const statementInfo = this.detectStatementFormat(text);
-        let defaultSpeaker = null;
-        let defaultSpeakerPosition = -1;
+        // STEP 1: Detect and extract multi-paragraph journalism-style quotes first
+        // Format: "Para 1...\n\n"Para 2...\n\n"Para 3..." said Speaker
+        const multiParaQuotes = this.extractMultiParagraphQuotes(text);
 
-        if (statementInfo) {
-            defaultSpeaker = statementInfo.speaker;
-            defaultSpeakerPosition = statementInfo.position;
+        // Track positions of multi-paragraph quotes to skip them in regular extraction
+        const multiParaPositions = multiParaQuotes.map(q => ({
+            start: q.position,
+            end: q.position + q.fullText.length
+        }));
+
+        // STEP 2: Extract regular quotes (single paragraph or properly paired)
+        const regularQuotes = this.extractRegularQuotes(text, multiParaPositions);
+
+        // STEP 3: Combine and filter
+        const allQuotes = [...multiParaQuotes, ...regularQuotes];
+
+        // Filter out quotes from headline/subhead
+        const filteredQuotes = allQuotes.filter(quote => {
+            const quoteText = quote.quote_text;
+            if ((headline && headline.includes(quoteText)) || (subhead && subhead.includes(quoteText))) {
+                return false;
+            }
+            return true;
+        });
+
+        // STEP 4: Sort by position in document
+        filteredQuotes.sort((a, b) => a.position - b.position);
+
+        return filteredQuotes;
+    }
+
+    /**
+     * Extract multi-paragraph journalism-style quotes
+     * Format: "Para 1 text\n\n"Para 2 text\n\n"Para 3 text," said Speaker
+     * Each paragraph starts with " but only the last has closing "
+     */
+    extractMultiParagraphQuotes(text) {
+        const quotes = [];
+        const paragraphs = text.split(/\n\n+/);
+        let i = 0;
+
+        const DEBUG = false; // Set to true for debugging
+
+        while (i < paragraphs.length) {
+            const para = paragraphs[i].trim();
+
+            // Check if paragraph starts with opening quote
+            if (para.match(/^[""]/) && para.length > 20) {
+                // Check if this paragraph has a closing quote
+                // Count quotes: if only 1 quote (the opening), it's multi-paragraph format
+                // If 2+ quotes (opening + closing), it's a complete quote
+                const quoteCount = (para.match(/[""]/g) || []).length;
+                const hasClosingQuote = quoteCount >= 2;
+
+                if (DEBUG) {
+                    console.log(`\nPara ${i}: Starts with quote, length ${para.length}`);
+                    console.log(`  Preview: ${para.substring(0, 80)}...`);
+                    console.log(`  Last 40: ...${para.substring(para.length - 40)}`);
+                    console.log(`  Quote count: ${quoteCount}`);
+                    console.log(`  Has closing quote: ${hasClosingQuote ? 'YES' : 'NO'}`);
+                }
+
+                if (!hasClosingQuote) {
+                    // This might be start of multi-paragraph quote
+                    // Collect all consecutive paragraphs that start with "
+                    const quoteParagraphs = [para];
+                    let j = i + 1;
+                    let foundClosing = false;
+                    let attribution = '';
+
+                    while (j < paragraphs.length && j < i + 10) { // Max 10 paragraphs
+                        const nextPara = paragraphs[j].trim();
+
+                        if (nextPara.match(/^[""]/) && nextPara.length > 20) {
+                            quoteParagraphs.push(nextPara);
+
+                            // Check if this paragraph has a closing quote (quote count >= 2)
+                            const nextQuoteCount = (nextPara.match(/[""]/g) || []).length;
+                            const hasClosing = nextQuoteCount >= 2;
+                            if (hasClosing) {
+                                // Found the closing paragraph
+                                foundClosing = true;
+
+                                // Extract attribution text after the closing quote
+                                // Pattern: ..." said Speaker or ..."," said Speaker
+                                const attrMatch = nextPara.match(/[""]([^"""]+)$/);
+                                if (attrMatch) {
+                                    attribution = attrMatch[1].trim();
+                                }
+
+                                j++;
+                                break;
+                            }
+                            j++;
+                        } else {
+                            // Next paragraph doesn't start with quote, not multi-para
+                            break;
+                        }
+                    }
+
+                    // If we found a proper multi-paragraph quote structure
+                    if (foundClosing && quoteParagraphs.length > 1) {
+                        // Combine paragraphs, removing quote marks
+                        let combinedText = quoteParagraphs.map(p => {
+                            // Remove opening quote
+                            let cleaned = p.replace(/^[""]/, '').trim();
+                            // Remove closing quote from last paragraph
+                            cleaned = cleaned.replace(/[""]([^"""]*?)$/, '$1').trim();
+                            return cleaned;
+                        }).join('\n\n');
+
+                        // Extract attribution from the combined attribution text
+                        const speaker = this.extractAttributionFromText(attribution, text);
+
+                        // Calculate position in original text
+                        const position = text.indexOf(quoteParagraphs[0]);
+
+                        quotes.push({
+                            quote_text: combinedText,
+                            speaker_name: speaker.name,
+                            speaker_title: speaker.title,
+                            full_attribution: speaker.attribution,
+                            position: position,
+                            fullText: quoteParagraphs.join('\n\n'),
+                            type: 'multi-paragraph'
+                        });
+
+                        // Skip past all the paragraphs we just processed
+                        i = j;
+                        continue;
+                    }
+                }
+            }
+            i++;
         }
+
+        return quotes;
+    }
+
+    /**
+     * Extract attribution (speaker info) from attribution text
+     * Handles patterns like "said Mikie Sherrill", "according to John Smith", etc.
+     */
+    extractAttributionFromText(attributionText, fullText = '') {
+        if (!attributionText) {
+            return { name: '', title: '', attribution: 'Unknown Speaker' };
+        }
+
+        // Pattern: "said Mikie Sherrill" or "according to John Smith"
+        const patterns = [
+            /(?:said|according to|stated|announced|noted|explained|added|continued)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i,
+            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s+(?:said|stated|announced)/i,
+            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i // Fallback: just extract name
+        ];
+
+        for (const pattern of patterns) {
+            const match = attributionText.match(pattern);
+            if (match) {
+                const speakerName = this.extractSpeakerName(match[1], fullText) || match[1].trim();
+                const speakerTitle = this.extractSpeakerTitle(speakerName, fullText);
+
+                return {
+                    name: speakerName,
+                    title: speakerTitle,
+                    attribution: attributionText.trim() || speakerName
+                };
+            }
+        }
+
+        return { name: '', title: '', attribution: attributionText.trim() || 'Unknown Speaker' };
+    }
+
+    /**
+     * Extract regular (non-multi-paragraph) quotes
+     * Skip positions that are part of multi-paragraph quotes
+     */
+    extractRegularQuotes(text, skipPositions = []) {
+        const rawQuotes = [];
 
         // Find all quoted text using quotation marks
         // Supports both straight quotes (") and curly/smart quotes (\u201C \u201D)
-        // Use alternation to match pairs: either straight OR curly, not mixed
         const quotePattern = /"([^"]+?)"|\u201C([^\u201C\u201D]+?)\u201D/g;
         let match;
 
         while ((match = quotePattern.exec(text)) !== null) {
-            // Get text from whichever group matched (group 1 for straight, group 2 for curly)
-            const quoteText = (match[1] || match[2]).trim();
             const quoteStartPos = match.index;
             const quoteEndPos = quoteStartPos + match[0].length;
 
-            // FILTER: Skip quotes that appear in headline or subheadline (false positives)
-            if ((headline && headline.includes(quoteText)) || (subhead && subhead.includes(quoteText))) {
+            // Check if this position is part of a multi-paragraph quote
+            const isPartOfMultiPara = skipPositions.some(range =>
+                quoteStartPos >= range.start && quoteStartPos < range.end
+            );
+
+            if (isPartOfMultiPara) {
                 continue;
             }
 
+            // Get text from whichever group matched (group 1 for straight, group 2 for curly)
+            const quoteText = (match[1] || match[2]).trim();
+
             // Check what character is at the end of the quote text (INSIDE the quotes)
-            // Quote patterns: "text," or "text." or "text"
             const lastCharOfQuote = quoteText.slice(-1);
-            const isMultiPartQuote = (lastCharOfQuote === ','); // "text," means more quotes coming
-            const isEndOfQuote = (lastCharOfQuote === '.'); // "text." means end of quote sequence
+            const isMultiPartQuote = (lastCharOfQuote === ',');
+            const isEndOfQuote = (lastCharOfQuote === '.');
 
             // Extract context after the quote (next ~200 characters)
             const contextAfter = text.substring(quoteEndPos, quoteEndPos + 200);
@@ -476,7 +647,8 @@ class PressReleaseParser {
                 quote_text: combinedText,
                 speaker_name: currentQuote.speaker_name || '',
                 speaker_title: currentQuote.speaker_title || '',
-                full_attribution: currentQuote.full_attribution
+                full_attribution: currentQuote.full_attribution,
+                position: currentQuote.position
             });
 
             i = j;
