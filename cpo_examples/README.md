@@ -9,6 +9,8 @@ These examples are **reference implementations** — use them to:
 - Provide onboarding material for new contributors.
 
 ## 📑 Files
+
+### Good Examples (JSON-LD)
 - **rally_release.jsonld**
   Announcement of a rally with an embedded `Event` object.
   Demonstrates subtype `ANN.EVT.RALLY` and an RSVP call-to-action.
@@ -16,6 +18,23 @@ These examples are **reference implementations** — use them to:
 - **contrast_release.jsonld**
   Contrast release responding to an opponent's statement.
   Demonstrates subtype `ATT.OPP.CHAR` and includes a `cpo:Claim` with supporting evidence.
+
+### Bad Examples (Text - Anti-patterns)
+- **release_01.txt through release_25.txt**
+  25 examples of POORLY WRITTEN press releases from the "Jane Smith" campaign.
+  These demonstrate common mistakes and anti-patterns to AVOID:
+  - Missing datelines (0/25 have proper datelines)
+  - Missing or weak headlines
+  - No structure (missing lead paragraphs in 21/25)
+  - No quotes or weak/informal quotes
+  - Vague information ("next Thursday" without date)
+  - Unprofessional tone (all caps, emoticons)
+  - Typos and incomplete information
+  - Missing accessibility details
+  - Unsubstantiated claims
+
+  **Use for:** Parser testing, quality checking, training staff on what NOT to do.
+  **Test Suite:** Run `npm run test-parser-suite` to validate parser against all 25 files.
 
 ## 🛠 Usage
 1. Copy an example into your working directory if you need a starting point.

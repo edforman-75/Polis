@@ -1,0 +1,47 @@
+[
+    {
+        "name": "Detroit Economy - Battery Plant Announcement",
+        "file_path": "./test-data/detroit-economy.txt",
+        "parser_version": "1.0.0",
+        "date_added": "2025-10-01",
+        "description": "Well-formatted press release with proper dateline, multi-part quotes, corporate and government speakers",
+        "expected": {
+            "headline": "Detroit Secures $800 Million Battery Plant, Creating 2,500 Good-Paying Jobs",
+            "dateline": "DETROIT, MI — October 1, 2025",
+            "lead_paragraph_min_length": 200,
+            "quote_count": 2,
+            "quotes": [
+                {
+                    "speaker_name": "James Wilson",
+                    "speaker_title": "Mayor of Detroit",
+                    "quote_text_contains": "good-paying, advanced manufacturing jobs"
+                },
+                {
+                    "speaker_name": "Jennifer Martinez",
+                    "speaker_title": "CEO of ElectricFuture",
+                    "quote_text_contains": "skilled workforce"
+                }
+            ]
+        }
+    },
+    {
+        "name": "Healthcare Access Expansion",
+        "file_path": "./test-data/healthcare-expansion.txt",
+        "parser_version": "1.0.0",
+        "date_added": "2025-10-01",
+        "description": "Governor announcement with state-level title enhancement",
+        "expected": {
+            "headline": "Governor Smith Unveils Plan to Expand Healthcare Access to 150,000 Uninsured Residents",
+            "dateline": "BOSTON, MA — October 1, 2025",
+            "lead_paragraph_min_length": 250,
+            "quote_count": 1,
+            "quotes": [
+                {
+                    "speaker_name": "Sarah Smith",
+                    "speaker_title": "Governor of Massachusetts",
+                    "quote_text_contains": "forced to choose"
+                }
+            ]
+        }
+    }
+]
