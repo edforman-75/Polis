@@ -1,0 +1,900 @@
+{
+  "timestamp": "2025-10-02T23:19:06.857Z",
+  "total_documents": 54,
+  "top_terms": [
+    [
+      "porter",
+      0.5918059084527567
+    ],
+    [
+      "schumer",
+      0.37168319097327845
+    ],
+    [
+      "virginia",
+      0.34643324880897647
+    ],
+    [
+      "jeffries",
+      0.3300975264108186
+    ],
+    [
+      "governor",
+      0.3056267339719117
+    ],
+    [
+      "healthcare",
+      0.30292535642320595
+    ],
+    [
+      "bill",
+      0.3005326952742773
+    ],
+    [
+      "california",
+      0.3000400695753325
+    ],
+    [
+      "republicans",
+      0.287003399679949
+    ],
+    [
+      "mikie",
+      0.2840443571198874
+    ],
+    [
+      "veterans",
+      0.2824064216008209
+    ],
+    [
+      "government",
+      0.28002766662729556
+    ],
+    [
+      "crypto",
+      0.2777140791911836
+    ],
+    [
+      "leader",
+      0.27656020912860796
+    ],
+    [
+      "jack",
+      0.27504170602586997
+    ],
+    [
+      "warren",
+      0.2725344018603753
+    ],
+    [
+      "trump",
+      0.2712486674639239
+    ],
+    [
+      "health",
+      0.2688227474338208
+    ],
+    [
+      "shutdown",
+      0.255888325757326
+    ],
+    [
+      "project",
+      0.2555990370460943
+    ],
+    [
+      "rep",
+      0.25154148166834966
+    ],
+    [
+      "jayapal",
+      0.24240181902322627
+    ],
+    [
+      "jersey",
+      0.2395571717703973
+    ],
+    [
+      "schiff",
+      0.2391267749480613
+    ],
+    [
+      "katie",
+      0.23741249499335162
+    ],
+    [
+      "care",
+      0.23604612706736627
+    ],
+    [
+      "house",
+      0.23005622008980386
+    ],
+    [
+      "american",
+      0.2203363433655704
+    ],
+    [
+      "campaign",
+      0.21784853638503163
+    ],
+    [
+      "stein",
+      0.2144187096426461
+    ],
+    [
+      "ban",
+      0.2084323709726058
+    ],
+    [
+      "ocasio-cortez",
+      0.2081100705351442
+    ],
+    [
+      "republican",
+      0.2071736031216995
+    ],
+    [
+      "cuts",
+      0.20543823893569998
+    ],
+    [
+      "funding",
+      0.20417807093945992
+    ],
+    [
+      "tax",
+      0.20098207093374212
+    ],
+    [
+      "security",
+      0.20037960078186556
+    ],
+    [
+      "million",
+      0.19831713695820585
+    ],
+    [
+      "federal",
+      0.19657716093080327
+    ],
+    [
+      "spanberger",
+      0.19656526131453544
+    ],
+    [
+      "poll",
+      0.19224176106379476
+    ],
+    [
+      "people",
+      0.18868518805832166
+    ],
+    [
+      "senate",
+      0.1873813188378059
+    ],
+    [
+      "retirement",
+      0.18553414170066393
+    ],
+    [
+      "americans",
+      0.18229783342453382
+    ],
+    [
+      "min",
+      0.1813174566620125
+    ],
+    [
+      "abortion",
+      0.1813174566620125
+    ],
+    [
+      "billion",
+      0.1808999869833787
+    ],
+    [
+      "democrats",
+      0.17742217246333514
+    ],
+    [
+      "senator",
+      0.17721032523534438
+    ],
+    [
+      "businesses",
+      0.17642195089605067
+    ],
+    [
+      "state",
+      0.17483393131921873
+    ],
+    [
+      "contracts",
+      0.1747000312363916
+    ],
+    [
+      "usda",
+      0.1747000312363916
+    ],
+    [
+      "families",
+      0.17377663757919637
+    ],
+    [
+      "potential",
+      0.17100334425774172
+    ],
+    [
+      "support",
+      0.16956758411161263
+    ],
+    [
+      "democratic",
+      0.16825928223179473
+    ],
+    [
+      "bipartisan",
+      0.1657706598255726
+    ],
+    [
+      "administration",
+      0.16336412683204282
+    ],
+    [
+      "jobs",
+      0.1628342594234467
+    ],
+    [
+      "president",
+      0.1621889464252237
+    ],
+    [
+      "congress",
+      0.1597827939782237
+    ],
+    [
+      "sherrill",
+      0.15781453172607102
+    ],
+    [
+      "social",
+      0.15534379853579133
+    ],
+    [
+      "down",
+      0.1548496278807083
+    ],
+    [
+      "age",
+      0.15461178475055326
+    ],
+    [
+      "energy",
+      0.15429387916161236
+    ],
+    [
+      "race",
+      0.15319276090828995
+    ],
+    [
+      "costs",
+      0.15261928788574183
+    ],
+    [
+      "000",
+      0.15216795116764115
+    ],
+    [
+      "law",
+      0.1501206949125997
+    ],
+    [
+      "weapons",
+      0.14960682106809406
+    ],
+    [
+      "september",
+      0.14937194310997234
+    ],
+    [
+      "economic",
+      0.1488431308872496
+    ],
+    [
+      "donald",
+      0.1474328453106448
+    ],
+    [
+      "khanna",
+      0.14650839801383267
+    ],
+    [
+      "earle-sears",
+      0.14622456295645742
+    ],
+    [
+      "act",
+      0.14546246416530864
+    ],
+    [
+      "dnc",
+      0.14525930830952855
+    ],
+    [
+      "dave",
+      0.14505396532960999
+    ],
+    [
+      "recovery",
+      0.14234635374983592
+    ],
+    [
+      "legislation",
+      0.14171815582609715
+    ],
+    [
+      "rights",
+      0.13989992139181529
+    ],
+    [
+      "representative",
+      0.13904577816152672
+    ],
+    [
+      "children",
+      0.13871424940957855
+    ],
+    [
+      "resolution",
+      0.13859081169181928
+    ],
+    [
+      "texas",
+      0.1381466336472476
+    ],
+    [
+      "following",
+      0.1380381281175868
+    ],
+    [
+      "released",
+      0.13799536166515033
+    ],
+    [
+      "negotiate",
+      0.13764797832027226
+    ],
+    [
+      "battery",
+      0.13760161568359996
+    ],
+    [
+      "including",
+      0.13684671370877466
+    ],
+    [
+      "against",
+      0.13454721777259424
+    ],
+    [
+      "reproductive",
+      0.13337438538272064
+    ],
+    [
+      "washington",
+      0.13320890824070933
+    ],
+    [
+      "package",
+      0.13116897346860484
+    ],
+    [
+      "workers",
+      0.13057968240974743
+    ],
+    [
+      "senators",
+      0.1302802801385623
+    ],
+    [
+      "block",
+      0.12951676628548905
+    ]
+  ],
+  "clusters": {
+    "porter": [
+      {
+        "term": "california",
+        "count": 5
+      },
+      {
+        "term": "katie",
+        "count": 5
+      },
+      {
+        "term": "governor",
+        "count": 5
+      }
+    ],
+    "schumer": [
+      {
+        "term": "leader",
+        "count": 7
+      },
+      {
+        "term": "senate",
+        "count": 7
+      },
+      {
+        "term": "democratic",
+        "count": 6
+      },
+      {
+        "term": "trump",
+        "count": 5
+      },
+      {
+        "term": "following",
+        "count": 5
+      }
+    ],
+    "jeffries": [
+      {
+        "term": "house",
+        "count": 6
+      },
+      {
+        "term": "democratic",
+        "count": 6
+      },
+      {
+        "term": "leader",
+        "count": 6
+      },
+      {
+        "term": "government",
+        "count": 6
+      },
+      {
+        "term": "healthcare",
+        "count": 6
+      }
+    ],
+    "governor": [
+      {
+        "term": "trump",
+        "count": 12
+      },
+      {
+        "term": "state",
+        "count": 12
+      },
+      {
+        "term": "families",
+        "count": 11
+      },
+      {
+        "term": "administration",
+        "count": 8
+      },
+      {
+        "term": "support",
+        "count": 8
+      }
+    ],
+    "healthcare": [
+      {
+        "term": "trump",
+        "count": 13
+      },
+      {
+        "term": "democratic",
+        "count": 11
+      },
+      {
+        "term": "republican",
+        "count": 11
+      },
+      {
+        "term": "people",
+        "count": 10
+      },
+      {
+        "term": "leader",
+        "count": 10
+      }
+    ],
+    "bill": [
+      {
+        "term": "washington",
+        "count": 13
+      },
+      {
+        "term": "house",
+        "count": 12
+      },
+      {
+        "term": "government",
+        "count": 11
+      },
+      {
+        "term": "republicans",
+        "count": 10
+      },
+      {
+        "term": "funding",
+        "count": 9
+      }
+    ],
+    "california": [
+      {
+        "term": "katie",
+        "count": 5
+      },
+      {
+        "term": "porter",
+        "count": 5
+      },
+      {
+        "term": "governor",
+        "count": 5
+      },
+      {
+        "term": "democratic",
+        "count": 5
+      },
+      {
+        "term": "trump",
+        "count": 5
+      }
+    ],
+    "republicans": [
+      {
+        "term": "trump",
+        "count": 13
+      },
+      {
+        "term": "house",
+        "count": 13
+      },
+      {
+        "term": "government",
+        "count": 13
+      },
+      {
+        "term": "republican",
+        "count": 13
+      },
+      {
+        "term": "washington",
+        "count": 12
+      }
+    ],
+    "mikie": [
+      {
+        "term": "jersey",
+        "count": 7
+      },
+      {
+        "term": "sherrill",
+        "count": 7
+      },
+      {
+        "term": "governor",
+        "count": 7
+      },
+      {
+        "term": "trump",
+        "count": 5
+      },
+      {
+        "term": "jack",
+        "count": 5
+      }
+    ],
+    "government": [
+      {
+        "term": "house",
+        "count": 18
+      },
+      {
+        "term": "trump",
+        "count": 16
+      },
+      {
+        "term": "washington",
+        "count": 14
+      },
+      {
+        "term": "september",
+        "count": 13
+      },
+      {
+        "term": "republicans",
+        "count": 13
+      }
+    ],
+    "leader": [
+      {
+        "term": "democratic",
+        "count": 12
+      },
+      {
+        "term": "trump",
+        "count": 11
+      },
+      {
+        "term": "healthcare",
+        "count": 10
+      },
+      {
+        "term": "senate",
+        "count": 8
+      },
+      {
+        "term": "government",
+        "count": 8
+      }
+    ],
+    "jack": [
+      {
+        "term": "jersey",
+        "count": 5
+      },
+      {
+        "term": "mikie",
+        "count": 5
+      },
+      {
+        "term": "sherrill",
+        "count": 5
+      },
+      {
+        "term": "governor",
+        "count": 5
+      }
+    ],
+    "trump": [
+      {
+        "term": "administration",
+        "count": 19
+      },
+      {
+        "term": "washington",
+        "count": 17
+      },
+      {
+        "term": "donald",
+        "count": 17
+      },
+      {
+        "term": "government",
+        "count": 16
+      },
+      {
+        "term": "senate",
+        "count": 16
+      }
+    ],
+    "health": [
+      {
+        "term": "care",
+        "count": 10
+      },
+      {
+        "term": "washington",
+        "count": 9
+      },
+      {
+        "term": "trump",
+        "count": 9
+      },
+      {
+        "term": "people",
+        "count": 9
+      },
+      {
+        "term": "bill",
+        "count": 8
+      }
+    ],
+    "shutdown": [
+      {
+        "term": "trump",
+        "count": 11
+      },
+      {
+        "term": "government",
+        "count": 11
+      },
+      {
+        "term": "house",
+        "count": 9
+      },
+      {
+        "term": "republican",
+        "count": 9
+      },
+      {
+        "term": "down",
+        "count": 8
+      }
+    ],
+    "jayapal": [
+      {
+        "term": "washington",
+        "count": 5
+      }
+    ],
+    "jersey": [
+      {
+        "term": "trump",
+        "count": 7
+      },
+      {
+        "term": "mikie",
+        "count": 7
+      },
+      {
+        "term": "sherrill",
+        "count": 7
+      },
+      {
+        "term": "governor",
+        "count": 7
+      },
+      {
+        "term": "people",
+        "count": 6
+      }
+    ],
+    "schiff": [
+      {
+        "term": "senator",
+        "count": 6
+      },
+      {
+        "term": "washington",
+        "count": 5
+      },
+      {
+        "term": "senate",
+        "count": 5
+      }
+    ],
+    "katie": [
+      {
+        "term": "california",
+        "count": 5
+      },
+      {
+        "term": "porter",
+        "count": 5
+      },
+      {
+        "term": "governor",
+        "count": 5
+      }
+    ],
+    "care": [
+      {
+        "term": "trump",
+        "count": 10
+      },
+      {
+        "term": "health",
+        "count": 10
+      },
+      {
+        "term": "including",
+        "count": 10
+      },
+      {
+        "term": "people",
+        "count": 9
+      },
+      {
+        "term": "washington",
+        "count": 8
+      }
+    ],
+    "house": [
+      {
+        "term": "government",
+        "count": 18
+      },
+      {
+        "term": "washington",
+        "count": 16
+      },
+      {
+        "term": "trump",
+        "count": 15
+      },
+      {
+        "term": "people",
+        "count": 14
+      },
+      {
+        "term": "september",
+        "count": 13
+      }
+    ],
+    "american": [
+      {
+        "term": "house",
+        "count": 13
+      },
+      {
+        "term": "people",
+        "count": 12
+      },
+      {
+        "term": "trump",
+        "count": 11
+      },
+      {
+        "term": "washington",
+        "count": 11
+      },
+      {
+        "term": "republicans",
+        "count": 11
+      }
+    ],
+    "campaign": [
+      {
+        "term": "trump",
+        "count": 9
+      },
+      {
+        "term": "including",
+        "count": 7
+      },
+      {
+        "term": "governor",
+        "count": 7
+      },
+      {
+        "term": "state",
+        "count": 6
+      },
+      {
+        "term": "families",
+        "count": 6
+      }
+    ]
+  },
+  "suggested_categories": {
+    "healthcare_policy": [
+      "healthcare",
+      "health",
+      "care"
+    ],
+    "elections_campaigns": [
+      "campaign",
+      "poll"
+    ],
+    "government_operations": [
+      "government",
+      "shutdown",
+      "funding"
+    ],
+    "legislative_action": [
+      "bill",
+      "billion"
+    ],
+    "opposition_criticism": [
+      "republicans",
+      "trump",
+      "rep",
+      "republican"
+    ],
+    "social_issues": [
+      "rep",
+      "abortion"
+    ]
+  }
+}
