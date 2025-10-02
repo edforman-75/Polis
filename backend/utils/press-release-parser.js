@@ -2048,6 +2048,145 @@ class PressReleaseParser {
     }
 
     /**
+     * Validate technical parseability (structural/encoding issues)
+     * This runs BEFORE parsing to catch technical problems
+     * @param {string} text - The raw input text
+     * @returns {Object} Technical validation result
+     */
+    validateTechnical(text) {
+        const validation = {
+            is_parseable: true,
+            errors: [],
+            warnings: []
+        };
+
+        // 1. Check if text exists
+        if (!text || typeof text !== 'string') {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'invalid_input',
+                message: 'Input is not a valid string',
+                suggestion: 'Provide text as a string value'
+            });
+            return validation;
+        }
+
+        // 2. Check for empty or whitespace-only
+        const trimmed = text.trim();
+        if (trimmed.length === 0) {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'empty_input',
+                message: 'Input is empty or contains only whitespace',
+                suggestion: 'Provide actual press release text'
+            });
+            return validation;
+        }
+
+        // 3. Check minimum length
+        if (trimmed.length < 50) {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'too_short',
+                message: `Input is too short (${trimmed.length} chars, minimum 50)`,
+                suggestion: 'Press releases should be at least 50 characters long'
+            });
+            return validation;
+        }
+
+        // 4. Check maximum length (prevent DoS)
+        const MAX_LENGTH = 1000000; // 1MB
+        if (text.length > MAX_LENGTH) {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'too_large',
+                message: `Input exceeds maximum size (${text.length} chars, max ${MAX_LENGTH})`,
+                suggestion: 'Press releases should be under 1MB'
+            });
+            return validation;
+        }
+
+        // 5. Check for null bytes or binary data
+        if (text.includes('\x00') || /[\x01-\x08\x0E-\x1F]/.test(text)) {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'binary_data',
+                message: 'Input contains binary or corrupt data',
+                suggestion: 'Ensure the file is plain text (UTF-8)'
+            });
+            return validation;
+        }
+
+        // 6. Check for HTML/XML
+        if (/<html|<body|<div|<p>|<span|<!DOCTYPE/i.test(text)) {
+            validation.warnings.push({
+                type: 'html_detected',
+                severity: 'high',
+                message: 'Input appears to contain HTML markup',
+                suggestion: 'Convert HTML to plain text before parsing'
+            });
+        }
+
+        // 7. Check for JSON
+        if ((text.trim().startsWith('{') && text.trim().endsWith('}')) ||
+            (text.trim().startsWith('[') && text.trim().endsWith(']'))) {
+            validation.warnings.push({
+                type: 'json_detected',
+                severity: 'high',
+                message: 'Input appears to be JSON data',
+                suggestion: 'Extract the text content from JSON before parsing'
+            });
+        }
+
+        // 8. Check for extremely long lines (could cause ReDoS)
+        const lines = text.split('\n');
+        const longLines = lines.filter(line => line.length > 5000);
+        if (longLines.length > 0) {
+            validation.warnings.push({
+                type: 'extremely_long_lines',
+                severity: 'medium',
+                message: `Found ${longLines.length} line(s) over 5000 characters`,
+                suggestion: 'Press releases should have reasonable line breaks'
+            });
+        }
+
+        // 9. Check for lack of structure (all one line)
+        if (lines.length === 1 && text.length > 100) {
+            validation.warnings.push({
+                type: 'no_line_breaks',
+                severity: 'medium',
+                message: 'Input has no line breaks (all one line)',
+                suggestion: 'Add line breaks to properly structure the press release'
+            });
+        }
+
+        // 10. Check for excessive special characters
+        const specialCharsCount = (text.match(/[^a-zA-Z0-9\s.,!?;:()\-"']/g) || []).length;
+        const specialCharsRatio = specialCharsCount / text.length;
+        if (specialCharsRatio > 0.3) {
+            validation.warnings.push({
+                type: 'excessive_special_chars',
+                severity: 'low',
+                message: `${(specialCharsRatio * 100).toFixed(0)}% of input is special characters`,
+                suggestion: 'Input may not be plain text or may be corrupt'
+            });
+        }
+
+        // 11. Check for valid text content (not just numbers/punctuation)
+        const alphaCount = (text.match(/[a-zA-Z]/g) || []).length;
+        if (alphaCount < 20) {
+            validation.is_parseable = false;
+            validation.errors.push({
+                type: 'no_text_content',
+                message: 'Input contains no meaningful text content',
+                suggestion: 'Provide actual press release text with letters and words'
+            });
+        }
+
+        return validation;
+    }
+
+    /**
      * Validate press release quality and provide actionable feedback
      * @param {Object} parseResult - The result from parse()
      * @param {string} originalText - The original press release text
@@ -2219,10 +2358,30 @@ class PressReleaseParser {
      * @returns {Object} Parse result with optional validation
      */
     parseWithValidation(text, includeValidation = true) {
-        const parseResult = this.parse(text);
+        let parseResult;
 
         if (includeValidation) {
+            // First, check technical parseability
+            const technicalValidation = this.validateTechnical(text);
+
+            // If technical validation fails, return early with error
+            if (!technicalValidation.is_parseable) {
+                return {
+                    technical_validation: technicalValidation,
+                    error: 'Input failed technical validation',
+                    is_parseable: false
+                };
+            }
+
+            // Technical validation passed, proceed with parsing
+            parseResult = this.parse(text);
+
+            // Add both technical and quality validation
+            parseResult.technical_validation = technicalValidation;
             parseResult.validation = this.validateQuality(parseResult, text);
+        } else {
+            // Skip validation, just parse
+            parseResult = this.parse(text);
         }
 
         return parseResult;
