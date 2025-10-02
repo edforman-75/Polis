@@ -2046,6 +2046,187 @@ class PressReleaseParser {
         }
         return null;
     }
+
+    /**
+     * Validate press release quality and provide actionable feedback
+     * @param {Object} parseResult - The result from parse()
+     * @param {string} originalText - The original press release text
+     * @returns {Object} Validation result with quality score, issues, and suggestions
+     */
+    validateQuality(parseResult, originalText) {
+        const validation = {
+            quality_score: 100,
+            status: 'excellent', // excellent, good, fair, poor, rejected
+            errors: [],
+            warnings: [],
+            suggestions: [],
+            should_reject: false,
+            metrics: {}
+        };
+
+        // Calculate metrics
+        const quoteCount = parseResult.quotes.length;
+        const unknownSpeakers = parseResult.quotes.filter(q =>
+            !q.speaker_name || q.speaker_name === 'UNKNOWN'
+        ).length;
+        const unknownPct = quoteCount > 0 ? (unknownSpeakers / quoteCount * 100) : 0;
+        const bodyLength = parseResult.content_structure.body_paragraphs?.join(' ').length || 0;
+        const hasDateline = !!(parseResult.content_structure.dateline?.date ||
+                              parseResult.content_structure.dateline?.location);
+        const hasHeadline = !!(parseResult.content_structure.headline &&
+                              parseResult.content_structure.headline.length > 10);
+
+        validation.metrics = {
+            quote_count: quoteCount,
+            unknown_speakers: unknownSpeakers,
+            unknown_speaker_percentage: Math.round(unknownPct),
+            body_length: bodyLength,
+            has_dateline: hasDateline,
+            has_headline: hasHeadline,
+            has_for_immediate_release: originalText.includes('FOR IMMEDIATE RELEASE') ||
+                                       originalText.includes('FOR RELEASE')
+        };
+
+        // CRITICAL ERRORS (auto-reject)
+        if (!validation.metrics.has_for_immediate_release) {
+            validation.errors.push({
+                type: 'missing_header',
+                message: 'Missing "FOR IMMEDIATE RELEASE" header',
+                suggestion: 'Add "FOR IMMEDIATE RELEASE" as the first line of the press release'
+            });
+            validation.quality_score -= 30;
+        }
+
+        if (quoteCount === 0) {
+            validation.errors.push({
+                type: 'no_quotes',
+                message: 'No quotes found in press release',
+                suggestion: 'Add at least one quote with proper attribution: "Quote text," said FirstName LastName, Title.'
+            });
+            validation.quality_score -= 40;
+        }
+
+        if (!hasHeadline) {
+            validation.errors.push({
+                type: 'no_headline',
+                message: 'No meaningful headline found',
+                suggestion: 'Add a clear, descriptive headline after the FOR IMMEDIATE RELEASE line'
+            });
+            validation.quality_score -= 25;
+        }
+
+        if (bodyLength < 100) {
+            validation.errors.push({
+                type: 'insufficient_content',
+                message: `Press release body is too short (${bodyLength} characters)`,
+                suggestion: 'Expand the body text to at least 100-200 characters with meaningful content'
+            });
+            validation.quality_score -= 35;
+        }
+
+        // HIGH-PRIORITY WARNINGS
+        if (!hasDateline) {
+            validation.warnings.push({
+                type: 'missing_dateline',
+                severity: 'high',
+                message: 'Missing dateline (location and date)',
+                suggestion: 'Add a dateline in format: CITY, STATE — Month Day, Year'
+            });
+            validation.quality_score -= 15;
+        }
+
+        if (quoteCount > 0 && unknownPct > 75) {
+            validation.warnings.push({
+                type: 'too_many_unknown_speakers',
+                severity: 'high',
+                message: `${unknownPct}% of quotes have unknown speakers (${unknownSpeakers}/${quoteCount})`,
+                suggestion: 'Add proper attribution to quotes using format: "Quote text," said FirstName LastName, Title.'
+            });
+            validation.quality_score -= 20;
+        } else if (quoteCount > 0 && unknownPct > 50) {
+            validation.warnings.push({
+                type: 'many_unknown_speakers',
+                severity: 'medium',
+                message: `${unknownPct}% of quotes have unknown speakers (${unknownSpeakers}/${quoteCount})`,
+                suggestion: 'Improve quote attribution by adding speaker names after quotes'
+            });
+            validation.quality_score -= 10;
+        }
+
+        // MEDIUM-PRIORITY WARNINGS
+        if (quoteCount === 1) {
+            validation.warnings.push({
+                type: 'few_quotes',
+                severity: 'medium',
+                message: 'Only 1 quote found - press releases typically include 2-3 quotes',
+                suggestion: 'Consider adding 1-2 more quotes from relevant speakers'
+            });
+            validation.quality_score -= 5;
+        }
+
+        if (unknownSpeakers > 0 && unknownPct <= 50) {
+            validation.warnings.push({
+                type: 'some_unknown_speakers',
+                severity: 'low',
+                message: `${unknownSpeakers} quote(s) have unknown speakers`,
+                suggestion: 'Review quotes without attribution and add speaker names where possible'
+            });
+            validation.quality_score -= 5;
+        }
+
+        if (bodyLength > 0 && bodyLength < 200) {
+            validation.warnings.push({
+                type: 'short_content',
+                severity: 'low',
+                message: `Press release is quite brief (${bodyLength} characters)`,
+                suggestion: 'Consider expanding with more context, background, or additional details'
+            });
+            validation.quality_score -= 5;
+        }
+
+        // Determine final status and rejection
+        validation.quality_score = Math.max(0, validation.quality_score);
+
+        if (validation.quality_score < 40) {
+            validation.status = 'rejected';
+            validation.should_reject = true;
+        } else if (validation.quality_score < 60) {
+            validation.status = 'poor';
+        } else if (validation.quality_score < 75) {
+            validation.status = 'fair';
+        } else if (validation.quality_score < 90) {
+            validation.status = 'good';
+        } else {
+            validation.status = 'excellent';
+        }
+
+        // Generate summary suggestions
+        if (validation.should_reject) {
+            validation.suggestions.push('This press release has critical issues that prevent proper parsing. Please address all errors before resubmitting.');
+        } else if (validation.status === 'poor') {
+            validation.suggestions.push('This press release has significant quality issues. Please review and address warnings to improve parseability.');
+        } else if (validation.status === 'fair') {
+            validation.suggestions.push('This press release is parseable but could be improved. Review warnings for specific suggestions.');
+        }
+
+        return validation;
+    }
+
+    /**
+     * Parse press release and include validation results
+     * @param {string} text - Press release text
+     * @param {boolean} includeValidation - Whether to include validation results (default: true)
+     * @returns {Object} Parse result with optional validation
+     */
+    parseWithValidation(text, includeValidation = true) {
+        const parseResult = this.parse(text);
+
+        if (includeValidation) {
+            parseResult.validation = this.validateQuality(parseResult, text);
+        }
+
+        return parseResult;
+    }
 }
 
 module.exports = PressReleaseParser;
