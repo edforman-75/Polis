@@ -208,15 +208,19 @@ class PressReleaseParser {
      * Returns: { speaker: 'Full Name', position: index_where_found }
      */
     detectStatementFormat(text) {
+        // UPDATED: Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
         const statementPatterns = [
+            // "Representative Alexandria Ocasio-Cortez (NY-14) released a statement"
+            // Handles titles + names + district info + "released a statement" (without "the following")
+            /(?:Representative|Senator|Congresswoman|Congressman|Governor|Mayor)\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s*(?:\([^)]+\))?\s+released\s+a\s+statement/i,
             // "Mikie Sherrill released the following statement:"
-            /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+released\s+the\s+following\s+statement/i,
+            /([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+released\s+the\s+following\s+statement/i,
             // "Statement from Mikie Sherrill:"
-            /Statement\s+from\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+            /Statement\s+from\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)/i,
             // "Campaign Manager Alex Ball released the following statement"
-            /(?:Campaign\s+Manager|Press\s+Secretary|Spokesperson)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+released\s+the\s+following\s+statement/i,
+            /(?:Campaign\s+Manager|Press\s+Secretary|Spokesperson)\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+released\s+the\s+following\s+statement/i,
             // "X said in a statement:"
-            /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+said\s+in\s+a\s+statement/i
+            /([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+said\s+in\s+a\s+statement/i
         ];
 
         for (const pattern of statementPatterns) {
@@ -243,6 +247,9 @@ class PressReleaseParser {
     extractQuotes(text, headline = '', subhead = '') {
         const quotes = [];
 
+        // STEP 0: Detect statement format - if someone "released a statement", apply speaker to all quotes
+        const statementFormat = this.detectStatementFormat(text);
+
         // STEP 1: Detect and extract multi-paragraph journalism-style quotes first
         // Format: "Para 1...\n\n"Para 2...\n\n"Para 3..." said Speaker
         const multiParaQuotes = this.extractMultiParagraphQuotes(text);
@@ -268,7 +275,19 @@ class PressReleaseParser {
             return true;
         });
 
-        // STEP 4: Sort by position in document
+        // STEP 4: Apply statement speaker to quotes without attribution
+        if (statementFormat && statementFormat.speaker) {
+            filteredQuotes.forEach(quote => {
+                // If quote has no speaker or empty speaker, apply statement speaker
+                if (!quote.speaker_name || quote.speaker_name.trim() === '' || quote.speaker_name === 'Unknown Speaker') {
+                    quote.speaker_name = statementFormat.speaker;
+                    quote.speaker_title = quote.speaker_title || '';
+                    quote.full_attribution = `Statement from ${statementFormat.speaker}`;
+                }
+            });
+        }
+
+        // STEP 5: Sort by position in document
         filteredQuotes.sort((a, b) => a.position - b.position);
 
         return filteredQuotes;
@@ -392,10 +411,11 @@ class PressReleaseParser {
         }
 
         // Pattern: "said Mikie Sherrill" or "according to John Smith"
+        // UPDATED: Support hyphenated names (e.g., "Ocasio-Cortez") and single names
         const patterns = [
-            /(?:said|according to|stated|announced|noted|explained|added|continued)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i,
-            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s+(?:said|stated|announced)/i,
-            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/i // Fallback: just extract name
+            /(?:said|according to|stated|announced|noted|explained|added|continued)\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)/i,
+            /^([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+(?:said|stated|announced)/i,
+            /^([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)/i // Fallback: just extract name
         ];
 
         for (const pattern of patterns) {
@@ -469,7 +489,8 @@ class PressReleaseParser {
             // Also handle reversed attribution: "quote," Name verb.
             // Handles: "quote," Porter continued. or "quote," Smith added.
             // Note: NOT case-insensitive to avoid matching pronouns like "she"/"he"
-            const reversedPattern = /^[,\s]*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(said|stated|announced|noted|explained|added|continued|emphasized|told)/;
+            // UPDATED: Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+            const reversedPattern = /^[,\s]*([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+(said|stated|announced|noted|explained|added|continued|emphasized|told)/;
             const reversedMatch = contextAfter.match(reversedPattern);
 
             // Also check for simple pronoun attribution: "quote," she said. or "quote," he said.
@@ -504,7 +525,8 @@ class PressReleaseParser {
                 } else {
                     // Only search for names if we don't have a previous speaker
                     const contextWindow = text.substring(Math.max(0, quoteStartPos - 500), quoteStartPos);
-                    const namePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/g;
+                    // Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+                    const namePattern = /\b([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)+)\b/g;
                     const names = [];
                     let nameMatch;
                     while ((nameMatch = namePattern.exec(contextWindow)) !== null) {
@@ -524,7 +546,8 @@ class PressReleaseParser {
             } else {
                 // IMPROVEMENT #007: Check for narrative attribution with colon before quote
                 // Pattern: "She told students:" or "He told the audience:" or "Spanberger told attendees:"
-                const narrativePattern = /(she|he|they|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+told\s+[^:]+:\s*$/i;
+                // Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+                const narrativePattern = /(she|he|they|[A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+told\s+[^:]+:\s*$/i;
                 const narrativeMatch = contextBefore.match(narrativePattern);
 
                 if (narrativeMatch) {
@@ -587,7 +610,8 @@ class PressReleaseParser {
                     } else {
                         // Pattern: Speaker Name said "quote"
                         // NEW: More flexible - allows extra words between name and "said" (e.g., "said on Instagram that")
-                        const speakerBeforePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:said|stated|announced|noted|explained)(?:\s+\w+(?:\s+\w+){0,5}?\s+that)?[,:\s]*$/i;
+                        // UPDATED: Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+                        const speakerBeforePattern = /([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+(?:said|stated|announced|noted|explained)(?:\s+\w+(?:\s+\w+){0,5}?\s+that)?[,:\s]*$/i;
                         const speakerBeforeMatch = contextBefore.match(speakerBeforePattern);
 
                         if (speakerBeforeMatch) {
@@ -769,7 +793,8 @@ class PressReleaseParser {
 
         // Extract title and full name from attribution
         // Captures one or more capitalized words after title (e.g., "Rep. Dave Min")
-        const titleLastPattern = new RegExp(`(${titlesPattern})\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)`, 'i');
+        // UPDATED: Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+        const titleLastPattern = new RegExp(`(${titlesPattern})\\s+([A-Z][a-zA-Z'-]+(?:\\s+[A-Z][a-zA-Z'-]+)*)`, 'i');
         const titleLastMatch = cleaned.match(titleLastPattern);
 
         let lastName = null;
@@ -780,7 +805,8 @@ class PressReleaseParser {
             lastName = titleLastMatch[2];
         } else {
             // Try to extract any capitalized name (but verify it's not a title)
-            const namePattern = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/;
+            // Support hyphenated names (e.g., "Ocasio-Cortez") and apostrophes (e.g., "O'Brien")
+            const namePattern = /([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)/;
             const nameMatch = cleaned.match(namePattern);
             if (nameMatch) {
                 const name = nameMatch[1];
@@ -800,6 +826,12 @@ class PressReleaseParser {
 
         // If we have a last name, search EARLIER in the document for the full name
         if (lastName && fullText) {
+            // IMPROVEMENT: If lastName already contains a hyphen or apostrophe, it's likely complete
+            // (e.g., "Ocasio-Cortez", "O'Brien") - return it as-is without searching for first name
+            if (/-/.test(lastName) || /'/.test(lastName)) {
+                return lastName;
+            }
+
             // Look for "FirstName LastName" pattern
             // Example: find "James Wilson" when we have lastName "Wilson"
             const fullNamePattern = new RegExp(`\\b([A-Z][a-z]+)\\s+${lastName}\\b`, 'g');
@@ -1723,6 +1755,56 @@ class PressReleaseParser {
                 result.confidence = 'medium';
                 if (result.date) {
                     result.full = result.date;
+                }
+            }
+        }
+
+        // STRATEGY -0.5: Check for AOC-style multi-line format (IMPROVEMENT #009)
+        // Format: Line with date (e.g., "September 19, 2025") followed 2 lines later by location
+        // Line 1: Headline
+        // Line 3: September 19, 2025
+        // Line 5: Washington, D.C.
+        const datePattern = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}$/i;
+
+        for (let i = 0; i < Math.min(lines.length, 10); i++) {
+            const trimmed = lines[i].trim();
+            const dateMatch = trimmed.match(datePattern);
+
+            if (dateMatch && trimmed.length < 30) { // Date line should be short
+                result.date = trimmed;
+
+                // Look for location 1-3 lines after the date
+                for (let j = i + 1; j < Math.min(lines.length, i + 4); j++) {
+                    const locationLine = lines[j].trim();
+
+                    // Match location patterns: "Washington, D.C." or "New York, NY" or "San Francisco"
+                    // NOT all caps (distinguishes from Porter-style)
+                    const locPatterns = [
+                        /^([A-Z][a-zA-Z\s]+),\s*([A-Z]\.?[A-Z]\.?|[A-Z][a-z]{1,20})$/,  // City, ST or City, D.C.
+                        /^([A-Z][a-zA-Z\s]{3,20})$/  // Single city name
+                    ];
+
+                    for (const pattern of locPatterns) {
+                        const locMatch = locationLine.match(pattern);
+                        if (locMatch && locationLine.length < 40) { // Location should be short
+                            if (locMatch[2]) {
+                                result.location = `${locMatch[1].trim()}, ${locMatch[2]}`;
+                            } else {
+                                result.location = locMatch[1].trim();
+                            }
+                            result.confidence = 'high';
+                            result.full = `${result.location} — ${result.date}`;
+                            result.format = 'aoc-multiline';
+                            return result;
+                        }
+                    }
+                }
+
+                // If we found date but no location, still return with medium confidence
+                if (result.date && !result.location) {
+                    result.confidence = 'medium';
+                    result.full = result.date;
+                    break;
                 }
             }
         }

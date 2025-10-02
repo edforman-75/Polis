@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 
 // Import routes
 const authRoutes = require('./backend/routes/auth');
@@ -176,6 +177,52 @@ Improved:`;
             error: 'Enhancement failed',
             enhanced: req.body.sentence // Fallback to original
         });
+    }
+});
+
+// Parser verification endpoints - List example files
+app.get('/api/parser/examples', async (req, res) => {
+    try {
+        const examplesDir = path.join(__dirname, 'cpo_examples');
+        const files = fs.readdirSync(examplesDir)
+            .filter(file => file.endsWith('.txt') && !file.endsWith('.json'))
+            .sort()
+            .map(file => ({
+                filename: file,
+                displayName: file.replace('.txt', '').replace(/_/g, ' ')
+            }));
+
+        res.json({ examples: files });
+    } catch (error) {
+        console.error('Error listing examples:', error);
+        res.status(500).json({ error: 'Failed to list examples' });
+    }
+});
+
+// Parser verification endpoints - Load specific example file
+app.get('/api/parser/examples/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+
+        // Security: prevent path traversal
+        if (filename.includes('..') || filename.includes('/')) {
+            return res.status(400).json({ error: 'Invalid filename' });
+        }
+
+        const filePath = path.join(__dirname, 'cpo_examples', filename);
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const content = fs.readFileSync(filePath, 'utf-8');
+        res.json({
+            filename,
+            content
+        });
+    } catch (error) {
+        console.error('Error loading example:', error);
+        res.status(500).json({ error: 'Failed to load example' });
     }
 });
 
@@ -464,8 +511,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Documentation routes - serve markdown files
-const fs = require('fs');
-
 app.get('/api/docs/prd', (req, res) => {
     const filePath = path.join(__dirname, 'PRD-Campaign-AI-Editor.md');
     res.set('Content-Type', 'text/markdown');
