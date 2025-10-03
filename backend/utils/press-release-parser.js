@@ -168,11 +168,51 @@ class PressReleaseParser {
             }
         }
 
+        // Extract date from press release
+        // Common patterns: "March 11, 2025", "October 1, 2025", "Wednesday, September 17, 2025", "Oct 02, 2025"
+        let date = '';
+        const datePatterns = [
+            /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})/i,
+            /([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})/,
+            /([A-Z][a-z]{2}\s+\d{1,2},?\s+\d{4})/
+        ];
+
+        for (const pattern of datePatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                date = match[1] || match[0];
+                break;
+            }
+        }
+
+        // Extract location from press release
+        // Common patterns: "CITY, STATE -" or "CITY, STATE" on its own line
+        // Handles both "D.C." and "DC" formats
+        let location = '';
+        const locationPatterns = [
+            // Pattern 1: Location with dash (e.g., "IRVINE, CA - ", "WASHINGTON, D.C. -")
+            /([A-Z][A-Z\s.]+,\s+[A-Z.]{2,})\s*-/,
+            // Pattern 2: Location on its own line (e.g., "WASHINGTON, D.C.", "WASHINGTON, DC")
+            /^([A-Z][A-Z\s.]+,\s+(?:[A-Z]{2}|[A-Z]\.[A-Z]\.|DC|D\.C\.))$/m,
+            // Pattern 3: Location in first few lines without dash
+            /^(?:.*?\n){1,5}([A-Z][A-Z\s.]+,\s+(?:[A-Z]{2}|[A-Z]\.[A-Z]\.|DC|D\.C\.))\s*$/m
+        ];
+
+        for (const pattern of locationPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                location = match[1].trim();
+                break;
+            }
+        }
+
         return {
             releaseType,
             embargoDate,
             embargoTime,
-            timing_classification: releaseType === 'FOR EMBARGOED RELEASE' ? 'Embargoed Release' : 'Immediate Release'
+            timing_classification: releaseType === 'FOR EMBARGOED RELEASE' ? 'Embargoed Release' : 'Immediate Release',
+            date: date,
+            location: location
         };
     }
 
@@ -837,6 +877,9 @@ class PressReleaseParser {
         // STEP 0: Detect statement format - if someone "released a statement", apply speaker to all quotes
         const statementFormat = this.detectStatementFormat(text);
 
+        // STEP 0.5: Extract joint statements (unquoted statement text after "released the following statement:")
+        const jointStatementQuotes = this.extractJointStatements(text);
+
         // STEP 1: Detect and extract multi-paragraph journalism-style quotes first
         // Format: "Para 1...\n\n"Para 2...\n\n"Para 3..." said Speaker
         const multiParaQuotes = this.extractMultiParagraphQuotes(text);
@@ -851,7 +894,7 @@ class PressReleaseParser {
         const regularQuotes = this.extractRegularQuotes(text, multiParaPositions);
 
         // STEP 3: Combine and filter
-        const allQuotes = [...multiParaQuotes, ...regularQuotes];
+        const allQuotes = [...jointStatementQuotes, ...multiParaQuotes, ...regularQuotes];
 
         // Filter out quotes from headline/subhead
         const filteredQuotes = allQuotes.filter(quote => {
@@ -878,6 +921,106 @@ class PressReleaseParser {
         filteredQuotes.sort((a, b) => a.position - b.position);
 
         return filteredQuotes;
+    }
+
+    /**
+     * Extract joint statements (unquoted statement text)
+     * Format: "Name(s) released the following [joint] statement:\n\nStatement text..."
+     * The statement text has no quotation marks but should be treated as a quote
+     */
+    extractJointStatements(text) {
+        const quotes = [];
+        const lines = text.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+
+            // Look for "released the following [joint] statement:" pattern
+            const statementMatch = line.match(/released the following (?:joint )?statement:/i);
+            if (!statementMatch) continue;
+
+            // Extract speaker name(s) from the line
+            // Pattern: "Today, [SPEAKER NAMES] released the following..."
+            // or: "[SPEAKER NAMES] released the following..."
+            let speaker = '';
+            const beforeReleased = line.substring(0, statementMatch.index).trim();
+
+            // Remove "Today," or date prefixes
+            let speakerText = beforeReleased
+                .replace(/^Today,?\s*/i, '')
+                .replace(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+/i, '')
+                .replace(/^[A-Z][a-z]+\s+\d{1,2},?\s+\d{4},?\s*/i, '')
+                .trim();
+
+            speaker = speakerText;
+
+            // Now collect the statement text (all paragraphs after the pattern)
+            let statementParagraphs = [];
+            let j = i + 1;
+
+            // Skip empty lines immediately after the statement marker
+            while (j < lines.length && lines[j].trim() === '') {
+                j++;
+            }
+
+            // Collect paragraphs until we hit a stopping condition
+            let currentParagraph = '';
+            while (j < lines.length) {
+                const currentLine = lines[j].trim();
+
+                // Stop conditions
+                if (currentLine === '###' ||
+                    currentLine === '---' ||
+                    currentLine.match(/^Contact:/i) ||
+                    currentLine.match(/^For (?:more )?information/i) ||
+                    currentLine.match(/^Media (?:Contact|Inquiries)/i) ||
+                    currentLine.match(/^\d{3}[.-]\d{3}[.-]\d{4}/) || // Phone number
+                    currentLine.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) { // Email
+                    break;
+                }
+
+                // Empty line indicates paragraph break
+                if (currentLine === '') {
+                    if (currentParagraph.trim()) {
+                        statementParagraphs.push(currentParagraph.trim());
+                        currentParagraph = '';
+                    }
+                } else {
+                    // Add line to current paragraph
+                    if (currentParagraph) {
+                        currentParagraph += ' ' + currentLine;
+                    } else {
+                        currentParagraph = currentLine;
+                    }
+                }
+
+                j++;
+            }
+
+            // Add last paragraph if exists
+            if (currentParagraph.trim()) {
+                statementParagraphs.push(currentParagraph.trim());
+            }
+
+            // Create quote object if we found statement text
+            if (statementParagraphs.length > 0) {
+                const quoteText = statementParagraphs.join('\n\n');
+
+                quotes.push({
+                    quote_text: quoteText,
+                    speaker_name: speaker || 'Unknown',
+                    speaker_title: '',
+                    full_attribution: speaker ? `Statement from ${speaker}` : 'Statement',
+                    position: text.indexOf(line),
+                    type: 'joint-statement'
+                });
+
+                // Skip ahead past what we've processed
+                i = j - 1;
+            }
+        }
+
+        return quotes;
     }
 
     /**
@@ -1641,9 +1784,21 @@ class PressReleaseParser {
             mediaContact = fullContact;
         }
 
+        // Extract individual contact fields
+        const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/;
+        const phonePattern = /(\d{3}[-.\\s]?\d{3}[-.\\s]?\d{4})/;
+        const websitePattern = /((?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.(?:com|org|gov|net|edu)(?:\/[^\s]*)?)/;
+
+        const emailMatch = text.match(emailPattern);
+        const phoneMatch = text.match(phonePattern);
+        const websiteMatch = text.match(websitePattern);
+
         return {
             media_contact: mediaContact,
-            paid_for: paidForMatch ? paidForMatch[1].trim() : ''
+            paid_for: paidForMatch ? paidForMatch[1].trim() : '',
+            email: emailMatch ? emailMatch[1] : '',
+            phone: phoneMatch ? phoneMatch[1] : '',
+            website: websiteMatch ? websiteMatch[1] : ''
         };
     }
 
@@ -2007,6 +2162,13 @@ class PressReleaseParser {
 
             // Skip ISO date lines
             if (this.releasePatterns.iso_date.test(line)) continue;
+
+            // Skip full dates (day + month + year) - these are publication dates, not subheads
+            // Patterns: "September 19, 2025", "Oct 02, 2025", "Wednesday, September 17, 2025"
+            if (/^(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+)?[A-Z][a-z]+\s+\d{1,2},?\s+\d{4}$/i.test(line)) continue;
+
+            // Skip standalone locations (e.g., "WASHINGTON, D.C." or "Washington, D.C." or "IRVINE, CA") - these are dateline locations, not subheads
+            if (/^[A-Z][A-Za-z\s.]+,\s+(?:[A-Z]{2}|D\.C\.|DC)$/i.test(line)) continue;
 
             // Skip standalone quotes (these are part of body, not subhead)
             if (/^[""]/.test(line) && !/[""].*[""]/.test(line)) continue;
@@ -3054,6 +3216,1648 @@ class PressReleaseParser {
         }
 
         return parseResult;
+    }
+
+    /**
+     * ============================================================================
+     * FACTUAL CLAIMS EXTRACTION
+     * ============================================================================
+     * Identifies provable, verifiable statements vs speculative/hedged claims
+     */
+
+    /**
+     * Extract provable factual claims from text
+     * Filters out hedged, speculative, opinion, and conditional statements
+     */
+    extractProvableFacts(text) {
+        const facts = [];
+
+        // Split text into sentences
+        const sentences = this.splitIntoSentences(text);
+
+        for (let i = 0; i < sentences.length; i++) {
+            const sentence = sentences[i].trim();
+
+            // Skip very short sentences
+            if (sentence.length < 20) continue;
+
+            // Check if claim is based on private/unverifiable data
+            const privateDataCheck = this.detectPrivateDataClaim(sentence);
+            if (privateDataCheck.is_private) {
+                // Still record it but mark as unverifiable
+                facts.push({
+                    statement: sentence,
+                    type: ['private-data-claim'],
+                    confidence: 0,
+                    verifiable: false,
+                    reason_unverifiable: privateDataCheck.reason,
+                    private_data_indicators: privateDataCheck.indicators,
+                    numeric_claims: this.extractNumericClaims(sentence),
+                    note: 'Cannot be verified against public sources'
+                });
+                continue;
+            }
+
+            // Check for plausible deniability patterns
+            const deniabilityCheck = this.detectPlausibleDeniability(sentence);
+            if (deniabilityCheck.has_deniability) {
+                // Record as deniable claim - speaker avoids direct responsibility
+                facts.push({
+                    statement: sentence,
+                    type: ['plausible-deniability', ...deniabilityCheck.labels.map(l => l.toLowerCase())],
+                    confidence: 0.3, // Low confidence because not a direct assertion
+                    verifiable: true,
+                    verification_type: 'extract-underlying-claim',
+                    deniability_patterns: deniabilityCheck.matched_patterns,
+                    deniability_reason: deniabilityCheck.reason,
+                    deniability_score: deniabilityCheck.confidence,
+                    numeric_claims: this.extractNumericClaims(sentence),
+                    note: 'Speaker uses deniability patterns to avoid direct responsibility for claim'
+                });
+                continue;
+            }
+
+            // Check if this is hearsay/reported speech
+            const hearsayCheck = this.detectHearsay(sentence);
+            if (hearsayCheck.is_hearsay) {
+                // Record as hearsay - requires two-step verification
+                facts.push({
+                    statement: sentence,
+                    type: ['hearsay', 'reported-speech'],
+                    confidence: 0.5,
+                    verifiable: true,
+                    verification_type: 'two-step',
+                    original_speaker: hearsayCheck.original_speaker,
+                    hearsay_type: hearsayCheck.hearsay_type,
+                    verification_notes: hearsayCheck.verification_notes,
+                    numeric_claims: this.extractNumericClaims(sentence),
+                    note: 'Hearsay requires verifying both the attribution and the claim itself'
+                });
+                continue;
+            }
+
+            // Check for comparative/computational claims (e.g., "deficit is greater than GDP")
+            const comparativeClaim = this.detectComparativeClaim(sentence);
+            if (comparativeClaim.is_comparative) {
+                facts.push({
+                    statement: sentence,
+                    text: sentence,
+                    type: ['comparative-claim', 'computational'],
+                    confidence: 0.8,
+                    verifiable: true,
+                    verification_type: 'multi-step-comparative',
+                    comparison_type: comparativeClaim.comparison_type,
+                    metrics: comparativeClaim.metrics,
+                    verification_steps: comparativeClaim.verification_steps,
+                    numeric_claims: this.extractNumericClaims(sentence),
+                    note: 'Requires looking up multiple data points and comparing them'
+                });
+                continue;
+            }
+
+            // Check if sentence is hedged/speculative
+            const hedging = this.detectHedging(sentence);
+            if (hedging.is_hedged && hedging.confidence > 0.6) continue;
+
+            // Check if sentence contains factual elements
+            const factualElements = this.identifyFactualElements(sentence);
+            if (factualElements.score < 0.3) continue;
+
+            // Classify the type of fact
+            const factType = this.classifyFactType(sentence, factualElements);
+
+            // Extract any numeric claims
+            const numericClaims = this.extractNumericClaims(sentence);
+
+            // Check for attribution
+            const attribution = this.extractAttribution(sentence);
+
+            facts.push({
+                statement: sentence,
+                text: sentence,
+                type: factType,
+                confidence: this.calculateFactConfidence(sentence, hedging, factualElements),
+                verifiable: true,
+                verification_type: 'standard',
+                hedging_detected: hedging.is_hedged ? hedging.markers : [],
+                numeric_claims: numericClaims,
+                has_attribution: attribution.has_attribution,
+                attribution_source: attribution.source,
+                factual_elements: factualElements.elements,
+                requires_verification: factualElements.score > 0.5
+            });
+        }
+
+        // Sort by confidence (most confident facts first)
+        facts.sort((a, b) => b.confidence - a.confidence);
+
+        return facts;
+    }
+
+    /**
+     * Split text into sentences
+     */
+    splitIntoSentences(text) {
+        // Split on sentence boundaries
+        // Handle abbreviations like "U.S." or "D.C." carefully
+        return text
+            .replace(/([.!?])\s+(?=[A-Z])/g, '$1|SPLIT|')
+            .split('|SPLIT|')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+    }
+
+    /**
+     * Detect claims based on private/internal data that cannot be verified
+     *
+     * CONCEPT: A claim is verifiable only if the underlying data source is publicly accessible.
+     *
+     * Verification requires:
+     * 1. PUBLIC ACCESS - Independent parties can access the raw data
+     * 2. INDEPENDENT CONFIRMATION - Third parties can validate the claim
+     * 3. TRANSPARENT METHODOLOGY - Methods can be reviewed and reproduced
+     *
+     * Claims are UNVERIFIABLE when:
+     * 1. DATA SOURCE IS CONTROLLED BY CLAIMANT - "our internal polling", "my research"
+     * 2. DATA IS NOT PUBLICLY RELEASED - "private data", "proprietary analysis"
+     * 3. NO INDEPENDENT VALIDATION POSSIBLE - No way for third parties to confirm
+     *
+     * Examples:
+     * - UNVERIFIABLE: "Our internal polling shows we're ahead" (controlled by claimant)
+     * - VERIFIABLE: "A Gallup poll shows we're ahead" (public, independent source)
+     * - UNVERIFIABLE: "Our campaign data confirms momentum" (not publicly accessible)
+     * - VERIFIABLE: "FEC filings show we raised $5M" (public records)
+     */
+    detectPrivateDataClaim(sentence) {
+        const indicators = [];
+        const sentenceLower = sentence.toLowerCase();
+
+        /**
+         * STEP 1: Check if data source is controlled by the claimant
+         * Violates PUBLIC ACCESS principle - the claimant controls the data
+         */
+        const claimantControlledSources = /\b(?:according to|poll(?:ing)?\s+(?:by|from)|reported by|study by|data from)\s+(?:our|my|internal|private|proprietary|campaign)\b/i.test(sentence);
+
+        if (claimantControlledSources) {
+            // Data is controlled by claimant - cannot be independently verified
+            // e.g., "according to our internal polling" - we control the data
+        } else {
+            /**
+             * STEP 2: Check for public attribution
+             * Satisfies INDEPENDENT CONFIRMATION - third parties produced the data
+             */
+            const hasPublicAttribution = /\b(?:according to|poll(?:ing)?\s+(?:by|from)|reported by|study by|data from)\s+(?:[A-Z][\w\s,]+|(?:the\s+)?(?:Politico|CNN|Reuters|AP|New York Times|Washington Post|CBS|NBC|ABC|Fox|Pew|Gallup|Rasmussen))/i.test(sentence);
+
+            if (hasPublicAttribution) {
+                // Data from independent, public source - can be verified
+                return {
+                    is_private: false,
+                    confidence: 0,
+                    indicators: [],
+                    reason: 'Claim attributed to public source'
+                };
+            }
+        }
+
+        /**
+         * STEP 3: Detect explicit private data patterns
+         * Violates PUBLIC ACCESS and INDEPENDENT CONFIRMATION principles
+         *
+         * These patterns identify data sources that:
+         * - Are controlled exclusively by the claimant
+         * - Cannot be accessed by independent parties
+         * - Have no publicly available methodology
+         */
+        const privateDataPatterns = [
+            // "our/my/internal/private polling" - claimant controls the data
+            { pattern: /\b(our|my|internal|private|proprietary)\s+(?:poll(?:ing|s)?|data|research|analysis|survey|study|numbers|metrics)\b/i, type: 'internal-data', weight: 1.0 },
+
+            // "our own campaign data" - explicitly campaign-controlled
+            { pattern: /\b(?:our|my)\s+(?:own|campaign)\s+(?:poll(?:ing|s)?|data|research|numbers)\b/i, type: 'campaign-data', weight: 1.0 },
+
+            // "internal polling/data" - not publicly released
+            { pattern: /\binternal\s+(?:poll(?:ing|s)?|data|numbers|metrics|analysis)\b/i, type: 'internal', weight: 1.0 },
+
+            // "private polling/research" - explicitly not public
+            { pattern: /\bprivate\s+(?:poll(?:ing|s)?|data|research|survey)\b/i, type: 'private', weight: 1.0 },
+
+            // "proprietary analysis" - owned/controlled, not shared
+            { pattern: /\bproprietary\s+(?:data|research|analysis)\b/i, type: 'proprietary', weight: 1.0 },
+
+            // "our data shows" - slightly weaker signal but still indicates control
+            { pattern: /\bour\s+(?:data|research)\s+(?:shows|confirms|indicates)\b/i, type: 'our-data', weight: 0.9 }
+        ];
+
+        let maxWeight = 0;
+        let reason = '';
+
+        // Check each pattern and track the strongest indicator found
+        for (const {pattern, type, weight} of privateDataPatterns) {
+            if (pattern.test(sentence)) {
+                const match = sentence.match(pattern);
+                indicators.push({
+                    type,
+                    match: match[0],
+                    weight
+                });
+                if (weight > maxWeight) {
+                    maxWeight = weight;
+                    reason = `Based on ${type.replace('-', ' ')} which is not publicly verifiable`;
+                }
+            }
+        }
+
+        /**
+         * STEP 4: Detect unsourced self-referential claims
+         * Violates TRANSPARENT METHODOLOGY - no way to validate the underlying data
+         *
+         * Example: "We are 20 points ahead" - who measured this? what's the source?
+         * Without attribution, we cannot access the methodology or verify the claim
+         */
+        if (sentenceLower.includes('we are') || sentenceLower.includes('we have')) {
+            if (/\b\d+\s*(?:point|percent|%|percentage)\s*(?:ahead|lead|up)\b/i.test(sentence)) {
+                // Check if there's NO public attribution
+                if (!/\baccording to\b/i.test(sentence) && !/\bpoll(?:ing|s)?\s+(?:by|from)\b/i.test(sentence)) {
+                    indicators.push({
+                        type: 'unsourced-comparative-claim',
+                        match: 'Self-referential claim without public source',
+                        weight: 0.7
+                    });
+                    maxWeight = Math.max(maxWeight, 0.7);
+                    reason = reason || 'Self-referential claim without attribution to public source';
+                }
+            }
+        }
+
+        return {
+            is_private: maxWeight >= 0.7,
+            confidence: maxWeight,
+            indicators,
+            reason: reason || 'Claim based on publicly verifiable data'
+        };
+    }
+
+    /**
+     * Detect plausible deniability patterns
+     *
+     * CONCEPT: Plausible deniability is when a speaker makes claims while maintaining
+     * the ability to deny responsibility or ownership of those claims.
+     *
+     * Common techniques:
+     * - Anonymous attribution: "People are saying...", "Everybody knows..."
+     * - Hedging: "Might be...", "Could be...", "Seems like..."
+     * - JAQing off: "I'm not saying it's true, but...", "Just asking questions..."
+     * - Passive authority: "It is widely believed..."
+     * - Rhetorical questions: "Isn't it interesting that...?"
+     *
+     * These patterns allow speakers to:
+     * 1. Make inflammatory claims without direct responsibility
+     * 2. Avoid fact-checking by not making direct assertions
+     * 3. Suggest conclusions without stating them explicitly
+     */
+    detectPlausibleDeniability(sentence) {
+        const patterns = [
+            // Trump-style attribution to anonymous sources
+            { id: 'ATTR_PEOPLE_SAY', label: 'AttributionToAnonymousOthers', weight: 0.40,
+              rx: /\b(people|lots of people|a lot of people|many (people|folks)) (are )?(saying|telling|have said)\b/i },
+            { id: 'ATTR_EVERYBODY_KNOWS', label: 'AppealToObviousness', weight: 0.40,
+              rx: /\b(everybody|everyone)\s+knows\b/i },
+            { id: 'ATTR_I_HEARD', label: 'HearsayShield', weight: 0.35,
+              rx: /\b(i\s*(just\s*)?heard|i'?ve heard|i(?:\s*do\s*not| don't)\s*know,?\s*but)\b/i },
+            { id: 'ATTR_MANY_BELIEVE', label: 'AppealToConsensus', weight: 0.35,
+              rx: /\b(many|most)\s+(people\s+)?(believe|think|feel)\b/i },
+            { id: 'ATTR_THEY_SAY', label: 'TheySay', weight: 0.35,
+              rx: /\b(they|some)\s+(say|are saying|have said)\b/i },
+
+            // Hedging with modality
+            { id: 'HEDGE_MODAL', label: 'HedgedModality', weight: 0.20,
+              rx: /\b(might|may|could|seems|appears|likely|possibly|perhaps)\b/i },
+            { id: 'COND_IF_TRUE', label: 'ConditionalEscape', weight: 0.25,
+              rx: /\b(if\s+true|assuming\s+this\s+is\s+the\s+case|suppose\s+for\s+a\s+moment)\b/i },
+
+            // Passive/impersonal authority
+            { id: 'PASSIVE_WIDELY_BELIEVED', label: 'PassiveAuthority', weight: 0.30,
+              rx: /\b(it\s+is\s+(widely\s+)?believed|it\s+has\s+been\s+suggested|it\s+is\s+said)\b/i },
+
+            // JAQing off (Just Asking Questions)
+            { id: 'JAQ', label: 'JustAskingQuestions', weight: 0.35,
+              rx: /\b(i'?m\s+not\s+saying\s+it'?s\s+true,?\s*but|not\s+saying\s+it'?s\s+true|just\s+asking|shouldn'?t\s+we\s+ask)\b/i },
+            { id: 'RHET_Q_STEMS', label: 'RhetoricalQuestionStem', weight: 0.20,
+              rx: /^(isn'?t\s+it\s+interesting|what\s+if|could\s+it\s+be\s+that|can\s+you\s+believe\s+it)\b/i },
+
+            // Equivocation / association without causation
+            { id: 'EQUIV_ASSOC', label: 'EquivocalAssociation', weight: 0.25,
+              rx: /\b(linked\s+to|connected\s+with|related\s+to)\b/i },
+
+            // Noncommittal future
+            { id: 'OVERLAP_WE_LL_SEE', label: 'NoncommittalFuture', weight: 0.25,
+              rx: /\b(we'?ll\s+see\s+what\s+happens|could\s+be\s+true,?\s*could\s+be\s+not\s+true|who\s+knows)\b/i },
+
+            // Common sense appeal
+            { id: 'COMMON_SENSE', label: 'AppealToCommonSense', weight: 0.30,
+              rx: /\b(it'?s)\s+(just\s+)?common\s+sense\b/i },
+
+            // Presupposition
+            { id: 'MEDIA_NEVER', label: 'Presupposition', weight: 0.30,
+              rx: /\b(the\s+media\s+never\s+talks?\s+about\s+it|nobody\s+talks?\s+about\s+it)\b/i }
+        ];
+
+        // Claiminess lexicon - charged terms that suggest serious accusations
+        const claimyWords = /\b(rigged|fraud|corrupt|fake|hoax|proof|evidence|massive|unprecedented|disaster|cover[-\s]?up|illegal|crime|scandal|worst|best|biggest|tremendous)\b/i;
+
+        // Rhetorical question stems
+        const rhetQuestionStem = /^\s*(isn'?t it|what if|could it be|can you believe|is it possible|how come)\b/i;
+
+        const matched = [];
+        let score = 0.0;
+
+        // Check each pattern
+        for (const pattern of patterns) {
+            if (pattern.rx.test(sentence)) {
+                const match = sentence.match(pattern.rx);
+                matched.push({
+                    id: pattern.id,
+                    label: pattern.label,
+                    match: match[0],
+                    weight: pattern.weight
+                });
+                score += pattern.weight;
+            }
+        }
+
+        // Claiminess boost - suggests hedge is attached to serious accusation
+        if (claimyWords.test(sentence)) {
+            score += 0.10;
+        }
+
+        // Rhetorical question boost
+        if (sentence.trim().endsWith('?') && rhetQuestionStem.test(sentence)) {
+            score += 0.10;
+        }
+
+        score = Math.min(1.0, score);
+
+        // Build reason string
+        const reasonBits = [];
+        if (matched.some(m => m.id.startsWith('ATTR_'))) {
+            reasonBits.push('attribution to anonymous or universalized sources');
+        }
+        if (matched.some(m => ['HEDGE_MODAL', 'COND_IF_TRUE'].includes(m.id))) {
+            reasonBits.push('hedged modality / conditional framing');
+        }
+        if (matched.some(m => ['JAQ', 'RHET_Q_STEMS'].includes(m.id)) || sentence.trim().endsWith('?')) {
+            reasonBits.push('rhetorical question / JAQ framing');
+        }
+        if (matched.some(m => m.id === 'PASSIVE_WIDELY_BELIEVED')) {
+            reasonBits.push('passive/impersonal authority');
+        }
+        if (matched.some(m => m.id === 'EQUIV_ASSOC')) {
+            reasonBits.push('equivocal association');
+        }
+        if (claimyWords.test(sentence)) {
+            reasonBits.push('contains charged claim terms');
+        }
+
+        return {
+            has_deniability: score >= 0.50,
+            confidence: score,
+            matched_patterns: matched,
+            reason: reasonBits.join('; '),
+            labels: [...new Set(matched.map(m => m.label))].sort()
+        };
+    }
+
+    /**
+     * Detect hearsay and reported speech
+     *
+     * CONCEPT: Hearsay is when the speaker reports what someone else said, rather than
+     * making a direct claim themselves.
+     *
+     * Verification of hearsay requires TWO steps:
+     * 1. VERIFY THE ATTRIBUTION - Did the person actually say this?
+     * 2. VERIFY THE CLAIM - Is what they said factually accurate?
+     *
+     * Types of reported speech:
+     * - Direct hearsay: "As you heard X say..." (referencing audience knowledge)
+     * - Indirect report: "X told us that..." (reporting private communication)
+     * - Paraphrase: "X mentioned that..." (restating someone's words)
+     *
+     * This is DIFFERENT from attribution:
+     * - Attribution: "According to the CBO, ..." (citing a verifiable source)
+     * - Hearsay: "As you heard the President say, ..." (reporting what was said)
+     */
+    detectHearsay(sentence) {
+        const indicators = [];
+
+        // Patterns for hearsay/reported speech
+        const hearsayPatterns = [
+            // Direct audience reference - "as you heard/saw X say"
+            { pattern: /\b(?:as|like)\s+you\s+(?:heard|saw|watched|listened to)\s+([A-Z][\w\s]+?)\s+(?:say|state|mention|claim|tell|explain)/i, type: 'audience-reference', weight: 1.0 },
+
+            // "You heard X say/mention/state"
+            { pattern: /\byou\s+heard\s+([A-Z][\w\s]+?)\s+(?:say|state|mention|claim|tell)/i, type: 'audience-reference', weight: 1.0 },
+
+            // "X told us/me that"
+            { pattern: /\b([A-Z][\w\s]+?)\s+told\s+(?:us|me|them)\s+(?:that|how)/i, type: 'reported-private-communication', weight: 0.9 },
+
+            // "X mentioned/said that"
+            { pattern: /\b([A-Z][\w\s]+?)\s+(?:mentioned|said|stated|claimed|told)\s+(?:that|how)/i, type: 'paraphrase', weight: 0.8 },
+
+            // "As X said/stated"
+            { pattern: /\bas\s+([A-Z][\w\s]+?)\s+(?:said|stated|mentioned|claimed|explained)/i, type: 'paraphrase', weight: 0.8 },
+
+            // "You've heard X say" (present perfect)
+            { pattern: /\byou(?:'ve|\s+have)\s+heard\s+([A-Z][\w\s]+?)\s+(?:say|state|claim)/i, type: 'audience-reference', weight: 1.0 }
+        ];
+
+        let maxWeight = 0;
+        let originalSpeaker = null;
+        let hearsayType = null;
+
+        for (const {pattern, type, weight} of hearsayPatterns) {
+            const match = sentence.match(pattern);
+            if (match) {
+                const speaker = match[1] ? match[1].trim() : null;
+                indicators.push({
+                    type,
+                    match: match[0],
+                    speaker,
+                    weight
+                });
+
+                if (weight > maxWeight) {
+                    maxWeight = weight;
+                    originalSpeaker = speaker;
+                    hearsayType = type;
+                }
+            }
+        }
+
+        return {
+            is_hearsay: maxWeight >= 0.8,
+            confidence: maxWeight,
+            original_speaker: originalSpeaker,
+            hearsay_type: hearsayType,
+            indicators,
+            verification_notes: maxWeight >= 0.8
+                ? `Must verify (1) that ${originalSpeaker || 'the person'} actually said this, and (2) whether the claim is factually accurate`
+                : null
+        };
+    }
+
+    /**
+     * Detect hedging language that indicates speculation rather than fact
+     */
+    detectHedging(sentence) {
+        const hedgingMarkers = [];
+        let score = 0;
+
+        // Modal verbs indicating uncertainty
+        const modalPatterns = [
+            { pattern: /\b(could|might|may)\b/i, weight: 0.9, type: 'modal-uncertainty' },
+            { pattern: /\b(would|should)\b/i, weight: 0.7, type: 'modal-conditional' },
+            { pattern: /\b(can|will)\s+(?!be\s+\d|cost\s+\$)/i, weight: 0.3, type: 'modal-weak' }
+        ];
+
+        // Estimation/approximation language
+        const estimationPatterns = [
+            { pattern: /\b(could be as (?:many|much) as|up to|as (?:many|much) as)\b/i, weight: 0.95, type: 'upper-bound-estimate' },
+            { pattern: /\b(approximately|roughly|around|about|nearly|almost)\b/i, weight: 0.7, type: 'approximation' },
+            { pattern: /\b(more than|over|less than|under|at least)\b/i, weight: 0.4, type: 'comparative-estimate' }
+        ];
+
+        // Uncertainty markers
+        const uncertaintyPatterns = [
+            { pattern: /\b(appears to|seems to|likely|probably|possibly|potentially)\b/i, weight: 0.9, type: 'uncertainty' },
+            { pattern: /\b(expected to|anticipated|projected|estimated)\b/i, weight: 0.6, type: 'projection' },
+            { pattern: /\b(suggest|indicate|imply|tend to)\b/i, weight: 0.5, type: 'inference' }
+        ];
+
+        // Conditional markers
+        const conditionalPatterns = [
+            { pattern: /\b(if\s+.*\s+then|in case|assuming|provided that)\b/i, weight: 0.85, type: 'conditional' },
+            { pattern: /\b(unless|without|depending on)\b/i, weight: 0.7, type: 'conditional-weak' }
+        ];
+
+        // Check all patterns
+        const allPatterns = [
+            ...modalPatterns,
+            ...estimationPatterns,
+            ...uncertaintyPatterns,
+            ...conditionalPatterns
+        ];
+
+        for (const {pattern, weight, type} of allPatterns) {
+            if (pattern.test(sentence)) {
+                hedgingMarkers.push({
+                    type,
+                    match: sentence.match(pattern)[0],
+                    weight
+                });
+                score = Math.max(score, weight);
+            }
+        }
+
+        return {
+            is_hedged: score > 0.4,
+            confidence: score,
+            markers: hedgingMarkers
+        };
+    }
+
+    /**
+     * Identify factual elements in a sentence
+     */
+    identifyFactualElements(sentence) {
+        const elements = [];
+        let score = 0;
+
+        // Specific numbers (not vague quantities)
+        if (/\b\d{1,3}(?:,\d{3})*(?:\.\d+)?\b/.test(sentence)) {
+            elements.push('specific-number');
+            score += 0.4;
+        }
+
+        // Currency amounts
+        if (/\$\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:\s*(?:million|billion|trillion))?/i.test(sentence)) {
+            elements.push('currency-amount');
+            score += 0.4;
+        }
+
+        // Percentages
+        if (/\d+(?:\.\d+)?%/.test(sentence)) {
+            elements.push('percentage');
+            score += 0.4;
+        }
+
+        // Specific dates (more specific = more factual)
+        if (/\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/i.test(sentence)) {
+            elements.push('specific-date');
+            score += 0.5;
+        }
+
+        // Past tense (factual assertions about what happened)
+        if (/\b(?:voted|passed|signed|announced|released|introduced|opposed|supported|proposed|enacted|defeated)\b/i.test(sentence)) {
+            elements.push('past-action');
+            score += 0.3;
+        }
+
+        // Definite present tense claims
+        if (/\b(?:is|are|has|have|costs|includes|contains|requires)\s+(?:\d|a\s+\$|the\s+\d)/i.test(sentence)) {
+            elements.push('definite-present');
+            score += 0.3;
+        }
+
+        // Named legislation/bills
+        if (/\b(?:H\.R\.|S\.|Bill|Act|Resolution)\s+\d+/i.test(sentence)) {
+            elements.push('legislation-reference');
+            score += 0.4;
+        }
+
+        // Specific geographic locations
+        if (/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*,\s+(?:[A-Z]{2}|D\.C\.)\b/.test(sentence)) {
+            elements.push('specific-location');
+            score += 0.2;
+        }
+
+        return {
+            elements,
+            score: Math.min(score, 1.0)
+        };
+    }
+
+    /**
+     * Classify the type of factual claim
+     */
+    classifyFactType(sentence, factualElements) {
+        const types = [];
+
+        if (factualElements.elements.includes('legislation-reference')) {
+            types.push('legislative-fact');
+        }
+
+        if (factualElements.elements.includes('currency-amount') ||
+            factualElements.elements.includes('specific-number')) {
+            types.push('statistical-claim');
+        }
+
+        if (factualElements.elements.includes('past-action')) {
+            types.push('historical-event');
+        }
+
+        if (factualElements.elements.includes('specific-date')) {
+            types.push('dated-claim');
+        }
+
+        if (/\b(?:according to|reported by|study by|data from)\b/i.test(sentence)) {
+            types.push('attributed-claim');
+        }
+
+        return types.length > 0 ? types : ['general-claim'];
+    }
+
+    /**
+     * Extract numeric claims from a sentence
+     */
+    extractNumericClaims(sentence) {
+        const claims = [];
+
+        // Currency amounts
+        const currencyMatches = sentence.matchAll(/\$(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(million|billion|trillion)?/gi);
+        for (const match of currencyMatches) {
+            claims.push({
+                type: 'currency',
+                value: match[1],
+                magnitude: match[2] || 'dollars',
+                text: match[0]
+            });
+        }
+
+        // Percentages
+        const percentMatches = sentence.matchAll(/(\d+(?:\.\d+)?)%/g);
+        for (const match of percentMatches) {
+            claims.push({
+                type: 'percentage',
+                value: match[1],
+                text: match[0]
+            });
+        }
+
+        // Population/count numbers
+        const countMatches = sentence.matchAll(/(\d{1,3}(?:,\d{3})+)\s+(people|Americans|families|workers|jobs|students)/gi);
+        for (const match of countMatches) {
+            claims.push({
+                type: 'population-count',
+                value: match[1],
+                unit: match[2],
+                text: match[0]
+            });
+        }
+
+        return claims;
+    }
+
+    /**
+     * Extract attribution (who is the source of the claim)
+     */
+    extractAttribution(sentence) {
+        const attributionPatterns = [
+            /according to ([^,]+)/i,
+            /(?:reported|found|showed|revealed)\s+by ([^,]+)/i,
+            /([^,]+)\s+(?:said|stated|announced|reported|found)/i,
+            /(?:study|report|analysis|data)\s+from ([^,]+)/i
+        ];
+
+        for (const pattern of attributionPatterns) {
+            const match = sentence.match(pattern);
+            if (match) {
+                return {
+                    has_attribution: true,
+                    source: match[1].trim()
+                };
+            }
+        }
+
+        return {
+            has_attribution: false,
+            source: null
+        };
+    }
+
+    /**
+     * Calculate overall confidence that this is a factual claim
+     */
+    calculateFactConfidence(sentence, hedging, factualElements) {
+        let confidence = factualElements.score;
+
+        // Reduce confidence based on hedging
+        if (hedging.is_hedged) {
+            confidence *= (1 - hedging.confidence * 0.7);
+        }
+
+        // Boost confidence for attribution
+        if (/\b(?:according to|reported by|study by|data from)\b/i.test(sentence)) {
+            confidence *= 1.2;
+        }
+
+        // Cap at 1.0
+        return Math.min(confidence, 1.0);
+    }
+
+    /**
+     * ============================================================================
+     * CLAIM VERIFICATION / GROUNDING
+     * ============================================================================
+     * Search for and validate factual claims against credible sources
+     */
+
+    /**
+     * Load credible sources configuration
+     */
+    loadCredibleSources() {
+        if (!this.credibleSources) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const sourcesPath = path.join(__dirname, '../../cpo_docs/tier1_sources.json');
+                this.credibleSources = JSON.parse(fs.readFileSync(sourcesPath, 'utf-8'));
+            } catch (error) {
+                console.error('Failed to load credible sources:', error.message);
+                this.credibleSources = { categories: {}, allowed_domains: [] };
+            }
+        }
+        return this.credibleSources;
+    }
+
+    /**
+     * Score the credibility of a source domain
+     */
+    scoreSourceCredibility(url) {
+        const sources = this.loadCredibleSources();
+        const domain = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+
+        // Check each category
+        const categoryScores = {
+            'congressional_official': 1.0,
+            'federal_agencies': 0.95,
+            'fact_checking': 0.90,
+            'research_institutions': 0.85,
+            'national_news': 0.75,
+            'broadcast_news': 0.70,
+            'state_local': 0.80
+        };
+
+        for (const [category, domains] of Object.entries(sources.categories || {})) {
+            if (domains.some(d => domain.includes(d))) {
+                return {
+                    score: categoryScores[category] || 0.6,
+                    tier: category,
+                    domain: domain,
+                    is_credible: true
+                };
+            }
+        }
+
+        // Not in our credible list
+        return {
+            score: 0.3,
+            tier: 'unknown',
+            domain: domain,
+            is_credible: false
+        };
+    }
+
+    /**
+     * Generate search queries from a factual claim
+     */
+    generateSearchQueries(claim) {
+        const queries = [];
+        const statement = claim.statement;
+        const numericClaims = claim.numeric_claims || [];
+
+        // Query 1: Direct statement search (focused on key content)
+        let directQuery = statement
+            .replace(/^.*?(?:said|stated|announced|released)\s+/i, '')
+            .replace(/\b(?:the|a|an|this|that|these|those)\b/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 120);
+
+        queries.push({
+            query: directQuery,
+            type: 'direct',
+            priority: 1
+        });
+
+        // Query 2: Attribution-focused (if source mentioned)
+        if (claim.has_attribution && claim.attribution_source) {
+            queries.push({
+                query: `${claim.attribution_source} ${directQuery.substring(0, 80)}`,
+                type: 'attributed',
+                priority: 1
+            });
+        }
+
+        // Query 3: Numeric-focused (if numbers present)
+        if (numericClaims.length > 0) {
+            const numericTerms = numericClaims.map(nc => nc.text).join(' ');
+            const contextTerms = statement
+                .replace(/\b\d+[%$,.]?\b/g, '')
+                .split(/\s+/)
+                .filter(w => w.length > 4)
+                .slice(0, 8)
+                .join(' ');
+
+            queries.push({
+                query: `${numericTerms} ${contextTerms}`,
+                type: 'numeric-focused',
+                priority: 2
+            });
+        }
+
+        // Query 4: Legislative references
+        const billMatch = statement.match(/\b((?:H\.R\.|S\.)\s*\d+|(?:Bill|Act)\s+\d+)/i);
+        if (billMatch) {
+            queries.push({
+                query: `${billMatch[0]} congress.gov`,
+                type: 'legislative',
+                priority: 1
+            });
+        }
+
+        return queries;
+    }
+
+    /**
+     * Check if fetched content supports the claim
+     * Returns: supported, contradicted, or insufficient
+     */
+    doesContentSupportClaim(claim, content) {
+        const claimNumbers = claim.numeric_claims || [];
+        const claimStatement = claim.statement.toLowerCase();
+        const contentLower = content.toLowerCase();
+
+        let matchScore = 0;
+        const matchedExcerpts = [];
+        const contradictions = [];
+
+        // Check if numeric values appear in content
+        for (const numClaim of claimNumbers) {
+            const claimValue = parseFloat(numClaim.text.replace(/[,$%]/g, ''));
+
+            // Escape special regex characters for exact match
+            const numPattern = numClaim.text.replace(/[.$%,]/g, '\\$&');
+            const exactRegex = new RegExp(numPattern, 'i');
+
+            if (exactRegex.test(content)) {
+                // Exact match found
+                matchScore += 0.4;
+
+                // Extract context around the number
+                const contextRegex = new RegExp(`.{0,150}${numPattern}.{0,150}`, 'i');
+                const match = content.match(contextRegex);
+                if (match) {
+                    matchedExcerpts.push(match[0].trim());
+                }
+            } else if (!isNaN(claimValue)) {
+                // Look for similar numbers that might contradict
+                // Extract all numbers from the same context
+                const numberRegex = /\b\d{1,3}(?:,\d{3})*(?:\.\d+)?%?(?:\s*(?:million|billion|trillion))?\b/gi;
+                const contentNumbers = content.match(numberRegex) || [];
+
+                for (const contentNum of contentNumbers) {
+                    const contentValue = parseFloat(contentNum.replace(/[,$%]/g, ''));
+
+                    // If numbers are in similar magnitude but different, might be contradiction
+                    if (!isNaN(contentValue)) {
+                        const ratio = Math.abs(claimValue / contentValue);
+                        if (ratio > 0.3 && ratio < 3.0 && Math.abs(claimValue - contentValue) > 0.1) {
+                            // Similar magnitude but different value - potential contradiction
+                            contradictions.push({
+                                type: 'numeric_mismatch',
+                                claimed: numClaim.text,
+                                found: contentNum,
+                                context: content.substring(Math.max(0, content.indexOf(contentNum) - 100),
+                                                          Math.min(content.length, content.indexOf(contentNum) + 100))
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Extract key terms from claim (excluding common words)
+        const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as', 'will', 'has', 'have', 'had']);
+        const keyTerms = claimStatement
+            .replace(/[^a-z0-9\s]/gi, '')
+            .split(/\s+/)
+            .filter(word => word.length > 3 && !stopWords.has(word.toLowerCase()))
+            .slice(0, 12);
+
+        const matchedTerms = keyTerms.filter(term => contentLower.includes(term));
+        matchScore += (matchedTerms.length / Math.max(keyTerms.length, 1)) * 0.6;
+
+        // Look for explicit contradiction patterns
+        const contradictionPatterns = [
+            /\b(not|never|no|false|incorrect|inaccurate|misleading|wrong)\b/i,
+            /\b(actually|in fact|contrary to|despite claims|however)\b/i
+        ];
+
+        let hasContradictionLanguage = false;
+        for (const pattern of contradictionPatterns) {
+            if (pattern.test(content)) {
+                hasContradictionLanguage = true;
+                break;
+            }
+        }
+
+        // Determine verification status
+        let status = 'insufficient';
+        if (contradictions.length > 0 || (hasContradictionLanguage && matchScore > 0.3)) {
+            status = 'contradicted';
+        } else if (matchScore > 0.4) {
+            status = 'supported';
+        }
+
+        return {
+            status: status,
+            supported: status === 'supported',
+            contradicted: status === 'contradicted',
+            confidence: Math.min(matchScore, 1.0),
+            excerpt: matchedExcerpts.length > 0
+                ? matchedExcerpts.slice(0, 2).join(' ... ')
+                : content.substring(0, 250) + '...',
+            matched_terms: matchedTerms,
+            term_match_ratio: matchedTerms.length / Math.max(keyTerms.length, 1),
+            contradictions: contradictions,
+            has_contradiction_language: hasContradictionLanguage
+        };
+    }
+
+    /**
+     * Map attribution source names to known domains
+     * Helps guide web search to authoritative sources
+     */
+    mapAttributionToDomain(attributionSource) {
+        if (!attributionSource) return null;
+
+        const sourceLower = attributionSource.toLowerCase();
+
+        // Common source mappings
+        const domainMap = {
+            'cbo': 'cbo.gov',
+            'congressional budget office': 'cbo.gov',
+            'congress.gov': 'congress.gov',
+            'fec': 'fec.gov',
+            'federal election commission': 'fec.gov',
+            'census bureau': 'census.gov',
+            'u.s. census': 'census.gov',
+            'gao': 'gao.gov',
+            'government accountability office': 'gao.gov',
+            'politico': 'politico.com',
+            'the new york times': 'nytimes.com',
+            'new york times': 'nytimes.com',
+            'washington post': 'washingtonpost.com',
+            'the washington post': 'washingtonpost.com',
+            'pew research': 'pewresearch.org',
+            'gallup': 'gallup.com',
+            'factcheck.org': 'factcheck.org',
+            'politifact': 'politifact.com',
+            'snopes': 'snopes.com',
+            'ap': 'apnews.com',
+            'associated press': 'apnews.com',
+            'reuters': 'reuters.com',
+            'npr': 'npr.org',
+            'bls': 'bls.gov',
+            'bureau of labor statistics': 'bls.gov',
+            'irs': 'irs.gov',
+            'brookings': 'brookings.edu',
+            'heritage foundation': 'heritage.org',
+            'urban institute': 'urban.org'
+        };
+
+        for (const [key, domain] of Object.entries(domainMap)) {
+            if (sourceLower.includes(key)) {
+                return domain;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ground a claim by finding supporting evidence on the web
+     *
+     * @param {Object} claim - Claim object from extractProvableFacts()
+     * @param {Object} options - Options for verification
+     *   @param {Function} options.webSearch - Function(query) that returns search results with URLs
+     *   @param {Function} options.webFetch - Function(url, prompt) that fetches and analyzes content
+     *   @param {number} options.maxResults - Max number of URLs to check (default: 3)
+     * @returns {Promise<Object>} Verification result
+     */
+    async groundClaim(claim, options = {}) {
+        const { webSearch, webFetch, maxResults = 3 } = options;
+
+        if (!webSearch || !webFetch) {
+            throw new Error('groundClaim requires webSearch and webFetch functions in options');
+        }
+
+        try {
+            // Generate search queries
+            const queries = this.generateSearchQueries(claim);
+
+            // Enhance queries with attribution domain if available
+            let searchQuery = queries[0].query;
+            if (claim.has_attribution && claim.attribution_source) {
+                const domain = this.mapAttributionToDomain(claim.attribution_source);
+                if (domain) {
+                    // Prioritize attributed query with site restriction
+                    searchQuery = `site:${domain} ${queries[0].query}`;
+                } else {
+                    // Use attribution in query without site restriction
+                    searchQuery = `${claim.attribution_source} ${queries[0].query}`;
+                }
+            }
+
+            // Perform web search
+            const searchResults = await webSearch(searchQuery);
+
+            if (!searchResults || !searchResults.length) {
+                return {
+                    verified: false,
+                    confidence: 0,
+                    reason: 'no_results',
+                    message: 'No search results found',
+                    query: searchQuery
+                };
+            }
+
+            // Check top results
+            const verificationAttempts = [];
+            for (let i = 0; i < Math.min(searchResults.length, maxResults); i++) {
+                const result = searchResults[i];
+
+                try {
+                    // Fetch and analyze content
+                    const fetchPrompt = `Does this content support the following claim: "${claim.statement}"? ` +
+                                      `Look for specific numbers, dates, and facts. Return "YES" or "NO" and explain why.`;
+
+                    const content = await webFetch(result.url, fetchPrompt);
+
+                    // Score source credibility
+                    const credibility = this.scoreSourceCredibility(result.url);
+
+                    // Validate content supports claim
+                    const validation = this.doesContentSupportClaim(claim, content);
+
+                    const attempt = {
+                        url: result.url,
+                        domain: credibility.domain,
+                        credibility_score: credibility.score,
+                        credibility_tier: credibility.tier,
+                        status: validation.status,
+                        content_match: validation.supported,
+                        contradicted: validation.contradicted,
+                        match_confidence: validation.confidence,
+                        excerpt: validation.excerpt,
+                        matched_terms: validation.matched_terms,
+                        contradictions: validation.contradictions
+                    };
+
+                    verificationAttempts.push(attempt);
+
+                    // If claim is CONTRADICTED by a credible source, flag as likely false
+                    if (validation.contradicted && credibility.score >= 0.7) {
+                        return {
+                            verified: false,
+                            contradicted: true,
+                            confidence: credibility.score,
+                            reason: 'contradicted',
+                            message: 'Claim contradicted by credible source',
+                            source_url: result.url,
+                            source_domain: credibility.domain,
+                            source_credibility: credibility.score,
+                            source_tier: credibility.tier,
+                            content_confidence: validation.confidence,
+                            excerpt: validation.excerpt,
+                            contradictions: validation.contradictions,
+                            has_contradiction_language: validation.has_contradiction_language,
+                            flagged_at: new Date().toISOString(),
+                            query: searchQuery,
+                            all_attempts: verificationAttempts
+                        };
+                    }
+
+                    // If we found strong support from a credible source, we can return
+                    if (validation.supported && credibility.score >= 0.7 && validation.confidence >= 0.6) {
+                        return {
+                            verified: true,
+                            contradicted: false,
+                            confidence: Math.min(credibility.score, validation.confidence),
+                            source_url: result.url,
+                            source_domain: credibility.domain,
+                            source_credibility: credibility.score,
+                            source_tier: credibility.tier,
+                            content_confidence: validation.confidence,
+                            excerpt: validation.excerpt,
+                            matched_terms: validation.matched_terms,
+                            verified_at: new Date().toISOString(),
+                            query: searchQuery,
+                            all_attempts: verificationAttempts
+                        };
+                    }
+                } catch (err) {
+                    verificationAttempts.push({
+                        url: result.url,
+                        error: err.message
+                    });
+                }
+            }
+
+            // No strong verification found, check for contradictions
+            const contradictedAttempt = verificationAttempts
+                .filter(a => !a.error && a.contradicted)
+                .sort((a, b) => b.credibility_score - a.credibility_score)[0];
+
+            if (contradictedAttempt) {
+                return {
+                    verified: false,
+                    contradicted: true,
+                    confidence: contradictedAttempt.credibility_score,
+                    reason: 'contradicted',
+                    message: 'Claim appears to be contradicted by available sources',
+                    source_url: contradictedAttempt.url,
+                    source_domain: contradictedAttempt.domain,
+                    source_credibility: contradictedAttempt.credibility_score,
+                    excerpt: contradictedAttempt.excerpt,
+                    contradictions: contradictedAttempt.contradictions,
+                    query: searchQuery,
+                    all_attempts: verificationAttempts
+                };
+            }
+
+            // Look for best supportive attempt (even if weak)
+            const bestAttempt = verificationAttempts
+                .filter(a => !a.error && a.content_match)
+                .sort((a, b) => (b.credibility_score * b.match_confidence) - (a.credibility_score * a.match_confidence))[0];
+
+            if (bestAttempt) {
+                return {
+                    verified: false,
+                    contradicted: false,
+                    confidence: bestAttempt.credibility_score * bestAttempt.match_confidence,
+                    reason: 'weak_support',
+                    message: 'Found some support but not strong enough for verification',
+                    source_url: bestAttempt.url,
+                    source_domain: bestAttempt.domain,
+                    source_credibility: bestAttempt.credibility_score,
+                    excerpt: bestAttempt.excerpt,
+                    query: searchQuery,
+                    all_attempts: verificationAttempts
+                };
+            }
+
+            return {
+                verified: false,
+                contradicted: false,
+                confidence: 0,
+                reason: 'insufficient_data',
+                message: 'No supporting evidence found - insufficient data to verify or contradict',
+                query: searchQuery,
+                all_attempts: verificationAttempts
+            };
+
+        } catch (error) {
+            return {
+                verified: false,
+                confidence: 0,
+                reason: 'error',
+                message: error.message,
+                error: error.stack
+            };
+        }
+    }
+
+    /**
+     * Extract non-factual statements that appear to be facts but cannot be verified
+     * Categories: opinions/characterizations, predictions, motivations/intent, value judgments
+     */
+    extractNonFactualStatements(text) {
+        const nonFactualStatements = [];
+        const sentences = this.splitIntoSentences(text);
+
+        // Load category patterns from database-seeded categories
+        const categories = {
+            opinion_characterization: {
+                keywords: ['awful', 'terrible', 'great', 'excellent', 'failed', 'successful', 'dangerous', 'extreme', 'radical', 'bad', 'good', 'disastrous', 'harmful', 'beneficial', 'reckless', 'irresponsible', 'shameful', 'disgraceful'],
+                patterns: [
+                    /\b(awful|terrible|disastrous|failed|dangerous|extreme|radical|reckless|harmful|shameful|disgraceful)\s+(Republican|Democrat|GOP|policy|bill|plan|approach|decision|rhetoric|agenda)\b/i,
+                    /\b(great|excellent|successful|beneficial|responsible)\s+(Democratic|Republican|policy|bill|plan|approach|decision)\b/i
+                ],
+                explanation: (match, keyword) => `This is a subjective ${keyword} that requires judgment and cannot be objectively verified. Different people have different definitions based on their values and perspectives.`
+            },
+            prediction_future: {
+                keywords: ['will', 'may', 'threatens to', 'could', 'is going to', 'are at risk of', 'will lead to', 'may cause', 'will result in', 'going to'],
+                patterns: [
+                    /\bwill\s+(cost|harm|hurt|damage|destroy|cause|lead|result)/i,
+                    /\b(threatens? to|may|could|might)\s+/i,
+                    /\b(are|is)\s+(?:at\s+risk|going\s+to|likely\s+to)/i
+                ],
+                explanation: (match, futureIndicator) => `This is a prediction about the future using "${futureIndicator}". Events that have not occurred cannot be verified. What CAN be verified is if authoritative sources (like CBO, expert analyses) have made such predictions.`
+            },
+            motivation_intent: {
+                keywords: ['wants to', 'intends to', 'refuses to', 'cares about', 'doesn\'t care', 'trying to', 'attempting to', 'seeks to', 'determined to', 'committed to'],
+                patterns: [
+                    /\b(want|wants|intend|intends|refuse|refuses|seek|seeks|try|tries|attempt|attempts)\s+to\b/i,
+                    /\b(care|cares|don't\s+care|doesn't\s+care)\s+about\b/i,
+                    /\b(determined|committed|dedicated)\s+to\b/i
+                ],
+                explanation: (match, intentVerb) => `This claims to know someone's internal mental state ("${intentVerb}"). We cannot verify what someone wants, intends, or cares about - only their actions and statements can be verified.`
+            },
+            value_judgment: {
+                keywords: ['should', 'must', 'ought to', 'need to', 'wrong', 'right', 'unconscionable', 'shameful', 'disgraceful', 'immoral', 'unethical'],
+                patterns: [
+                    /\b(should|must|ought\s+to|need\s+to)\b/i,
+                    /\b(is|are|was|were)\s+(wrong|right|unconscionable|shameful|disgraceful|immoral|unethical)\b/i
+                ],
+                explanation: (match, normativeTerm) => `This is a normative/moral claim using "${normativeTerm}". Statements about what ought to be or moral judgments cannot be empirically verified - they depend on value systems and ethical frameworks.`
+            }
+        };
+
+        for (let i = 0; i < sentences.length; i++) {
+            const sentence = sentences[i].trim();
+
+            // Skip very short sentences
+            if (sentence.length < 20) continue;
+
+            // Check each category
+            for (const [categoryName, category] of Object.entries(categories)) {
+                let matched = false;
+                let matchedKeyword = null;
+                let matchedPattern = null;
+
+                // Check keywords
+                for (const keyword of category.keywords) {
+                    const regex = new RegExp(`\\b${keyword.replace(/'/g, "\\'")}\\b`, 'i');
+                    if (regex.test(sentence)) {
+                        matched = true;
+                        matchedKeyword = keyword;
+                        break;
+                    }
+                }
+
+                // Check patterns for stronger matches
+                if (!matched) {
+                    for (const pattern of category.patterns) {
+                        const match = sentence.match(pattern);
+                        if (match) {
+                            matched = true;
+                            matchedPattern = match[0];
+                            matchedKeyword = match[1] || matchedPattern;
+                            break;
+                        }
+                    }
+                }
+
+                if (matched) {
+                    // Calculate confidence that this appears factual
+                    // (higher score = looks more like a fact at first glance)
+                    const appearsFactualConfidence = this.calculateAppearsFactualConfidence(sentence);
+
+                    nonFactualStatements.push({
+                        statement: sentence,
+                        sentenceIndex: i,
+                        reasonCategory: categoryName,
+                        detailedExplanation: category.explanation(matchedPattern || sentence, matchedKeyword),
+                        matchedKeyword: matchedKeyword,
+                        matchedPattern: matchedPattern,
+                        appearsFactualConfidence: appearsFactualConfidence,
+                        examples: [sentence.substring(0, 100)]
+                    });
+
+                    break; // Only categorize into first matching category
+                }
+            }
+        }
+
+        return nonFactualStatements;
+    }
+
+    /**
+     * Calculate how much a non-factual statement appears to be factual
+     * Higher score = looks more like a fact (thus more important to flag)
+     */
+    calculateAppearsFactualConfidence(sentence) {
+        let score = 0.5; // baseline
+
+        // Increase if it contains numbers (looks factual)
+        if (/\d+/.test(sentence)) score += 0.2;
+
+        // Increase if it contains proper nouns (looks specific)
+        if (/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/.test(sentence)) score += 0.1;
+
+        // Increase if it contains dates (looks factual)
+        if (/\b\d{4}\b|January|February|March|April|May|June|July|August|September|October|November|December/.test(sentence)) score += 0.1;
+
+        // Decrease if it's clearly an opinion word at the start
+        if (/^(I think|In my opinion|We believe|It seems|Clearly,|Obviously,)/i.test(sentence)) score -= 0.3;
+
+        return Math.max(0, Math.min(1, score));
+    }
+
+    /**
+     * Detect comparative/computational claims
+     * These require looking up multiple data points and comparing them
+     *
+     * Examples:
+     * - "our deficit is greater than the GDP of the UK"
+     * - "unemployment is lower than it was in 2019"
+     * - "we've raised more money than any other candidate"
+     * - "inflation is higher than the EU average"
+     */
+    detectComparativeClaim(sentence) {
+        // Comparison operators (expanded to include temporal and trend patterns)
+        const comparisonPatterns = [
+            { pattern: /\b(greater|larger|bigger|higher|more) than\b/i, type: 'greater_than' },
+            { pattern: /\b(less|smaller|lower|fewer) than\b/i, type: 'less_than' },
+            { pattern: /\b(equal to|same as|as (much|many|high|low) as)\b/i, type: 'equal_to' },
+            { pattern: /\b(exceeds?|surpasses?|outpaces?)\b/i, type: 'exceeds' },
+            { pattern: /\b(trails?|lags? behind|falls? short of)\b/i, type: 'trails' },
+            { pattern: /\b(doubled|tripled|quadrupled)\b/i, type: 'multiple_of' },
+            { pattern: /\b(half of|twice|three times|[\d.]+ times)\b/i, type: 'ratio' },
+
+            // Temporal patterns - comparing to past values
+            { pattern: /\b(higher|lower|greater|less|more|fewer) than (it was|in) (last year|\d{4}|[\d]+ years? ago|a (year|decade) ago)\b/i, type: 'temporal_comparison' },
+            { pattern: /\b(double|triple|quadruple|half|twice|three times) what (it was|we had|they had) (last year|a year ago|(two|three|four|five|[\d]+) years? ago|\d{4})\b/i, type: 'temporal_ratio' },
+            { pattern: /\b(up|down|increased|decreased) (from|since) (last year|\d{4}|[\d]+ years? ago)\b/i, type: 'temporal_change' },
+
+            // Trend patterns - ongoing changes
+            { pattern: /\b(keeps?|continues?|keeps? on|continuing) (getting|growing|rising|increasing|declining|decreasing|falling)\b/i, type: 'ongoing_trend' },
+            { pattern: /\b(rising|increasing|growing|declining|decreasing|falling) (every|each) (year|month|quarter|day)\b/i, type: 'periodic_trend' },
+            { pattern: /\b(consistent|steady|continuous) (rise|increase|decline|decrease|growth)\b/i, type: 'sustained_trend' },
+            { pattern: /\b(has (risen|increased|grown|declined|decreased|fallen)) (for|over) ([\d]+) (consecutive )?(years?|months?|quarters?)\b/i, type: 'multi_period_trend' }
+        ];
+
+        // Economic/political metrics that can be looked up (expanded)
+        const metrics = [
+            'GDP', 'deficit', 'debt', 'unemployment', 'inflation', 'growth',
+            'revenue', 'spending', 'budget', 'income', 'wages', 'poverty',
+            'enrollment', 'graduation', 'mortality', 'crime', 'temperature',
+            'emissions', 'approval', 'poll', 'votes', 'donations', 'fundraising',
+            'price', 'cost', 'rate', 'percentage', 'population', 'jobs', 'employment',
+            'sales', 'production', 'output', 'exports', 'imports', 'trade'
+        ];
+
+        // Check for comparison pattern
+        let comparisonMatch = null;
+        let comparisonType = null;
+
+        for (const { pattern, type } of comparisonPatterns) {
+            const match = sentence.match(pattern);
+            if (match) {
+                comparisonMatch = match[0];
+                comparisonType = type;
+                break;
+            }
+        }
+
+        if (!comparisonMatch) {
+            return { is_comparative: false };
+        }
+
+        // Check if sentence contains metrics
+        const sentenceLower = sentence.toLowerCase();
+        const foundMetrics = metrics.filter(metric =>
+            sentenceLower.includes(metric.toLowerCase())
+        );
+
+        // Also check for numeric values which suggest quantifiable metrics
+        const hasNumbers = /\d+/.test(sentence);
+
+        // If we have a comparison and either metrics or numbers, it's likely comparative
+        if (foundMetrics.length > 0 || hasNumbers) {
+            // Extract the two things being compared
+            const parts = sentence.split(new RegExp(comparisonMatch, 'i'));
+            const leftSide = parts[0]?.trim() || '';
+            const rightSide = parts[1]?.trim() || '';
+
+            // Extract time references if it's a temporal comparison
+            const timeMatch = sentence.match(/\b(last year|\d{4}|[\d]+ years? ago|a (year|decade) ago|every (year|month)|for [\d]+ years?)\b/i);
+            const timeReference = timeMatch ? timeMatch[0] : null;
+
+            // Build verification steps based on comparison type
+            let verificationSteps = [];
+
+            if (comparisonType.includes('temporal') || comparisonType.includes('trend')) {
+                // Temporal or trend comparison - need historical data
+                verificationSteps = [
+                    {
+                        step: 1,
+                        action: 'identify_metric_and_timeframe',
+                        description: 'Identify the metric and time period(s) to compare',
+                        metric: foundMetrics[0] || 'value from sentence',
+                        time_reference: timeReference,
+                        current_vs_past: comparisonType.includes('temporal')
+                    },
+                    {
+                        step: 2,
+                        action: 'lookup_current_value',
+                        description: 'Look up the current/recent value of the metric',
+                        sources_needed: ['official statistics', 'government data', 'recent reports']
+                    },
+                    {
+                        step: 3,
+                        action: 'lookup_historical_value',
+                        description: `Look up the value at the referenced time point (${timeReference || 'past'})`,
+                        sources_needed: ['historical data', 'archived statistics', 'time series data']
+                    },
+                    {
+                        step: 4,
+                        action: 'compare_or_calculate_trend',
+                        description: comparisonType.includes('trend')
+                            ? 'Calculate trend across time periods and verify direction/magnitude'
+                            : `Verify that the relationship "${comparisonType}" holds between current and past values`,
+                        comparison_operator: comparisonType
+                    }
+                ];
+            } else {
+                // Standard comparison - two contemporary values
+                verificationSteps = [
+                    {
+                        step: 1,
+                        action: 'identify_metrics',
+                        description: 'Identify the two metrics being compared',
+                        left_metric: leftSide.substring(Math.max(0, leftSide.length - 50)),
+                        right_metric: rightSide.substring(0, 50)
+                    },
+                    {
+                        step: 2,
+                        action: 'lookup_left',
+                        description: 'Look up the value of the first metric',
+                        sources_needed: ['official statistics', 'government data', 'financial reports']
+                    },
+                    {
+                        step: 3,
+                        action: 'lookup_right',
+                        description: 'Look up the value of the second metric',
+                        sources_needed: ['official statistics', 'government data', 'financial reports']
+                    },
+                    {
+                        step: 4,
+                        action: 'compare',
+                        description: `Verify that the relationship "${comparisonType}" holds between the two values`,
+                        comparison_operator: comparisonType
+                    }
+                ];
+            }
+
+            return {
+                is_comparative: true,
+                comparison_type: comparisonType,
+                comparison_phrase: comparisonMatch,
+                metrics: foundMetrics,
+                has_numbers: hasNumbers,
+                time_reference: timeReference,
+                is_temporal: comparisonType.includes('temporal'),
+                is_trend: comparisonType.includes('trend'),
+                left_side: leftSide.substring(Math.max(0, leftSide.length - 100)),
+                right_side: rightSide.substring(0, 100),
+                verification_steps: verificationSteps,
+                complexity: 'multi-step',
+                requires_calculation: foundMetrics.length > 1 || hasNumbers || comparisonType.includes('trend')
+            };
+        }
+
+        return { is_comparative: false };
+    }
+
+    /**
+     * Automatically verify a comparative claim using WebSearch
+     * This performs the verification steps and returns a verdict
+     *
+     * NOTE: This is a placeholder for future WebSearch integration
+     * In production, this would use the WebSearch tool to look up actual data
+     *
+     * @param {Object} claim - Claim object from detectComparativeClaim()
+     * @param {Function} webSearchFn - Function to perform web searches (optional)
+     * @returns {Object} Verification result with verdict and supporting data
+     */
+    async verifyComparativeClaim(claim, webSearchFn = null) {
+        if (!claim.is_comparative) {
+            return {
+                verified: false,
+                error: 'Not a comparative claim'
+            };
+        }
+
+        const result = {
+            claim_text: claim.original_sentence || 'Unknown',
+            comparison_type: claim.comparison_type,
+            verification_date: new Date().toISOString(),
+            steps_completed: [],
+            verdict: null,
+            confidence: 0,
+            supporting_data: {},
+            sources: [],
+            notes: []
+        };
+
+        try {
+            // Step 1: Identify what needs to be looked up
+            const step1 = claim.verification_steps[0];
+            result.steps_completed.push(step1);
+
+            if (claim.is_temporal || claim.is_trend) {
+                // Temporal/trend comparison
+                const metric = claim.metrics[0];
+                const timeRef = claim.time_reference;
+
+                result.notes.push(`Identified metric: ${metric}, time reference: ${timeRef}`);
+
+                // Step 2 & 3: Look up current and historical values
+                // In production, would use WebSearch here
+                if (webSearchFn) {
+                    // Example: await webSearchFn(`current ${metric} value 2025`)
+                    // Example: await webSearchFn(`${metric} value ${timeRef}`)
+                    result.notes.push('Would use WebSearch to look up current and historical values');
+                } else {
+                    result.notes.push('WebSearch function not provided - cannot complete automated verification');
+                    result.notes.push('Manual verification required using the generated steps');
+                }
+
+                result.supporting_data = {
+                    current_value: 'Requires WebSearch',
+                    historical_value: 'Requires WebSearch',
+                    difference: 'Requires calculation after lookup'
+                };
+
+            } else {
+                // Standard comparison
+                const leftMetric = step1.left_metric;
+                const rightMetric = step1.right_metric;
+
+                result.notes.push(`Identified left metric: ${leftMetric}`);
+                result.notes.push(`Identified right metric: ${rightMetric}`);
+
+                // Step 2 & 3: Look up both values
+                if (webSearchFn) {
+                    result.notes.push('Would use WebSearch to look up both metric values');
+                } else {
+                    result.notes.push('WebSearch function not provided - cannot complete automated verification');
+                    result.notes.push('Manual verification required using the generated steps');
+                }
+
+                result.supporting_data = {
+                    left_value: 'Requires WebSearch',
+                    right_value: 'Requires WebSearch',
+                    comparison_result: 'Requires calculation after lookup'
+                };
+            }
+
+            // Step 4: Comparison/verdict (would be automated if we had the data)
+            result.verdict = 'MANUAL_VERIFICATION_REQUIRED';
+            result.confidence = 0;
+            result.notes.push('Automated verification requires WebSearch integration');
+            result.notes.push('Follow the verification_steps to complete manually');
+
+            return result;
+
+        } catch (error) {
+            return {
+                verified: false,
+                error: error.message,
+                claim_text: claim.original_sentence,
+                notes: ['Error during verification process']
+            };
+        }
+    }
+
+    /**
+     * Generate a search query for looking up a specific metric value
+     * Helper function for automated verification
+     *
+     * @param {string} metric - The metric to look up (e.g., "US deficit")
+     * @param {string} timeRef - Optional time reference (e.g., "2019", "last year")
+     * @returns {string} Search query optimized for finding official data
+     */
+    generateSearchQuery(metric, timeRef = null) {
+        const currentYear = new Date().getFullYear();
+
+        // Build search query with authoritative source hints
+        let query = metric;
+
+        // Add time reference if provided
+        if (timeRef) {
+            // Convert relative time to absolute
+            if (timeRef === 'last year') {
+                query += ` ${currentYear - 1}`;
+            } else if (timeRef.match(/(\d+) years? ago/)) {
+                const yearsAgo = parseInt(timeRef.match(/(\d+)/)[0]);
+                query += ` ${currentYear - yearsAgo}`;
+            } else if (timeRef.match(/\d{4}/)) {
+                query += ` ${timeRef}`;
+            }
+        } else {
+            // Current data
+            query += ` ${currentYear}`;
+        }
+
+        // Add source hints to get authoritative data
+        const metricLower = metric.toLowerCase();
+
+        if (metricLower.includes('gdp')) {
+            query += ' site:bea.gov OR site:worldbank.org';
+        } else if (metricLower.includes('deficit') || metricLower.includes('debt')) {
+            query += ' site:treasury.gov OR site:cbo.gov';
+        } else if (metricLower.includes('unemployment')) {
+            query += ' site:bls.gov';
+        } else if (metricLower.includes('inflation')) {
+            query += ' site:bls.gov OR site:federalreserve.gov';
+        } else {
+            query += ' official statistics';
+        }
+
+        return query;
     }
 }
 

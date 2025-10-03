@@ -1,0 +1,363 @@
+{
+  "timestamp": "2025-10-02T22:45:53.968Z",
+  "total_files": 42,
+  "type_distribution": {
+    "STATEMENT": 7,
+    "NEWS_RELEASE": 35
+  },
+  "subtype_distribution": {
+    "condemnation": 2,
+    "policy_position": 2,
+    "legislative_action": 12,
+    "general": 7,
+    "response_opposition": 15,
+    "campaign_announcement": 3,
+    "poll_results": 5,
+    "endorsement": 3,
+    "personnel_announcement": 2,
+    "support_statement": 1
+  },
+  "file_details": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "condemnation",
+        "policy_position"
+      ],
+      "headline": "Ocasio-Cortez Statement on Charlie Kirk Resolution and Trump Administration's Assault on Free Speech"
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "Ocasio-Cortez Joins House Members and Advocates in Calling to Block Bombs to Israel"
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "Energy & Commerce Health Subcommittee Advances Ocasio-Cortez, Malliotakis Bill To Support Parents and Infants"
+    },
+    {
+      "file": "booker_01_shutdown.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [],
+      "headline": "Booker Statement on Trump Shutdown"
+    },
+    {
+      "file": "booker_02_house_cr.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [],
+      "headline": "Booker Statement on House CR: \"I Will Not Support a Budget that Continues to Hurt Americans\""
+    },
+    {
+      "file": "booker_03_farmer_contracts.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "Booker, Colleagues Introduce Honor Farmer Contracts Act"
+    },
+    {
+      "file": "jayapal_01_shutdown.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "Jayapal Statement on Republican Government Shutdown"
+    },
+    {
+      "file": "jayapal_02_violence_threats.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "condemnation",
+        "policy_position"
+      ],
+      "headline": "Jayapal Response to Calls for Political Violence from AZ Lawmaker"
+    },
+    {
+      "file": "jayapal_03_cr_vote.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "Jayapal Statement on Continuing Resolution \"NO\" Vote"
+    },
+    {
+      "file": "jayapal_04_rescissions.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "Jayapal Statement on GOP Rescissions Package"
+    },
+    {
+      "file": "jayapal_05_doj_letter.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition",
+        "legislative_action"
+      ],
+      "headline": "Ranking Members Raskin, Jayapal, McBath Press DOJ on Trump Administration's Dangerous Diversion of Law Enforcement Officials"
+    },
+    {
+      "file": "jeffries_01_shutdown_statement.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "JEFFRIES, SCHUMER STATEMENT ON THE TRUMP SHUTDOWN"
+    },
+    {
+      "file": "jeffries_02_cancel_cuts.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "LEADER JEFFRIES: \"OUR VIEW WILL CONTINUE TO BE CANCEL THE CUTS, LOWER THE COST, SAVE HEALTHCARE\""
+    },
+    {
+      "file": "jeffries_03_white_house_meeting.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "JEFFRIES, SCHUMER STATEMENT ON TRUMP FINALLY COMING TO THE TABLE FOR A WHITE HOUSE MEETING"
+    },
+    {
+      "file": "jeffries_04_on_duty.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "LEADER JEFFRIES ON THE HOUSE STEPS: \"HOUSE DEMOCRATS ARE ON DUTY. HOUSE REPUBLICANS ARE ON VACATION.\""
+    },
+    {
+      "file": "jeffries_05_healthcare.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "LEADER JEFFRIES ON CNBC: \"HEALTHCARE IS NOT AN EXTRANEOUS ISSUE. IT IS A CENTRAL ISSUE TO THE QUALITY OF LIFE OF THE AMERICAN PEOPLE.\""
+    },
+    {
+      "file": "khanna_01_epstein_files.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition",
+        "legislative_action"
+      ],
+      "headline": "RELEASE: REP. RO KHANNA SLAMS DOJ FOR \"STONEWALLING,\" CALLS FOR THE FULL RELEASE OF THE EPSTEIN FILES"
+    },
+    {
+      "file": "khanna_02_children_healthcare.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [],
+      "headline": "RELEASE: REP. KHANNA TO INTRODUCE AMENDMENT TO PROTECT AMERICAN CHILDREN FROM LOSING HEALTH INSURANCE IN REPUBLICAN BUDGET"
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "campaign_announcement",
+        "poll_results"
+      ],
+      "headline": "FOR IMMEDIATE RELEASE"
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition",
+        "poll_results"
+      ],
+      "headline": "Katie Porter: We Have The Momentum In This Race"
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "poll_results"
+      ],
+      "headline": "Another Poll Shows Katie Porter Is Clear Frontrunner in Race for CA Governor"
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "endorsement",
+        "response_opposition",
+        "poll_results"
+      ],
+      "headline": "FOR IMMEDIATE RELEASE"
+    },
+    {
+      "file": "schiff_sen_01_continuing_resolution.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "STATEMENT: Senator Schiff Opposes Flawed Partisan Continuing Resolution"
+    },
+    {
+      "file": "schiff_sen_02_protect_democracy.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [],
+      "headline": "NEWS: Sen. Schiff Reintroduces His Landmark Proposal to Protect Democracy, Close Legal Loopholes Enabling Widespread Abuses of Presidential Power"
+    },
+    {
+      "file": "schiff_sen_03_orange_county_healthcare.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "PHOTOS: Sen. Schiff and Orange County Leaders Warn Against Republicans' Attacks on California Health Care, Demand Negotiations to Avert Government Shutdown"
+    },
+    {
+      "file": "schiff_sen_04_10_ways_trump_wrecking.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition",
+        "legislative_action"
+      ],
+      "headline": "WATCH: Sen. Schiff Outlines 10 Ways Trump is Wrecking the Country, Redefining the Idea of America"
+    },
+    {
+      "file": "schiff_sen_05_assault_weapons_ban.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [],
+      "headline": "ICYMI: Sen. Schiff and Colleagues Introduce Assault Weapons Ban of 2025"
+    },
+    {
+      "file": "schumer_01_project_2025.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "Leader Schumer Floor Remarks On President Trump Following The Project 2025 Playbook"
+    },
+    {
+      "file": "schumer_02_inflation_reduction.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "general"
+      ],
+      "headline": "Schumer Press Release On The Inflation Reduction Act Continuing To Spur Historic Investments Across The Country"
+    },
+    {
+      "file": "schumer_03_tax_bill.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "Leader Schumer Floor Remarks On The Republican Tax Bill Hurting The Most Vulnerable Americans To Further Enrich The Ultra-Wealthy"
+    },
+    {
+      "file": "schumer_04_white_house_meeting.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "TRANSCRIPT: Leader Schumer Remarks And Q&A At Press Conference Following The Bipartisan Meeting At White House To Avoid A Government Shutdown"
+    },
+    {
+      "file": "schumer_05_doj_nominees.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "Leader Schumer Announces Hold On All DOJ Political Nominees, Demands Full Transparency Of Qatari Influence Over Trump Administration"
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition",
+        "personnel_announcement"
+      ],
+      "headline": "While Trump Rips Away Funding, Jack Refuses To Stand Up For New Jersey — Again"
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "type": "STATEMENT",
+      "subtypes": [
+        "support_statement"
+      ],
+      "headline": "Mikie Sherrill for Governor Statement on the Lieutenant Governor Debate"
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "response_opposition"
+      ],
+      "headline": "Mikie Calls on Jack to Release His Tax Returns"
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "ICYMI: Mikie Sherrill To Declare A State of Emergency on Utility Costs on Day One"
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "campaign_announcement",
+        "endorsement",
+        "response_opposition"
+      ],
+      "headline": "Patricia Campos-Medina Endorses Mikie Sherrill for Governor"
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "endorsement"
+      ],
+      "headline": "NOV"
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "personnel_announcement",
+        "poll_results"
+      ],
+      "headline": "OCT"
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "campaign_announcement",
+        "response_opposition",
+        "legislative_action"
+      ],
+      "headline": "Warren On Republicans' Government Shutdown: Democrats Want to Save Health Care, Only Republicans Stand in the Way"
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "At Crypto Tax Hearing, Warren Questions Witnesses on Multi-Billion Dollar Cost to Taxpayers of Crypto Industry Handouts"
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "type": "NEWS_RELEASE",
+      "subtypes": [
+        "legislative_action"
+      ],
+      "headline": "Warren, Democrats Press Trump on Possible Plans to Raise Social Security Retirement Age"
+    }
+  ]
+}

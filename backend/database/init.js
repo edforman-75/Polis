@@ -729,6 +729,24 @@ class Database {
                 checked_by INTEGER,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (checked_by) REFERENCES users(id)
+            )`,
+
+            // Manual references table - editor-provided references for claims
+            `CREATE TABLE IF NOT EXISTS manual_references (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                claim_id INTEGER NOT NULL,
+                url TEXT NOT NULL,
+                title TEXT,
+                description TEXT,
+                added_by INTEGER NOT NULL,
+                added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                validated BOOLEAN DEFAULT 0,
+                validation_status TEXT DEFAULT 'pending',
+                http_status_code INTEGER,
+                validation_error TEXT,
+                validation_attempted_at DATETIME,
+                FOREIGN KEY (claim_id) REFERENCES extracted_claims(id) ON DELETE CASCADE,
+                FOREIGN KEY (added_by) REFERENCES users(id)
             )`
         ];
 
@@ -820,6 +838,22 @@ class Database {
             if (!hasTeamMembers) {
                 await this.run(`ALTER TABLE ${table} ADD COLUMN team_members TEXT`);
                 console.log(`👥 Added team_members column to ${table} table`);
+            }
+        }
+
+        // Migration: Add substantiation analysis columns to manual_references table
+        const substantiationColumns = [
+            { name: 'substantiation_status', type: 'TEXT', default: null },
+            { name: 'substantiation_confidence', type: 'REAL', default: null },
+            { name: 'substantiation_analysis', type: 'TEXT', default: null },
+            { name: 'content_excerpt', type: 'TEXT', default: null }
+        ];
+
+        for (const col of substantiationColumns) {
+            const hasColumn = await this.columnExists('manual_references', col.name);
+            if (!hasColumn) {
+                await this.run(`ALTER TABLE manual_references ADD COLUMN ${col.name} ${col.type}${col.default ? ' DEFAULT ' + col.default : ''}`);
+                console.log(`📝 Added ${col.name} column to manual_references table`);
             }
         }
 

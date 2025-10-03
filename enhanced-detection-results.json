@@ -1,0 +1,646 @@
+{
+  "timestamp": "2025-10-02T21:23:22.785Z",
+  "total_files": 17,
+  "subtype_counts": {
+    "condemnation": 1,
+    "policy_position": 1,
+    "legislative_action": 4,
+    "general": 3,
+    "campaign_announcement": 3,
+    "poll_results": 5,
+    "response_opposition": 5,
+    "endorsement": 3,
+    "personnel_announcement": 2,
+    "support_statement": 1
+  },
+  "issue_counts": {
+    "civil_rights": 1,
+    "free_speech": 1,
+    "political_violence": 3,
+    "education": 3,
+    "climate": 2,
+    "opponent_record": 7,
+    "healthcare": 6,
+    "israel_palestine": 1,
+    "foreign_policy": 2,
+    "general": 2,
+    "elections": 10,
+    "housing": 2,
+    "infrastructure": 4,
+    "government_shutdown": 2,
+    "taxes": 3,
+    "economy": 3,
+    "abortion": 1,
+    "cryptocurrency": 1
+  },
+  "results": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "type": "STATEMENT",
+      "type_confidence": "high",
+      "subtypes": [
+        {
+          "subtype": "condemnation",
+          "confidence": "high",
+          "keywords": [
+            "condemns",
+            "denounces",
+            "opposes"
+          ]
+        },
+        {
+          "subtype": "policy_position",
+          "confidence": "medium",
+          "keywords": [
+            "position on",
+            "calls for"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "civil_rights",
+          "confidence": "high"
+        },
+        {
+          "issue": "free_speech",
+          "confidence": "high"
+        },
+        {
+          "issue": "political_violence",
+          "confidence": "high"
+        },
+        {
+          "issue": "education",
+          "confidence": "medium"
+        },
+        {
+          "issue": "climate",
+          "confidence": "medium"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "high",
+      "subtypes": [
+        {
+          "subtype": "legislative_action",
+          "confidence": "medium",
+          "keywords": [
+            "hearing",
+            "questioned witnesses",
+            "floor speech"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "israel_palestine",
+          "confidence": "high"
+        },
+        {
+          "issue": "foreign_policy",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "low",
+      "subtypes": [
+        {
+          "subtype": "general",
+          "confidence": "low",
+          "keywords": []
+        }
+      ],
+      "issues": [
+        {
+          "issue": "general",
+          "confidence": "low"
+        }
+      ]
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "campaign_announcement",
+          "confidence": "high",
+          "keywords": [
+            "announced candidacy",
+            "launches campaign",
+            "running for"
+          ]
+        },
+        {
+          "subtype": "poll_results",
+          "confidence": "medium",
+          "keywords": [
+            "poll",
+            "survey",
+            "lead"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "education",
+          "confidence": "medium"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "response_opposition",
+          "confidence": "medium",
+          "keywords": [
+            "attacks",
+            "condemns",
+            "opposes"
+          ]
+        },
+        {
+          "subtype": "poll_results",
+          "confidence": "medium",
+          "keywords": [
+            "poll",
+            "survey",
+            "lead"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "housing",
+          "confidence": "high"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "poll_results",
+          "confidence": "medium",
+          "keywords": [
+            "poll",
+            "survey",
+            "lead"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "high",
+      "subtypes": [
+        {
+          "subtype": "endorsement",
+          "confidence": "high",
+          "keywords": [
+            "endorses",
+            "endorsement",
+            "support in this race"
+          ]
+        },
+        {
+          "subtype": "response_opposition",
+          "confidence": "medium",
+          "keywords": [
+            "attacks",
+            "condemns",
+            "opposes"
+          ]
+        },
+        {
+          "subtype": "poll_results",
+          "confidence": "medium",
+          "keywords": [
+            "poll",
+            "survey",
+            "lead"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "political_violence",
+          "confidence": "high"
+        },
+        {
+          "issue": "housing",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "response_opposition",
+          "confidence": "high",
+          "keywords": [
+            "responds to",
+            "criticizes",
+            "refuses to stand up"
+          ]
+        },
+        {
+          "subtype": "personnel_announcement",
+          "confidence": "medium",
+          "keywords": [
+            "appoints",
+            "names",
+            "joins campaign"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "infrastructure",
+          "confidence": "high"
+        },
+        {
+          "issue": "government_shutdown",
+          "confidence": "high"
+        },
+        {
+          "issue": "political_violence",
+          "confidence": "high"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "type": "STATEMENT",
+      "type_confidence": "high",
+      "subtypes": [
+        {
+          "subtype": "support_statement",
+          "confidence": "high",
+          "keywords": [
+            "praises",
+            "supports",
+            "commends"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "taxes",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "general",
+          "confidence": "low",
+          "keywords": []
+        }
+      ],
+      "issues": [
+        {
+          "issue": "taxes",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "legislative_action",
+          "confidence": "medium",
+          "keywords": [
+            "hearing",
+            "questioned witnesses",
+            "floor speech"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "infrastructure",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "foreign_policy",
+          "confidence": "medium"
+        },
+        {
+          "issue": "climate",
+          "confidence": "medium"
+        },
+        {
+          "issue": "economy",
+          "confidence": "medium"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "high",
+      "subtypes": [
+        {
+          "subtype": "campaign_announcement",
+          "confidence": "high",
+          "keywords": [
+            "announced candidacy",
+            "launches campaign",
+            "running for"
+          ]
+        },
+        {
+          "subtype": "endorsement",
+          "confidence": "high",
+          "keywords": [
+            "endorses",
+            "endorsement",
+            "support in this race"
+          ]
+        },
+        {
+          "subtype": "response_opposition",
+          "confidence": "medium",
+          "keywords": [
+            "attacks",
+            "condemns",
+            "opposes"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "education",
+          "confidence": "medium"
+        },
+        {
+          "issue": "economy",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "endorsement",
+          "confidence": "high",
+          "keywords": [
+            "endorses",
+            "endorsement",
+            "support in this race"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "infrastructure",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "abortion",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "medium",
+      "subtypes": [
+        {
+          "subtype": "personnel_announcement",
+          "confidence": "medium",
+          "keywords": [
+            "appoints",
+            "names",
+            "joins campaign"
+          ]
+        },
+        {
+          "subtype": "poll_results",
+          "confidence": "medium",
+          "keywords": [
+            "poll",
+            "survey",
+            "lead"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "infrastructure",
+          "confidence": "high"
+        },
+        {
+          "issue": "elections",
+          "confidence": "medium"
+        },
+        {
+          "issue": "economy",
+          "confidence": "medium"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "low",
+      "subtypes": [
+        {
+          "subtype": "campaign_announcement",
+          "confidence": "high",
+          "keywords": [
+            "announced candidacy",
+            "launches campaign",
+            "running for"
+          ]
+        },
+        {
+          "subtype": "response_opposition",
+          "confidence": "high",
+          "keywords": [
+            "responds to",
+            "criticizes",
+            "refuses to stand up"
+          ]
+        },
+        {
+          "subtype": "legislative_action",
+          "confidence": "medium",
+          "keywords": [
+            "hearing",
+            "questioned witnesses",
+            "floor speech"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "healthcare",
+          "confidence": "high"
+        },
+        {
+          "issue": "government_shutdown",
+          "confidence": "high"
+        },
+        {
+          "issue": "opponent_record",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "low",
+      "subtypes": [
+        {
+          "subtype": "legislative_action",
+          "confidence": "medium",
+          "keywords": [
+            "hearing",
+            "questioned witnesses",
+            "floor speech"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "issue": "cryptocurrency",
+          "confidence": "high"
+        },
+        {
+          "issue": "taxes",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "type": "NEWS_RELEASE",
+      "type_confidence": "low",
+      "subtypes": [
+        {
+          "subtype": "general",
+          "confidence": "low",
+          "keywords": []
+        }
+      ],
+      "issues": [
+        {
+          "issue": "general",
+          "confidence": "low"
+        }
+      ]
+    }
+  ]
+}

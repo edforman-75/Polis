@@ -1,0 +1,104 @@
+{
+  "timestamp": "2025-10-02T22:45:20.260Z",
+  "total_files": 46,
+  "type_stats": {
+    "STATEMENT": {
+      "count": 7,
+      "high": 3,
+      "medium": 4,
+      "low": 0,
+      "scores": [
+        15,
+        5,
+        5,
+        5,
+        5,
+        15,
+        15
+      ]
+    },
+    "NEWS_RELEASE": {
+      "count": 38,
+      "high": 13,
+      "medium": 25,
+      "low": 0,
+      "scores": [
+        12,
+        11,
+        11,
+        8,
+        7,
+        12,
+        8,
+        9,
+        5,
+        10,
+        7,
+        9,
+        7,
+        6,
+        6,
+        7,
+        11,
+        7,
+        12,
+        7,
+        9,
+        9,
+        10,
+        7,
+        7,
+        7,
+        10,
+        10,
+        9,
+        9,
+        5,
+        13,
+        13,
+        7,
+        10,
+        6,
+        9,
+        7
+      ]
+    },
+    "FACT_SHEET": {
+      "count": 1,
+      "high": 0,
+      "medium": 1,
+      "low": 0,
+      "scores": [
+        6
+      ]
+    }
+  },
+  "low_confidence_files": [],
+  "type_weakness": [
+    {
+      "type": "FACT_SHEET",
+      "avgScore": 6,
+      "lowPct": 0,
+      "mediumPct": 100,
+      "highPct": 0,
+      "count": 1
+    },
+    {
+      "type": "NEWS_RELEASE",
+      "avgScore": 8.657894736842104,
+      "lowPct": 0,
+      "mediumPct": 65.8,
+      "highPct": 34.2,
+      "count": 38
+    },
+    {
+      "type": "STATEMENT",
+      "avgScore": 9.285714285714286,
+      "lowPct": 0,
+      "mediumPct": 57.1,
+      "highPct": 42.9,
+      "count": 7
+    }
+  ],
+  "recommendation": "FACT_SHEET"
+}

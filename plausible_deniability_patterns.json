@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "Pattern catalog for detecting plausible-deniability/hedging rhetoric (incl. Trump-style variants).",
+    "default_threshold": 0.5
+  },
+  "boosts": {
+    "claiminess": 0.10,
+    "rhetorical_question": 0.10,
+    "max_score": 1.0
+  },
+  "claimy_words": [
+    "rigged", "fraud", "corrupt", "fake", "hoax", "proof", "evidence",
+    "massive", "unprecedented", "disaster", "cover-?up",
+    "illegal", "crime", "scandal", "worst", "best", "biggest", "tremendous"
+  ],
+  "rhet_question_stems": [
+    "isn(?:'|')?t it",
+    "what if",
+    "could it be",
+    "can you believe",
+    "is it possible",
+    "how come"
+  ],
+  "patterns": [
+    {
+      "id": "ATTR_PEOPLE_SAY",
+      "label": "AttributionToAnonymousOthers",
+      "weight": 0.40,
+      "rx": "\\b(people|lots of people|a lot of people|many (?:people|folks))\\s+(?:are )?(?:saying|telling|have said)\\b"
+    },
+    {
+      "id": "ATTR_EVERYBODY_KNOWS",
+      "label": "AppealToObviousness",
+      "weight": 0.40,
+      "rx": "\\b(everybody|everyone)\\s+knows\\b"
+    },
+    {
+      "id": "ATTR_I_HEARD",
+      "label": "HearsayShield",
+      "weight": 0.35,
+      "rx": "\\b(i\\s*(?:just\\s*)?heard|i(?:'|')ve heard|i(?:\\s*do\\s*not| don't)\\s*know,?\\s*but)\\b"
+    },
+    {
+      "id": "ATTR_MANY_BELIEVE",
+      "label": "AppealToConsensus",
+      "weight": 0.35,
+      "rx": "\\b(many|most)\\s+(?:people\\s+)?(?:believe|think|feel)\\b"
+    },
+    {
+      "id": "ATTR_THEY_SAY",
+      "label": "TheySay",
+      "weight": 0.35,
+      "rx": "\\b(they|some)\\s+(?:say|are saying|have said)\\b"
+    },
+    {
+      "id": "HEDGE_MODAL",
+      "label": "HedgedModality",
+      "weight": 0.20,
+      "rx": "\\b(might|may|could|seems|appears|likely|possibly|perhaps)\\b"
+    },
+    {
+      "id": "COND_IF_TRUE",
+      "label": "ConditionalEscape",
+      "weight": 0.25,
+      "rx": "\\b(if\\s+true|assuming\\s+this\\s+is\\s+the\\s+case|suppose\\s+for\\s+a\\s+moment)\\b"
+    },
+    {
+      "id": "PASSIVE_WIDELY_BELIEVED",
+      "label": "PassiveAuthority",
+      "weight": 0.30,
+      "rx": "\\b(it\\s+is\\s+(?:widely\\s+)?believed|it\\s+has\\s+been\\s+suggested|it\\s+is\\s+said)\\b"
+    },
+    {
+      "id": "JAQ",
+      "label": "JustAskingQuestions",
+      "weight": 0.35,
+      "rx": "\\b(i(?:'|')m\\s+not\\s+saying\\s+it(?:'|')s\\s+true,?\\s*but|not\\s+saying\\s+it(?:'|')s\\s+true|just\\s+asking|shouldn(?:'|')t\\s+we\\s+ask)\\b"
+    },
+    {
+      "id": "RHET_Q_STEMS",
+      "label": "RhetoricalQuestionStem",
+      "weight": 0.20,
+      "rx": "^(isn(?:'|')t\\s+it\\s+interesting|what\\s+if|could\\s+it\\s+be\\s+that|can\\s+you\\s+believe\\s+it)\\b"
+    },
+    {
+      "id": "EQUIV_ASSOC",
+      "label": "EquivocalAssociation",
+      "weight": 0.25,
+      "rx": "\\b(linked\\s+to|connected\\s+with|related\\s+to)\\b"
+    },
+    {
+      "id": "OVERLAP_WE_LL_SEE",
+      "label": "NoncommittalFuture",
+      "weight": 0.25,
+      "rx": "\\b(we(?:'|')ll\\s+see\\s+what\\s+happens|could\\s+be\\s+true,?\\s*could\\s+be\\s+not\\s+true|who\\s+knows)\\b"
+    },
+    {
+      "id": "COMMON_SENSE",
+      "label": "AppealToCommonSense",
+      "weight": 0.30,
+      "rx": "\\b(it(?:'|')s)\\s+(?:just\\s+)?common\\s+sense\\b"
+    },
+    {
+      "id": "MEDIA_NEVER",
+      "label": "Presupposition",
+      "weight": 0.30,
+      "rx": "\\b(the\\s+media\\s+never\\s+talks?\\s+about\\s+it|nobody\\s+talks?\\s+about\\s+it)\\b"
+    }
+  ]
+}

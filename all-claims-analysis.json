@@ -1,0 +1,1200 @@
+{
+  "summary": {
+    "totalFiles": 54,
+    "totalStatements": 572,
+    "totalFactualClaims": 135,
+    "totalNonFactual": 437,
+    "factualPercentage": "23.6"
+  },
+  "files": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "totalSentences": 11,
+      "factualClaims": 4,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "totalSentences": 10,
+      "factualClaims": 4,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "booker_01_shutdown.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "booker_02_house_cr.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        }
+      ]
+    },
+    {
+      "file": "booker_03_farmer_contracts.txt",
+      "totalSentences": 8,
+      "factualClaims": 3,
+      "nonFactual": 5,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dnc_billboards_rural_hospitals.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dnc_texas_gerrymandering.txt",
+      "totalSentences": 6,
+      "factualClaims": 4,
+      "nonFactual": 2,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dnc_trump_seniors_vets.txt",
+      "totalSentences": 5,
+      "factualClaims": 0,
+      "nonFactual": 5,
+      "claims": []
+    },
+    {
+      "file": "dnc_trump_va.txt",
+      "totalSentences": 10,
+      "factualClaims": 5,
+      "nonFactual": 5,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jayapal_01_shutdown.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jayapal_02_violence_threats.txt",
+      "totalSentences": 12,
+      "factualClaims": 2,
+      "nonFactual": 10,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jayapal_03_cr_vote.txt",
+      "totalSentences": 7,
+      "factualClaims": 3,
+      "nonFactual": 4,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jayapal_04_rescissions.txt",
+      "totalSentences": 8,
+      "factualClaims": 3,
+      "nonFactual": 5,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jayapal_05_doj_letter.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 11,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jeffries_01_shutdown_statement.txt",
+      "totalSentences": 6,
+      "factualClaims": 1,
+      "nonFactual": 5,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jeffries_02_cancel_cuts.txt",
+      "totalSentences": 7,
+      "factualClaims": 1,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jeffries_03_white_house_meeting.txt",
+      "totalSentences": 3,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        }
+      ]
+    },
+    {
+      "file": "jeffries_04_on_duty.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "jeffries_05_healthcare.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "khanna_01_epstein_files.txt",
+      "totalSentences": 11,
+      "factualClaims": 3,
+      "nonFactual": 8,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "khanna_02_children_healthcare.txt",
+      "totalSentences": 11,
+      "factualClaims": 4,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "totalSentences": 11,
+      "factualClaims": 1,
+      "nonFactual": 10,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "totalSentences": 6,
+      "factualClaims": 2,
+      "nonFactual": 4,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "totalSentences": 8,
+      "factualClaims": 7,
+      "nonFactual": 1,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "totalSentences": 11,
+      "factualClaims": 2,
+      "nonFactual": 9,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "porter_05_launch.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 11,
+      "claims": [
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schiff_sen_01_continuing_resolution.txt",
+      "totalSentences": 10,
+      "factualClaims": 2,
+      "nonFactual": 8,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schiff_sen_02_protect_democracy.txt",
+      "totalSentences": 9,
+      "factualClaims": 3,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schiff_sen_03_orange_county_healthcare.txt",
+      "totalSentences": 12,
+      "factualClaims": 3,
+      "nonFactual": 9,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schiff_sen_04_10_ways_trump_wrecking.txt",
+      "totalSentences": 16,
+      "factualClaims": 2,
+      "nonFactual": 14,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schiff_sen_05_assault_weapons_ban.txt",
+      "totalSentences": 15,
+      "factualClaims": 3,
+      "nonFactual": 12,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schumer_01_project_2025.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schumer_02_inflation_reduction.txt",
+      "totalSentences": 15,
+      "factualClaims": 10,
+      "nonFactual": 5,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schumer_03_tax_bill.txt",
+      "totalSentences": 6,
+      "factualClaims": 0,
+      "nonFactual": 6,
+      "claims": []
+    },
+    {
+      "file": "schumer_04_white_house_meeting.txt",
+      "totalSentences": 10,
+      "factualClaims": 1,
+      "nonFactual": 9,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "schumer_05_doj_nominees.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 11,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "totalSentences": 13,
+      "factualClaims": 1,
+      "nonFactual": 12,
+      "claims": [
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "totalSentences": 46,
+      "factualClaims": 7,
+      "nonFactual": 39,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        },
+        {
+          "type": [
+            "plausible-deniability",
+            "hedgedmodality",
+            "theysay"
+          ],
+          "verifiable": true,
+          "verificationType": "extract-underlying-claim"
+        }
+      ]
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "totalSentences": 20,
+      "factualClaims": 2,
+      "nonFactual": 18,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "totalSentences": 12,
+      "factualClaims": 0,
+      "nonFactual": 12,
+      "claims": []
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "totalSentences": 24,
+      "factualClaims": 7,
+      "nonFactual": 17,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "hearsay",
+            "reported-speech"
+          ],
+          "verifiable": true,
+          "verificationType": "two-step"
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "spanberger_01_mass_firings.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "spanberger_02_jobs_economy.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "spanberger_03_abortion_ad.txt",
+      "totalSentences": 3,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        },
+        {
+          "type": [
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "spanberger_04_shutdown_statement.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 7,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "stein_01_hurricane_recovery.txt",
+      "totalSentences": 13,
+      "factualClaims": 3,
+      "nonFactual": 10,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "stein_02_western_nc_funding.txt",
+      "totalSentences": 16,
+      "factualClaims": 6,
+      "nonFactual": 10,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "stein_03_bills_action.txt",
+      "totalSentences": 12,
+      "factualClaims": 4,
+      "nonFactual": 8,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "historical-event",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "legislative-fact",
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "legislative-fact",
+            "statistical-claim"
+          ]
+        },
+        {
+          "type": [
+            "legislative-fact",
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        },
+        {
+          "type": [
+            "statistical-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "totalSentences": 7,
+      "factualClaims": 1,
+      "nonFactual": 6,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "totalSentences": 9,
+      "factualClaims": 1,
+      "nonFactual": 8,
+      "claims": [
+        {
+          "type": [
+            "statistical-claim",
+            "dated-claim"
+          ]
+        }
+      ]
+    }
+  ]
+}

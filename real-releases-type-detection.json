@@ -1,0 +1,334 @@
+{
+  "timestamp": "2025-10-02T20:55:33.762Z",
+  "total_files": 17,
+  "excluded_files": 50,
+  "type_counts": {
+    "STATEMENT": 2,
+    "NEWS_RELEASE": 15
+  },
+  "confidence_counts": {
+    "high": 5,
+    "medium": 8,
+    "low": 4,
+    "none": 0
+  },
+  "results": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "type": "STATEMENT",
+      "confidence": "high",
+      "score": 15,
+      "indicators": [
+        "Statement format detected",
+        "Contains \"released a statement\"",
+        "Has dateline format",
+        "Contains formatted date",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 15,
+        "NEWS_RELEASE": 10,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "high",
+      "score": 10,
+      "indicators": [
+        "Has dateline format",
+        "Contains formatted date",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 10,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 2,
+      "indicators": [
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 2,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 7,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\"",
+        "Contains third-person narrative verbs",
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 7,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 9,
+      "indicators": [
+        "Contains \"issued the following statement\"",
+        "Contains formatted date",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 9,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Contains formatted date",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "high",
+      "score": 10,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\"",
+        "Multiple speaker attributions found",
+        "Contains third-person narrative verbs",
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 10,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 7,
+      "indicators": [
+        "Has ### end marker",
+        "Contains third-person narrative verbs",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 7,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "type": "STATEMENT",
+      "confidence": "high",
+      "score": 15,
+      "indicators": [
+        "Statement format detected",
+        "Contains \"released a statement\"",
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 15,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "high",
+      "score": 13,
+      "indicators": [
+        "Has dateline format",
+        "Multiple speaker attributions found",
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 13,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Has ### end marker",
+        "Has location header"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 4,
+      "indicators": [
+        "Contains third-person narrative verbs",
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 4,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 4,
+      "indicators": [
+        "Contains third-person narrative verbs",
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 4,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 2,
+      "indicators": [
+        "Contains formatted date"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 2,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    }
+  ]
+}

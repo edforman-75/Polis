@@ -33,6 +33,7 @@ const editorAnalysisRoutes = require('./backend/routes/editor-analysis');
 const boilerplateRoutes = require('./backend/routes/boilerplate');
 const quotesRoutes = require('./backend/routes/quotes');
 const textAnalysisRoutes = require('./backend/routes/text-analysis');
+const factCheckingRoutes = require('./backend/routes/fact-checking');
 
 // Import database
 const db = require('./backend/database/init');
@@ -143,6 +144,7 @@ app.use('/api/editor', editorAnalysisRoutes);
 app.use('/api/boilerplate', boilerplateRoutes);
 app.use('/api/quotes', quotesRoutes);
 app.use('/api/text-analysis', textAnalysisRoutes);
+app.use('/api/fact-checking', factCheckingRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');
@@ -223,6 +225,62 @@ app.get('/api/parser/examples/:filename', async (req, res) => {
     } catch (error) {
         console.error('Error loading example:', error);
         res.status(500).json({ error: 'Failed to load example' });
+    }
+});
+
+// Save type verification corrections
+app.post('/api/parser/type-verification', async (req, res) => {
+    try {
+        const { filename, detectedType, detectedConfidence, detectedScore, correctedType, subtypes, issues, notes } = req.body;
+
+        if (!filename || !correctedType) {
+            return res.status(400).json({ error: 'filename and correctedType are required' });
+        }
+
+        // Store in database using existing db connection
+        await db.run(`
+            INSERT OR REPLACE INTO type_verifications
+            (filename, detected_type, detected_confidence, detected_score, corrected_type, subtypes, issues, notes, verified_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `, [
+            filename,
+            detectedType || 'UNKNOWN',
+            detectedConfidence || 'none',
+            detectedScore || 0,
+            correctedType,
+            JSON.stringify(subtypes || []),
+            JSON.stringify(issues || []),
+            notes || ''
+        ]);
+
+        console.log(`✓ Type verification saved: ${filename} -> ${correctedType} (${(issues || []).length} issues)`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving type verification:', error);
+        res.status(500).json({ error: 'Failed to save verification' });
+    }
+});
+
+// Get saved type verifications
+app.get('/api/parser/type-verifications', async (req, res) => {
+    try {
+        const verifications = await db.all(`
+            SELECT filename, detected_type, detected_confidence, detected_score,
+                   corrected_type, subtypes, issues, notes, verified_at
+            FROM type_verifications
+            ORDER BY verified_at DESC
+        `);
+
+        // Parse JSON fields
+        verifications.forEach(v => {
+            v.subtypes = JSON.parse(v.subtypes || '[]');
+            v.issues = JSON.parse(v.issues || '[]');
+        });
+
+        res.json({ verifications });
+    } catch (error) {
+        console.error('Error loading verifications:', error);
+        res.status(500).json({ error: 'Failed to load verifications' });
     }
 });
 

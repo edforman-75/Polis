@@ -1,0 +1,666 @@
+{
+  "summary": {
+    "total_files": 67,
+    "total_quotes": 77,
+    "unknown_speakers": 26,
+    "missing_dates": 23,
+    "missing_locations": 26,
+    "missing_headlines": 0
+  },
+  "failures": {
+    "speaker_extraction": [
+      {
+        "file": "aoc_01_kirk.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "honoring the life and legacy..."
+      },
+      {
+        "file": "aoc_01_kirk.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "House Republicans today brought to the floor a resolution 'h..."
+      },
+      {
+        "file": "aoc_01_kirk.txt",
+        "quote_num": 3,
+        "attribution": "Unknown Speaker",
+        "text": "It then only underscores the majority's recklessness and int..."
+      },
+      {
+        "file": "aoc_02_israel.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "The Israeli government has now killed over 64,000 human bein..."
+      },
+      {
+        "file": "porter_03_poll.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "Kamala Harris supporters flocked to Katie Porter in Californ..."
+      },
+      {
+        "file": "porter_04_min_endorsement.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "lobb[ies] attack after attack at our state...."
+      },
+      {
+        "file": "sherrill_01_trump_funding.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "fight tooth and nail..."
+      },
+      {
+        "file": "sherrill_03_tax_returns.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "Let’s hope others follow her example..."
+      },
+      {
+        "file": "sherrill_03_tax_returns.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "follow her example..."
+      },
+      {
+        "file": "sherrill_03_tax_returns.txt",
+        "quote_num": 3,
+        "attribution": "Unknown Speaker",
+        "text": "exact values of her finances greater level of transparency a..."
+      },
+      {
+        "file": "sherrill_03_tax_returns.txt",
+        "quote_num": 4,
+        "attribution": "Unknown Speaker",
+        "text": "I’ve always held myself to the highest standards of accounta..."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "obscure nonprofit..."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "BS...."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 3,
+        "attribution": "Unknown Speaker",
+        "text": "state of emergency..."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 4,
+        "attribution": "Unknown Speaker",
+        "text": "day one..."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 8,
+        "attribution": "Unknown Speaker",
+        "text": "energy arsenal...."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 9,
+        "attribution": "Unknown Speaker",
+        "text": "Mikie’s plan to cap energy prices in the short term and spee..."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 10,
+        "attribution": "Unknown Speaker",
+        "text": "Sherrill said...."
+      },
+      {
+        "file": "sherrill_04_utility_emergency.txt",
+        "quote_num": 11,
+        "attribution": "Unknown Speaker",
+        "text": "creeping up..."
+      },
+      {
+        "file": "sherrill_05_pcm_endorse.txt",
+        "quote_num": 3,
+        "attribution": "Unknown Speaker",
+        "text": "I’m absolutely thrilled to have Patricia’s support in this r..."
+      },
+      {
+        "file": "sherrill_06_matching_funds.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "Build Something..."
+      },
+      {
+        "file": "warren_01_shutdown.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "Democrats want to keep the government open AND we want rollb..."
+      },
+      {
+        "file": "warren_02_crypto.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "Examining the Taxation of Digital Assets..."
+      },
+      {
+        "file": "warren_02_crypto.txt",
+        "quote_num": 3,
+        "attribution": "Unknown Speaker",
+        "text": "same basic transaction, same kind of risks means we need the..."
+      },
+      {
+        "file": "warren_03_social_security.txt",
+        "quote_num": 1,
+        "attribution": "Unknown Speaker",
+        "text": "If the Social Security retirement age is increased under you..."
+      },
+      {
+        "file": "warren_03_social_security.txt",
+        "quote_num": 2,
+        "attribution": "Unknown Speaker",
+        "text": "Social Security War Room..."
+      }
+    ],
+    "dateline_extraction": [
+      {
+        "file": "porter_04_min_endorsement.txt",
+        "type": "location",
+        "first_lines": "FOR IMMEDIATE RELEASE | September 2, 2025 |  | REP. DAVE MIN ENDORSES KATIE PORTER TO BE CALIFORNIA'S NEXT GOVERNOR | "
+      },
+      {
+        "file": "release_01.txt",
+        "type": "date",
+        "first_lines": "FOR IMMEDIATE RELEASE | Contact: press@janesmithforcongress.org |  | Jane Smith will hold a rally at the high school gym next Thursday. Doors open at 6, she’ll talk about jobs and families. Bring friends. | "
+      },
+      {
+        "file": "release_01.txt",
+        "type": "location",
+        "first_lines": "FOR IMMEDIATE RELEASE | Contact: press@janesmithforcongress.org |  | Jane Smith will hold a rally at the high school gym next Thursday. Doors open at 6, she’ll talk about jobs and families. Bring friends. | "
+      },
+      {
+        "file": "release_02.txt",
+        "type": "location",
+        "first_lines": "FOR IMMEDIATE RELEASE | Contact: team@janesmithforcongress.org |  | Jane Smith is inviting all constituents to a Town Hall on March 9 at the Civic Center Hall. She will take questions directly from voters.  | The Town Hall will be a good opportunity for voters to ask Jane questions. Jane will also present her ideas for the district. "
+      },
+      {
+        "file": "release_03.txt",
+        "type": "date",
+        "first_lines": "Jane Smith for Congress invites supporters to a campaign picnic. Free hot dogs. Come by with kids. |  | DATE: Saturday. | TIME: TBD. | LOCATION: TBA."
+      },
+      {
+        "file": "release_03.txt",
+        "type": "location",
+        "first_lines": "Jane Smith for Congress invites supporters to a campaign picnic. Free hot dogs. Come by with kids. |  | DATE: Saturday. | TIME: TBD. | LOCATION: TBA."
+      },
+      {
+        "file": "release_04.txt",
+        "type": "date",
+        "first_lines": "Jane Smith announced her comprehensive multi-tier framework for healthcare accessibility and affordability, leveraging a multiphase rollout of community-centered care hubs and universal coverage optimization.  | "
+      },
+      {
+        "file": "release_04.txt",
+        "type": "location",
+        "first_lines": "Jane Smith announced her comprehensive multi-tier framework for healthcare accessibility and affordability, leveraging a multiphase rollout of community-centered care hubs and universal coverage optimization.  | "
+      },
+      {
+        "file": "release_05.txt",
+        "type": "date",
+        "first_lines": "Jane Smith announced a new plan to end fossil fuels in 8 years, while also supporting “responsible oil and gas expansion.” | "
+      },
+      {
+        "file": "release_05.txt",
+        "type": "location",
+        "first_lines": "Jane Smith announced a new plan to end fossil fuels in 8 years, while also supporting “responsible oil and gas expansion.” | "
+      },
+      {
+        "file": "release_06.txt",
+        "type": "date",
+        "first_lines": "Jane’s education platform: | - Support teachers | - Fix classrooms | - College affordability | [NEED MORE BULLETS HERE]"
+      },
+      {
+        "file": "release_06.txt",
+        "type": "location",
+        "first_lines": "Jane’s education platform: | - Support teachers | - Fix classrooms | - College affordability | [NEED MORE BULLETS HERE]"
+      },
+      {
+        "file": "release_07.txt",
+        "type": "date",
+        "first_lines": "The Steelworkers Union today endorsed Jane Smith. “She’s pretty good at standing up for workers,” said a union rep. Jane said she was “very happy” about it. | "
+      },
+      {
+        "file": "release_07.txt",
+        "type": "location",
+        "first_lines": "The Steelworkers Union today endorsed Jane Smith. “She’s pretty good at standing up for workers,” said a union rep. Jane said she was “very happy” about it. | "
+      },
+      {
+        "file": "release_08.txt",
+        "type": "date",
+        "first_lines": "The Daily Gazette endorsed Jane Smith this week. [Insert pull quote here]. | "
+      },
+      {
+        "file": "release_08.txt",
+        "type": "location",
+        "first_lines": "The Daily Gazette endorsed Jane Smith this week. [Insert pull quote here]. | "
+      },
+      {
+        "file": "release_09.txt",
+        "type": "date",
+        "first_lines": "Actor Brian Thomas said on Instagram that Jane Smith is “cool” and “deserves to win.” Campaign confirms the endorsement. | "
+      },
+      {
+        "file": "release_09.txt",
+        "type": "location",
+        "first_lines": "Actor Brian Thomas said on Instagram that Jane Smith is “cool” and “deserves to win.” Campaign confirms the endorsement. | "
+      },
+      {
+        "file": "release_10.txt",
+        "type": "date",
+        "first_lines": "Jane Smith’s campaign today called out Congressman John Doe for “shady dealings” in Washington. The campaign did not provide documentation but said “it’s widely known.” | "
+      },
+      {
+        "file": "release_10.txt",
+        "type": "location",
+        "first_lines": "Jane Smith’s campaign today called out Congressman John Doe for “shady dealings” in Washington. The campaign did not provide documentation but said “it’s widely known.” | "
+      },
+      {
+        "file": "release_11.txt",
+        "type": "date",
+        "first_lines": "John Doe has NO ETHICS. He takes dirty $$$ and votes against us EVERY TIME. Jane Smith will end this corrpution (sic). | "
+      },
+      {
+        "file": "release_11.txt",
+        "type": "location",
+        "first_lines": "John Doe has NO ETHICS. He takes dirty $$$ and votes against us EVERY TIME. Jane Smith will end this corrpution (sic). | "
+      },
+      {
+        "file": "release_12.txt",
+        "type": "date",
+        "first_lines": "Jane Smith today contrasted her pragmatic incremental health reform approach with John Doe’s deregulatory-oriented healthcare framework, which she called “misaligned with constituent-driven needs.” | "
+      },
+      {
+        "file": "release_12.txt",
+        "type": "location",
+        "first_lines": "Jane Smith today contrasted her pragmatic incremental health reform approach with John Doe’s deregulatory-oriented healthcare framework, which she called “misaligned with constituent-driven needs.” | "
+      },
+      {
+        "file": "release_13.txt",
+        "type": "date",
+        "first_lines": "Jane Smith’s campaign is nearing its fundraising deadline. We need help. Donate if you can. (link??) | "
+      },
+      {
+        "file": "release_13.txt",
+        "type": "location",
+        "first_lines": "Jane Smith’s campaign is nearing its fundraising deadline. We need help. Donate if you can. (link??) | "
+      },
+      {
+        "file": "release_14.txt",
+        "type": "date",
+        "first_lines": "Our campaign has raised an amazing $50,000 from more than 1,200 contributions averaging $41 each, which shows the power of grassroots, ordinary people, small donors, folks like you, who are stepping up in these tough times when things are difficult. | "
+      },
+      {
+        "file": "release_14.txt",
+        "type": "location",
+        "first_lines": "Our campaign has raised an amazing $50,000 from more than 1,200 contributions averaging $41 each, which shows the power of grassroots, ordinary people, small donors, folks like you, who are stepping up in these tough times when things are difficult. | "
+      },
+      {
+        "file": "release_15.txt",
+        "type": "date",
+        "first_lines": "A donor has pledged to match every dollar up to $25,000… but only if we raise $50,000 first. | "
+      },
+      {
+        "file": "release_15.txt",
+        "type": "location",
+        "first_lines": "A donor has pledged to match every dollar up to $25,000… but only if we raise $50,000 first. | "
+      },
+      {
+        "file": "release_16.txt",
+        "type": "date",
+        "first_lines": "Jane Smith apologizes “if anyone was offended” by her comment last week. She insists she was taken out of context and blames the media. | "
+      },
+      {
+        "file": "release_16.txt",
+        "type": "location",
+        "first_lines": "Jane Smith apologizes “if anyone was offended” by her comment last week. She insists she was taken out of context and blames the media. | "
+      },
+      {
+        "file": "release_17.txt",
+        "type": "date",
+        "first_lines": "Some have said Jane Smith opposes veterans. This is wrong. Jane has always supported veterans. [Add stats here]. | "
+      },
+      {
+        "file": "release_17.txt",
+        "type": "location",
+        "first_lines": "Some have said Jane Smith opposes veterans. This is wrong. Jane has always supported veterans. [Add stats here]. | "
+      },
+      {
+        "file": "release_18.txt",
+        "type": "date",
+        "first_lines": "John Doe’s attack ad is false. Jane Smith says the ad “misrepresents her record.” Campaign will issue a fact check “soon.” | "
+      },
+      {
+        "file": "release_18.txt",
+        "type": "location",
+        "first_lines": "John Doe’s attack ad is false. Jane Smith says the ad “misrepresents her record.” Campaign will issue a fact check “soon.” | "
+      },
+      {
+        "file": "release_19.txt",
+        "type": "date",
+        "first_lines": "Jane Smith wants to create jobs by growing jobs. Her plan will put people back to work and help working families. | "
+      },
+      {
+        "file": "release_19.txt",
+        "type": "location",
+        "first_lines": "Jane Smith wants to create jobs by growing jobs. Her plan will put people back to work and help working families. | "
+      },
+      {
+        "file": "release_20.txt",
+        "type": "date",
+        "first_lines": "Jane Smith grew up right here in our district, where her parents taught her to always try your best, work hard, believe in America, believe in yourself, believe in faith, and believe in what you can achieve if you never give up. | "
+      },
+      {
+        "file": "release_20.txt",
+        "type": "location",
+        "first_lines": "Jane Smith grew up right here in our district, where her parents taught her to always try your best, work hard, believe in America, believe in yourself, believe in faith, and believe in what you can achieve if you never give up. | "
+      },
+      {
+        "file": "release_21.txt",
+        "type": "date",
+        "first_lines": "Campaign launches new ad “Better Future.” Link: [INSERT LINK] | "
+      },
+      {
+        "file": "release_21.txt",
+        "type": "location",
+        "first_lines": "Campaign launches new ad “Better Future.” Link: [INSERT LINK] | "
+      },
+      {
+        "file": "release_22.txt",
+        "type": "date",
+        "first_lines": "Jane Smith promises to fix all the roads in the county. “We’ll make sure every pothole is filled,” she said. No details on how to pay for this. | "
+      },
+      {
+        "file": "release_22.txt",
+        "type": "location",
+        "first_lines": "Jane Smith promises to fix all the roads in the county. “We’ll make sure every pothole is filled,” she said. No details on how to pay for this. | "
+      },
+      {
+        "file": "release_23.txt",
+        "type": "date",
+        "first_lines": "Jane Smith supports more affordable housing, but also promises to stop new apartment buildings in neighborhoods. | "
+      },
+      {
+        "file": "release_23.txt",
+        "type": "location",
+        "first_lines": "Jane Smith supports more affordable housing, but also promises to stop new apartment buildings in neighborhoods. | "
+      },
+      {
+        "file": "release_24.txt",
+        "type": "location",
+        "first_lines": "Early voting starts Oct 13th, or maybe the 15th, check local rules. Polls open 6am. Vote for Jane Smith!! | "
+      },
+      {
+        "file": "release_25.txt",
+        "type": "date",
+        "first_lines": "Jane Smith Watch Party at Joe’s Bar, 9pm on election night. Come by! Media invited, but bring own chairs. Food? TBD. | "
+      },
+      {
+        "file": "release_25.txt",
+        "type": "location",
+        "first_lines": "Jane Smith Watch Party at Joe’s Bar, 9pm on election night. Come by! Media invited, but bring own chairs. Food? TBD. | "
+      }
+    ],
+    "headline_extraction": []
+  },
+  "files_with_issues": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "issues": [
+        "3/3 unknown speakers (100%)"
+      ]
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "issues": [
+        "1/3 unknown speakers (33%)"
+      ]
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "issues": [
+        "1/1 unknown speakers (100%)"
+      ]
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "issues": [
+        "1/2 unknown speakers (50%)",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_01.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_02.txt",
+      "issues": [
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_03.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_04.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_05.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_06.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_07.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_08.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_09.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_10.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_11.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_12.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_13.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_14.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_15.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_16.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_17.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_18.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_19.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_20.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_21.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_22.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_23.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_24.txt",
+      "issues": [
+        "Missing location"
+      ]
+    },
+    {
+      "file": "release_25.txt",
+      "issues": [
+        "Missing date",
+        "Missing location"
+      ]
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "issues": [
+        "1/4 unknown speakers (25%)"
+      ]
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "issues": [
+        "4/4 unknown speakers (100%)"
+      ]
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "issues": [
+        "8/12 unknown speakers (67%)"
+      ]
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "issues": [
+        "1/4 unknown speakers (25%)"
+      ]
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "issues": [
+        "1/2 unknown speakers (50%)"
+      ]
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "issues": [
+        "1/2 unknown speakers (50%)"
+      ]
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "issues": [
+        "2/3 unknown speakers (67%)"
+      ]
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "issues": [
+        "2/2 unknown speakers (100%)"
+      ]
+    }
+  ]
+}

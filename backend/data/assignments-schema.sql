@@ -165,6 +165,26 @@ CREATE TABLE IF NOT EXISTS editorial_changes (
     FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
 );
 
+-- Type verifications table (for release type detection training)
+CREATE TABLE IF NOT EXISTS type_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT UNIQUE NOT NULL,          -- Example filename (e.g., release_01.txt)
+
+    -- Detection results
+    detected_type TEXT NOT NULL,            -- STATEMENT, NEWS_RELEASE, etc.
+    detected_confidence TEXT NOT NULL,      -- high, medium, low, none
+    detected_score INTEGER NOT NULL,        -- Numeric score
+
+    -- Human corrections
+    corrected_type TEXT NOT NULL,           -- Correct type
+    subtypes TEXT,                          -- JSON array of subtypes
+    issues TEXT,                            -- JSON array of issues (healthcare, education, etc.)
+    notes TEXT,                             -- Any feedback/notes
+
+    -- Tracking
+    verified_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
 CREATE INDEX IF NOT EXISTS idx_assignments_validation_by ON assignments(validation_completed_by);

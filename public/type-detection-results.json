@@ -1,0 +1,1093 @@
+{
+  "timestamp": "2025-10-02T19:56:39.953Z",
+  "total_files": 67,
+  "type_counts": {
+    "STATEMENT": 2,
+    "NEWS_RELEASE": 31,
+    "UNKNOWN": 34
+  },
+  "confidence_counts": {
+    "high": 2,
+    "medium": 3,
+    "low": 28,
+    "none": 34
+  },
+  "results": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "type": "STATEMENT",
+      "confidence": "high",
+      "score": 15,
+      "indicators": [
+        "Statement format detected",
+        "Contains \"released a statement\"",
+        "Has dateline format"
+      ],
+      "all_scores": {
+        "STATEMENT": 15,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 5,
+      "indicators": [
+        "Has dateline format"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 5,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_01.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_02.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_03.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_04.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_05.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_06.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_07.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_08.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_09.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_10.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_11.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_12.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_13.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_14.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_15.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_16.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_17.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_18.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_19.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_20.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_21.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_22.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_23.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_24.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "hybrid_release_25.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 6,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\"",
+        "Multiple speaker attributions found"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 6,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_01.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_02.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "low",
+      "score": 3,
+      "indicators": [
+        "Has \"FOR IMMEDIATE RELEASE\""
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 3,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_03.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_04.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_05.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_06.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_07.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_08.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_09.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_10.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_11.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_12.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_13.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_14.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_15.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_16.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_17.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_18.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_19.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_20.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_21.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_22.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_23.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_24.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "release_25.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "type": "STATEMENT",
+      "confidence": "high",
+      "score": 15,
+      "indicators": [
+        "Statement format detected",
+        "Contains \"released a statement\""
+      ],
+      "all_scores": {
+        "STATEMENT": 15,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "type": "NEWS_RELEASE",
+      "confidence": "medium",
+      "score": 8,
+      "indicators": [
+        "Has dateline format",
+        "Multiple speaker attributions found"
+      ],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 8,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "type": "UNKNOWN",
+      "confidence": "none",
+      "score": 0,
+      "indicators": [],
+      "all_scores": {
+        "STATEMENT": 0,
+        "NEWS_RELEASE": 0,
+        "MEDIA_ADVISORY": 0,
+        "LETTER": 0,
+        "TRANSCRIPT": 0,
+        "FACT_SHEET": 0
+      }
+    }
+  ]
+}

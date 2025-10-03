@@ -1,0 +1,94 @@
+{
+  "timestamp": "2025-10-02T22:06:15.668Z",
+  "total_files": 4,
+  "metrics": {
+    "precision": "91.7",
+    "recall": "100.0",
+    "f1_score": "95.7",
+    "true_positives": 11,
+    "false_positives": 1,
+    "false_negatives": 0
+  },
+  "results": [
+    {
+      "id": "dnc_trump_seniors_vets",
+      "expected": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "detected": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "matched": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "missed": [],
+      "extra": []
+    },
+    {
+      "id": "dnc_trump_va",
+      "expected": [
+        "attack_fear",
+        "attack_rapid_response"
+      ],
+      "detected": [
+        "attack_policy",
+        "attack_fear",
+        "attack_rapid_response"
+      ],
+      "matched": [
+        "attack_fear",
+        "attack_rapid_response"
+      ],
+      "missed": [],
+      "extra": [
+        "attack_policy"
+      ]
+    },
+    {
+      "id": "dnc_billboards_rural_hospitals",
+      "expected": [
+        "attack_policy",
+        "attack_fear",
+        "attack_association"
+      ],
+      "detected": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "matched": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "missed": [],
+      "extra": []
+    },
+    {
+      "id": "dnc_texas_gerrymandering",
+      "expected": [
+        "attack_association",
+        "attack_policy",
+        "attack_fear"
+      ],
+      "detected": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "matched": [
+        "attack_policy",
+        "attack_association",
+        "attack_fear"
+      ],
+      "missed": [],
+      "extra": []
+    }
+  ]
+}

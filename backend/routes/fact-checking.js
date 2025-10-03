@@ -990,4 +990,467 @@ router.post('/:factCheckId/claims/:claimId/verify-auto', requireAuth, async (req
     }
 });
 
+// Demo endpoint for UI testing (no auth required)
+router.post('/demo/verify', async (req, res) => {
+    try {
+        const { claim, method } = req.body;
+
+        if (!claim) {
+            return res.status(400).json({ error: 'Claim text is required' });
+        }
+
+        // Create claim object
+        const claimObj = {
+            text: claim,
+            type: [method || 'standard']
+        };
+
+        // Create mock WebSearch function for demo
+        const mockWebSearch = async (query) => {
+            console.log(`Demo WebSearch: ${query}`);
+
+            // Return consistent format that verifier expects
+            const response = {
+                content: '',
+                source: 'web'
+            };
+
+            // Handle VA workforce queries
+            if (query.toLowerCase().includes('va') || query.toLowerCase().includes('veteran') || query.toLowerCase().includes('workforce')) {
+                response.content = 'The Department of Veterans Affairs reports that approximately 31% of its workforce are veterans themselves, with over 100,000 veteran employees as of 2025.';
+                response.source = 'va.gov';
+                return response;
+            }
+
+            // Handle deficit queries (current)
+            if (query.toLowerCase().includes('deficit') && (query.includes('2025') || query.includes('current'))) {
+                response.content = 'The Congressional Budget Office projects the federal deficit for fiscal year 2025 at $1.8 trillion dollars.';
+                response.source = 'cbo.gov';
+                return response;
+            }
+
+            // Handle deficit queries (historical)
+            if (query.toLowerCase().includes('deficit') && (query.includes('2023') || query.includes('ago') || query.includes('2 years'))) {
+                response.content = 'The federal deficit for fiscal year 2023 was $1.7 trillion according to Treasury Department data.';
+                response.source = 'treasury.gov';
+                return response;
+            }
+
+            // Handle any "double" or percentage increase queries
+            if (query.toLowerCase().includes('double') || query.toLowerCase().includes('increase')) {
+                response.content = 'Current value is $1.8 trillion, previous value was $1.7 trillion, representing a 5.9% increase.';
+                response.source = 'official statistics';
+                return response;
+            }
+
+            // Handle voting record queries
+            if (query.toLowerCase().includes('voted') || query.toLowerCase().includes('infrastructure') || query.toLowerCase().includes('bill')) {
+                response.content = 'Congressional voting records show 8 NO votes on infrastructure-related bills and amendments.';
+                response.source = 'congress.gov';
+                return response;
+            }
+
+            // Handle crime statistics
+            if (query.toLowerCase().includes('crime') || query.toLowerCase().includes('decrease')) {
+                response.content = 'Crime statistics show a 15% decrease in reported incidents since 2020 according to FBI data.';
+                response.source = 'fbi.gov';
+                return response;
+            }
+
+            // Default response with some data
+            response.content = 'Search results contain limited verifiable data. Manual fact-checking recommended.';
+            response.source = 'web';
+            return response;
+        };
+
+        // Return realistic mock results for demo
+        // In production, this would use real verification
+        const response = {
+            verdict: 'UNSUPPORTED',
+            confidence: 0.5,
+            evidence: [],
+            calculation: '',
+            sources: []
+        };
+
+        // Generate realistic mock results based on claim content
+        const claimLower = claim.toLowerCase();
+
+        if (claimLower.includes('25%') && claimLower.includes('va')) {
+            // VA workforce claim
+            response.verdict = 'TRUE';
+            response.confidence = 0.95;
+            response.evidence = [
+                'VA reports 31% of workforce are veterans',
+                'Claimed: More than 25%, Actual: 31%'
+            ];
+            response.calculation = '31% > 25% ✓';
+            response.sources = [
+                { name: 'VA Workforce Dashboard (Monthly Reports)', url: 'https://department.va.gov/employees/va-workforce-dashboard/' },
+                { name: 'VA Section 505 Annual Report (2024)', url: 'https://www.va.gov/EMPLOYEE/docs/Section-505-Annual-Report-2024.pdf' }
+            ];
+        } else if (claimLower.includes('deficit') && claimLower.includes('double')) {
+            // Deficit double claim
+            response.verdict = 'FALSE';
+            response.confidence = 0.98;
+            response.evidence = [
+                '2025 deficit: $1.8 trillion',
+                '2023 deficit: $1.7 trillion'
+            ];
+            response.calculation = 'Ratio: 1.8/1.7 = 1.06 (expected 2.0 for "double"). Only 6% increase, not 100%.';
+            response.sources = [
+                { name: 'CBO Budget and Economic Outlook: 2025 to 2035', url: 'https://www.cbo.gov/publication/60870' },
+                { name: 'CBO Budget Outlook Full Report (PDF)', url: 'https://www.cbo.gov/system/files/2025-01/60870-Outlook-2025.pdf' }
+            ];
+        } else if (claimLower.includes('voted') && claimLower.includes('infrastructure') && claimLower.includes('12')) {
+            // Voting record claim
+            response.verdict = 'MISLEADING';
+            response.confidence = 0.67;
+            response.evidence = [
+                'Congressional records show 8 NO votes on infrastructure bills',
+                'Claimed: 12 times, Found: 8 times'
+            ];
+            response.calculation = 'Found 8 NO votes on infrastructure bills, not 12 as claimed.';
+            response.sources = [
+                { name: 'Roll Call 369 - H.R.3684 Final Passage (Nov 5, 2021)', url: 'https://clerk.house.gov/Votes/2021369' },
+                { name: 'Roll Call 208 - H.R.3684 Initial Passage (Jul 1, 2021)', url: 'https://clerk.house.gov/Votes/2021208' }
+            ];
+        } else if (claimLower.includes('crime') && claimLower.includes('15%')) {
+            // Crime statistics claim
+            response.verdict = 'UNSUPPORTED';
+            response.confidence = 0.50;
+            response.evidence = [
+                'Quantity: 15% decrease claimed',
+                'Insufficient WebSearch data for verification'
+            ];
+            response.calculation = '';
+            response.sources = [
+                { name: 'FBI Crime Data Explorer', url: 'https://cde.ucr.cjis.gov/' },
+                { name: 'FBI 2024 Crime Statistics Report', url: 'https://www.fbi.gov/news/press-releases/fbi-releases-2024-reported-crimes-in-the-nation-statistics' }
+            ];
+        } else if (method === 'comparative') {
+            response.verdict = 'UNSUPPORTED';
+            response.confidence = 0.60;
+            response.evidence = [
+                'Comparative claim detected',
+                'Insufficient data for automated verification'
+            ];
+            response.sources = [];
+        } else if (method === 'structured') {
+            response.verdict = 'UNSUPPORTED';
+            response.confidence = 0.60;
+            response.evidence = [
+                'Structured claim detected',
+                'Would require data source integration'
+            ];
+            response.sources = [];
+        }
+
+        res.json(response);
+
+    } catch (error) {
+        console.error('Demo verification error:', error);
+        res.status(500).json({
+            error: 'Verification failed',
+            details: error.message
+        });
+    }
+});
+
+// Add a manual reference to a claim
+router.post('/claims/:claimId/add-reference', requireAuth, async (req, res) => {
+    try {
+        const { claimId } = req.params;
+        const { url, title, description } = req.body;
+
+        if (!url) {
+            return res.status(400).json({ error: 'URL is required' });
+        }
+
+        // Validate URL format
+        let urlObj;
+        try {
+            urlObj = new URL(url);
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid URL format' });
+        }
+
+        // Check if claim exists
+        const claim = await db.get('SELECT * FROM extracted_claims WHERE id = ?', [claimId]);
+        if (!claim) {
+            return res.status(404).json({ error: 'Claim not found' });
+        }
+
+        // Validate URL by attempting to fetch it
+        let validationStatus = 'pending';
+        let httpStatusCode = null;
+        let validationError = null;
+        let extractedTitle = title;
+        let htmlContent = '';
+        let substantiationStatus = null;
+        let substantiationConfidence = null;
+        let substantiationAnalysis = null;
+        let contentExcerpt = null;
+
+        try {
+            const https = require('https');
+            const http = require('http');
+            const protocol = urlObj.protocol === 'https:' ? https : http;
+
+            await new Promise((resolve, reject) => {
+                const request = protocol.get(url, {
+                    timeout: 5000,
+                    headers: {
+                        'User-Agent': 'Campaign-Fact-Checker/1.0'
+                    }
+                }, (response) => {
+                    httpStatusCode = response.statusCode;
+
+                    if (httpStatusCode >= 200 && httpStatusCode < 300) {
+                        validationStatus = 'valid';
+                    } else if (httpStatusCode >= 300 && httpStatusCode < 400) {
+                        validationStatus = 'redirect';
+                    } else {
+                        validationStatus = 'invalid';
+                        validationError = `HTTP ${httpStatusCode}`;
+                    }
+
+                    // Try to extract title and collect HTML content
+                    if (response.headers['content-type']?.includes('text/html')) {
+                        response.on('data', chunk => {
+                            htmlContent += chunk.toString();
+                            // Limit to 100KB to avoid memory issues
+                            if (htmlContent.length > 100000) {
+                                response.destroy();
+                            }
+                        });
+                        response.on('end', () => {
+                            if (!extractedTitle) {
+                                const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+                                if (titleMatch) {
+                                    extractedTitle = titleMatch[1].trim();
+                                }
+                            }
+                            resolve();
+                        });
+                    } else {
+                        response.resume(); // Drain the response
+                        resolve();
+                    }
+                });
+
+                request.on('error', (err) => {
+                    validationStatus = 'unreachable';
+                    validationError = err.message;
+                    resolve();
+                });
+
+                request.on('timeout', () => {
+                    request.destroy();
+                    validationStatus = 'timeout';
+                    validationError = 'Request timeout';
+                    resolve();
+                });
+            });
+        } catch (err) {
+            validationStatus = 'error';
+            validationError = err.message;
+        }
+
+        // Analyze if the content substantiates the claim
+        if (htmlContent && validationStatus === 'valid') {
+            try {
+                // Extract text from HTML (remove tags, scripts, styles)
+                let textContent = htmlContent
+                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                // Limit to first 3000 characters for analysis
+                textContent = textContent.substring(0, 3000);
+
+                // Store excerpt
+                contentExcerpt = textContent.substring(0, 500);
+
+                // Use WebFetch to analyze if content substantiates claim
+                const WebFetch = req.webFetch; // Assuming webFetch is available in request
+
+                if (WebFetch) {
+                    const analysis = await WebFetch(url,
+                        `Does this webpage content substantiate the claim: "${claim.claim_text}"?
+
+                        Analyze the content and respond in this JSON format:
+                        {
+                            "substantiates": "SUPPORTS" | "REFUTES" | "NEUTRAL" | "INSUFFICIENT",
+                            "confidence": 0.0-1.0,
+                            "reasoning": "Brief explanation of why",
+                            "relevant_excerpt": "The most relevant quote or data from the page"
+                        }`
+                    );
+
+                    try {
+                        const parsed = JSON.parse(analysis);
+                        substantiationStatus = parsed.substantiates;
+                        substantiationConfidence = parsed.confidence;
+                        substantiationAnalysis = parsed.reasoning;
+                        if (parsed.relevant_excerpt) {
+                            contentExcerpt = parsed.relevant_excerpt.substring(0, 500);
+                        }
+                    } catch (e) {
+                        // If parsing fails, do simple text matching
+                        const claimWords = claim.claim_text.toLowerCase().split(/\s+/);
+                        const contentLower = textContent.toLowerCase();
+                        const matchCount = claimWords.filter(word =>
+                            word.length > 3 && contentLower.includes(word)
+                        ).length;
+
+                        if (matchCount >= claimWords.length * 0.5) {
+                            substantiationStatus = 'SUPPORTS';
+                            substantiationConfidence = matchCount / claimWords.length;
+                            substantiationAnalysis = `Found ${matchCount} of ${claimWords.length} significant words from the claim in the content.`;
+                        } else {
+                            substantiationStatus = 'INSUFFICIENT';
+                            substantiationConfidence = 0.3;
+                            substantiationAnalysis = `Only found ${matchCount} of ${claimWords.length} words from the claim.`;
+                        }
+                    }
+                } else {
+                    // Fallback: simple keyword matching
+                    const claimWords = claim.claim_text.toLowerCase().split(/\s+/);
+                    const contentLower = textContent.toLowerCase();
+                    const matchCount = claimWords.filter(word =>
+                        word.length > 3 && contentLower.includes(word)
+                    ).length;
+
+                    if (matchCount >= claimWords.length * 0.6) {
+                        substantiationStatus = 'SUPPORTS';
+                        substantiationConfidence = matchCount / claimWords.length;
+                        substantiationAnalysis = `Found ${matchCount} of ${claimWords.length} significant words from the claim.`;
+                    } else if (matchCount >= claimWords.length * 0.3) {
+                        substantiationStatus = 'NEUTRAL';
+                        substantiationConfidence = 0.5;
+                        substantiationAnalysis = `Partially related: ${matchCount} of ${claimWords.length} words found.`;
+                    } else {
+                        substantiationStatus = 'INSUFFICIENT';
+                        substantiationConfidence = 0.2;
+                        substantiationAnalysis = `Limited relevance: only ${matchCount} of ${claimWords.length} words found.`;
+                    }
+                }
+            } catch (err) {
+                console.error('Error analyzing substantiation:', err);
+                substantiationStatus = 'ERROR';
+                substantiationAnalysis = 'Failed to analyze content: ' + err.message;
+            }
+        }
+
+        // Insert the reference
+        const result = await db.run(`
+            INSERT INTO manual_references (
+                claim_id, url, title, description, added_by,
+                validated, validation_status, http_status_code,
+                validation_error, validation_attempted_at,
+                substantiation_status, substantiation_confidence,
+                substantiation_analysis, content_excerpt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
+        `, [
+            claimId,
+            url,
+            extractedTitle || null,
+            description || null,
+            req.user.id,
+            validationStatus === 'valid' ? 1 : 0,
+            validationStatus,
+            httpStatusCode,
+            validationError,
+            substantiationStatus,
+            substantiationConfidence,
+            substantiationAnalysis,
+            contentExcerpt
+        ]);
+
+        res.json({
+            success: true,
+            reference: {
+                id: result.lastID,
+                claim_id: claimId,
+                url,
+                title: extractedTitle,
+                description,
+                validation_status: validationStatus,
+                http_status_code: httpStatusCode,
+                validation_error: validationError,
+                substantiation_status: substantiationStatus,
+                substantiation_confidence: substantiationConfidence,
+                substantiation_analysis: substantiationAnalysis,
+                content_excerpt: contentExcerpt
+            }
+        });
+
+    } catch (error) {
+        console.error('Error adding reference:', error);
+        res.status(500).json({ error: 'Failed to add reference' });
+    }
+});
+
+// Get all manual references for a claim
+router.get('/claims/:claimId/references', async (req, res) => {
+    try {
+        const { claimId } = req.params;
+
+        const references = await db.all(`
+            SELECT
+                mr.*,
+                u.name as added_by_name
+            FROM manual_references mr
+            LEFT JOIN users u ON mr.added_by = u.id
+            WHERE mr.claim_id = ?
+            ORDER BY mr.added_at DESC
+        `, [claimId]);
+
+        res.json({
+            success: true,
+            references
+        });
+
+    } catch (error) {
+        console.error('Error fetching references:', error);
+        res.status(500).json({ error: 'Failed to fetch references' });
+    }
+});
+
+// Delete a manual reference
+router.delete('/claims/:claimId/references/:refId', requireAuth, async (req, res) => {
+    try {
+        const { claimId, refId } = req.params;
+
+        // Verify the reference belongs to this claim
+        const reference = await db.get(
+            'SELECT * FROM manual_references WHERE id = ? AND claim_id = ?',
+            [refId, claimId]
+        );
+
+        if (!reference) {
+            return res.status(404).json({ error: 'Reference not found' });
+        }
+
+        // Only allow deletion by the person who added it or admins
+        if (reference.added_by !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Not authorized to delete this reference' });
+        }
+
+        await db.run('DELETE FROM manual_references WHERE id = ?', [refId]);
+
+        res.json({
+            success: true,
+            message: 'Reference deleted'
+        });
+
+    } catch (error) {
+        console.error('Error deleting reference:', error);
+        res.status(500).json({ error: 'Failed to delete reference' });
+    }
+});
+
 module.exports = router;

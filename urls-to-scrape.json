@@ -1,0 +1,122 @@
+[
+  {
+    "id": "whitmer_01_continuation_budget",
+    "url": "https://www.michigan.gov/whitmer/news/press-releases/2025/10/01/whitmer-signs-continuation-budget-to-continue-government-services-as-legislature-finalizes-budget",
+    "candidate": "Gretchen Whitmer",
+    "type": "Governor"
+  },
+  {
+    "id": "whitmer_02_property_owners",
+    "url": "https://www.michigan.gov/whitmer/news/press-releases/2025/09/30/whitmer-signs-bill-to-protect-michigan-property-owners-streamlining-government-efficiency",
+    "candidate": "Gretchen Whitmer",
+    "type": "Governor"
+  },
+  {
+    "id": "whitmer_03_clean_energy",
+    "url": "https://www.michigan.gov/whitmer/news/press-releases/2025/10/01/whitmer-gives-speech-on-high-tech-and-clean-energy-investments-strengthening-partnerships",
+    "candidate": "Gretchen Whitmer",
+    "type": "Governor"
+  },
+  {
+    "id": "whitmer_04_budget_deal",
+    "url": "https://www.michigan.gov/whitmer/news/press-releases/2025/09/25/whitmer-senate-majority-leader-brinks-and-speaker-hall-announce-deal-to-pass-budget-before-october-1",
+    "candidate": "Gretchen Whitmer",
+    "type": "Governor"
+  },
+  {
+    "id": "whitmer_05_state_of_state",
+    "url": "https://www.michigan.gov/whitmer/news/press-releases/2025/02/26/whitmer-deliver-2025-state-of-the-state",
+    "candidate": "Gretchen Whitmer",
+    "type": "Governor"
+  },
+  {
+    "id": "jeffries_01_shutdown_statement",
+    "url": "https://democraticleader.house.gov/media/press-releases/jeffries-schumer-statement-trump-shutdown",
+    "candidate": "Hakeem Jeffries",
+    "type": "House Leader"
+  },
+  {
+    "id": "jeffries_02_cancel_cuts",
+    "url": "https://democraticleader.house.gov/media/press-releases/leader-jeffries-our-view-will-continue-be-cancel-cuts-lower-cost-save",
+    "candidate": "Hakeem Jeffries",
+    "type": "House Leader"
+  },
+  {
+    "id": "jeffries_03_white_house_meeting",
+    "url": "https://democraticleader.house.gov/media/press-releases/jeffries-schumer-statement-trump-finally-coming-table-white-house-meeting",
+    "candidate": "Hakeem Jeffries",
+    "type": "House Leader"
+  },
+  {
+    "id": "jeffries_04_on_duty",
+    "url": "https://democraticleader.house.gov/media/press-releases/leader-jeffries-house-steps-house-democrats-are-duty-house-republicans-are",
+    "candidate": "Hakeem Jeffries",
+    "type": "House Leader"
+  },
+  {
+    "id": "jeffries_05_healthcare",
+    "url": "https://democraticleader.house.gov/media/press-releases/leader-jeffries-cnbc-healthcare-not-extraneous-issue-it-central-issue-quality",
+    "candidate": "Hakeem Jeffries",
+    "type": "House Leader"
+  },
+  {
+    "id": "schumer_01_project_2025",
+    "url": "https://www.democrats.senate.gov/news/press-releases/leader-schumer-floor-remarks-on-president-trump-following-the-project-2025-playbook",
+    "candidate": "Chuck Schumer",
+    "type": "Senate Leader"
+  },
+  {
+    "id": "schumer_02_inflation_reduction",
+    "url": "https://www.democrats.senate.gov/newsroom/press-releases/schumer-press-release-on-the-inflation-reduction-act-continuing-to-spur-historic-investments-across-the-country",
+    "candidate": "Chuck Schumer",
+    "type": "Senate Leader"
+  },
+  {
+    "id": "schumer_03_tax_bill",
+    "url": "https://www.democrats.senate.gov/news/press-releases/leader-schumer-floor-remarks-on-the-republican-tax-bill-hurting-the-most-vulnerable-americans-to-further-enrich-the-ultra-wealthy",
+    "candidate": "Chuck Schumer",
+    "type": "Senate Leader"
+  },
+  {
+    "id": "schumer_04_white_house_meeting",
+    "url": "https://www.democrats.senate.gov/news/press-releases/transcript-leader-schumer-remarks-and-qanda-at-press-conference-following-the-bipartisan-meeting-at-white-house-to-avoid-a-government-shutdown",
+    "candidate": "Chuck Schumer",
+    "type": "Senate Leader"
+  },
+  {
+    "id": "schumer_05_doj_nominees",
+    "url": "https://www.democrats.senate.gov/news/press-releases/leader-schumer-announces-hold-on-all-doj-political-nominees-demands-full-transparency-of-qatari-influence-over-trump-administration-on-senate-floor-and-in-direct-letter-to-ag-bondi-schumer-demands-testimony-and-answers-on-costs-national-security-impacts-and-ethics-of-plane-gift",
+    "candidate": "Chuck Schumer",
+    "type": "Senate Leader"
+  },
+  {
+    "id": "jayapal_01_shutdown",
+    "url": "https://jayapal.house.gov/2025/09/30/jayapal-statement-on-republican-government-shutdown/",
+    "candidate": "Pramila Jayapal",
+    "type": "House Progressive Caucus"
+  },
+  {
+    "id": "jayapal_02_violence_threats",
+    "url": "https://jayapal.house.gov/2025/09/26/jayapal-response-to-calls-for-political-violence-from-az-lawmaker/",
+    "candidate": "Pramila Jayapal",
+    "type": "House Progressive Caucus"
+  },
+  {
+    "id": "jayapal_03_cr_vote",
+    "url": "https://jayapal.house.gov/2025/09/19/jayapal-statement-on-continuing-resolution-no-vote/",
+    "candidate": "Pramila Jayapal",
+    "type": "House Progressive Caucus"
+  },
+  {
+    "id": "jayapal_04_rescissions",
+    "url": "https://jayapal.house.gov/2025/07/17/jayapal-statement-on-gop-rescissions-package-2/",
+    "candidate": "Pramila Jayapal",
+    "type": "House Progressive Caucus"
+  },
+  {
+    "id": "jayapal_05_doj_letter",
+    "url": "https://jayapal.house.gov/2025/02/05/ranking-members-raskin-jayapal-mcbath-press-doj-on-trump-administrations-dangerous-diversion-of-law-enforcement-officials/",
+    "candidate": "Pramila Jayapal",
+    "type": "House Progressive Caucus"
+  }
+]

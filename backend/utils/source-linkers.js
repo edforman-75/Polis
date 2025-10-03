@@ -47,11 +47,16 @@ class SourceLinkers {
                 const results = await this.webSearch(query);
 
                 if (results) {
+                    // Handle both string and object results
+                    const snippet = typeof results === 'string'
+                        ? results.substring(0, 200)
+                        : (results.content || '').substring(0, 200);
+
                     evidence.push(new Evidence(
                         'congress:vote:pending',
                         'Congressional Vote Record',
                         'https://www.congress.gov',
-                        results.substring(0, 200),
+                        snippet,
                         0.7
                     ));
                 }
@@ -102,11 +107,16 @@ class SourceLinkers {
                 const results = await this.webSearch(query);
 
                 if (results) {
+                    // Handle both string and object results
+                    const snippet = typeof results === 'string'
+                        ? results.substring(0, 300)
+                        : (results.content || '').substring(0, 300);
+
                     evidence.push(new Evidence(
                         sourceId,
                         `Official Economic Data`,
                         query,
-                        results.substring(0, 300),
+                        snippet,
                         0.8
                     ));
                 }

@@ -1,0 +1,507 @@
+{
+  "totalFiles": 54,
+  "totalStatements": 572,
+  "totalFactualClaims": 135,
+  "totalNonFactual": 114,
+  "byCategory": {
+    "opinion_characterization": 21,
+    "prediction_future": 69,
+    "motivation_intent": 12,
+    "value_judgment": 12
+  },
+  "files": [
+    {
+      "file": "aoc_01_kirk.txt",
+      "totalSentences": 11,
+      "factualClaims": 4,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "aoc_02_israel.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "aoc_03_healthy_start.txt",
+      "totalSentences": 10,
+      "factualClaims": 4,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "booker_01_shutdown.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "prediction_future": 3
+      }
+    },
+    {
+      "file": "booker_02_house_cr.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 4,
+      "nonFactualByCategory": {
+        "prediction_future": 2,
+        "opinion_characterization": 1,
+        "motivation_intent": 1
+      }
+    },
+    {
+      "file": "booker_03_farmer_contracts.txt",
+      "totalSentences": 8,
+      "factualClaims": 3,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "dnc_billboards_rural_hospitals.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "dnc_texas_gerrymandering.txt",
+      "totalSentences": 6,
+      "factualClaims": 4,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "motivation_intent": 3
+      }
+    },
+    {
+      "file": "dnc_trump_seniors_vets.txt",
+      "totalSentences": 5,
+      "factualClaims": 0,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "dnc_trump_va.txt",
+      "totalSentences": 10,
+      "factualClaims": 5,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1,
+        "prediction_future": 2
+      }
+    },
+    {
+      "file": "jayapal_01_shutdown.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "prediction_future": 2
+      }
+    },
+    {
+      "file": "jayapal_02_violence_threats.txt",
+      "totalSentences": 12,
+      "factualClaims": 2,
+      "nonFactual": 4,
+      "nonFactualByCategory": {
+        "opinion_characterization": 2,
+        "value_judgment": 1,
+        "motivation_intent": 1
+      }
+    },
+    {
+      "file": "jayapal_03_cr_vote.txt",
+      "totalSentences": 7,
+      "factualClaims": 3,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1,
+        "prediction_future": 2
+      }
+    },
+    {
+      "file": "jayapal_04_rescissions.txt",
+      "totalSentences": 8,
+      "factualClaims": 3,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "jayapal_05_doj_letter.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1,
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "jeffries_01_shutdown_statement.txt",
+      "totalSentences": 6,
+      "factualClaims": 1,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "motivation_intent": 1,
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "jeffries_02_cancel_cuts.txt",
+      "totalSentences": 7,
+      "factualClaims": 1,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "opinion_characterization": 2
+      }
+    },
+    {
+      "file": "jeffries_03_white_house_meeting.txt",
+      "totalSentences": 3,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "jeffries_04_on_duty.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "prediction_future": 2
+      }
+    },
+    {
+      "file": "jeffries_05_healthcare.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "khanna_01_epstein_files.txt",
+      "totalSentences": 11,
+      "factualClaims": 3,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "value_judgment": 1,
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "khanna_02_children_healthcare.txt",
+      "totalSentences": 11,
+      "factualClaims": 4,
+      "nonFactual": 6,
+      "nonFactualByCategory": {
+        "prediction_future": 5,
+        "value_judgment": 1
+      }
+    },
+    {
+      "file": "porter_01_launch.txt",
+      "totalSentences": 11,
+      "factualClaims": 1,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "porter_02_momentum.txt",
+      "totalSentences": 6,
+      "factualClaims": 2,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "porter_03_poll.txt",
+      "totalSentences": 8,
+      "factualClaims": 7,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "porter_04_min_endorsement.txt",
+      "totalSentences": 11,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "value_judgment": 1
+      }
+    },
+    {
+      "file": "porter_05_launch.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "schiff_sen_01_continuing_resolution.txt",
+      "totalSentences": 10,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "schiff_sen_02_protect_democracy.txt",
+      "totalSentences": 9,
+      "factualClaims": 3,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "schiff_sen_03_orange_county_healthcare.txt",
+      "totalSentences": 12,
+      "factualClaims": 3,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "prediction_future": 1,
+        "value_judgment": 1
+      }
+    },
+    {
+      "file": "schiff_sen_04_10_ways_trump_wrecking.txt",
+      "totalSentences": 16,
+      "factualClaims": 2,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1,
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "schiff_sen_05_assault_weapons_ban.txt",
+      "totalSentences": 15,
+      "factualClaims": 3,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "schumer_01_project_2025.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "schumer_02_inflation_reduction.txt",
+      "totalSentences": 15,
+      "factualClaims": 10,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "schumer_03_tax_bill.txt",
+      "totalSentences": 6,
+      "factualClaims": 0,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "prediction_future": 1,
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "schumer_04_white_house_meeting.txt",
+      "totalSentences": 10,
+      "factualClaims": 1,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "schumer_05_doj_nominees.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "prediction_future": 2
+      }
+    },
+    {
+      "file": "sherrill_01_trump_funding.txt",
+      "totalSentences": 12,
+      "factualClaims": 1,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "motivation_intent": 2,
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "sherrill_02_lt_gov_debate.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "prediction_future": 3
+      }
+    },
+    {
+      "file": "sherrill_03_tax_returns.txt",
+      "totalSentences": 13,
+      "factualClaims": 1,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "prediction_future": 2,
+        "motivation_intent": 1
+      }
+    },
+    {
+      "file": "sherrill_04_utility_emergency.txt",
+      "totalSentences": 46,
+      "factualClaims": 7,
+      "nonFactual": 13,
+      "nonFactualByCategory": {
+        "prediction_future": 8,
+        "motivation_intent": 1,
+        "opinion_characterization": 1,
+        "value_judgment": 3
+      }
+    },
+    {
+      "file": "sherrill_05_pcm_endorse.txt",
+      "totalSentences": 20,
+      "factualClaims": 2,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "prediction_future": 3
+      }
+    },
+    {
+      "file": "sherrill_06_matching_funds.txt",
+      "totalSentences": 12,
+      "factualClaims": 0,
+      "nonFactual": 5,
+      "nonFactualByCategory": {
+        "motivation_intent": 1,
+        "prediction_future": 4
+      }
+    },
+    {
+      "file": "sherrill_07_gateway_trump.txt",
+      "totalSentences": 24,
+      "factualClaims": 7,
+      "nonFactual": 11,
+      "nonFactualByCategory": {
+        "prediction_future": 10,
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "spanberger_01_mass_firings.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "spanberger_02_jobs_economy.txt",
+      "totalSentences": 9,
+      "factualClaims": 2,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "spanberger_03_abortion_ad.txt",
+      "totalSentences": 3,
+      "factualClaims": 2,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "opinion_characterization": 1,
+        "value_judgment": 1
+      }
+    },
+    {
+      "file": "spanberger_04_shutdown_statement.txt",
+      "totalSentences": 8,
+      "factualClaims": 1,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "opinion_characterization": 2
+      }
+    },
+    {
+      "file": "stein_01_hurricane_recovery.txt",
+      "totalSentences": 13,
+      "factualClaims": 3,
+      "nonFactual": 0,
+      "nonFactualByCategory": {}
+    },
+    {
+      "file": "stein_02_western_nc_funding.txt",
+      "totalSentences": 16,
+      "factualClaims": 6,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "value_judgment": 1
+      }
+    },
+    {
+      "file": "stein_03_bills_action.txt",
+      "totalSentences": 12,
+      "factualClaims": 4,
+      "nonFactual": 2,
+      "nonFactualByCategory": {
+        "value_judgment": 2
+      }
+    },
+    {
+      "file": "warren_01_shutdown.txt",
+      "totalSentences": 8,
+      "factualClaims": 2,
+      "nonFactual": 3,
+      "nonFactualByCategory": {
+        "motivation_intent": 1,
+        "prediction_future": 1,
+        "opinion_characterization": 1
+      }
+    },
+    {
+      "file": "warren_02_crypto.txt",
+      "totalSentences": 7,
+      "factualClaims": 1,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    },
+    {
+      "file": "warren_03_social_security.txt",
+      "totalSentences": 9,
+      "factualClaims": 1,
+      "nonFactual": 1,
+      "nonFactualByCategory": {
+        "prediction_future": 1
+      }
+    }
+  ]
+}
