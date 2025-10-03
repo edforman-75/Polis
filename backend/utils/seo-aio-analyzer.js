@@ -11,10 +11,15 @@ class SEOAIOAnalyzer {
         this.scores = {
             seo: 0,
             aio: 0,
+            metadata: 0,
             overall: 0
         };
         this.issues = [];
         this.recommendations = [];
+        this.correlationData = {
+            seo: [],
+            aio: []
+        };
     }
 
     /**
@@ -23,10 +28,11 @@ class SEOAIOAnalyzer {
      * @param {string} content - Press release text
      * @param {Object} jsonld - Generated JSON-LD
      * @param {Object} parseResult - Parser output
+     * @param {Object} metadata - Optional metadata from HTML generation
      * @returns {Object} - Analysis report with scores and recommendations
      */
-    analyze(content, jsonld, parseResult) {
-        this.scores = { seo: 0, aio: 0, overall: 0 };
+    analyze(content, jsonld, parseResult, metadata = null) {
+        this.scores = { seo: 0, aio: 0, metadata: 0, overall: 0 };
         this.issues = [];
         this.recommendations = [];
 
@@ -36,14 +42,23 @@ class SEOAIOAnalyzer {
         // AIO Analysis
         this.analyzeAIO(content, jsonld, parseResult);
 
+        // Metadata Quality Analysis
+        if (metadata) {
+            this.analyzeMetadata(metadata, jsonld, content);
+        }
+
         // Calculate overall score
-        this.scores.overall = Math.round((this.scores.seo + this.scores.aio) / 2);
+        // Weight: SEO 35%, AIO 35%, Metadata 30%
+        this.scores.overall = metadata
+            ? Math.round((this.scores.seo * 0.35) + (this.scores.aio * 0.35) + (this.scores.metadata * 0.30))
+            : Math.round((this.scores.seo + this.scores.aio) / 2);
 
         return {
             scores: this.scores,
             issues: this.issues,
             recommendations: this.recommendations,
-            summary: this.generateSummary()
+            summary: this.generateSummary(),
+            correlation: this.calculateCorrelation()
         };
     }
 
@@ -334,11 +349,274 @@ class SEOAIOAnalyzer {
     }
 
     /**
+     * Metadata Quality Analysis - Implementation quality of SEO/AIO tags
+     */
+    analyzeMetadata(metadata, jsonld, content) {
+        let metadataScore = 100;
+        const metadataIssues = [];
+
+        // 1. Title Tag Quality (20 points)
+        const title = metadata.title || jsonld.headline;
+        if (!title) {
+            metadataScore -= 20;
+            metadataIssues.push({
+                severity: 'critical',
+                category: 'Metadata',
+                issue: 'Missing title tag',
+                recommendation: 'Add title tag for search engine display'
+            });
+        } else {
+            // Length optimization
+            if (title.length < 30 || title.length > 60) {
+                metadataScore -= 5;
+                metadataIssues.push({
+                    severity: 'warning',
+                    category: 'Metadata',
+                    issue: `Title length suboptimal: ${title.length} chars (optimal: 50-60)`,
+                    recommendation: title.length < 30
+                        ? 'Expand title to be more descriptive'
+                        : 'Shorten title to avoid truncation in search results'
+                });
+            }
+
+            // Duplicate check
+            const description = metadata.description;
+            if (description && title === description) {
+                metadataScore -= 10;
+                metadataIssues.push({
+                    severity: 'error',
+                    category: 'Metadata',
+                    issue: 'Title and description are identical',
+                    recommendation: 'Make description complementary to title with additional information'
+                });
+            }
+        }
+
+        // 2. Meta Description Quality (20 points)
+        const description = metadata.description;
+        if (!description) {
+            metadataScore -= 15;
+            metadataIssues.push({
+                severity: 'error',
+                category: 'Metadata',
+                issue: 'Missing meta description',
+                recommendation: 'Add 120-160 character description for search results'
+            });
+        } else {
+            if (description.length < 120 || description.length > 160) {
+                metadataScore -= 5;
+                metadataIssues.push({
+                    severity: 'warning',
+                    category: 'Metadata',
+                    issue: `Description length suboptimal: ${description.length} chars (optimal: 120-160)`,
+                    recommendation: description.length < 120
+                        ? 'Expand description to utilize available space'
+                        : 'Shorten description to avoid truncation'
+                });
+            }
+        }
+
+        // 3. Keywords Quality (10 points)
+        const keywords = metadata.keywords;
+        if (!keywords || keywords.length === 0) {
+            metadataScore -= 5;
+            metadataIssues.push({
+                severity: 'warning',
+                category: 'Metadata',
+                issue: 'No meta keywords specified',
+                recommendation: 'Add 5-10 relevant keywords for content categorization'
+            });
+        } else {
+            const keywordCount = keywords.split(',').length;
+            if (keywordCount < 3 || keywordCount > 15) {
+                metadataScore -= 3;
+                metadataIssues.push({
+                    severity: 'info',
+                    category: 'Metadata',
+                    issue: `Keyword count suboptimal: ${keywordCount} (optimal: 5-10)`,
+                    recommendation: 'Adjust keyword count to focused set of relevant terms'
+                });
+            }
+        }
+
+        // 4. Open Graph Completeness (15 points)
+        const requiredOG = ['og:type', 'og:url', 'og:title', 'og:description'];
+        const missingOG = requiredOG.filter(tag => !metadata[tag]);
+        if (missingOG.length > 0) {
+            metadataScore -= missingOG.length * 3;
+            metadataIssues.push({
+                severity: 'warning',
+                category: 'Metadata',
+                issue: `Missing Open Graph tags: ${missingOG.join(', ')}`,
+                recommendation: 'Add all required OG tags for social media sharing'
+            });
+        }
+
+        if (!metadata['og:image']) {
+            metadataScore -= 5;
+            metadataIssues.push({
+                severity: 'warning',
+                category: 'Metadata',
+                issue: 'No Open Graph image specified',
+                recommendation: 'Add og:image (1200x630px) for rich social media previews'
+            });
+        }
+
+        // 5. Twitter Card Quality (10 points)
+        if (!metadata['twitter:card']) {
+            metadataScore -= 5;
+            metadataIssues.push({
+                severity: 'warning',
+                category: 'Metadata',
+                issue: 'No Twitter Card specified',
+                recommendation: 'Add twitter:card meta tag (recommend: summary_large_image)'
+            });
+        } else if (metadata['twitter:card'] === 'summary' && metadata['og:image']) {
+            metadataScore -= 2;
+            metadataIssues.push({
+                severity: 'info',
+                category: 'Metadata',
+                issue: 'Using basic Twitter card when image available',
+                recommendation: 'Change to summary_large_image for better visual impact'
+            });
+        }
+
+        // 6. Canonical URL Quality (5 points)
+        const canonical = metadata.canonical || jsonld['@id'];
+        if (!canonical) {
+            metadataScore -= 5;
+            metadataIssues.push({
+                severity: 'error',
+                category: 'Metadata',
+                issue: 'No canonical URL specified',
+                recommendation: 'Add canonical link to prevent duplicate content issues'
+            });
+        } else {
+            if (!canonical.startsWith('https://')) {
+                metadataScore -= 3;
+                metadataIssues.push({
+                    severity: 'warning',
+                    category: 'Metadata',
+                    issue: 'Canonical URL not using HTTPS',
+                    recommendation: 'Use HTTPS for canonical URL'
+                });
+            }
+        }
+
+        // 7. JSON-LD Validity and Richness (20 points)
+        if (!jsonld || Object.keys(jsonld).length === 0) {
+            metadataScore -= 20;
+            metadataIssues.push({
+                severity: 'critical',
+                category: 'Metadata',
+                issue: 'No JSON-LD structured data',
+                recommendation: 'Add Schema.org JSON-LD for rich search results'
+            });
+        } else {
+            // Required fields
+            if (!jsonld['@context']) {
+                metadataScore -= 5;
+                metadataIssues.push({
+                    severity: 'error',
+                    category: 'Metadata',
+                    issue: 'JSON-LD missing @context',
+                    recommendation: 'Add @context to JSON-LD'
+                });
+            }
+
+            if (!jsonld['@type']) {
+                metadataScore -= 5;
+                metadataIssues.push({
+                    severity: 'error',
+                    category: 'Metadata',
+                    issue: 'JSON-LD missing @type',
+                    recommendation: 'Add @type (e.g., PressRelease) to JSON-LD'
+                });
+            }
+
+            // Check for template placeholders
+            const jsonldStr = JSON.stringify(jsonld);
+            if (/<[^>]+>/.test(jsonldStr)) {
+                metadataScore -= 15;
+                metadataIssues.push({
+                    severity: 'critical',
+                    category: 'Metadata',
+                    issue: 'JSON-LD contains template placeholders',
+                    recommendation: 'Remove all placeholder values (<value>) from JSON-LD'
+                });
+            }
+        }
+
+        this.scores.metadata = Math.max(0, metadataScore);
+        this.issues.push(...metadataIssues);
+    }
+
+    /**
+     * Calculate correlation between SEO and AIO scores
+     */
+    calculateCorrelation() {
+        // Track which factors contribute to each score
+        const overlap = {
+            // Factors that improve both
+            both: [
+                'Clear headline',
+                'Comprehensive content (400+ words)',
+                'Complete JSON-LD',
+                'Explicit dates',
+                'Entity definitions',
+                'Quantitative data'
+            ],
+            // SEO-specific factors
+            seoOnly: [
+                'Keyword density',
+                'Call-to-action',
+                'Social media tags',
+                'Internal links'
+            ],
+            // AIO-specific factors
+            aioOnly: [
+                'Structured claims with evidence',
+                'Q&A format',
+                'Source attribution',
+                'Evidence URLs in JSON-LD'
+            ]
+        };
+
+        const scoreDiff = Math.abs(this.scores.seo - this.scores.aio);
+
+        // Estimate correlation coefficient based on score difference
+        // 0 diff = r ≈ 1.0 (perfect correlation)
+        // 20+ diff = r ≈ 0.3 (weak correlation)
+        const estimatedCorrelation = Math.max(0.3, 1.0 - (scoreDiff / 50));
+
+        return {
+            seo: this.scores.seo,
+            aio: this.scores.aio,
+            difference: scoreDiff,
+            estimatedCorrelation: estimatedCorrelation.toFixed(2),
+            interpretation: this.interpretCorrelation(estimatedCorrelation),
+            factors: overlap
+        };
+    }
+
+    /**
+     * Interpret correlation coefficient
+     */
+    interpretCorrelation(r) {
+        if (r >= 0.9) return 'Very strong positive correlation - SEO and AIO highly aligned';
+        if (r >= 0.7) return 'Strong positive correlation - SEO and AIO well aligned';
+        if (r >= 0.5) return 'Moderate positive correlation - Some divergence between SEO and AIO';
+        if (r >= 0.3) return 'Weak positive correlation - Significant divergence between SEO and AIO';
+        return 'Very weak correlation - SEO and AIO poorly aligned';
+    }
+
+    /**
      * Generate summary and recommendations
      */
     generateSummary() {
         const seoGrade = this.getGrade(this.scores.seo);
         const aioGrade = this.getGrade(this.scores.aio);
+        const metadataGrade = this.scores.metadata > 0 ? this.getGrade(this.scores.metadata) : null;
         const overallGrade = this.getGrade(this.scores.overall);
 
         // Priority recommendations (top 5 most impactful)
@@ -350,6 +628,7 @@ class SEOAIOAnalyzer {
         return {
             seoGrade,
             aioGrade,
+            metadataGrade,
             overallGrade,
             readyToPublish: this.scores.overall >= 70,
             criticalIssues: this.issues.filter(i => i.severity === 'critical').length,
@@ -390,9 +669,18 @@ class SEOAIOAnalyzer {
         report += '='.repeat(70) + '\n\n';
 
         report += '🎯 SCORES:\n';
-        report += `  SEO Score: ${this.scores.seo}/100 (${this.getGrade(this.scores.seo)})\n`;
-        report += `  AIO Score: ${this.scores.aio}/100 (${this.getGrade(this.scores.aio)})\n`;
-        report += `  Overall:   ${this.scores.overall}/100 (${this.getGrade(this.scores.overall)})\n\n`;
+        report += `  SEO Score:      ${this.scores.seo}/100 (${this.getGrade(this.scores.seo)})\n`;
+        report += `  AIO Score:      ${this.scores.aio}/100 (${this.getGrade(this.scores.aio)})\n`;
+        if (this.scores.metadata > 0) {
+            report += `  Metadata Score: ${this.scores.metadata}/100 (${this.getGrade(this.scores.metadata)})\n`;
+        }
+        report += `  Overall:        ${this.scores.overall}/100 (${this.getGrade(this.scores.overall)})\n\n`;
+
+        // Correlation analysis
+        const correlation = this.calculateCorrelation();
+        report += `📈 SEO/AIO CORRELATION:\n`;
+        report += `  Correlation: ${correlation.estimatedCorrelation} - ${correlation.interpretation}\n`;
+        report += `  Score Difference: ${correlation.difference} points\n\n`;
 
         const summary = this.generateSummary();
         report += `📝 Status: ${summary.status}\n`;
