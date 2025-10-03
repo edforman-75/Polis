@@ -438,6 +438,131 @@ class Database {
                 FOREIGN KEY (completed_by) REFERENCES users(id)
             )`,
 
+            // Extracted claims table - individual claims from fact-checked content
+            `CREATE TABLE IF NOT EXISTS extracted_claims (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fact_check_id TEXT NOT NULL,
+                claim_text TEXT NOT NULL,
+                claim_type TEXT,
+                sentence_index INTEGER,
+                span_start INTEGER,
+                span_end INTEGER,
+                verifiable BOOLEAN DEFAULT 1,
+                verification_type TEXT,
+                confidence_score REAL,
+                patterns_matched TEXT,
+                deniability_score REAL,
+                hearsay_confidence REAL,
+                private_data_detected BOOLEAN DEFAULT 0,
+                status TEXT DEFAULT 'pending',
+                priority TEXT DEFAULT 'medium',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (fact_check_id) REFERENCES fact_checks(id) ON DELETE CASCADE
+            )`,
+
+            // Claim verifications table - verification attempts and results
+            `CREATE TABLE IF NOT EXISTS claim_verifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                claim_id INTEGER NOT NULL,
+                verification_status TEXT DEFAULT 'pending',
+                rating TEXT,
+                credibility_score REAL,
+                sources_found TEXT,
+                verification_method TEXT,
+                verification_notes TEXT,
+                verified_by INTEGER,
+                verified_at DATETIME,
+                time_spent_seconds INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+                -- Comparative claim specific fields
+                comparison_type TEXT,
+                left_value TEXT,
+                right_value TEXT,
+                calculated_result TEXT,
+                expected_result TEXT,
+                search_queries_used TEXT,
+                data_extraction_log TEXT,
+                calculation_steps TEXT,
+                automated BOOLEAN DEFAULT 0,
+
+                -- Structured claim fields (for fact-check pipeline)
+                predicate TEXT,
+                actor TEXT,
+                action TEXT,
+                object TEXT,
+                quantity_value REAL,
+                quantity_unit TEXT,
+                quantity_direction TEXT,
+                time_reference TEXT,
+                time_start TEXT,
+                time_end TEXT,
+                assertiveness REAL,
+
+                FOREIGN KEY (claim_id) REFERENCES extracted_claims(id) ON DELETE CASCADE,
+                FOREIGN KEY (verified_by) REFERENCES users(id)
+            )`,
+
+            // Verification sources table - sources used for verification
+            `CREATE TABLE IF NOT EXISTS verification_sources (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                verification_id INTEGER NOT NULL,
+                url TEXT NOT NULL,
+                domain TEXT,
+                title TEXT,
+                credibility_tier TEXT,
+                credibility_score REAL,
+                supports_claim BOOLEAN,
+                relevance_score REAL,
+                excerpt TEXT,
+                date_published DATETIME,
+                date_accessed DATETIME DEFAULT CURRENT_TIMESTAMP,
+                notes TEXT,
+                FOREIGN KEY (verification_id) REFERENCES claim_verifications(id) ON DELETE CASCADE
+            )`,
+
+            // Claim types reference table
+            `CREATE TABLE IF NOT EXISTS claim_types (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type_name TEXT UNIQUE NOT NULL,
+                verification_approach TEXT NOT NULL,
+                description TEXT,
+                requires_sources BOOLEAN DEFAULT 1,
+                typical_verification_time INTEGER,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`,
+
+            // Non-factual statements table - tracks statements that appear factual but cannot be fact-checked
+            `CREATE TABLE IF NOT EXISTS non_factual_statements (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fact_check_id TEXT,
+                statement_text TEXT NOT NULL,
+                reason_category TEXT NOT NULL,
+                detailed_explanation TEXT NOT NULL,
+                source_file TEXT,
+                source_context TEXT,
+                sentence_index INTEGER,
+                appears_factual_confidence REAL,
+                keywords_detected TEXT,
+                examples TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                created_by INTEGER,
+                FOREIGN KEY (fact_check_id) REFERENCES fact_checks(id) ON DELETE CASCADE,
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            )`,
+
+            // Non-factual categories reference table - defines why statements can't be fact-checked
+            `CREATE TABLE IF NOT EXISTS non_factual_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category_name TEXT UNIQUE NOT NULL,
+                description TEXT NOT NULL,
+                detection_keywords TEXT,
+                example_patterns TEXT,
+                explanation_template TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`,
+
             // Research tracking table
             `CREATE TABLE IF NOT EXISTS research_tracking (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -890,6 +1015,86 @@ class Database {
             `INSERT INTO templates (name, type, content, created_by)
              VALUES (?, ?, ?, ?)`,
             ['Policy Brief Template', 'policy', '{"blocks": [{"type": "heading1", "content": "Policy Brief"}, {"type": "policy", "content": "Policy details here"}]}', 1]
+        );
+
+        // Seed claim types
+        await this.run(
+            `INSERT INTO claim_types (type_name, verification_approach, description, requires_sources, typical_verification_time)
+             VALUES (?, ?, ?, ?, ?)`,
+            ['direct_factual', 'standard', 'Direct factual claims that can be verified against public sources', 1, 300]
+        );
+
+        await this.run(
+            `INSERT INTO claim_types (type_name, verification_approach, description, requires_sources, typical_verification_time)
+             VALUES (?, ?, ?, ?, ?)`,
+            ['private_data', 'unverifiable', 'Claims based on private data not accessible to independent verification', 0, 60]
+        );
+
+        await this.run(
+            `INSERT INTO claim_types (type_name, verification_approach, description, requires_sources, typical_verification_time)
+             VALUES (?, ?, ?, ?, ?)`,
+            ['hearsay', 'two-step', 'Reported speech requiring verification of both attribution and underlying claim', 1, 600]
+        );
+
+        await this.run(
+            `INSERT INTO claim_types (type_name, verification_approach, description, requires_sources, typical_verification_time)
+             VALUES (?, ?, ?, ?, ?)`,
+            ['plausible_deniability', 'extract-underlying-claim', 'Claims made with deniability techniques that obscure direct assertion', 1, 450]
+        );
+
+        await this.run(
+            `INSERT INTO claim_types (type_name, verification_approach, description, requires_sources, typical_verification_time)
+             VALUES (?, ?, ?, ?, ?)`,
+            ['comparative_computational', 'multi-step-comparative', 'Comparative claims requiring lookup of multiple metrics and calculation/comparison of values', 1, 900]
+        );
+
+        // Seed non-factual categories
+        await this.run(
+            `INSERT INTO non_factual_categories (category_name, description, detection_keywords, example_patterns, explanation_template)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                'opinion_characterization',
+                'Subjective opinions and characterizations that cannot be objectively verified',
+                JSON.stringify(['awful', 'terrible', 'great', 'excellent', 'failed', 'successful', 'dangerous', 'extreme', 'radical', 'bad', 'good']),
+                JSON.stringify(['awful Republican tax bill', 'failed policies', 'dangerous rhetoric', 'extreme agenda']),
+                'This is a subjective {adjective} that requires judgment and cannot be objectively verified. Different people have different definitions of "{term}" based on their values and perspectives.'
+            ]
+        );
+
+        await this.run(
+            `INSERT INTO non_factual_categories (category_name, description, detection_keywords, example_patterns, explanation_template)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                'prediction_future',
+                'Predictions and speculation about future events that have not yet occurred',
+                JSON.stringify(['will', 'may', 'threatens to', 'could', 'is going to', 'are at risk of', 'will lead to', 'may cause']),
+                JSON.stringify(['will cost 15 million Americans their healthcare', 'threatens to undermine democracy', 'may lead to economic crisis']),
+                'This is a prediction about the future using "{future_indicator}". Events that have not occurred cannot be verified. What CAN be verified is if authoritative sources (like CBO, expert analyses) have made such predictions.'
+            ]
+        );
+
+        await this.run(
+            `INSERT INTO non_factual_categories (category_name, description, detection_keywords, example_patterns, explanation_template)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                'motivation_intent',
+                'Claims about internal mental states, motivations, or intentions that cannot be directly observed',
+                JSON.stringify(['wants to', 'intends to', 'refuses to', 'cares about', 'doesn\'t care', 'trying to', 'attempting to', 'seeks to']),
+                JSON.stringify(['Republicans want to hurt families', 'Democrats are fighting for working people', 'Trump refuses to negotiate']),
+                'This claims to know someone\'s internal mental state ("{intent_verb}"). We cannot verify what someone wants, intends, or cares about - only their actions and statements can be verified.'
+            ]
+        );
+
+        await this.run(
+            `INSERT INTO non_factual_categories (category_name, description, detection_keywords, example_patterns, explanation_template)
+             VALUES (?, ?, ?, ?, ?)`,
+            [
+                'value_judgment',
+                'Normative claims about what should or must be done, moral judgments',
+                JSON.stringify(['should', 'must', 'ought to', 'need to', 'wrong', 'right', 'unconscionable', 'shameful', 'disgraceful']),
+                JSON.stringify(['This is wrong', 'They should be ashamed', 'We must act now', 'It\'s unconscionable']),
+                'This is a normative/moral claim using "{normative_term}". Statements about what ought to be or moral judgments cannot be empirically verified - they depend on value systems and ethical frameworks.'
+            ]
         );
 
         // Seed role permissions
