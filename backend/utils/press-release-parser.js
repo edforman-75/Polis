@@ -438,6 +438,112 @@ class PressReleaseParser {
     }
 
     /**
+     * Detect subhead speaker format (per user policy A)
+     * Pattern: "Name: 'Quote...'" or "Name, Title: 'Quote...'"
+     * Returns: { speaker: 'Name', title: 'Title', preview: 'quote...' }
+     * Note: The subhead quote itself is already filtered out. This just extracts the speaker.
+     */
+    detectSubheadSpeaker(subhead) {
+        if (!subhead || subhead.trim() === '') {
+            return null;
+        }
+
+        // Pattern 1: "Robert L. Bragg III, VPFF President: 'Quote...'" (Name, Title: Quote)
+        // Pattern 2: "Spanberger: 'Quote...'" (Name: Quote)
+        // Support hyphenated names like "Earle-Sears" and apostrophes like "O'Brien"
+
+        // Try with title first
+        const withTitlePattern = /^([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+(?:\s+[IVX]+)?)*),\s*([^:]+?)\s*:\s*["']?(.+?)["']?$/;
+        let match = subhead.match(withTitlePattern);
+
+        if (match) {
+            return {
+                speaker: match[1].trim(),
+                title: match[2].trim(),
+                preview: match[3].trim().substring(0, 50)
+            };
+        }
+
+        // Try simple name only
+        const simplePattern = /^([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s*:\s*["']?(.+?)["']?$/;
+        match = subhead.match(simplePattern);
+
+        if (match) {
+            return {
+                speaker: match[1].trim(),
+                title: '',
+                preview: match[2].trim().substring(0, 50)
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect endorsement format and extract organization/person (per user policy B)
+     * Pattern: "Organization Endorses X" or "X Receives Endorsement from Organization"
+     * Returns: { organization: 'Org Name', person: 'Person Name', title: 'Title' }
+     */
+    detectEndorsementSpeaker(text, headline = '') {
+        const searchText = headline + '\n' + text.substring(0, 1000); // Search headline and first 1000 chars
+
+        // Check if this is an endorsement release
+        const endorsementIndicators = /\b(endorse|endorses|endorsement|backs|supports|announces support)\b/i;
+        if (!endorsementIndicators.test(searchText)) {
+            return null;
+        }
+
+        // Extract organization from headline
+        // Patterns: "Org Endorses X", "Org Announces Endorsement", etc.
+        const orgPatterns = [
+            /^([A-Z][A-Za-z\s&]+?(?:Association|Union|Federation|Coalition|League|PAC|Committee|Council|Alliance|Organization|Group|Society|Professional [A-Z][a-z\s]+))\s+(?:Endorse|Announce|Back|Support)/i,
+            /^([A-Z][A-Za-z\s&]+?)\s+(?:Endorse|Announce|Back|Support)/i
+        ];
+
+        let organization = null;
+        for (const pattern of orgPatterns) {
+            const match = headline.match(pattern);
+            if (match) {
+                organization = match[1].trim();
+                break;
+            }
+        }
+
+        if (!organization) {
+            return null;
+        }
+
+        // Try to find person name + title in the text
+        // Pattern: "Name, Title" or "Name, Title, Org" or just "Name"
+        // Look for patterns like "said John Doe, President" or "John Doe, President, said"
+        const personPatterns = [
+            // "said Name, Title" or "Name, Title, said" or "Name, Title:"
+            /(?:said|according to)\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+(?:\s+[IVX]+)?)*),\s*([^,\n"]+?)(?:,|\s+said|:)/,
+            /([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+(?:\s+[IVX]+)?)*),\s*([^,\n"]+?)\s+(?:said|stated|noted):/,
+            // Subhead format: "Name, Title:"
+            /^([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+(?:\s+[IVX]+)?)*),\s*([^:]+?):/m
+        ];
+
+        for (const pattern of personPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                return {
+                    organization: organization,
+                    person: match[1].trim(),
+                    title: match[2].trim()
+                };
+            }
+        }
+
+        // No person found, just return organization
+        return {
+            organization: organization,
+            person: null,
+            title: null
+        };
+    }
+
+    /**
      * Detect the type of press release
      * Returns: { type: string, confidence: string, indicators: array }
      *
@@ -1028,6 +1134,12 @@ class PressReleaseParser {
         // STEP 0: Detect statement format - if someone "released a statement", apply speaker to all quotes
         const statementFormat = this.detectStatementFormat(text);
 
+        // STEP 0.1: Detect subhead speaker format - if subhead is "Name: 'Quote...'", use that speaker (per user policy A)
+        const subheadSpeaker = this.detectSubheadSpeaker(subhead);
+
+        // STEP 0.2: Detect endorsement format - extract org/person for endorsement releases (per user policy B)
+        const endorsementSpeaker = this.detectEndorsementSpeaker(text, headline);
+
         // STEP 0.25: Extract ad transcript dialogue (Speaker: "Quote" format)
         const adTranscriptQuotes = this.extractAdTranscriptDialogue(text);
 
@@ -1096,8 +1208,71 @@ class PressReleaseParser {
             });
         }
 
+        // STEP 4.1: Apply subhead speaker to quotes without attribution (per user policy A)
+        // If subhead has "Name: 'Quote...'", use that speaker for following body quotes
+        if (subheadSpeaker && subheadSpeaker.speaker) {
+            filteredQuotes.forEach(quote => {
+                // If quote has no speaker or empty speaker, apply subhead speaker
+                if (!quote.speaker_name || quote.speaker_name.trim() === '' || quote.speaker_name === 'Unknown Speaker') {
+                    quote.speaker_name = subheadSpeaker.speaker;
+                    quote.speaker_title = subheadSpeaker.title || '';
+                    quote.full_attribution = subheadSpeaker.speaker;
+                }
+            });
+        }
+
+        // STEP 4.2: Apply endorsement speaker to quotes without attribution (per user policy B)
+        // Prefer person if found, otherwise use organization name
+        if (endorsementSpeaker && endorsementSpeaker.organization) {
+            const speaker = endorsementSpeaker.person || endorsementSpeaker.organization;
+            const title = endorsementSpeaker.title || '';
+
+            filteredQuotes.forEach(quote => {
+                // If quote has no speaker or empty speaker, apply endorsement speaker
+                if (!quote.speaker_name || quote.speaker_name.trim() === '' || quote.speaker_name === 'Unknown Speaker') {
+                    quote.speaker_name = speaker;
+                    quote.speaker_title = title;
+                    quote.full_attribution = title ? `${speaker}, ${title}` : speaker;
+                }
+            });
+        }
+
         // STEP 5: Sort by position in document
         filteredQuotes.sort((a, b) => a.position - b.position);
+
+        // STEP 5.5: Apply continuation speaker tracking (per user policy)
+        // If a quote has no speaker but immediately follows another quote, use the previous speaker
+        let lastSpeaker = null;
+        for (let i = 0; i < filteredQuotes.length; i++) {
+            const quote = filteredQuotes[i];
+
+            if (quote.speaker_name && quote.speaker_name !== 'Unknown Speaker' && quote.speaker_name.trim() !== '') {
+                // This quote has a speaker - remember it for potential continuation
+                lastSpeaker = {
+                    name: quote.speaker_name,
+                    title: quote.speaker_title || '',
+                    attribution: quote.full_attribution
+                };
+            } else if (lastSpeaker && i > 0) {
+                // Check if this is a continuation (minimal text between quotes)
+                const prevQuote = filteredQuotes[i - 1];
+                const prevEndPos = prevQuote.position + prevQuote.quote_text.length + 50; // Add buffer for closing quote
+                const gap = text.substring(prevEndPos, quote.position);
+
+                // If gap is small and doesn't contain attribution markers or paragraph breaks, it's a continuation
+                const hasAttributionMarkers = /\b(?:said|stated|according to|added|noted|explained|remarked)\b/i.test(gap);
+                const hasMultipleParagraphs = (gap.match(/\n\n/g) || []).length > 1;
+
+                if (gap.length < 150 && !hasAttributionMarkers && !hasMultipleParagraphs) {
+                    quote.speaker_name = lastSpeaker.name;
+                    quote.speaker_title = lastSpeaker.title;
+                    quote.full_attribution = lastSpeaker.attribution + ' (continued)';
+                } else if (hasAttributionMarkers || hasMultipleParagraphs) {
+                    // Gap contains markers or multiple paragraphs - not a continuation, reset speaker
+                    lastSpeaker = null;
+                }
+            }
+        }
 
         return filteredQuotes;
     }
@@ -1737,7 +1912,8 @@ class PressReleaseParser {
             // Check if this is narrative text with embedded quoted phrases (not actual spoken quotes)
             // Patterns: "announced her 'Plan' focused on", "lost its 'Ranking' as"
             // Also: "criticized Trump's 'approach'", "noted that opponent has 'defended'"
-            const narrativeWithQuotesPattern = /(?:announced|launched|unveiled|released|introduced|titled|called|named|lost|gained|earned|received|known as|dubbed|criticized|noted that[^'"]+has|described|characterized)\s+(?:her|his|their|its|a|an|the|[A-Z][a-zA-Z-]+'s)\s+$/i;
+            // NEW (per user policy A): "ranking as 'Title'", "lost its 'Name'", "maintained their 'Status'"
+            const narrativeWithQuotesPattern = /(?:announced|launched|unveiled|released|introduced|titled|called|named|lost|gained|earned|received|known as|dubbed|criticized|noted that[^'"]+has|described|characterized|ranking|title|designation|status|position|maintained|holds?)\s+(?:as|of|her|his|their|its|a|an|the|[A-Z][a-zA-Z-]+'s)\s+$/i;
             const isNarrativeWithQuotes = contextBefore.match(narrativeWithQuotesPattern);
 
             // Check if quote is immediately followed by text that indicates it's a proper name/title, not speech
