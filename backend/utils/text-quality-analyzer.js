@@ -293,11 +293,138 @@ class TextQualityAnalyzer {
     /**
      * Check if a sentence is run-on
      */
+    /**
+     * Detect specific run-on sentence patterns
+     */
+    detectRunOnPattern(sentence) {
+        const trimmed = sentence.trim();
+
+        // Pattern 1A: Simple Comma Splice - Independent clause, independent clause
+        if (/[^,]+,\s+[a-z]/i.test(trimmed) && !/(said|stated|noted|added|continued)\s*,/i.test(trimmed)) {
+            const parts = trimmed.split(/,\s+/);
+            if (parts.length === 2 && parts[1].match(/^[A-Z]?\w+\s+(is|are|was|were|will|would|can|could|has|have|had)\b/)) {
+                return {
+                    type: 'Type 1A: Simple Comma Splice',
+                    category: 'Comma Splices',
+                    explanation: 'Two complete thoughts joined only by comma',
+                    fixSuggestions: [
+                        'Use a period to separate sentences',
+                        'Add a coordinating conjunction after the comma',
+                        'Use a semicolon instead of comma'
+                    ]
+                };
+            }
+        }
+
+        // Pattern 1C: Transitional Comma Splice - however, therefore, nevertheless, etc.
+        const transitions = ['however', 'therefore', 'nevertheless', 'moreover', 'furthermore', 'consequently', 'thus'];
+        for (const trans of transitions) {
+            const regex = new RegExp(`,\\s+${trans}\\s+`, 'i');
+            if (regex.test(trimmed)) {
+                return {
+                    type: 'Type 1C: Transitional Comma Splice',
+                    category: 'Comma Splices',
+                    explanation: `"${trans.charAt(0).toUpperCase() + trans.slice(1)}" is not a coordinating conjunction and cannot join independent clauses with just a comma`,
+                    fixSuggestions: [
+                        `Use a semicolon: "; ${trans},"`,
+                        `Start new sentence: ". ${trans.charAt(0).toUpperCase() + trans.slice(1)},"`,
+                        'Restructure to use coordinating conjunction'
+                    ]
+                };
+            }
+        }
+
+        // Pattern 2A/2B: Fused Sentences - pronoun starts new clause without punctuation
+        // Look for pattern where sentence has multiple subjects with verbs
+        const pronounStarts = /(he|she|it|they|we)\s+(is|are|was|were|will|would|can|could|has|have|had|said|went|came|took|made)\b/gi;
+        const pronounMatches = trimmed.match(pronounStarts);
+        if (pronounMatches && pronounMatches.length > 1 && !trimmed.includes(',') && !trimmed.includes(';')) {
+            return {
+                type: 'Type 2B: Pronoun Fusion',
+                category: 'Fused Sentences',
+                explanation: 'Multiple independent clauses with no punctuation between them',
+                fixSuggestions: [
+                    'Add period between independent clauses',
+                    'Use conjunction to connect related ideas',
+                    'Combine clauses with shared subject'
+                ]
+            };
+        }
+
+        // Pattern 4A: Excessive "And" Chains - multiple "and" connecting independent clauses
+        const andCount = (trimmed.match(/\s+and\s+/gi) || []).length;
+        if (andCount >= 3) {
+            return {
+                type: 'Type 4A: Excessive "And" Chains',
+                category: 'Compound Sentence Overload',
+                explanation: 'Too many independent clauses chained with "and"',
+                fixSuggestions: [
+                    'Break into multiple sentences',
+                    'Convert some clauses to participial phrases',
+                    'Use parallel structure with single subject'
+                ]
+            };
+        }
+
+        // Pattern 6A: Implied Causation - looks like cause-effect but no connector
+        if (/,\s+(the|it|this|that|these|those)\s+(will|would|can|could|should|must)\b/i.test(trimmed)) {
+            return {
+                type: 'Type 6A: Implied Causation Without Proper Connection',
+                category: 'Cause-Effect Confusion',
+                explanation: 'Causal relationship implied but not explicitly connected',
+                fixSuggestions: [
+                    'Add "so" after the comma to show causation',
+                    'Start second clause with "Therefore," or "As a result,"',
+                    'Use "enabling" or "allowing" to show relationship'
+                ]
+            };
+        }
+
+        // Pattern 7A: Time Sequence Errors - multiple time-based events with only commas
+        const timeMarkers = (trimmed.match(/\b(then|next|after|before|first|second|finally|later|soon|yesterday|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|morning|afternoon|evening|night|\d+\s*(am|pm|AM|PM))/gi) || []).length;
+        const hasMultipleVerbs = (trimmed.match(/\b(arrived|departed|met|spoke|announced|visited|toured|addressed|began|ended|started|finished|completed)\b/gi) || []).length >= 3;
+
+        if (timeMarkers >= 2 && hasMultipleVerbs) {
+            return {
+                type: 'Type 7A: Sequential Events Without Proper Punctuation',
+                category: 'Time Sequence Errors',
+                explanation: 'Multiple sequential events joined only by commas',
+                fixSuggestions: [
+                    'Break into separate sentences for clarity',
+                    'Use semicolons between major events',
+                    'Group related events with conjunctions'
+                ]
+            };
+        }
+
+        // Pattern 8A: Statistical/Data Overload - multiple statistics without structure
+        const percentMatches = (trimmed.match(/\d+(\.\d+)?%/g) || []).length;
+        const numberMatches = (trimmed.match(/\b\d{1,3}(,\d{3})*(\.\d+)?\b/g) || []).length;
+
+        if ((percentMatches >= 3 || numberMatches >= 4) && !trimmed.includes(';')) {
+            return {
+                type: 'Type 8A: Multiple Data Points Without Structure',
+                category: 'Statistical/Data Overload',
+                explanation: 'Too many independent statistical facts without proper organization',
+                fixSuggestions: [
+                    'Break into multiple sentences',
+                    'Use semicolons to group related statistics',
+                    'Consider using a bulleted list'
+                ]
+            };
+        }
+
+        return null; // No specific pattern detected
+    }
+
     checkRunOnSentence(sentence) {
         const words = sentence.trim().split(/\s+/);
         const wordCount = words.length;
         const details = [];
         let isRunOn = false;
+
+        // First check for specific patterns
+        const pattern = this.detectRunOnPattern(sentence);
 
         // Check 1: Word count threshold
         if (wordCount > this.thresholds.runOnSentence.wordThreshold) {
@@ -305,8 +432,9 @@ class TextQualityAnalyzer {
             isRunOn = true;
         }
 
-        // Check 2: Coordinating conjunctions
-        const conjunctions = (sentence.match(/\b(and|but|or|nor|for|so|yet)\b/gi) || []).length;
+        // Check 2: Coordinating conjunctions (FANBOYS: For, And, Nor, But, Or, Yet, So)
+        // Note: Excluding "for" as it's almost always a preposition in press releases, not a conjunction
+        const conjunctions = (sentence.match(/\b(and|but|or|nor|so|yet)\b/gi) || []).length;
         if (conjunctions >= this.thresholds.runOnSentence.conjunctionThreshold) {
             details.push(`${conjunctions} coordinating conjunctions (creates run-on feel)`);
             isRunOn = true;
@@ -323,12 +451,22 @@ class TextQualityAnalyzer {
             isRunOn = true;
         }
 
+        // If pattern detected, it's definitely a run-on
+        if (pattern) {
+            isRunOn = true;
+        }
+
         return {
             isRunOn,
             details: details.join('; '),
             wordCount,
             conjunctions,
-            clauses: totalClauses
+            clauses: totalClauses,
+            pattern: pattern || undefined,
+            patternType: pattern ? pattern.type : undefined,
+            patternCategory: pattern ? pattern.category : undefined,
+            explanation: pattern ? pattern.explanation : undefined,
+            fixSuggestions: pattern ? pattern.fixSuggestions : undefined
         };
     }
 
