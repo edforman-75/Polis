@@ -108,10 +108,24 @@
         }
 
         .content-text {
-            line-height: 1.6;
+            line-height: 1.8;
             color: #2c3e50;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
+            font-size: 15px;
+        }
+
+        .content-text p {
+            margin-bottom: 12px;
+        }
+
+        .content-text ul, .content-text ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .content-text li {
+            margin-bottom: 6px;
         }
 
         .ai-section {
@@ -414,8 +428,19 @@
             }
         }
 
+        function formatContentForDisplay(text) {
+            // Preserve paragraphs and basic formatting
+            return text
+                .split('\n\n')
+                .map(para => para.trim())
+                .filter(para => para.length > 0)
+                .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+                .join('');
+        }
+
         function displayReviewItem(item) {
             const reviewSection = document.getElementById('reviewSection');
+            const formattedContent = formatContentForDisplay(item.content);
 
             reviewSection.innerHTML = `
                 <div class="queue-info">
@@ -428,7 +453,7 @@
                         <span>📅 Queued: ${new Date(item.queuedAt).toLocaleString()}</span>
                         ${item.metadata.filename ? `<span>📄 ${item.metadata.filename}</span>` : ''}
                     </div>
-                    <div class="content-text">${item.content}</div>
+                    <div class="content-text">${formattedContent}</div>
                 </div>
 
                 <div class="decision-section">
