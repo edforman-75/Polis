@@ -42,6 +42,10 @@ const electionLawComplianceRoutes = require('./backend/routes/election-law-compl
 const grammarStyleRoutes = require('./backend/routes/grammar-style');
 const grammarLearningRoutes = require('./backend/routes/grammar-learning');
 const validationQueueRoutes = require('./backend/routes/validation-queue');
+const workflowRoutes = require('./backend/routes/workflow');
+const calendarRoutes = require('./backend/routes/calendar');
+const teamCollaborationRoutes = require('./backend/routes/team-collaboration');
+const versionControlRoutes = require('./backend/routes/version-control');
 
 // Import database
 const db = require('./backend/database/init');
@@ -161,6 +165,10 @@ app.use('/api/election-law-compliance', electionLawComplianceRoutes);
 app.use('/api/grammar-style', grammarStyleRoutes);
 app.use('/api/grammar-learning', grammarLearningRoutes);
 app.use('/api/validation', validationQueueRoutes);
+app.use('/api/workflow', workflowRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/team-collaboration', teamCollaborationRoutes);
+app.use('/api/version-control', versionControlRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');

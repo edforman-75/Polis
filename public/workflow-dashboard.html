@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow & Collaboration Dashboard - Campaign AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-header h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .notification-badge {
+            background: #f56565;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            background: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #718096;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a202c;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #1a202c;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .task-list {
+            list-style: none;
+        }
+
+        .task-item {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .task-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .priority-critical {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .priority-high {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .priority-medium {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .priority-low {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .calendar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-item {
+            padding: 12px;
+            border-left: 4px solid #667eea;
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .event-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin: 5px 0;
+        }
+
+        .event-type {
+            font-size: 11px;
+            color: #a0aec0;
+            text-transform: uppercase;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>🏛️ Workflow & Collaboration Dashboard</h1>
+            <div class="user-info">
+                <div class="user-badge">
+                    <div class="avatar">CD</div>
+                    <div>
+                        <div style="font-weight: 600;">Communications Director</div>
+                        <div style="font-size: 12px; color: #718096;">director@campaign.com</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div>
+                        <span class="notification-badge" id="notificationCount">0</span>
+                        <span style="margin-left: 5px; color: #718096;">Notifications</span>
+                    </div>
+                    <div>
+                        <span class="notification-badge" id="taskCount">0</span>
+                        <span style="margin-left: 5px; color: #718096;">Pending Tasks</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="dashboard-tabs">
+            <button class="tab-button active" onclick="switchTab('overview')">📊 Overview</button>
+            <button class="tab-button" onclick="switchTab('approvals')">✅ Approvals</button>
+            <button class="tab-button" onclick="switchTab('calendar')">📅 Calendar</button>
+            <button class="tab-button" onclick="switchTab('collaboration')">💬 Collaboration</button>
+            <button class="tab-button" onclick="switchTab('versions')">📝 Versions</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Pending Approvals</h3>
+                    <div class="stat-value" id="stat-approvals">0</div>
+                    <div class="stat-label">Awaiting your review</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Workflows</h3>
+                    <div class="stat-value" id="stat-workflows">0</div>
+                    <div class="stat-label">In progress</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Upcoming Deadlines</h3>
+                    <div class="stat-value" id="stat-deadlines">0</div>
+                    <div class="stat-label">Next 7 days</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unread Comments</h3>
+                    <div class="stat-value" id="stat-comments">0</div>
+                    <div class="stat-label">Requiring response</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="panel">
+                    <h2>My Tasks</h2>
+                    <div id="overview-tasks" class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 15px; color: #718096;">Loading tasks...</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Today's Schedule</h2>
+                    <div id="overview-schedule" class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 15px; color: #718096;">Loading schedule...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="tab-approvals" class="tab-content">
+            <div class="panel">
+                <h2>Pending Approvals</h2>
+                <div id="approvals-list" class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: #718096;">Loading approvals...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Tab -->
+        <div id="tab-calendar" class="tab-content">
+            <div class="calendar">
+                <div class="calendar-header">
+                    <h2>Content Calendar</h2>
+                    <div class="calendar-nav">
+                        <button class="btn btn-secondary" onclick="loadCalendar('prev')">← Previous</button>
+                        <button class="btn btn-secondary" onclick="loadCalendar('today')">Today</button>
+                        <button class="btn btn-secondary" onclick="loadCalendar('next')">Next →</button>
+                    </div>
+                </div>
+                <div id="calendar-events" class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: #718096;">Loading calendar...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collaboration Tab -->
+        <div id="tab-collaboration" class="tab-content">
+            <div class="content-grid">
+                <div class="panel">
+                    <h2>Recent Comments</h2>
+                    <div id="recent-comments" class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 15px; color: #718096;">Loading comments...</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Mentions & Notifications</h2>
+                    <div id="notifications-list" class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 15px; color: #718096;">Loading notifications...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Versions Tab -->
+        <div id="tab-versions" class="tab-content">
+            <div class="panel">
+                <h2>Version History</h2>
+                <div id="versions-list" class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px; color: #718096;">Loading versions...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUser = { id: 2, name: 'Communications Director', role: 'communications_director' };
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Load tab data
+            loadTabData(tabName);
+        }
+
+        async function loadTabData(tabName) {
+            switch(tabName) {
+                case 'overview':
+                    await loadOverview();
+                    break;
+                case 'approvals':
+                    await loadApprovals();
+                    break;
+                case 'calendar':
+                    await loadCalendar('today');
+                    break;
+                case 'collaboration':
+                    await loadCollaboration();
+                    break;
+                case 'versions':
+                    await loadVersions();
+                    break;
+            }
+        }
+
+        async function loadOverview() {
+            try {
+                // Load stats
+                const [workflowTasks, deadlines, notifications] = await Promise.all([
+                    fetch(`/api/workflow/users/${currentUser.id}/tasks?status=pending`).then(r => r.json()),
+                    fetch(`/api/calendar/deadlines?user_id=${currentUser.id}&days_ahead=7`).then(r => r.json()),
+                    fetch(`/api/team-collaboration/users/${currentUser.id}/notifications/unread-count`).then(r => r.json())
+                ]);
+
+                document.getElementById('stat-approvals').textContent = workflowTasks.tasks?.length || 0;
+                document.getElementById('stat-deadlines').textContent = deadlines.deadlines?.length || 0;
+                document.getElementById('stat-comments').textContent = notifications.count || 0;
+                document.getElementById('notificationCount').textContent = notifications.count || 0;
+                document.getElementById('taskCount').textContent = workflowTasks.tasks?.length || 0;
+
+                // Load tasks
+                displayTasks(workflowTasks.tasks || [], 'overview-tasks');
+
+                // Load today's schedule
+                const today = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+                const schedule = await fetch(`/api/calendar/events?start_date=${today}&end_date=${tomorrow}&user_id=${currentUser.id}`).then(r => r.json());
+                displaySchedule(schedule.events || [], 'overview-schedule');
+            } catch (error) {
+                console.error('Error loading overview:', error);
+            }
+        }
+
+        function displayTasks(tasks, containerId) {
+            const container = document.getElementById(containerId);
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No pending tasks</p></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <ul class="task-list">
+                    ${tasks.map(task => `
+                        <li class="task-item">
+                            <div class="task-header">
+                                <span class="task-title">${task.workflow_name || 'Task'}</span>
+                                <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                            </div>
+                            <div class="task-meta">
+                                <span>📄 ${task.content_type}</span>
+                                <span>⏰ ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No deadline'}</span>
+                                <span>🎯 ${task.stage_name}</span>
+                            </div>
+                            <div class="task-actions">
+                                <button class="btn btn-primary" onclick="viewWorkflow(${task.workflow_instance_id})">View</button>
+                                <button class="btn btn-success" onclick="approveTask(${task.id})">Approve</button>
+                                <button class="btn btn-danger" onclick="rejectTask(${task.id})">Request Changes</button>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        function displaySchedule(events, containerId) {
+            const container = document.getElementById(containerId);
+
+            if (events.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No events scheduled</p></div>';
+                return;
+            }
+
+            container.innerHTML = events.map(event => `
+                <div class="event-item">
+                    <div class="event-time">${new Date(event.start_datetime).toLocaleTimeString()}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-type">${event.event_type.replace('_', ' ')}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadApprovals() {
+            const container = document.getElementById('approvals-list');
+            try {
+                const response = await fetch(`/api/workflow/users/${currentUser.id}/tasks?status=pending`);
+                const data = await response.json();
+                displayTasks(data.tasks || [], 'approvals-list');
+            } catch (error) {
+                container.innerHTML = '<div class="empty-state"><p>Error loading approvals</p></div>';
+            }
+        }
+
+        async function loadCalendar(period) {
+            const container = document.getElementById('calendar-events');
+            try {
+                const startDate = new Date().toISOString();
+                const endDate = new Date(Date.now() + 7 * 86400000).toISOString();
+
+                const response = await fetch(`/api/calendar/events?start_date=${startDate}&end_date=${endDate}&user_id=${currentUser.id}`);
+                const data = await response.json();
+
+                displaySchedule(data.events || [], 'calendar-events');
+            } catch (error) {
+                container.innerHTML = '<div class="empty-state"><p>Error loading calendar</p></div>';
+            }
+        }
+
+        async function loadCollaboration() {
+            // Load recent comments and notifications
+            const [comments, notifications] = await Promise.all([
+                fetch(`/api/team-collaboration/activity?user_id=${currentUser.id}&limit=10`).then(r => r.json()),
+                fetch(`/api/team-collaboration/users/${currentUser.id}/notifications?limit=10`).then(r => r.json())
+            ]);
+
+            // Display them
+            document.getElementById('recent-comments').innerHTML = comments.activities?.length > 0
+                ? comments.activities.map(a => `<div class="task-item"><strong>${a.user_name}</strong>: ${a.description}</div>`).join('')
+                : '<div class="empty-state"><p>No recent activity</p></div>';
+
+            document.getElementById('notifications-list').innerHTML = notifications.notifications?.length > 0
+                ? notifications.notifications.map(n => `<div class="task-item"><strong>${n.title}</strong><br>${n.message}</div>`).join('')
+                : '<div class="empty-state"><p>No notifications</p></div>';
+        }
+
+        async function loadVersions() {
+            const container = document.getElementById('versions-list');
+            try {
+                const response = await fetch('/api/version-control/versioned-content');
+                const data = await response.json();
+
+                if (!data.content || data.content.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>No versioned content</p></div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <ul class="task-list">
+                        ${data.content.map(item => `
+                            <li class="task-item">
+                                <div class="task-header">
+                                    <span class="task-title">${item.content_type} #${item.content_id}</span>
+                                    <span style="color: #718096;">v${item.latest_version}</span>
+                                </div>
+                                <div class="task-meta">
+                                    <span>📝 ${item.version_count} versions</span>
+                                    <span>⏰ ${new Date(item.last_updated).toLocaleDateString()}</span>
+                                </div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                container.innerHTML = '<div class="empty-state"><p>Error loading versions</p></div>';
+            }
+        }
+
+        async function approveTask(assignmentId) {
+            if (!confirm('Approve this task?')) return;
+
+            try {
+                await fetch(`/api/workflow/assignments/${assignmentId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        action: 'approved',
+                        notes: 'Approved via dashboard'
+                    })
+                });
+
+                alert('Task approved!');
+                loadOverview();
+            } catch (error) {
+                alert('Error approving task: ' + error.message);
+            }
+        }
+
+        async function rejectTask(assignmentId) {
+            const notes = prompt('Enter reason for requesting changes:');
+            if (!notes) return;
+
+            try {
+                await fetch(`/api/workflow/assignments/${assignmentId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        action: 'rejected',
+                        notes
+                    })
+                });
+
+                alert('Changes requested!');
+                loadOverview();
+            } catch (error) {
+                alert('Error rejecting task: ' + error.message);
+            }
+        }
+
+        function viewWorkflow(instanceId) {
+            window.location.href = `/workflow-instance.html?id=${instanceId}`;
+        }
+
+        // Load initial data
+        loadOverview();
+    </script>
+</body>
+</html>
