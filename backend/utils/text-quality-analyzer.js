@@ -451,10 +451,33 @@ class TextQualityAnalyzer {
             isRunOn = true;
         }
 
+        // Check 4: Double negatives (confusing constructions)
+        const doubleNegatives = this.findDoubleNegatives(sentence);
+        if (doubleNegatives.length > 0) {
+            details.push(`${doubleNegatives.length} double negative(s): "${doubleNegatives.join('", "')}"`);
+            // Note: Double negatives alone don't make a run-on, but they add to complexity
+            // Only flag if combined with other issues
+            if (wordCount > 25 || conjunctions >= 2 || totalClauses >= 3) {
+                isRunOn = true;
+            }
+        }
+
         // If pattern detected, it's definitely a run-on
         if (pattern) {
             isRunOn = true;
         }
+
+        // Generate comprehensive fix suggestions
+        const fixSuggestions = this.generateRunOnFixSuggestions({
+            isRunOn,
+            wordCount,
+            conjunctions,
+            clauses: totalClauses,
+            doubleNegatives: doubleNegatives.length,
+            doubleNegativeExamples: doubleNegatives,
+            pattern: pattern,
+            sentence: sentence
+        });
 
         return {
             isRunOn,
@@ -462,11 +485,13 @@ class TextQualityAnalyzer {
             wordCount,
             conjunctions,
             clauses: totalClauses,
+            doubleNegatives: doubleNegatives.length,
+            doubleNegativeExamples: doubleNegatives,
             pattern: pattern || undefined,
             patternType: pattern ? pattern.type : undefined,
             patternCategory: pattern ? pattern.category : undefined,
             explanation: pattern ? pattern.explanation : undefined,
-            fixSuggestions: pattern ? pattern.fixSuggestions : undefined
+            fixSuggestions: fixSuggestions
         };
     }
 
@@ -696,6 +721,67 @@ class TextQualityAnalyzer {
         return this.patterns.excessiveHedging.filter(phrase =>
             lowerText.includes(phrase)
         ).length;
+    }
+
+    /**
+     * Generate fix suggestions for run-on sentences
+     */
+    generateRunOnFixSuggestions(analysis) {
+        const suggestions = [];
+
+        // Pattern-specific suggestions
+        if (analysis.pattern && analysis.pattern.fixSuggestions) {
+            suggestions.push(...analysis.pattern.fixSuggestions);
+        }
+
+        // Double negative fixes
+        if (analysis.doubleNegatives > 0 && analysis.doubleNegativeExamples) {
+            const doubleNegativeFixes = {
+                'not uncommon': 'common / frequent / typical',
+                'not unlikely': 'likely / probable',
+                'not impossible': 'possible / feasible',
+                'no lack of': 'plenty of / abundant / strong',
+                'not without': 'has / includes / contains',
+                "can't deny": 'must admit / acknowledge / recognize',
+                "won't fail to": 'will / will definitely / will certainly',
+                "didn't refuse": 'accepted / agreed',
+                'never fails to': 'always / consistently'
+            };
+
+            analysis.doubleNegativeExamples.forEach(neg => {
+                const negLower = neg.toLowerCase();
+                for (const [pattern, fix] of Object.entries(doubleNegativeFixes)) {
+                    if (negLower.includes(pattern)) {
+                        suggestions.push(`Replace "${neg}" with "${fix}"`);
+                        break;
+                    }
+                }
+            });
+        }
+
+        // Word count suggestions
+        if (analysis.wordCount > 35) {
+            suggestions.push('Break into 2-3 shorter sentences (currently ' + analysis.wordCount + ' words)');
+        }
+
+        // Conjunction suggestions
+        if (analysis.conjunctions >= 3) {
+            suggestions.push('Reduce coordinating conjunctions (and/but/or) - use periods or semicolons instead');
+        }
+
+        // Clause complexity suggestions
+        if (analysis.clauses >= 4) {
+            suggestions.push('Simplify clause structure - too many subordinate clauses make the sentence hard to follow');
+            suggestions.push('Consider splitting at conjunctions like "because", "although", or "which"');
+        }
+
+        // General suggestions if no specific ones
+        if (suggestions.length === 0 && analysis.isRunOn) {
+            suggestions.push('Break into multiple sentences for clarity');
+            suggestions.push('Use active voice and simple structure');
+        }
+
+        return suggestions;
     }
 
     /**
