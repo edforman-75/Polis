@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Validation Review - Campaign AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+
+        .reviewer-input {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .reviewer-input input {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            width: 200px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .document-panel, .issues-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .panel-header h2 {
+            color: #1a202c;
+        }
+
+        .validator-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .validator-tab {
+            padding: 8px 16px;
+            border: none;
+            background: #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .validator-tab:hover {
+            background: #cbd5e0;
+        }
+
+        .validator-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .document-content {
+            font-family: Georgia, serif;
+            line-height: 1.8;
+            color: #2d3748;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .highlighted {
+            background: #fed7d7;
+            border-bottom: 2px solid #f56565;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .highlighted:hover {
+            background: #fbd5d5;
+        }
+
+        .highlighted.warning {
+            background: #feebc8;
+            border-bottom-color: #ed8936;
+        }
+
+        .highlighted.suggestion {
+            background: #bee3f8;
+            border-bottom-color: #4299e1;
+        }
+
+        .issue-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .issue-card {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .issue-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .issue-card.reviewed {
+            opacity: 0.6;
+            background: #f7fafc;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .issue-type {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #718096;
+        }
+
+        .severity-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .severity-critical {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .severity-error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .severity-warning {
+            background: #feebc8;
+            color: #c05621;
+        }
+
+        .severity-suggestion {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .issue-text {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .issue-correction {
+            margin: 10px 0;
+            padding: 10px;
+            background: #c6f6d5;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .issue-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-accept {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-modify {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-kb {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            margin-top: 15px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group select,
+        .form-group textarea,
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .score-display {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .score-item {
+            flex: 1;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎯 Unified Validation Review Dashboard</h1>
+            <div class="reviewer-input">
+                <label>Reviewer Initials:</label>
+                <input type="text" id="reviewerInitials" placeholder="Enter your initials" maxlength="5">
+                <button class="btn btn-primary" onclick="loadFirstItem()">Start Review</button>
+                <button class="btn btn-secondary" onclick="loadKBEnhancements()">View KB Suggestions</button>
+            </div>
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value" id="currentItem">-</div>
+                    <div class="stat-label">Current Item</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalIssues">0</div>
+                    <div class="stat-label">Total Issues</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="reviewedCount">0</div>
+                    <div class="stat-label">Reviewed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="completedCount">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="overallScore">-</div>
+                    <div class="stat-label">Overall Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Document Panel -->
+            <div class="document-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2 id="documentTitle">Select an item to review</h2>
+                        <div class="score-display" id="scoreDisplay" style="display: none;">
+                            <div class="score-item">
+                                <div class="score-value" id="grammarScore">-</div>
+                                <div class="score-label">Grammar</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="complianceScore">-</div>
+                                <div class="score-label">Compliance</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="toneScore">-</div>
+                                <div class="score-label">Tone</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value" id="factScore">-</div>
+                                <div class="score-label">Facts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validator Tabs -->
+                <div class="validator-tabs">
+                    <button class="validator-tab active" onclick="switchValidator('all')">All Issues</button>
+                    <button class="validator-tab" onclick="switchValidator('grammar')">Grammar</button>
+                    <button class="validator-tab" onclick="switchValidator('compliance')">Compliance</button>
+                    <button class="validator-tab" onclick="switchValidator('tone')">Tone</button>
+                    <button class="validator-tab" onclick="switchValidator('fact_check')">Facts</button>
+                </div>
+
+                <div id="documentContent" class="document-content">
+                    <div class="empty-state">
+                        <p>👈 Enter your initials and click "Start Review" to begin</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: none;" id="documentActions">
+                    <button class="btn btn-primary" onclick="completeReview()">✓ Complete & Next</button>
+                    <button class="btn btn-secondary" onclick="skipItem()">Skip</button>
+                </div>
+            </div>
+
+            <!-- Issues Panel -->
+            <div class="issues-panel">
+                <div class="panel-header">
+                    <h2>Issues</h2>
+                    <span id="issueCount">0 issues</span>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+
+                <div id="issueList" class="issue-list">
+                    <div class="empty-state">
+                        <p>No issues to review</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KB Modal -->
+    <div class="modal" id="kbModal">
+        <div class="modal-content">
+            <div class="modal-header">Add to Knowledge Base</div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="kbCategory">
+                    <option value="custom_term">Custom Terminology</option>
+                    <option value="style_rule">Style Rule</option>
+                    <option value="exception">Exception</option>
+                    <option value="compliance_rule">Compliance Rule</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="kbNotes" rows="4" placeholder="Explain why this should be added to the knowledge base..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeKBModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitKBSuggestion()">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentItem = null;
+        let currentIssues = [];
+        let reviewedIssues = new Set();
+        let currentValidator = 'all';
+        let currentIssueForKB = null;
+
+        async function loadFirstItem() {
+            const reviewerInitials = document.getElementById('reviewerInitials').value.trim();
+            if (!reviewerInitials) {
+                alert('Please enter your initials');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/unified-validation/next?reviewer_initials=${reviewerInitials}`);
+                const data = await response.json();
+
+                if (data.item) {
+                    currentItem = data.item;
+                    displayItem(data.item);
+
+                    // Start review
+                    await fetch(`/api/unified-validation/${currentItem.id}/start-review`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reviewer_initials: reviewerInitials })
+                    });
+                } else {
+                    document.getElementById('documentContent').innerHTML = '<div class="empty-state"><p>🎉 All items reviewed!</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading item:', error);
+                alert('Error loading item: ' + error.message);
+            }
+        }
+
+        function displayItem(item) {
+            document.getElementById('documentTitle').textContent = item.title;
+            document.getElementById('currentItem').textContent = `#${item.id}`;
+            document.getElementById('totalIssues').textContent = item.total_issues || 0;
+            document.getElementById('overallScore').textContent = item.overall_score ? Math.round(item.overall_score) : '-';
+
+            // Show scores
+            document.getElementById('scoreDisplay').style.display = 'flex';
+            document.getElementById('grammarScore').textContent = item.grammar_score ? Math.round(item.grammar_score) : '-';
+            document.getElementById('complianceScore').textContent = item.compliance_score ? Math.round(item.compliance_score) : '-';
+            document.getElementById('toneScore').textContent = item.tone_score ? Math.round(item.tone_score) : '-';
+            document.getElementById('factScore').textContent = item.fact_check_score ? Math.round(item.fact_check_score) : '-';
+
+            // Display document
+            document.getElementById('documentContent').innerHTML = `<p>${item.content}</p>`;
+            document.getElementById('documentActions').style.display = 'block';
+
+            // Store and display issues
+            currentIssues = item.issues || [];
+            reviewedIssues.clear();
+            displayIssues(currentIssues);
+        }
+
+        function displayIssues(issues) {
+            const filtered = currentValidator === 'all'
+                ? issues
+                : issues.filter(i => i.validator_type === currentValidator);
+
+            const issueList = document.getElementById('issueList');
+            document.getElementById('issueCount').textContent = `${filtered.length} issues`;
+
+            if (filtered.length === 0) {
+                issueList.innerHTML = '<div class="empty-state"><p>No issues for this validator</p></div>';
+                return;
+            }
+
+            issueList.innerHTML = filtered.map(issue => `
+                <div class="issue-card ${reviewedIssues.has(issue.id) ? 'reviewed' : ''}" id="issue-${issue.id}">
+                    <div class="issue-header">
+                        <div class="issue-type">${issue.validator_type} - ${issue.category}</div>
+                        <span class="severity-badge severity-${issue.severity}">${issue.severity}</span>
+                    </div>
+                    <div class="issue-text">
+                        <strong>Found:</strong> "${issue.original_text || 'N/A'}"
+                    </div>
+                    ${issue.suggested_correction ? `
+                        <div class="issue-correction">
+                            <strong>Suggestion:</strong> "${issue.suggested_correction}"
+                        </div>
+                    ` : ''}
+                    <div style="font-size: 12px; color: #718096; margin: 10px 0;">
+                        ${issue.explanation || ''}
+                    </div>
+                    <div class="issue-actions">
+                        <button class="btn btn-accept" onclick="reviewIssue(${issue.id}, 'accepted')" ${reviewedIssues.has(issue.id) ? 'disabled' : ''}>✓ Accept</button>
+                        <button class="btn btn-reject" onclick="reviewIssue(${issue.id}, 'rejected')" ${reviewedIssues.has(issue.id) ? 'disabled' : ''}>✗ Reject</button>
+                        <button class="btn btn-modify" onclick="reviewIssue(${issue.id}, 'modified')" ${reviewedIssues.has(issue.id) ? 'disabled' : ''}>✎ Modify</button>
+                        <button class="btn btn-kb" onclick="openKBModal(${issue.id})" ${reviewedIssues.has(issue.id) ? 'disabled' : ''}>💡 KB</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateProgress();
+        }
+
+        async function reviewIssue(issueId, status) {
+            const reviewerInitials = document.getElementById('reviewerInitials').value.trim();
+
+            let correction = null;
+            if (status === 'modified') {
+                correction = prompt('Enter your correction:');
+                if (!correction) return;
+            }
+
+            try {
+                await fetch(`/api/unified-validation/issue/${issueId}/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reviewer_initials: reviewerInitials,
+                        review_status: status,
+                        reviewer_correction: correction
+                    })
+                });
+
+                reviewedIssues.add(issueId);
+                document.getElementById(`issue-${issueId}`).classList.add('reviewed');
+                document.getElementById('reviewedCount').textContent = reviewedIssues.size;
+                updateProgress();
+            } catch (error) {
+                console.error('Error reviewing issue:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function openKBModal(issueId) {
+            currentIssueForKB = issueId;
+            document.getElementById('kbModal').classList.add('active');
+        }
+
+        function closeKBModal() {
+            document.getElementById('kbModal').classList.remove('active');
+            currentIssueForKB = null;
+        }
+
+        async function submitKBSuggestion() {
+            const reviewerInitials = document.getElementById('reviewerInitials').value.trim();
+            const category = document.getElementById('kbCategory').value;
+            const notes = document.getElementById('kbNotes').value;
+
+            try {
+                await fetch(`/api/unified-validation/issue/${currentIssueForKB}/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reviewer_initials: reviewerInitials,
+                        review_status: 'noted',
+                        should_add_to_kb: true,
+                        kb_category: category,
+                        kb_notes: notes
+                    })
+                });
+
+                reviewedIssues.add(currentIssueForKB);
+                document.getElementById(`issue-${currentIssueForKB}`).classList.add('reviewed');
+                document.getElementById('reviewedCount').textContent = reviewedIssues.size;
+
+                closeKBModal();
+                updateProgress();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function completeReview() {
+            const reviewerInitials = document.getElementById('reviewerInitials').value.trim();
+
+            try {
+                await fetch(`/api/unified-validation/${currentItem.id}/complete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reviewer_initials: reviewerInitials,
+                        validator_type: currentValidator === 'all' ? null : currentValidator
+                    })
+                });
+
+                const completedCount = parseInt(document.getElementById('completedCount').textContent) + 1;
+                document.getElementById('completedCount').textContent = completedCount;
+
+                // Load next item
+                loadFirstItem();
+            } catch (error) {
+                alert('Error completing review: ' + error.message);
+            }
+        }
+
+        function skipItem() {
+            loadFirstItem();
+        }
+
+        function switchValidator(validator) {
+            currentValidator = validator;
+
+            // Update tabs
+            document.querySelectorAll('.validator-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Redisplay issues
+            displayIssues(currentIssues);
+        }
+
+        function updateProgress() {
+            const progress = currentIssues.length > 0
+                ? (reviewedIssues.size / currentIssues.length) * 100
+                : 0;
+
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function loadKBEnhancements() {
+            window.location.href = '/kb-enhancements.html';
+        }
+    </script>
+</body>
+</html>

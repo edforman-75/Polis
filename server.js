@@ -46,6 +46,7 @@ const workflowRoutes = require('./backend/routes/workflow');
 const calendarRoutes = require('./backend/routes/calendar');
 const teamCollaborationRoutes = require('./backend/routes/team-collaboration');
 const versionControlRoutes = require('./backend/routes/version-control');
+const unifiedValidationRoutes = require('./backend/routes/unified-validation');
 
 // Import database
 const db = require('./backend/database/init');
@@ -169,6 +170,7 @@ app.use('/api/workflow', workflowRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/team-collaboration', teamCollaborationRoutes);
 app.use('/api/version-control', versionControlRoutes);
+app.use('/api/unified-validation', unifiedValidationRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');
