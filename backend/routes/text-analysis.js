@@ -7,9 +7,11 @@ const express = require('express');
 const router = express.Router();
 const TextQualityAnalyzer = require('../utils/text-quality-analyzer');
 const ReadabilityAnalyzer = require('../utils/readability-analyzer');
+const PressReleaseParser = require('../utils/press-release-parser');
 
 const textAnalyzer = new TextQualityAnalyzer();
 const readabilityAnalyzer = new ReadabilityAnalyzer();
+const pressReleaseParser = new PressReleaseParser();
 
 /**
  * Analyze full text
@@ -72,26 +74,42 @@ router.post('/check-runons', (req, res) => {
             return res.status(400).json({ error: 'Text is required' });
         }
 
-        const sentences = textAnalyzer.splitIntoSentences(text);
-        const runOnSentences = [];
+        // Use the existing PressReleaseParser to extract structure
+        const structure = pressReleaseParser.extractContentStructure(text);
 
-        sentences.forEach((sentence, idx) => {
-            const check = textAnalyzer.checkRunOnSentence(sentence);
-            if (check.isRunOn) {
-                runOnSentences.push({
-                    sentenceNumber: idx + 1,
-                    sentence: sentence,
-                    wordCount: check.wordCount,
-                    conjunctions: check.conjunctions,
-                    clauses: check.clauses,
-                    details: check.details
-                });
-            }
+        // Get all body paragraphs (lead + body paragraphs)
+        const bodyParagraphs = [structure.lead_paragraph, ...structure.body_paragraphs]
+            .filter(p => p.trim().length > 0);
+
+        // Process each paragraph separately - run-ons can only occur within a single paragraph
+        const runOnSentences = [];
+        let totalSentenceCount = 0;
+
+        bodyParagraphs.forEach((paragraph, paragraphIdx) => {
+            // Split this paragraph into sentences
+            const sentences = textAnalyzer.splitIntoSentences(paragraph);
+
+            sentences.forEach((sentence, sentenceIdx) => {
+                totalSentenceCount++;
+                const check = textAnalyzer.checkRunOnSentence(sentence);
+
+                if (check.isRunOn) {
+                    runOnSentences.push({
+                        sentenceNumber: totalSentenceCount,
+                        paragraphNumber: paragraphIdx + 1,
+                        sentence: sentence.trim(),
+                        wordCount: check.wordCount,
+                        conjunctions: check.conjunctions,
+                        clauses: check.clauses,
+                        details: check.details
+                    });
+                }
+            });
         });
 
         res.json({
             success: true,
-            totalSentences: sentences.length,
+            totalSentences: totalSentenceCount,
             runOnCount: runOnSentences.length,
             runOnSentences
         });

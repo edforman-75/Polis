@@ -53,12 +53,17 @@ router.post('/check', async (req, res) => {
 
         // Also check against known boilerplate in database
         if (candidateName) {
-            const match = await boilerplateManager.findMatchingBoilerplate(candidateName, text, 0.85);
-            if (match) {
-                result.matchedKnownBoilerplate = true;
-                result.matchedBoilerplateId = match.match.id;
-                result.similarity = match.similarity;
-                result.isExact = match.isExact;
+            try {
+                const match = await boilerplateManager.findMatchingBoilerplate(candidateName, text, 0.85);
+                if (match) {
+                    result.matchedKnownBoilerplate = true;
+                    result.matchedBoilerplateId = match.match.id;
+                    result.similarity = match.similarity;
+                    result.isExact = match.isExact;
+                }
+            } catch (dbError) {
+                console.log('Database error:', dbError);
+                // Continue without database match - just use the pattern detection
             }
         }
 

@@ -1,0 +1,32 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://spanbergerforvirginia.com/press/spanberger-jobs-economy-data",
+  "headline": "NEW DATA: U.S. Businesses Shed Jobs as Virginians Face Economic Uncertainty",
+  "datePublished": "2025-10-02",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Abigail Spanberger for Governor",
+    "url": "https://spanbergerforvirginia.com",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@spanbergerforvirginia.com"
+    }
+  },
+  "articleBody": "NEW DATA: U.S. Businesses Shed Jobs as Virginians Face Economic Uncertainty\n\nOct 02, 2025\n\nThe ADP National Employment Report released today shows U.S. private sector businesses lost 32,000 workers in September, highlighting growing economic uncertainty facing Virginia families and businesses.\n\nVirginia recently lost its CNBC ranking as \"America's Top State for Business,\" and the unemployment rate in Virginia has risen for seven consecutive months.\n\nConnor Joseph, Communications Director, stated: \"Amid the Trump Administration's DOGE attacks, tariff policies, and tax law driving up costs for Virginia families and causing chaos for businesses, the economic data is clear: Virginia needs a governor focused on protecting jobs and growing our economy.\"\n\nBackground:\n\nSpanberger announced her \"Growing Virginia Plan\" focused on protecting jobs and growing the economy. A UVA forecast projects virtually no job growth in Virginia for 2026.\n\nSpanberger was previously endorsed by the U.S. Chamber of Commerce in 2020 and 2022 for supporting businesses and economic growth during her time in Congress.\n\nThe latest employment data underscores the economic challenges facing Virginia and the need for leadership focused on job creation and business support.\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "endorsement",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "taxes"
+}

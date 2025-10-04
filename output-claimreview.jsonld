@@ -1,0 +1,24 @@
+{
+  "@context": [
+    "https://schema.org"
+  ],
+  "@type": "ClaimReview",
+  "@id": "https://janesmithforcongress.org/fact/checks/deficit-doubled-claim",
+  "url": "https://janesmithforcongress.org/fact/checks/deficit-doubled-claim",
+  "datePublished": "2025-10-03",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress Fact Desk"
+  },
+  "claimReviewed": "The deficit has doubled in the last two years",
+  "reviewRating": {
+    "@type": "Rating",
+    "ratingValue": "1",
+    "bestRating": "5",
+    "alternateName": "False"
+  },
+  "itemReviewed": {
+    "@type": "CreativeWork",
+    "@id": "https://janesmithforcongress.org/press/economic-recovery-plan"
+  }
+}

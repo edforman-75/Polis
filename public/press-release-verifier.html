@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Parser Verifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin-top: 5px;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        .panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .panel-original {
+            background: #fff;
+            border-right: 2px solid #e1e8ed;
+        }
+
+        .panel-parsed {
+            background: #f8fafc;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .original-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .field-group {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .field-group:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .confidence-high {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .confidence-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .confidence-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .field-value {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #1f2937;
+        }
+
+        .field-value.editable {
+            padding: 10px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: text;
+            transition: all 0.2s;
+        }
+
+        .field-value.editable:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .field-value.editable:focus {
+            outline: none;
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .quote-box {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .quote-text {
+            font-style: italic;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .quote-attribution {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .body-paragraph {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-left: 3px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .edit-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-button:hover {
+            background: #5568d3;
+        }
+
+        .save-button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+
+        .save-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .input-area {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .input-area button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .input-area button:hover {
+            background: #5568d3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .type-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Press Release Parser Verifier</h1>
+        <p>Compare original text with parsed structure and make corrections</p>
+    </div>
+
+    <div class="container">
+        <div class="panel panel-original">
+            <div class="panel-title">
+                <span>📄</span>
+                Original Text
+            </div>
+
+            <div class="input-area" id="inputArea">
+                <textarea id="originalTextInput" placeholder="Paste your press release text here..."></textarea>
+                <button onclick="parseText()">Parse Text</button>
+            </div>
+
+            <div id="originalTextDisplay" style="display: none;">
+                <pre class="original-text" id="originalText"></pre>
+                <button onclick="resetInput()" style="margin-top: 15px; background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Parse Different Text</button>
+            </div>
+        </div>
+
+        <div class="panel panel-parsed">
+            <div class="panel-title">
+                <span>🔍</span>
+                Parsed Structure
+            </div>
+
+            <div id="parsedContent">
+                <div class="loading">
+                    <p>Enter text and click "Parse Text" to begin verification</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="save-button" id="saveButton" style="display: none;" onclick="saveCorrections()">
+        💾 Save Corrections
+    </button>
+
+    <script>
+        let parsedData = null;
+        let originalText = '';
+
+        async function parseText() {
+            const textInput = document.getElementById('originalTextInput');
+            originalText = textInput.value.trim();
+
+            if (!originalText) {
+                alert('Please enter some text to parse');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('parsedContent').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Parsing press release...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: originalText,
+                        verifiedData: {
+                            release_type: 'NEWS_RELEASE',
+                            subtypes: [],
+                            issues: [],
+                            reviewed_by: 'Verifier'
+                        }
+                    })
+                });
+
+                const apiResponse = await response.json();
+                // API returns { success: true, parsed: {...}, original_text: ... }
+                parsedData = apiResponse.parsed || apiResponse;
+
+                // Hide input, show original text display
+                document.getElementById('inputArea').style.display = 'none';
+                document.getElementById('originalTextDisplay').style.display = 'block';
+                document.getElementById('originalText').textContent = originalText;
+
+                // Render parsed content
+                renderParsedContent();
+
+                // Show save button
+                document.getElementById('saveButton').style.display = 'block';
+
+            } catch (error) {
+                document.getElementById('parsedContent').innerHTML = `
+                    <div class="loading">
+                        <p style="color: #dc2626;">Error parsing text: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderParsedContent() {
+            const content = parsedData.content_structure;
+            const quotes = parsedData.quotes || [];
+
+            let html = '';
+
+            // Type Badge
+            html += `
+                <div class="field-group">
+                    <div class="field-label">Release Type</div>
+                    <div class="field-value">
+                        <span class="type-badge">${parsedData.verification_metadata.verified_type}</span>
+                    </div>
+                </div>
+            `;
+
+            // Headline
+            if (content.headline) {
+                const confidence = getConfidenceLevel(content.headline_confidence || 0.9);
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">
+                            Headline
+                            <span class="confidence-badge confidence-${confidence.level}">${confidence.percent}% confidence</span>
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="headline">
+                            ${escapeHtml(content.headline)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Dateline
+            if (content.dateline) {
+                // Handle dateline object or string
+                let datelineText = '';
+                if (typeof content.dateline === 'object') {
+                    datelineText = content.dateline.full ||
+                                   `${content.dateline.location || ''} ${content.dateline.date || ''}`.trim() ||
+                                   'Not detected';
+                } else {
+                    datelineText = content.dateline;
+                }
+
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">Dateline</div>
+                        <div class="field-value editable" contenteditable="true" data-field="dateline">
+                            ${escapeHtml(datelineText)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Lead Paragraph
+            if (content.lead_paragraph) {
+                const confidence = getConfidenceLevel(content.lead_confidence || 0.9);
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">
+                            Lead Paragraph
+                            <span class="confidence-badge confidence-${confidence.level}">${confidence.percent}% confidence</span>
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="lead_paragraph">
+                            ${escapeHtml(content.lead_paragraph)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Body Paragraphs
+            if (content.body_paragraphs && content.body_paragraphs.length > 0) {
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">Body Paragraphs (${content.body_paragraphs.length})</div>
+                `;
+                content.body_paragraphs.forEach((para, idx) => {
+                    html += `
+                        <div class="body-paragraph">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Paragraph ${idx + 1}</div>
+                            <div class="field-value editable" contenteditable="true" data-field="body_paragraph_${idx}">
+                                ${escapeHtml(para)}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // Quotes
+            if (quotes.length > 0) {
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">Quotes (${quotes.length})</div>
+                `;
+                quotes.forEach((quote, idx) => {
+                    const confidence = getConfidenceLevel(quote.confidence || 0.8);
+                    html += `
+                        <div class="quote-box">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                Quote ${idx + 1}
+                                <span class="confidence-badge confidence-${confidence.level}">${confidence.percent}%</span>
+                            </div>
+                            <div class="quote-text editable" contenteditable="true" data-field="quote_${idx}_text">
+                                "${escapeHtml(quote.quote_text)}"
+                            </div>
+                            <div class="quote-attribution editable" contenteditable="true" data-field="quote_${idx}_attribution">
+                                — ${escapeHtml(quote.speaker_name || 'Unknown')}${quote.speaker_title ? ', ' + escapeHtml(quote.speaker_title) : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // Contact Info
+            if (parsedData.contact_info && parsedData.contact_info.primary_contact) {
+                const contact = parsedData.contact_info.primary_contact;
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">Contact Information</div>
+                        <div class="field-value editable" contenteditable="true" data-field="contact_name">
+                            ${escapeHtml(contact.name || '')}
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="contact_phone" style="margin-top: 8px;">
+                            ${escapeHtml(contact.phone || '')}
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="contact_email" style="margin-top: 8px;">
+                            ${escapeHtml(contact.email || '')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('parsedContent').innerHTML = html;
+        }
+
+        function getConfidenceLevel(confidence) {
+            const percent = Math.round(confidence * 100);
+            let level = 'low';
+            if (percent >= 80) level = 'high';
+            else if (percent >= 60) level = 'medium';
+
+            return { percent, level };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function saveCorrections() {
+            const editableFields = document.querySelectorAll('[data-field]');
+            const corrections = {};
+
+            editableFields.forEach(field => {
+                const fieldName = field.getAttribute('data-field');
+                const newValue = field.textContent.trim();
+                corrections[fieldName] = newValue;
+            });
+
+            console.log('Corrections:', corrections);
+
+            // TODO: Send corrections to server
+            alert('Corrections saved!\n\nCorrected fields:\n' + Object.keys(corrections).join('\n'));
+        }
+
+        function resetInput() {
+            document.getElementById('inputArea').style.display = 'block';
+            document.getElementById('originalTextDisplay').style.display = 'none';
+            document.getElementById('originalTextInput').value = '';
+            document.getElementById('parsedContent').innerHTML = `
+                <div class="loading">
+                    <p>Enter text and click "Parse Text" to begin verification</p>
+                </div>
+            `;
+            document.getElementById('saveButton').style.display = 'none';
+            parsedData = null;
+            originalText = '';
+        }
+    </script>
+</body>
+</html>

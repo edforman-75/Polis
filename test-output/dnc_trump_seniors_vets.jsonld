@@ -1,0 +1,37 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/dnc_trump_seniors_vets",
+  "headline": "Trump Attacks Seniors' and Veterans' Hard-Earned Benefits",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "Trump Attacks Seniors' and Veterans' Hard-Earned Benefits\n\nMay 5, 2025\n\nDonald Trump and his shadow president Elon Musk are attacking millions of seniors' and veterans' hard-earned benefits with chaotic funding cuts, delayed Social Security checks, and \"severe\" shortages that force veterans to get care in crowded hallways. While Trump makes life worse for seniors and veterans to give his billionaire backers tax handouts, it's clear that his priorities lie with propping up the ultra-wealthy — not helping hardworking Americans.\n\nHere's a look at the latest coverage of Donald Trump going after veterans' and seniors' hard-earned benefits:\n\nNew York Times: The article describes cramped conditions at Veterans Affairs facilities resulting from Trump's remote work policy reversal. Key quotes include:\n- \"Since Mr. Trump's order, the Department of Veterans Affairs has been scrambling to find adequate office space\"\n- \"Some providers told The Times that they are quitting or retiring early\"\n\nCBS News: Reported on Social Security administration issues, including:\n- \"The incorrectly marked deaths are just a piece of the Trump administration's crash program\"\n- A senior action council leader noted that delayed payments meant \"not being able to pay rent on time\"\n\nNPR: Highlighted the end of a VA mortgage-rescue program, noting:\n- The program had helped about 20,000 veterans avoid foreclosure\n- Nearly 90,000 VA loans are seriously past due, with 33,000 in foreclosure process\n\nNew York Times: Mentioned a Supreme Court case about Social Security data, with a judge ruling that the intrusion is \"not in the public interest.\"\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "fact_sheet",
+  "cpo:subtype": "response_opposition",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "healthcare",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "donate",
+    "url": "https://example.org"
+  }
+}

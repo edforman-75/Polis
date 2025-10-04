@@ -1,0 +1,37 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/booker_02_house_cr",
+  "headline": "Booker Statement on House CR: \"I Will Not Support a Budget that Continues to Hurt Americans\"",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "Booker Statement on House CR: \"I Will Not Support a Budget that Continues to Hurt Americans\"\n\nSeptember 16, 2025\n\nWASHINGTON, D.C.\n\nIn response to House Republicans releasing a partisan continuing resolution that fails to address Americans' most urgent concerns, U.S. Senator Cory Booker (D-NJ) issued the following statement:\n\n\"Trump and Republicans have taken another step to advance a short-term government funding bill without any input from Democrats that fails to address Americans' most urgent concerns. I have heard from working families in New Jersey and across the country who are struggling with the fallout from President Trump and Republicans' failed policies. Americans' health care is in jeopardy, they're facing higher prices on everything from groceries to back-to-school supplies, and they're fed up with their tax dollars being used to give more handouts to the biggest corporations and the wealthiest few.\n\n\"As I have said, I will not give away my vote to Trump to fund the government for nothing. Republicans control the White House and Congress—but if they want to pass a bill through the Senate, they need to put forward a proposal that can earn bipartisan support. A funding bill that continues to raise our costs, jeopardizes our health care, and hurts the people of my state does not have my support.\"\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "attack_policy",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "healthcare",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "donate",
+    "url": "https://example.org"
+  }
+}

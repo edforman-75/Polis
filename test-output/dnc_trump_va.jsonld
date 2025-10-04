@@ -1,0 +1,32 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/dnc_trump_va",
+  "headline": "NEW: After His Advisor Attacked Veterans As \"Not Fit,\" Trump Is Firing 80,000 VA Employees, Risking Benefits",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "NEW: After His Advisor Attacked Veterans As \"Not Fit,\" Trump Is Firing 80,000 VA Employees, Risking Benefits\n\nMarch 5, 2025\n\nOn the heels of Donald Trump's senior advisor and long-time lawyer attacking veterans as \"not fit\" to serve in his administration, Trump is now cutting 80,000 employees from Veterans Affairs. Rather than help the very people who have risked their lives for this country, Trump continues to leave them out in the cold, slashing veterans' access to health care and creating delays.\n\nLet's be clear: Trump's dangerous and reckless agenda of mass firings is putting over 9 million veterans' hard-earned benefits on the line.\n\nKey details from the press release:\n\n1. The Department of Veterans Affairs is planning to cut over 80,000 jobs.\n\n2. The cuts would come after the VA expanded during the Biden administration, including coverage for veterans impacted by burn pits under the 2022 PACT Act.\n\n3. More than 25% of the VA's workforce are veterans themselves.\n\n4. The cuts could potentially impact over 9 million veterans who receive physical and mental health care from the VA.\n\nQuotes from sources:\n\n- Associated Press: \"The Department of Veterans Affairs is planning a reorganization that includes cutting over 80,000 jobs\"\n\n- Washington Examiner: \"The cuts to the Veteran Crisis Line and other support services suggest that veterans seeking assistance may encounter longer wait times\"\n\n- Trump's advisor Alina Habba: \"Perhaps they're not fit to have a job at this moment.\"\n\nThe press release emphasizes concerns about reduced service quality, longer wait times, and potential disruptions to veterans' benefits as a result of these planned job cuts.\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "response_opposition",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "healthcare"
+}

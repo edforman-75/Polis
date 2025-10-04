@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📄 Press Release Editor Queue</title>
+    <link rel="stylesheet" href="/styles/design-system.css">
+    <script src="/styles/ui-utils.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            color: #1e293b;
+        }
+
+        .header .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .stat strong {
+            color: #3b82f6;
+            font-size: 18px;
+            display: block;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .filters {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .filters label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .filters select, .filters input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .release-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .release-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .release-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+
+        .release-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .release-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            flex: 1;
+        }
+
+        .release-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .release-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .release-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #eff6ff;
+            color: #3b82f6;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag.type {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .tag.reviewed {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .tag.unreviewed {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .edit-btn {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .edit-btn:hover {
+            background: #2563eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            color: #64748b;
+        }
+
+        .empty-state h3 {
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 64px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Press Release Editor Queue</h1>
+        <p class="subtitle">Browse and edit parsed press releases from the database</p>
+        <div class="stats">
+            <div class="stat">
+                <strong id="stat-total">0</strong>
+                <span>Total Releases</span>
+            </div>
+            <div class="stat">
+                <strong id="stat-reviewed">0</strong>
+                <span>Reviewed</span>
+            </div>
+            <div class="stat">
+                <strong id="stat-unreviewed">0</strong>
+                <span>Unreviewed</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filters">
+            <label>Filter:</label>
+            <select id="filter-type">
+                <option value="all">All Types</option>
+                <option value="endorsement">Endorsements</option>
+                <option value="policy_position">Policy Positions</option>
+                <option value="response_statement">Response Statements</option>
+                <option value="attack_ad">Attack Ads</option>
+                <option value="media_appearance">Media Appearances</option>
+                <option value="campaign_announcement">Campaign Announcements</option>
+            </select>
+
+            <label>Review Status:</label>
+            <select id="filter-reviewed">
+                <option value="all">All</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="unreviewed">Unreviewed</option>
+            </select>
+
+            <label>Search:</label>
+            <input type="text" id="search-input" placeholder="Search titles...">
+
+            <button class="btn btn-primary" onclick="loadReleases()">Refresh</button>
+        </div>
+
+        <div id="release-list" class="loading">
+            Loading press releases...
+        </div>
+    </div>
+
+    <script>
+        let allReleases = [];
+
+        async function loadReleases() {
+            const container = document.getElementById('release-list');
+            container.innerHTML = '<div class="loading">Loading press releases...</div>';
+
+            try {
+                console.log('Fetching press releases...');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+                const response = await fetch('/api/press-releases/parsed?limit=100', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                console.log('Response received:', response.status);
+                const data = await response.json();
+                console.log('Data parsed:', data);
+
+                if (data.success) {
+                    allReleases = data.releases;
+                    console.log(`Loaded ${allReleases.length} releases`);
+                    updateStats();
+                    renderReleases();
+                } else {
+                    console.error('API returned error:', data);
+                    showToast('Failed to load releases', 'error');
+                    container.innerHTML = `<div class="empty-state"><h3>Error</h3><p>${data.error || 'Unknown error'}</p></div>`;
+                }
+            } catch (error) {
+                console.error('Error loading releases:', error);
+                if (error.name === 'AbortError') {
+                    showToast('Request timed out - server may be busy', 'error');
+                    container.innerHTML = '<div class="empty-state"><h3>Request Timed Out</h3><p>The server is taking too long to respond. Please try again.</p></div>';
+                } else {
+                    showToast('Failed to load releases: ' + error.message, 'error');
+                    container.innerHTML = `<div class="empty-state"><h3>Error</h3><p>${error.message}</p></div>`;
+                }
+            }
+        }
+
+        function updateStats() {
+            const reviewed = allReleases.filter(r => r.reviewed_by).length;
+            const unreviewed = allReleases.length - reviewed;
+
+            document.getElementById('stat-total').textContent = allReleases.length;
+            document.getElementById('stat-reviewed').textContent = reviewed;
+            document.getElementById('stat-unreviewed').textContent = unreviewed;
+        }
+
+        function renderReleases() {
+            const filterType = document.getElementById('filter-type').value;
+            const filterReviewed = document.getElementById('filter-reviewed').value;
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+
+            let filtered = allReleases.filter(release => {
+                if (filterType !== 'all' && release.release_type !== filterType) return false;
+                if (filterReviewed === 'reviewed' && !release.reviewed_by) return false;
+                if (filterReviewed === 'unreviewed' && release.reviewed_by) return false;
+                if (searchTerm && !release.title.toLowerCase().includes(searchTerm)) return false;
+                return true;
+            });
+
+            const container = document.getElementById('release-list');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No press releases found</h3>
+                        <p>Try adjusting your filters or search term</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="release-grid">
+                    ${filtered.map(release => renderReleaseCard(release)).join('')}
+                </div>
+            `;
+
+            // Add event listeners to all edit buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.getAttribute('data-edit-id');
+                    openInEditor(id);
+                });
+            });
+
+            // Add event listeners to release cards
+            document.querySelectorAll('.release-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.getAttribute('data-release-id');
+                    openInEditor(id);
+                });
+            });
+        }
+
+        function renderReleaseCard(release) {
+            const reviewStatus = release.reviewed_by ? 'reviewed' : 'unreviewed';
+            const reviewLabel = release.reviewed_by ? `Reviewed by ${release.reviewed_by}` : 'Unreviewed';
+
+            const subtypes = Array.isArray(release.subtypes) ? release.subtypes :
+                            (typeof release.subtypes === 'string' ? JSON.parse(release.subtypes || '[]') : []);
+            const issues = Array.isArray(release.issues) ? release.issues :
+                          (typeof release.issues === 'string' ? JSON.parse(release.issues || '[]') : []);
+
+            return `
+                <div class="release-card" data-release-id="${release.id}">
+                    <div class="release-header">
+                        <div style="flex: 1;">
+                            <div class="release-title">${release.title}</div>
+                            <div class="release-meta">
+                                <span>ID: ${release.id}</span>
+                                <span>•</span>
+                                <span>${release.source_file || 'Manual Entry'}</span>
+                                <span>•</span>
+                                <span>${formatDate(release.created_at)}</span>
+                            </div>
+                        </div>
+                        <button class="edit-btn" data-edit-id="${release.id}">
+                            Edit →
+                        </button>
+                    </div>
+                    <div class="release-tags">
+                        ${release.release_type ? `<span class="tag type">${release.release_type.replace(/_/g, ' ')}</span>` : ''}
+                        <span class="tag ${reviewStatus}">${reviewLabel}</span>
+                        ${subtypes.slice(0, 3).map(st => `<span class="tag">${st}</span>`).join('')}
+                        ${issues.slice(0, 2).map(issue => `<span class="tag">${issue}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openInEditor(id) {
+            // Open press release in editor with suggestions
+            window.open(`/editor-with-suggestions.html?id=${id}`, '_blank');
+        }
+
+        // Event listeners
+        document.getElementById('filter-type').addEventListener('change', renderReleases);
+        document.getElementById('filter-reviewed').addEventListener('change', renderReleases);
+        document.getElementById('search-input').addEventListener('input', debounce(renderReleases, 300));
+
+        // Load releases on page load
+        loadReleases();
+    </script>
+</body>
+</html>

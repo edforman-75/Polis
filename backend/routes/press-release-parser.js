@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const PressReleaseParser = require('../utils/press-release-parser');
+const DynamicHTMLGenerator = require('../utils/dynamic-html-generator');
+const HtmlGenerator = require('../utils/html-generator');
 const axios = require('axios');
 const cheerio = require('cheerio');
+const db = require('../database/init');
 
 // Parse press release text and extract components
-router.post('/parse', (req, res) => {
+router.post('/parse', async (req, res) => {
     try {
-        const { text } = req.body;
+        const { text, filename, verifiedData } = req.body;
 
         if (!text || text.trim().length < 50) {
             return res.status(400).json({
@@ -16,12 +19,51 @@ router.post('/parse', (req, res) => {
         }
 
         const parser = new PressReleaseParser();
-        const parsedData = parser.parse(text);
+        let parsedData;
+
+        // If verifiedData is explicitly provided, use it
+        if (verifiedData) {
+            parsedData = parser.parse(text, verifiedData);
+        }
+        // If filename is provided, look up verified data from database
+        else if (filename && db) {
+            try {
+                const verification = await db.get(`
+                    SELECT corrected_type as release_type, subtypes, issues, verified_at
+                    FROM type_verifications
+                    WHERE filename = ?
+                    ORDER BY verified_at DESC
+                    LIMIT 1
+                `, [filename]);
+
+                if (verification) {
+                    // Parse JSON fields and create verifiedData object
+                    const verifiedDataFromDb = {
+                        release_type: verification.release_type,
+                        subtypes: JSON.parse(verification.subtypes || '[]'),
+                        issues: JSON.parse(verification.issues || '[]'),
+                        reviewed_by: 'QC Dashboard' // Could be enhanced to store actual reviewer
+                    };
+                    parsedData = parser.parse(text, verifiedDataFromDb);
+                } else {
+                    // No verification found, auto-detect
+                    parsedData = parser.parse(text);
+                }
+            } catch (dbError) {
+                console.warn('Database lookup failed, using auto-detection:', dbError.message);
+                parsedData = parser.parse(text);
+            }
+        }
+        // No verified data or filename, auto-detect
+        else {
+            parsedData = parser.parse(text);
+        }
 
         res.json({
             success: true,
             parsed: parsedData,
-            original_text: text
+            original_text: text,
+            used_verified_data: parsedData.verification_metadata?.classification_source === 'human_verified'
         });
 
     } catch (error) {
@@ -642,6 +684,68 @@ router.get('/feedback/predict-error/:field', async (req, res) => {
         console.error('Error predicting error:', error);
         res.status(500).json({
             error: 'Failed to predict error',
+            details: error.message
+        });
+    }
+});
+
+// Generate dynamic HTML based on press release structure
+router.post('/generate-html', async (req, res) => {
+    try {
+        const { text, filename, verifiedData } = req.body;
+
+        if (!text || text.trim().length < 50) {
+            return res.status(400).json({
+                error: 'Press release text is required and must be at least 50 characters'
+            });
+        }
+
+        // First parse the press release
+        const parser = new PressReleaseParser();
+        let parsedData;
+
+        if (verifiedData) {
+            parsedData = parser.parse(text, verifiedData);
+        } else if (filename && db) {
+            try {
+                const verification = await db.get(`
+                    SELECT corrected_type as release_type, subtypes, issues
+                    FROM type_verifications
+                    WHERE filename = ?
+                    ORDER BY verified_at DESC
+                    LIMIT 1
+                `, [filename]);
+
+                if (verification) {
+                    const verifiedDataFromDb = {
+                        release_type: verification.release_type,
+                        subtypes: JSON.parse(verification.subtypes || '[]'),
+                        issues: JSON.parse(verification.issues || '[]'),
+                        reviewed_by: 'QC Dashboard'
+                    };
+                    parsedData = parser.parse(text, verifiedDataFromDb);
+                } else {
+                    parsedData = parser.parse(text);
+                }
+            } catch (dbError) {
+                console.warn('Database lookup failed, using auto-detection:', dbError.message);
+                parsedData = parser.parse(text);
+            }
+        } else {
+            parsedData = parser.parse(text);
+        }
+
+        // Generate dynamic HTML based on parsed structure and type
+        const htmlGenerator = new HtmlGenerator();
+        const html = htmlGenerator.generateHtml(parsedData);
+
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+
+    } catch (error) {
+        console.error('Error generating HTML:', error);
+        res.status(500).json({
+            error: 'Failed to generate HTML',
             details: error.message
         });
     }

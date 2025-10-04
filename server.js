@@ -29,6 +29,7 @@ const editorialAIRoutes = require('./backend/routes/editorial-ai');
 const collaborationRoutes = require('./backend/routes/collaboration');
 const pressReleaseTypologyRoutes = require('./backend/routes/press-release-typology');
 const pressReleaseParserRoutes = require('./backend/routes/press-release-parser');
+const pressReleasesRoutes = require('./backend/routes/press-releases');
 const editorAnalysisRoutes = require('./backend/routes/editor-analysis');
 const boilerplateRoutes = require('./backend/routes/boilerplate');
 const quotesRoutes = require('./backend/routes/quotes');
@@ -140,6 +141,7 @@ app.use('/api/editorial-ai', editorialAIRoutes);
 app.use('/api/collaboration', collaborationRoutes);
 app.use('/api/press-release-typology', pressReleaseTypologyRoutes);
 app.use('/api/press-release-parser', pressReleaseParserRoutes);
+app.use('/api/press-releases', pressReleasesRoutes);
 app.use('/api/editor', editorAnalysisRoutes);
 app.use('/api/boilerplate', boilerplateRoutes);
 app.use('/api/quotes', quotesRoutes);
@@ -657,6 +659,12 @@ db.initialize().then(async () => {
     // Initialize parser feedback service tables
     const feedbackService = require('./backend/services/parser-feedback-service');
     await feedbackService.initializeDatabase();
+
+    // Initialize parsed press releases table (don't block server start)
+    const parsedPressReleasesDB = require('./backend/database/parsed-press-releases');
+    parsedPressReleasesDB.initializeParsedPressReleasesTable().catch(err => {
+        console.error('Error initializing parsed press releases table:', err);
+    });
 
     const server = app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);

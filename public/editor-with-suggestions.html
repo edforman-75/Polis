@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Press Release Editor - Spanberger Campaign</title>
+    <link rel="stylesheet" href="/styles/design-system.css">
+    <script src="/styles/ui-utils.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: #1e293b;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toolbar .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .toolbar .btn:hover {
+            background: #2563eb;
+        }
+
+        .toolbar .btn-secondary {
+            background: #64748b;
+        }
+
+        .toolbar .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .toolbar .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .ai-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Container with Split View */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 49px);
+            overflow: hidden;
+        }
+
+        /* Left Panel - Editor */
+        .split-panel-left {
+            flex: 0 0 50%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .editor-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--color-border);
+            background: var(--color-bg-secondary);
+        }
+
+        .editor-header h2 {
+            font-size: 16px;
+            color: #334155;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px 40px;
+        }
+
+        #main-editor {
+            outline: none;
+            min-height: 100%;
+            line-height: 1.8;
+            font-size: 15px;
+            color: #1e293b;
+        }
+
+        #main-editor h3 {
+            margin-bottom: 16px;
+            margin-top: 0;
+        }
+
+        #main-editor p {
+            margin-bottom: 12px;
+        }
+
+        #main-editor ul {
+            margin-bottom: 12px;
+            margin-left: 24px;
+        }
+
+        #main-editor li {
+            margin-bottom: 6px;
+        }
+
+        .editor-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--color-border);
+            background: var(--color-bg-secondary);
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        /* Highlight Styles */
+        .highlight {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            border-radius: 3px;
+            padding: 2px 0;
+        }
+
+        .highlight-critical {
+            background: rgba(239, 68, 68, 0.15);
+            border-bottom: 2px solid #ef4444;
+        }
+
+        .highlight-critical:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .highlight-warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-bottom: 2px solid #f59e0b;
+        }
+
+        .highlight-warning:hover {
+            background: rgba(245, 158, 11, 0.25);
+        }
+
+        .highlight-info {
+            background: rgba(59, 130, 246, 0.15);
+            border-bottom: 2px solid #3b82f6;
+        }
+
+        .highlight-info:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        .highlight-success {
+            background: rgba(16, 185, 129, 0.15);
+            border-bottom: 2px solid #10b981;
+        }
+
+        .highlight-success:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        .highlight-active {
+            background: rgba(139, 92, 246, 0.25) !important;
+            border-bottom: 3px solid #8b5cf6 !important;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        /* Panel Resizer */
+        .panel-resizer {
+            width: 4px;
+            background: var(--color-border-light);
+            cursor: col-resize;
+            position: relative;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .panel-resizer:hover {
+            background: var(--color-primary);
+        }
+
+        .panel-resizer:active {
+            background: var(--color-primary-hover);
+        }
+
+        /* Right Panel - Recommendations */
+        .split-panel-right {
+            flex: 1;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .recommendations-header {
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .recommendations-header h2 {
+            font-size: 16px;
+            color: #334155;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+
+        .recommendations-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Checker Result Cards */
+        .checker-result {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--color-border);
+        }
+
+        .checker-result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .checker-result-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .checker-result-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .badge-pass {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .checker-result-content {
+            font-size: 13px;
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .issue-item {
+            padding: 10px;
+            background: #f8fafc;
+            border-left: 3px solid #f59e0b;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .issue-item-text {
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #334155;
+        }
+
+        .issue-item-detail {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Suggestion Cards */
+        .suggestion-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-card:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .suggestion-card.suggestion-accepted {
+            background: #f0fdf4;
+            border-color: #86efac;
+            cursor: default;
+        }
+
+        .suggestion-card.suggestion-accepted:hover,
+        .suggestion-card.suggestion-rejected:hover {
+            background: inherit;
+            border-color: inherit;
+            box-shadow: none;
+        }
+
+        .suggestion-card.suggestion-rejected {
+            opacity: 0.5;
+            background: #fef2f2;
+            border-color: #fecaca;
+            cursor: default;
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .suggestion-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #334155;
+        }
+
+        .suggestion-stats {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .suggestion-original,
+        .suggestion-proposed {
+            margin-bottom: 12px;
+        }
+
+        .suggestion-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .suggestion-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #334155;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .suggestion-text-fix {
+            background: #eff6ff;
+            border-color: #93c5fd;
+        }
+
+        /* Pattern Information */
+        .pattern-info {
+            margin: 12px 0;
+            padding: 10px 12px;
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            border-radius: 4px;
+        }
+
+        .pattern-type {
+            font-weight: 600;
+            font-size: 13px;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .pattern-explanation {
+            font-size: 12px;
+            color: #78350f;
+            font-style: italic;
+        }
+
+        /* Fix Options */
+        .fix-options {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #f0fdf4;
+            border-left: 3px solid #16a34a;
+            border-radius: 4px;
+        }
+
+        .fix-options-title {
+            font-weight: 600;
+            font-size: 12px;
+            color: #166534;
+            margin-bottom: 6px;
+        }
+
+        .fix-options-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 12px;
+            color: #14532d;
+            line-height: 1.6;
+        }
+
+        .fix-options-list li {
+            margin-bottom: 4px;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .suggestion-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .suggestion-btn-accept {
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .suggestion-btn-accept:hover {
+            background: #f0fdf4;
+            border-color: #4ade80;
+        }
+
+        .suggestion-btn-reject {
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .suggestion-btn-reject:hover {
+            background: #fef2f2;
+            border-color: #f87171;
+        }
+
+        .suggestion-btn-highlight {
+            color: #1e40af;
+            border-color: #93c5fd;
+        }
+
+        .suggestion-btn-highlight:hover {
+            background: #eff6ff;
+            border-color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn" onclick="loadPressRelease()">Load</button>
+            <button class="btn" onclick="runChecker('parse')">Parse</button>
+            <button class="btn" onclick="runChecker('analyze')">Analyze</button>
+            <button class="btn" onclick="runChecker('readability')">Readability</button>
+            <button class="btn" onclick="runChecker('grammar')">Grammar</button>
+            <button class="btn" onclick="runChecker('ap-style')">AP Style</button>
+            <button class="btn" onclick="runChecker('runons')">Run-ons</button>
+            <button class="btn" onclick="runChecker('quality')">Quality</button>
+            <button class="btn" onclick="runChecker('boilerplate')">Boilerplate</button>
+            <button class="btn" onclick="runChecker('fact-check')">Fact Check</button>
+        </div>
+        <div class="toolbar-right">
+            <div class="ai-status">
+                <span class="ai-indicator"></span>
+                <span id="status-text">Ready</span>
+            </div>
+            <button class="btn btn-secondary" onclick="saveContent()">Save</button>
+        </div>
+    </div>
+
+    <div class="main-container split-view">
+        <!-- Left Panel - Editor -->
+        <div class="split-panel-left">
+            <div class="editor-header">
+                <h2 id="document-title">Press Release Editor</h2>
+            </div>
+            <div class="editor-content">
+                <div id="main-editor" contenteditable="true">
+                    <h3>Click "Load" to load a press release from the database</h3>
+                    <p>Or start typing here to create a new press release.</p>
+                    <p>Use the checker buttons in the toolbar to analyze the content.</p>
+                </div>
+            </div>
+            <div class="editor-footer">
+                <span id="word-count">Words: 0</span> | Click any highlighted text to see details
+            </div>
+        </div>
+
+        <!-- Resizer -->
+        <div class="panel-resizer"></div>
+
+        <!-- Right Panel - Recommendations -->
+        <div class="split-panel-right">
+            <div class="recommendations-header">
+                <h2>Analysis & Recommendations</h2>
+                <div id="last-checker" style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                    Run a checker to see results
+                </div>
+            </div>
+            <div class="recommendations-content" id="recommendations-content">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-text">Select a checker from the toolbar to analyze the content</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentPressReleaseId = null;
+        let parsedData = null;
+        let lastCheckerResults = {};
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize panel resizers
+            initPanelResizers();
+            applySavedPanelSplit();
+
+            // Load from URL parameter if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const prId = urlParams.get('id');
+            if (prId) {
+                loadPressReleaseById(prId);
+            }
+
+            // Update word count on input
+            const editor = document.getElementById('main-editor');
+            editor.addEventListener('input', updateWordCount);
+            updateWordCount();
+        });
+
+        // Update word count
+        function updateWordCount() {
+            const editor = document.getElementById('main-editor');
+            const text = editor.innerText || '';
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            document.getElementById('word-count').textContent = `Words: ${words}`;
+        }
+
+        // Load press release by ID
+        async function loadPressReleaseById(id) {
+            try {
+                setStatus('Loading press release...', true);
+
+                const apiUrl = `/api/press-releases/parsed/${id}`;
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.release) {
+                    currentPressReleaseId = id;
+
+                    // Load content into editor
+                    const editor = document.getElementById('main-editor');
+                    editor.innerHTML = formatContentAsHTML(data.release.content);
+
+                    // Update title
+                    document.getElementById('document-title').textContent = data.release.title || 'Press Release';
+
+                    // Store parsed data if available
+                    if (data.release.parsed_data) {
+                        parsedData = data.release.parsed_data;
+                    }
+
+                    updateWordCount();
+                    setStatus(`Loaded: ${data.release.title}`, false);
+                } else {
+                    throw new Error(data.error || 'Failed to load press release');
+                }
+            } catch (error) {
+                console.error('Error loading press release:', error);
+                setStatus('Error loading press release', false);
+                alert('Failed to load press release: ' + error.message);
+            }
+        }
+
+        // Load press release (show selection dialog)
+        async function loadPressRelease() {
+            try {
+                const apiUrl = '/api/press-releases/list';
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error('Failed to load press releases list');
+                }
+
+                const data = await response.json();
+
+                if (data.success && data.releases.length > 0) {
+                    // Show selection dialog
+                    const selection = prompt(
+                        'Enter press release number to load:\n\n' +
+                        data.releases.slice(0, 10).map((pr, idx) =>
+                            `${idx + 1}. ${pr.title}`
+                        ).join('\n')
+                    );
+
+                    if (selection) {
+                        const index = parseInt(selection) - 1;
+                        if (index >= 0 && index < data.releases.length) {
+                            const pr = data.releases[index];
+                            await loadPressReleaseById(pr.id);
+                        }
+                    }
+                } else {
+                    alert('No press releases found');
+                }
+            } catch (error) {
+                console.error('Error loading press releases:', error);
+                alert('Failed to load press releases: ' + error.message);
+            }
+        }
+
+        // Format plain text content as HTML
+        function formatContentAsHTML(text) {
+            const lines = text.split('\n');
+            let html = '';
+            let inList = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (!line) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    continue;
+                }
+
+                // Detect headlines
+                if (line.match(/^(NEW:|ICYMI:|FOR IMMEDIATE RELEASE|PRESS RELEASE)/i) ||
+                    (line === line.toUpperCase() && line.length > 10)) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<h3>${line}</h3>`;
+                }
+                // Detect datelines
+                else if (line.match(/^[A-Z][A-Za-z\s]+,\s*[A-Z]{2,}/)) {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<p><strong>${line}</strong></p>`;
+                }
+                // Detect bullet points
+                else if (line.match(/^[-•*]\s+/)) {
+                    if (!inList) {
+                        html += '<ul>';
+                        inList = true;
+                    }
+                    html += `<li>${line.replace(/^[-•*]\s+/, '')}</li>`;
+                }
+                // Regular paragraph
+                else {
+                    if (inList) {
+                        html += '</ul>';
+                        inList = false;
+                    }
+                    html += `<p>${line}</p>`;
+                }
+            }
+
+            if (inList) {
+                html += '</ul>';
+            }
+
+            return html;
+        }
+
+        // Save content
+        async function saveContent() {
+            try {
+                const editor = document.getElementById('main-editor');
+                const content = editor.innerText || editor.textContent;
+
+                if (!content || content.trim().length < 50) {
+                    alert('Please add some content to save (at least 50 characters)');
+                    return;
+                }
+
+                setStatus('Saving...', true);
+
+                // Get title from first heading or first line
+                let title = 'Untitled Press Release';
+                const firstH3 = editor.querySelector('h3');
+                if (firstH3) {
+                    title = firstH3.textContent.trim();
+                } else {
+                    const firstLine = content.split('\n')[0].trim();
+                    if (firstLine.length > 0) {
+                        title = firstLine.substring(0, 200);
+                    }
+                }
+
+                const apiUrl = '/api/press-releases/save-parsed';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: currentPressReleaseId,
+                        title,
+                        content,
+                        parsed_data: parsedData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentPressReleaseId = data.id;
+                    setStatus(`Saved (ID: ${data.id})`, false);
+                    showToast('Content saved successfully', 'success');
+                } else {
+                    throw new Error(data.error || 'Save failed');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                setStatus('Save failed', false);
+                alert('Failed to save: ' + error.message);
+            }
+        }
+
+        // Run a specific checker
+        async function runChecker(checkerType) {
+            const editor = document.getElementById('main-editor');
+            const text = editor.innerText || editor.textContent;
+
+            if (!text || text.trim().length < 10) {
+                alert('Please add some content to analyze');
+                return;
+            }
+
+            setStatus(`Running ${checkerType}...`, true);
+            document.getElementById('last-checker').textContent = `Running ${checkerType} checker...`;
+
+            try {
+                let result;
+
+                switch (checkerType) {
+                    case 'parse':
+                        result = await runParse(text);
+                        break;
+                    case 'analyze':
+                        result = await runAnalyze(text);
+                        break;
+                    case 'readability':
+                        result = await runReadability(text);
+                        break;
+                    case 'grammar':
+                        result = await runGrammar(text);
+                        break;
+                    case 'ap-style':
+                        result = await runAPStyle(text);
+                        break;
+                    case 'runons':
+                        result = await runRunons(text);
+                        break;
+                    case 'quality':
+                        result = await runQuality(text);
+                        break;
+                    case 'boilerplate':
+                        result = await runBoilerplate(text);
+                        break;
+                    case 'fact-check':
+                        result = await runFactCheck(text);
+                        break;
+                    default:
+                        throw new Error('Unknown checker type');
+                }
+
+                lastCheckerResults[checkerType] = result;
+                displayResults(checkerType, result);
+                setStatus(`${checkerType} complete`, false);
+                document.getElementById('last-checker').textContent = `Last run: ${checkerType}`;
+
+            } catch (error) {
+                console.error(`${checkerType} error:`, error);
+                setStatus(`${checkerType} failed`, false);
+                displayError(checkerType, error);
+            }
+        }
+
+        // Parse
+        async function runParse(text) {
+            const response = await fetch('/api/press-release-parser/parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                parsedData = data.parsed;
+                return data.parsed;
+            } else {
+                throw new Error(data.error || 'Parse failed');
+            }
+        }
+
+        // Analyze
+        async function runAnalyze(text) {
+            const response = await fetch('/api/press-release-parser/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                return data.analysis;
+            } else {
+                throw new Error(data.error || 'Analysis failed');
+            }
+        }
+
+        // Readability
+        async function runReadability(text) {
+            const response = await fetch('/api/text-analysis/readability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, targetGrade: 8, contentType: 'press_release' })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                return data;
+            } else {
+                throw new Error(data.error || 'Readability check failed');
+            }
+        }
+
+        // Grammar
+        async function runGrammar(text) {
+            const response = await fetch('/api/content-quality/grammar-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, context: {} })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        }
+
+        // AP Style
+        async function runAPStyle(text) {
+            const response = await fetch('/api/editorial-comments/style-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: text, contentType: 'press_release' })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                return data.styleCheck;
+            } else {
+                throw new Error(data.error || 'AP Style check failed');
+            }
+        }
+
+        // Run-ons
+        async function runRunons(text) {
+            const response = await fetch('/api/text-analysis/check-runons', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                return data;
+            } else {
+                throw new Error(data.error || 'Run-on check failed');
+            }
+        }
+
+        // Quality
+        async function runQuality(text) {
+            const response = await fetch('/api/quality-checker/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: text,
+                    assignmentType: 'press_release',
+                    options: {}
+                })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+
+            if (data.success) {
+                return data.analysis;
+            } else {
+                throw new Error(data.error || 'Quality check failed');
+            }
+        }
+
+        // Boilerplate
+        async function runBoilerplate(text) {
+            const response = await fetch('/api/boilerplate/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, candidateName: 'Spanberger' })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        }
+
+        // Fact Check
+        async function runFactCheck(text) {
+            const response = await fetch('/api/content-quality/fact-check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        }
+
+        // Display results
+        function displayResults(checkerType, result) {
+            const container = document.getElementById('recommendations-content');
+            let html = '';
+
+            switch (checkerType) {
+                case 'parse':
+                    html = displayParseResults(result);
+                    break;
+                case 'analyze':
+                    html = displayAnalyzeResults(result);
+                    break;
+                case 'readability':
+                    html = displayReadabilityResults(result);
+                    break;
+                case 'grammar':
+                    html = displayGrammarResults(result);
+                    break;
+                case 'ap-style':
+                    html = displayAPStyleResults(result);
+                    break;
+                case 'runons':
+                    html = displayRunonsResults(result);
+                    break;
+                case 'quality':
+                    html = displayQualityResults(result);
+                    break;
+                case 'boilerplate':
+                    html = displayBoilerplateResults(result);
+                    break;
+                case 'fact-check':
+                    html = displayFactCheckResults(result);
+                    break;
+            }
+
+            container.innerHTML = html;
+
+            // Add event listeners to suggestion cards
+            const suggestionCards = container.querySelectorAll('.suggestion-card');
+            suggestionCards.forEach(card => {
+                // Click on card to highlight
+                card.addEventListener('click', function(e) {
+                    // Don't trigger if clicking on buttons
+                    if (e.target.closest('.suggestion-btn')) return;
+
+                    const originalText = this.getAttribute('data-original-text');
+                    const index = this.getAttribute('data-suggestion-index');
+
+                    if (originalText) {
+                        highlightSuggestion(originalText, index);
+                    }
+                });
+
+                // Button clicks
+                const acceptBtn = card.querySelector('[data-action="accept"]');
+                const rejectBtn = card.querySelector('[data-action="reject"]');
+
+                if (acceptBtn) {
+                    acceptBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const originalText = card.getAttribute('data-original-text');
+                        const suggestedText = card.getAttribute('data-suggested-text');
+                        const index = card.getAttribute('data-suggestion-index');
+                        acceptSuggestion(originalText, suggestedText, index, card);
+                    });
+                }
+
+                if (rejectBtn) {
+                    rejectBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const index = card.getAttribute('data-suggestion-index');
+                        rejectSuggestion(index, card);
+                    });
+                }
+            });
+        }
+
+        // Display Parse Results
+        function displayParseResults(result) {
+            let html = '<div class="summary-stats">';
+
+            // Release type
+            if (result.release_type) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${result.release_type.type.replace(/_/g, ' ')}</div>
+                        <div class="stat-label">Release Type</div>
+                    </div>
+                `;
+            }
+
+            // Subtypes count
+            if (result.subtypes) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${result.subtypes.length}</div>
+                        <div class="stat-label">Subtypes</div>
+                    </div>
+                `;
+            }
+
+            // Issues count
+            if (result.issues) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${result.issues.length}</div>
+                        <div class="stat-label">Key Issues</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            // Subtypes
+            if (result.subtypes && result.subtypes.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Subtypes</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.subtypes.map(st =>
+                                `<div style="display: inline-block; padding: 4px 10px; margin: 4px; background: #eff6ff; color: #1e40af; border-radius: 4px; font-size: 12px;">
+                                    ${st.subtype.replace(/_/g, ' ')}
+                                    ${st.confidence ? `(${Math.round(st.confidence * 100)}%)` : ''}
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Issues
+            if (result.issues && result.issues.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Key Issues</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.issues.map(issue =>
+                                `<div style="display: inline-block; padding: 4px 10px; margin: 4px; background: #f0fdf4; color: #166534; border-radius: 4px; font-size: 12px;">
+                                    ${issue.issue.replace(/_/g, ' ')}
+                                    ${issue.confidence ? `(${Math.round(issue.confidence * 100)}%)` : ''}
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Metadata
+            if (result.metadata) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Metadata</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.metadata.candidate_name ? `<div><strong>Candidate:</strong> ${result.metadata.candidate_name}</div>` : ''}
+                            ${result.metadata.state ? `<div><strong>State:</strong> ${result.metadata.state}</div>` : ''}
+                            ${result.metadata.location ? `<div><strong>Location:</strong> ${result.metadata.location}</div>` : ''}
+                            ${result.metadata.word_count ? `<div><strong>Word Count:</strong> ${result.metadata.word_count}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display Analyze Results
+        function displayAnalyzeResults(result) {
+            let html = '';
+
+            if (result.summary) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Summary</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.summary}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.strengths && result.strengths.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Strengths</div>
+                            <span class="checker-result-badge badge-pass">${result.strengths.length} found</span>
+                        </div>
+                        <div class="checker-result-content">
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${result.strengths.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.improvements && result.improvements.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Suggested Improvements</div>
+                            <span class="checker-result-badge badge-warning">${result.improvements.length} items</span>
+                        </div>
+                        <div class="checker-result-content">
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${result.improvements.map(i => `<li>${i}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html || '<div class="empty-state"><div class="empty-state-text">No analysis results available</div></div>';
+        }
+
+        // Display Readability Results
+        function displayReadabilityResults(result) {
+            const analysis = result.analysis || result;
+            const report = result.report || '';
+
+            let html = '<div class="summary-stats">';
+
+            if (analysis.fleschKincaidGrade !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${analysis.fleschKincaidGrade.toFixed(1)}</div>
+                        <div class="stat-label">Grade Level</div>
+                    </div>
+                `;
+            }
+
+            if (analysis.fleschReadingEase !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${analysis.fleschReadingEase.toFixed(0)}</div>
+                        <div class="stat-label">Reading Ease</div>
+                    </div>
+                `;
+            }
+
+            if (analysis.avgSentenceLength !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${analysis.avgSentenceLength.toFixed(1)}</div>
+                        <div class="stat-label">Avg Sentence</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            if (report) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Readability Report</div>
+                        </div>
+                        <div class="checker-result-content" style="white-space: pre-wrap;">
+                            ${report}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (analysis.issues && analysis.issues.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Issues Found</div>
+                            <span class="checker-result-badge badge-warning">${analysis.issues.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${analysis.issues.map(issue => `
+                                <div class="issue-item">
+                                    <div class="issue-item-text">${issue.description || issue.message || issue}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display Grammar Results
+        function displayGrammarResults(result) {
+            let html = '<div class="summary-stats">';
+
+            if (result.score !== undefined) {
+                const badge = result.score >= 80 ? 'pass' : result.score >= 60 ? 'warning' : 'fail';
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: ${badge === 'pass' ? '#166534' : badge === 'warning' ? '#92400e' : '#991b1b'}">
+                            ${result.score}
+                        </div>
+                        <div class="stat-label">Score</div>
+                    </div>
+                `;
+            }
+
+            if (result.issues && result.issues.length !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${result.issues.length}</div>
+                        <div class="stat-label">Issues</div>
+                    </div>
+                `;
+            }
+
+            if (result.wordCount !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${result.wordCount}</div>
+                        <div class="stat-label">Words</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            if (result.overallFeedback) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Overall Feedback</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.overallFeedback}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.issues && result.issues.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Grammar Issues</div>
+                            <span class="checker-result-badge badge-warning">${result.issues.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.issues.map(issue => `
+                                <div class="issue-item">
+                                    <div class="issue-item-text">${issue.message || issue.description || issue}</div>
+                                    ${issue.context ? `<div class="issue-item-detail">${issue.context}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display AP Style Results
+        function displayAPStyleResults(result) {
+            let html = '';
+
+            const totalIssues = (result.errors?.length || 0) + (result.warnings?.length || 0) + (result.suggestions?.length || 0);
+
+            html += '<div class="summary-stats">';
+            html += `
+                <div class="stat-card">
+                    <div class="stat-value">${totalIssues}</div>
+                    <div class="stat-label">Total Issues</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.errors?.length || 0}</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.warnings?.length || 0}</div>
+                    <div class="stat-label">Warnings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${result.suggestions?.length || 0}</div>
+                    <div class="stat-label">Suggestions</div>
+                </div>
+            `;
+            html += '</div>';
+
+            if (result.errors && result.errors.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Errors</div>
+                            <span class="checker-result-badge badge-fail">${result.errors.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.errors.map(error => `
+                                <div class="issue-item" style="border-left-color: #ef4444;">
+                                    <div class="issue-item-text">${error.message || error.rule || error}</div>
+                                    ${error.suggestion ? `<div class="issue-item-detail">Suggestion: ${error.suggestion}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.warnings && result.warnings.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Warnings</div>
+                            <span class="checker-result-badge badge-warning">${result.warnings.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.warnings.map(warning => `
+                                <div class="issue-item">
+                                    <div class="issue-item-text">${warning.message || warning.rule || warning}</div>
+                                    ${warning.suggestion ? `<div class="issue-item-detail">Suggestion: ${warning.suggestion}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.suggestions && result.suggestions.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Suggestions</div>
+                            <span class="checker-result-badge badge-info">${result.suggestions.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.suggestions.map(suggestion => `
+                                <div class="issue-item" style="border-left-color: #3b82f6;">
+                                    <div class="issue-item-text">${suggestion.message || suggestion.rule || suggestion}</div>
+                                    ${suggestion.suggestion ? `<div class="issue-item-detail">Suggestion: ${suggestion.suggestion}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (totalIssues === 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">AP Style Check</div>
+                            <span class="checker-result-badge badge-pass">Passed</span>
+                        </div>
+                        <div class="checker-result-content">
+                            No AP Style issues found. Great work!
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display Run-ons Results
+        function displayRunonsResults(result) {
+            let html = '<div class="summary-stats">';
+            html += `
+                <div class="stat-card">
+                    <div class="stat-value">${result.totalSentences || 0}</div>
+                    <div class="stat-label">Total Sentences</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: ${result.runOnCount > 0 ? '#991b1b' : '#166534'}">
+                        ${result.runOnCount || 0}
+                    </div>
+                    <div class="stat-label">Run-ons</div>
+                </div>
+            `;
+            html += '</div>';
+
+            if (result.runOnSentences && result.runOnSentences.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Run-on Sentences</div>
+                            <span class="checker-result-badge badge-fail">${result.runOnSentences.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.runOnSentences.map((runon, index) => {
+                                const suggested = suggestRunonFix(runon.sentence, runon);
+                                return `
+                                <div class="suggestion-card" data-suggestion-index="${index}" data-original-text="${escapeHtml(runon.sentence)}" data-suggested-text="${escapeHtml(suggested)}">
+                                    <div class="suggestion-header">
+                                        <span class="suggestion-label">Sentence #${runon.sentenceNumber}</span>
+                                        <span class="suggestion-stats">
+                                            ${runon.wordCount} words | ${runon.conjunctions} conjunctions | ${runon.clauses} clauses
+                                        </span>
+                                    </div>
+
+                                    ${runon.patternType ? `
+                                    <div class="pattern-info">
+                                        <div class="pattern-type">${runon.patternType}</div>
+                                        ${runon.explanation ? `<div class="pattern-explanation">${runon.explanation}</div>` : ''}
+                                    </div>
+                                    ` : ''}
+
+                                    <div class="suggestion-original">
+                                        <div class="suggestion-section-title">Original:</div>
+                                        <div class="suggestion-text">${runon.sentence}</div>
+                                    </div>
+
+                                    <div class="suggestion-proposed">
+                                        <div class="suggestion-section-title">Suggested Fix:</div>
+                                        <div class="suggestion-text suggestion-text-fix">${suggested}</div>
+                                    </div>
+
+                                    ${runon.fixSuggestions && runon.fixSuggestions.length > 0 ? `
+                                    <div class="fix-options">
+                                        <div class="fix-options-title">Fix Options:</div>
+                                        <ul class="fix-options-list">
+                                            ${runon.fixSuggestions.map(fix => `<li>${fix}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    ` : ''}
+
+                                    <div class="suggestion-actions">
+                                        <button class="suggestion-btn suggestion-btn-accept" data-action="accept">
+                                            ✓ Accept
+                                        </button>
+                                        <button class="suggestion-btn suggestion-btn-reject" data-action="reject">
+                                            ✗ Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            `}).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Run-on Check</div>
+                            <span class="checker-result-badge badge-pass">Passed</span>
+                        </div>
+                        <div class="checker-result-content">
+                            No run-on sentences detected. Excellent!
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display Quality Results
+        function displayQualityResults(result) {
+            let html = '';
+
+            if (result.overallScore !== undefined) {
+                const badge = result.overallScore >= 80 ? 'pass' : result.overallScore >= 60 ? 'warning' : 'fail';
+                html += '<div class="summary-stats">';
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: ${badge === 'pass' ? '#166534' : badge === 'warning' ? '#92400e' : '#991b1b'}">
+                            ${result.overallScore}
+                        </div>
+                        <div class="stat-label">Quality Score</div>
+                    </div>
+                `;
+                html += '</div>';
+            }
+
+            if (result.summary) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Summary</div>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.summary}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.criticalIssues && result.criticalIssues.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Critical Issues</div>
+                            <span class="checker-result-badge badge-fail">${result.criticalIssues.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.criticalIssues.map(issue => `
+                                <div class="issue-item" style="border-left-color: #ef4444;">
+                                    <div class="issue-item-text">${issue.description || issue.message || issue}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (result.recommendations && result.recommendations.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Recommendations</div>
+                            <span class="checker-result-badge badge-info">${result.recommendations.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html || '<div class="empty-state"><div class="empty-state-text">No quality results available</div></div>';
+        }
+
+        // Display Boilerplate Results
+        function displayBoilerplateResults(result) {
+            let html = '';
+
+            const isBoilerplate = result.isBoilerplate || result.matchedKnownBoilerplate;
+
+            html += '<div class="summary-stats">';
+            html += `
+                <div class="stat-card">
+                    <div class="stat-value" style="color: ${isBoilerplate ? '#166534' : '#64748b'}">
+                        ${isBoilerplate ? 'Yes' : 'No'}
+                    </div>
+                    <div class="stat-label">Is Boilerplate</div>
+                </div>
+            `;
+
+            if (result.similarity !== undefined) {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-value">${Math.round(result.similarity * 100)}%</div>
+                        <div class="stat-label">Similarity</div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+
+            html += `
+                <div class="checker-result">
+                    <div class="checker-result-header">
+                        <div class="checker-result-title">Boilerplate Analysis</div>
+                        <span class="checker-result-badge ${isBoilerplate ? 'badge-pass' : 'badge-info'}">
+                            ${isBoilerplate ? 'Detected' : 'Not Detected'}
+                        </span>
+                    </div>
+                    <div class="checker-result-content">
+                        ${result.reason || result.message || 'Analysis complete'}
+                        ${result.matchedKnownBoilerplate ? '<div style="margin-top: 8px; color: #166534; font-weight: 500;">Matched known boilerplate in database</div>' : ''}
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Display Fact Check Results
+        function displayFactCheckResults(result) {
+            let html = '';
+
+            if (result.facts && result.facts.length > 0) {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Facts to Verify</div>
+                            <span class="checker-result-badge badge-info">${result.facts.length}</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.facts.map(fact => `
+                                <div class="issue-item" style="border-left-color: #3b82f6;">
+                                    <div class="issue-item-text">${fact.claim || fact}</div>
+                                    ${fact.confidence ? `<div class="issue-item-detail">Confidence: ${Math.round(fact.confidence * 100)}%</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="checker-result">
+                        <div class="checker-result-header">
+                            <div class="checker-result-title">Fact Check</div>
+                            <span class="checker-result-badge badge-info">Complete</span>
+                        </div>
+                        <div class="checker-result-content">
+                            ${result.message || 'No factual claims requiring verification found.'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // Display error
+        function displayError(checkerType, error) {
+            const container = document.getElementById('recommendations-content');
+            container.innerHTML = `
+                <div class="checker-result">
+                    <div class="checker-result-header">
+                        <div class="checker-result-title">Error Running ${checkerType}</div>
+                        <span class="checker-result-badge badge-fail">Failed</span>
+                    </div>
+                    <div class="checker-result-content" style="color: #991b1b;">
+                        ${error.message || 'An unknown error occurred'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Set status text
+        function setStatus(text, loading = false) {
+            const statusEl = document.getElementById('status-text');
+            if (loading) {
+                statusEl.innerHTML = `<span class="loading-spinner"></span> ${text}`;
+            } else {
+                statusEl.textContent = text;
+            }
+        }
+
+        // Suggest a fix for run-on sentences
+        function suggestRunonFix(sentence, runon) {
+            // If we have pattern-specific fix suggestions from the API, use the first one
+            if (runon && runon.fixSuggestions && runon.fixSuggestions.length > 0) {
+                // Apply the first fix suggestion intelligently
+                const patternType = runon.patternType || '';
+
+                // Type 1A: Simple Comma Splice - use period
+                if (patternType.includes('1A') || patternType.includes('Simple Comma Splice')) {
+                    const parts = sentence.split(',');
+                    if (parts.length === 2) {
+                        const secondPart = parts[1].trim();
+                        const secondCapitalized = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+                        return `${parts[0].trim()}. ${secondCapitalized}`;
+                    }
+                }
+
+                // Type 1C: Transitional Comma Splice - use semicolon
+                if (patternType.includes('1C') || patternType.includes('Transitional')) {
+                    const transitions = ['however', 'therefore', 'nevertheless', 'moreover', 'furthermore', 'consequently', 'thus'];
+                    for (const trans of transitions) {
+                        const regex = new RegExp(`,\\s+${trans}\\s+`, 'i');
+                        if (regex.test(sentence)) {
+                            return sentence.replace(regex, `; ${trans}, `);
+                        }
+                    }
+                }
+
+                // Type 6A: Implied Causation - add "so"
+                if (patternType.includes('6A') || patternType.includes('Causation')) {
+                    return sentence.replace(/,\s+(the|it|this|that)\s+/i, ', so $1 ');
+                }
+
+                // Type 4A: Excessive And Chains - break into sentences
+                if (patternType.includes('4A') || patternType.includes('And Chains')) {
+                    const parts = sentence.split(' and ');
+                    if (parts.length >= 3) {
+                        // Keep first two parts with "and", break rest into sentences
+                        const firstPart = parts.slice(0, 2).join(' and ');
+                        const secondPart = parts.slice(2).map(p => {
+                            const trimmed = p.trim();
+                            return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+                        }).join('. ');
+                        return `${firstPart}. ${secondPart}`;
+                    }
+                }
+            }
+
+            // Fallback to original logic if no pattern detected
+            // Strategy 1: Find coordinating conjunctions with commas
+            const conjunctionsWithComma = [', and ', ', but ', ', or ', ', so ', ', yet ', ', nor ', ', for '];
+            for (const conj of conjunctionsWithComma) {
+                if (sentence.includes(conj)) {
+                    const idx = sentence.indexOf(conj);
+                    const firstPart = sentence.substring(0, idx);
+                    const secondPart = sentence.substring(idx + conj.length);
+                    const secondCapitalized = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+                    return `${firstPart}. ${secondCapitalized}`;
+                }
+            }
+
+            // Strategy 2: Find semicolons and replace with period
+            if (sentence.includes(';')) {
+                const parts = sentence.split(';');
+                const fixed = parts.map((part, idx) => {
+                    const trimmed = part.trim();
+                    if (idx === 0) return trimmed;
+                    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+                }).join('. ');
+                return fixed;
+            }
+
+            // Strategy 3: If sentence is very long (35+ words), split at natural midpoint
+            const words = sentence.split(' ');
+            if (words.length >= 35) {
+                const targetIdx = Math.floor(words.length / 2);
+                for (let offset = 0; offset < words.length / 4; offset++) {
+                    for (const direction of [1, -1]) {
+                        const idx = targetIdx + (offset * direction);
+                        if (idx >= 0 && idx < words.length) {
+                            const word = words[idx];
+                            if (word.endsWith(',')) {
+                                const firstPart = words.slice(0, idx + 1).join(' ').replace(/,$/, '');
+                                const secondPart = words.slice(idx + 1).join(' ');
+                                const secondCapitalized = secondPart.charAt(0).toUpperCase() + secondPart.slice(1);
+                                return `${firstPart}. ${secondCapitalized}`;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return sentence + ' [Manual revision recommended]';
+        }
+
+        // Escape HTML for safe insertion
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Accept a suggestion
+        // Highlight a suggestion in the editor (persistent until next click)
+        function highlightSuggestion(text, index) {
+            console.log('highlightSuggestion called with index:', index);
+            console.log('Text to highlight (first 100 chars):', text.substring(0, 100));
+
+            const editor = document.getElementById('main-editor');
+            const unescaped = unescapeHtml(text);
+
+            console.log('Unescaped text (first 100 chars):', unescaped.substring(0, 100));
+
+            // Remove any existing highlights
+            removeHighlights();
+
+            // Get both innerHTML and textContent for debugging
+            const content = editor.innerHTML;
+            const textContent = editor.textContent;
+
+            console.log('Editor innerHTML length:', content.length);
+            console.log('Editor textContent length:', textContent.length);
+            console.log('Looking for text in content:', content.includes(unescaped));
+            console.log('Looking for text in textContent:', textContent.includes(unescaped));
+
+            // Try to find in textContent first
+            if (textContent.includes(unescaped)) {
+                // Text exists in the editor, now we need to highlight it
+                // We'll use a different approach - wrap it with find and replace in the DOM
+
+                // Simple approach: replace in innerHTML
+                if (content.includes(unescaped)) {
+                    const highlighted = content.replace(
+                        unescaped,
+                        `<mark class="suggestion-highlight" style="background: #fef08a; padding: 2px 4px; border-radius: 3px;">${unescaped}</mark>`
+                    );
+                    editor.innerHTML = highlighted;
+                    console.log('Applied highlight via innerHTML replace');
+                } else {
+                    // The text exists but not in the HTML directly (probably has tags inside)
+                    console.warn('Text found in textContent but not in innerHTML - may have HTML formatting');
+                    showToast('Text found but contains formatting - click Accept to apply changes', 'info');
+                    return;
+                }
+            } else {
+                console.warn('Text not found in editor');
+                console.log('Searching for partial match...');
+
+                // Try to find first 50 chars
+                const partial = unescaped.substring(0, 50);
+                if (textContent.includes(partial)) {
+                    console.log('Found partial match (first 50 chars)');
+                    showToast('Sentence partially found - may have been edited', 'warning');
+                } else {
+                    console.log('No match found at all');
+                    showToast('Could not locate text in editor', 'error');
+                }
+                return;
+            }
+
+            // Scroll the highlighted text into view
+            setTimeout(() => {
+                const mark = editor.querySelector('mark.suggestion-highlight');
+                if (mark) {
+                    mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    console.log('Scrolled to highlight');
+                } else {
+                    console.warn('Mark element not found after highlighting');
+                }
+            }, 100);
+        }
+
+        // Remove all highlights from editor
+        function removeHighlights() {
+            const editor = document.getElementById('main-editor');
+            const marks = editor.querySelectorAll('mark.suggestion-highlight');
+            marks.forEach(mark => {
+                const text = mark.textContent;
+                const textNode = document.createTextNode(text);
+                mark.parentNode.replaceChild(textNode, mark);
+            });
+
+            // Normalize to merge adjacent text nodes
+            editor.normalize();
+        }
+
+        // Accept a suggestion
+        function acceptSuggestion(originalText, suggestedText, index, card) {
+            const editor = document.getElementById('main-editor');
+
+            // Remove any existing highlights first
+            removeHighlights();
+
+            // Unescape the HTML entities
+            const original = unescapeHtml(originalText);
+            const suggested = unescapeHtml(suggestedText);
+
+            console.log('Accepting suggestion:');
+            console.log('Original:', original.substring(0, 100));
+            console.log('Suggested:', suggested.substring(0, 100));
+
+            // Get content and check if text exists
+            const content = editor.innerHTML;
+
+            if (!content.includes(original)) {
+                console.warn('Original text not found in editor:', original.substring(0, 100));
+                showToast('Could not locate text in editor', 'error');
+                return;
+            }
+
+            // Replace the original text with suggested text and highlight it in green
+            const newContent = content.replace(
+                original,
+                `<mark class="suggestion-highlight" style="background: #86efac; padding: 2px 4px; border-radius: 3px;">${suggested}</mark>`
+            );
+
+            editor.innerHTML = newContent;
+
+            // Scroll to the changed text
+            setTimeout(() => {
+                const mark = editor.querySelector('mark.suggestion-highlight');
+                if (mark) {
+                    mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+
+            // Mark the suggestion card as accepted
+            card.classList.add('suggestion-accepted');
+
+            // Disable the buttons
+            const buttons = card.querySelectorAll('.suggestion-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            showToast('Suggestion applied successfully', 'success');
+            updateWordCount();
+        }
+
+        // Reject a suggestion
+        function rejectSuggestion(index, card) {
+            card.classList.add('suggestion-rejected');
+
+            // Disable the buttons
+            const buttons = card.querySelectorAll('.suggestion-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            showToast('Suggestion rejected', 'info');
+        }
+
+        // Unescape HTML entities
+        function unescapeHtml(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+    </script>
+</body>
+</html>

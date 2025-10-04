@@ -1,0 +1,31 @@
+📊 SEO + AIO OPTIMIZATION REPORT
+======================================================================
+
+🎯 SCORES:
+  SEO Score: 84/100 (B)
+  AIO Score: 65/100 (D)
+  Overall:   75/100 (C)
+
+📝 Status: Fair - Acceptable, but significant improvements recommended
+✅ Ready to Publish: YES
+
+🚨 CRITICAL ISSUES:
+  • No structured claims with evidence
+    → Add cpo:claims array with factual claims and evidence sources for AI fact-checking
+
+⚠️  WARNINGS:
+  • [SEO] Content too short (219 words)
+    → Aim for 300-800 words for better ranking potential
+  • [AIO] Limited quantitative data
+    → Add specific numbers, percentages, or statistics for AI fact extraction
+  • [AIO] No source attribution detected
+    → Add sources or citations for AI to verify claims and build trust
+
+💡 OPTIMIZATION TIPS:
+  • [SEO] Headline could be more compelling
+    → Consider adding numbers or action words (announces, launches, unveils)
+  • [SEO] Low keyword density for "healthcare"
+    → Mention "healthcare" 2-3 times naturally throughout the content
+  • [AIO] No Q&A format detected
+    → Consider adding FAQ-style content to improve AI answer extraction
+

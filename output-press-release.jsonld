@@ -1,0 +1,84 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://janesmithforcongress.org/press/economic-recovery-plan",
+  "headline": "Jane Smith Announces Comprehensive Economic Recovery Plan",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Jane Smith for Congress",
+    "url": "https://janesmithforcongress.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@janesmithforcongress.org"
+    }
+  },
+  "articleBody": "For Immediate Release\nOctober 3, 2025\n\nContact: Jane Smith Press Team\npress@janesmithforcongress.org\n\nJane Smith Announces Comprehensive Economic Recovery Plan\n\nWASHINGTON - Jane Smith today unveiled a bold economic recovery plan that will create jobs, reduce the deficit, and restore fiscal responsibility to Washington.\n\n\"For too long, Washington has failed to deliver real solutions for American families,\" said Smith. \"While politicians play games, hardworking Americans are paying the price. That ends now.\"\n\nThe comprehensive plan addresses several critical areas:\n\nJob Creation and Economic Growth\n\nOur plan will create 50,000 new jobs in the first year through targeted infrastructure investments and support for small businesses.\n\nMore than 25% of VA workers are veterans, demonstrating our commitment to those who served.\n\nFiscal Responsibility\n\nThe deficit has doubled in the last two years, placing an enormous burden on future generations. Our plan takes a balanced approach to deficit reduction.\n\nLearn more at janesmithforcongress.org/plan\n\n###",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "endorsement",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "infrastructure",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "learn",
+    "url": "https://janesmithforcongress.org/plan"
+  },
+  "cpo:claims": [
+    {
+      "@type": "cpo:Claim",
+      "@id": "claim:economic-recovery-plan-1",
+      "cpo:claimText": "Our plan will create 50,000 new jobs",
+      "cpo:verificationStatus": "TRUE",
+      "cpo:confidence": 0.92,
+      "cpo:evidence": [
+        {
+          "@type": "CreativeWork",
+          "url": "https://janesmithforcongress.org/plan/economic-policy.pdf",
+          "name": "Economic Policy White Paper",
+          "cpo:excerpt": "Modeling suggests 48,000-52,000 jobs..."
+        }
+      ]
+    },
+    {
+      "@type": "cpo:Claim",
+      "@id": "claim:economic-recovery-plan-2",
+      "cpo:claimText": "More than 25% of VA workers are veterans",
+      "cpo:verificationStatus": "TRUE",
+      "cpo:confidence": 0.95,
+      "cpo:evidence": [
+        {
+          "@type": "CreativeWork",
+          "url": "https://www.va.gov/EMPLOYEE/docs/Section-505-Annual-Report-2024.pdf",
+          "name": "VA Workforce Dashboard",
+          "cpo:excerpt": ""
+        }
+      ]
+    },
+    {
+      "@type": "cpo:Claim",
+      "@id": "claim:economic-recovery-plan-3",
+      "cpo:claimText": "The deficit has doubled in the last two years",
+      "cpo:verificationStatus": "FALSE",
+      "cpo:confidence": 0.98,
+      "cpo:evidence": [
+        {
+          "@type": "CreativeWork",
+          "url": "https://www.cbo.gov/publication/60870",
+          "name": "CBO Budget Outlook 2025",
+          "cpo:excerpt": ""
+        }
+      ]
+    }
+  ]
+}

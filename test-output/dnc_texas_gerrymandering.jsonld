@@ -1,0 +1,37 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/dnc_texas_gerrymandering",
+  "headline": "ICYMI: New DNC Organizing Campaign Targets Texas GOP's Gerrymandering Scheme, Mobilizes Grassroots Activists to Fight Back",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "ICYMI: New DNC Organizing Campaign Targets Texas GOP's Gerrymandering Scheme, Mobilizes Grassroots Activists to Fight Back\n\nJuly 29, 2025\n\nYesterday, the DNC launched a new national organizing campaign to fight back against Donald Trump and Texas Republicans' attempt to disenfranchise Texas voters and rig the congressional map instead of focusing on flood relief for Texans most in need. As part of this new initiative, the DNC is mobilizing our 30,000 volunteer organizer base to contact persuadable Republicans and independent voters and make sure they know exactly who is responsible for Texas Republicans' trying to disenfranchise voters even more than they already have. This builds off the DNC's already robust engagement with Texas voters, including 250,000 texts sent recruiting Texans to turn out for the redistricting field hearings across the state. While Republicans play political games in the wake of tragedy, Democrats are committed to organizing from the ground up to ensure Texans are holding Republicans accountable for ripping away their health, food, and voting power.\n\nThe press release then goes on to highlight media coverage of the campaign, including quotes from DNC Chair Ken Martin such as: \"The DNC is all hands on deck to hold Donald Trump and Greg Abbott accountable for their scheme to use the tragic Texas floods as cover to redraw the Texas maps in a last-ditch effort to save the Republican majority.\"\n\nThe campaign involves:\n- Deploying 30,000 volunteer organizers\n- Sending over 250,000 text messages\n- Targeting persuadable Republican and independent voters\n- Encouraging public comments and calls to state representatives\n- Organizing both in-person and virtual efforts to build Democratic power in Texas\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "legislative_action",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "healthcare",
+  "cpo:cta": {
+    "@type": "cpo:CTA",
+    "cpo:type": "volunteer",
+    "url": "https://example.org"
+  }
+}

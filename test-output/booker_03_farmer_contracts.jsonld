@@ -1,0 +1,32 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/booker_03_farmer_contracts",
+  "headline": "Booker, Colleagues Introduce Honor Farmer Contracts Act",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "Booker, Colleagues Introduce Honor Farmer Contracts Act\n\nMarch 27, 2025\n\nWASHINGTON, D.C.\n\nSenator Cory Booker (D-NJ) introduced the Honor Farmer Contracts Act to release illegally withheld funding for USDA contracts and agreements.\n\nThe legislation would require USDA to unfreeze all signed agreements and contracts, require USDA to make all past due payments quickly, prohibit USDA from cancelling agreements without cause, and prohibit USDA from closing offices without 60 days notice to Congress.\n\nKey quotes:\n\nSenator Booker: \"USDA's refusal to pay what is owed to farmers and organizations that support them is theft, plain and simple.\"\n\nRepresentative Vasquez: \"When farmers sign contracts, they expect the government to follow through. It's that simple.\"\n\nDevin Cornia (Northeast Organic Farming Association): \"Interrupting farmer contracts undermines our nation's economic, military, and food security.\"\n\nThe bill is cosponsored by 17 senators, including Tammy Duckworth, Peter Welch, Adam Schiff, and others. Representative Gabe Vasquez will introduce companion legislation in the House.\n",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "general",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "economy"
+}

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batch Press Release Verifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-stats {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .sidebar {
+            width: 350px;
+            background: white;
+            border-right: 2px solid #e1e8ed;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-header {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+
+        .reviewer-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .reviewer-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .release-item {
+            background: #f8fafc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .release-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .release-item.active {
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .release-item.approved {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .release-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .release-meta {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .main-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .verification-container {
+            display: none;
+        }
+
+        .verification-container.active {
+            display: block;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .original-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .field-group {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .confidence-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .confidence-high {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .confidence-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .confidence-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .field-value {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1f2937;
+            padding: 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .field-value.editable {
+            cursor: text;
+        }
+
+        .field-value.editable:hover {
+            background: white;
+            border-color: #cbd5e1;
+        }
+
+        .field-value.editable:focus {
+            outline: none;
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .field-value.modified {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .quote-box {
+            background: white;
+            border-left: 3px solid #667eea;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .quote-text {
+            font-style: italic;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .quote-attribution {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .action-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-approve:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-skip {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-skip:hover {
+            background: #5a6268;
+        }
+
+        .btn-export {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #5568d3;
+        }
+
+        .corrections-indicator {
+            font-size: 13px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>📋 Batch Press Release Verifier</h1>
+        </div>
+        <div class="header-stats">
+            <span id="statsApproved">0</span> / <span id="statsTotal">0</span> Approved
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Reviewer Name</h2>
+                <input type="text" id="reviewerName" class="reviewer-input" placeholder="Enter your name...">
+            </div>
+
+            <div class="sidebar-header">
+                <h2>Press Releases</h2>
+            </div>
+
+            <div id="releaseList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading press releases...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-panel">
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">📄</div>
+                <h3>Select a press release to begin verification</h3>
+                <p>Choose from the list on the left</p>
+            </div>
+
+            <div id="verificationContainer" class="verification-container">
+                <div class="comparison-grid">
+                    <div class="panel">
+                        <div class="panel-title">
+                            <span>📄</span>
+                            Original Text
+                        </div>
+                        <pre class="original-text" id="originalText"></pre>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">
+                            <span>🔍</span>
+                            Parsed Structure
+                        </div>
+                        <div id="parsedContent"></div>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <div class="corrections-indicator" id="correctionsIndicator" style="display: none;">
+                        ✏️ Corrections made
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-skip" onclick="skipRelease()">Skip</button>
+                        <button class="btn btn-approve" id="approveBtn" onclick="approveRelease()" disabled>
+                            ✓ Approve & Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let releases = [];
+        let currentRelease = null;
+        let parsedData = null;
+        let corrections = {};
+        let approvals = JSON.parse(localStorage.getItem('prApprovals') || '{}');
+
+        const SPANBERGER_RELEASES = [
+            'spanberger_01_mass_firings.txt',
+            'spanberger_02_jobs_economy.txt',
+            'spanberger_03_abortion_ad.txt',
+            'spanberger_04_shutdown_statement.txt',
+            'spanberger_05_trump_norfolk_visit.txt',
+            'spanberger_06_one_month_election.txt',
+            'spanberger_07_msnbc_appearance.txt',
+            'spanberger_08_mass_firings_shutdown.txt',
+            'spanberger_09_jobs_data.txt',
+            'spanberger_10_abortion_ad.txt',
+            'spanberger_11_fire_fighters_endorsement.txt',
+            'spanberger_12_votevets_endorsement.txt',
+            'spanberger_13_trump_tax_ad.txt',
+            'spanberger_14_healthcare_costs.txt'
+        ];
+
+        async function init() {
+            await loadReleases();
+            updateStats();
+        }
+
+        async function loadReleases() {
+            const listHtml = [];
+
+            for (const filename of SPANBERGER_RELEASES) {
+                const id = filename.replace('.txt', '');
+                const title = filename.replace('spanberger_', '').replace('.txt', '').replace(/_/g, ' ');
+                const isApproved = approvals[id];
+
+                releases.push({
+                    id: id,
+                    filename: filename,
+                    title: title,
+                    approved: isApproved || false,
+                    approvedBy: isApproved ? isApproved.reviewer : null,
+                    approvedAt: isApproved ? isApproved.timestamp : null
+                });
+
+                listHtml.push(`
+                    <div class="release-item ${isApproved ? 'approved' : ''}" data-id="${id}" onclick="selectRelease('${id}')">
+                        <div class="release-title">${capitalizeWords(title)}</div>
+                        <div class="release-meta">
+                            <span class="status-badge ${isApproved ? 'status-approved' : 'status-pending'}">
+                                ${isApproved ? '✓ Approved' : 'Pending'}
+                            </span>
+                            ${isApproved ? `<span>by ${isApproved.reviewer}</span>` : ''}
+                        </div>
+                    </div>
+                `);
+            }
+
+            document.getElementById('releaseList').innerHTML = listHtml.join('');
+        }
+
+        async function selectRelease(id) {
+            const release = releases.find(r => r.id === id);
+            if (!release) return;
+
+            currentRelease = release;
+            corrections = {};
+
+            // Update UI
+            document.querySelectorAll('.release-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelector(`[data-id="${id}"]`).classList.add('active');
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('verificationContainer').classList.add('active');
+            document.getElementById('correctionsIndicator').style.display = 'none';
+
+            // Show loading
+            document.getElementById('parsedContent').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Parsing press release...</p>
+                </div>
+            `;
+
+            // Load and parse
+            try {
+                const textResponse = await fetch(`/cpo/examples/${release.filename}`);
+                const text = await textResponse.text();
+
+                document.getElementById('originalText').textContent = text;
+
+                const parseResponse = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        verifiedData: {
+                            release_type: 'NEWS_RELEASE',
+                            subtypes: [],
+                            issues: [],
+                            reviewed_by: 'BatchVerifier'
+                        }
+                    })
+                });
+
+                const apiResponse = await parseResponse.json();
+                // API returns { success: true, parsed: {...}, original_text: ... }
+                parsedData = apiResponse.parsed || apiResponse;
+                renderParsedContent();
+
+                // Enable approve button if reviewer name is entered
+                updateApproveButton();
+
+            } catch (error) {
+                document.getElementById('parsedContent').innerHTML = `
+                    <div class="loading">
+                        <p style="color: #dc2626;">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderParsedContent() {
+            // Handle different possible structures
+            const content = parsedData.content_structure || parsedData;
+            const quotes = parsedData.quotes || [];
+
+            let html = '';
+
+            // Debug: show what we got if structure is unexpected
+            if (!content) {
+                html = `<div class="field-group"><pre>${JSON.stringify(parsedData, null, 2)}</pre></div>`;
+                document.getElementById('parsedContent').innerHTML = html;
+                return;
+            }
+
+            // Headline
+            if (content.headline) {
+                const conf = getConfidenceLevel(content.headline_confidence || 0.9);
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">
+                            Headline
+                            <span class="confidence-badge confidence-${conf.level}">${conf.percent}%</span>
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="headline" oninput="markModified(this)">
+                            ${escapeHtml(content.headline)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Dateline - show as separate location and date fields if available
+            if (content.dateline) {
+                if (typeof content.dateline === 'object') {
+                    // Separate location and date fields
+                    if (content.dateline.location || content.dateline.date) {
+                        html += `<div class="field-group">`;
+
+                        if (content.dateline.location) {
+                            html += `
+                                <div class="field-label">Location</div>
+                                <div class="field-value editable" contenteditable="true" data-field="dateline_location" oninput="markModified(this)">
+                                    ${escapeHtml(content.dateline.location)}
+                                </div>
+                            `;
+                        }
+
+                        if (content.dateline.date) {
+                            html += `
+                                <div class="field-label" style="margin-top: ${content.dateline.location ? '10px' : '0'}">Date Issued</div>
+                                <div class="field-value editable" contenteditable="true" data-field="dateline_date" oninput="markModified(this)">
+                                    ${escapeHtml(content.dateline.date)}
+                                </div>
+                            `;
+                        }
+
+                        html += `</div>`;
+                    } else {
+                        // Fallback to full text
+                        const datelineText = content.dateline.full || 'Not detected';
+                        html += `
+                            <div class="field-group">
+                                <div class="field-label">Dateline</div>
+                                <div class="field-value editable" contenteditable="true" data-field="dateline" oninput="markModified(this)">
+                                    ${escapeHtml(datelineText)}
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // String dateline
+                    html += `
+                        <div class="field-group">
+                            <div class="field-label">Dateline</div>
+                            <div class="field-value editable" contenteditable="true" data-field="dateline" oninput="markModified(this)">
+                                ${escapeHtml(content.dateline)}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Lead
+            if (content.lead_paragraph) {
+                const conf = getConfidenceLevel(content.lead_confidence || 0.9);
+                html += `
+                    <div class="field-group">
+                        <div class="field-label">
+                            Lead Paragraph
+                            <span class="confidence-badge confidence-${conf.level}">${conf.percent}%</span>
+                        </div>
+                        <div class="field-value editable" contenteditable="true" data-field="lead" oninput="markModified(this)">
+                            ${escapeHtml(content.lead_paragraph)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Body
+            if (content.body_paragraphs && content.body_paragraphs.length > 0) {
+                content.body_paragraphs.forEach((para, idx) => {
+                    html += `
+                        <div class="field-group">
+                            <div class="field-label">Body Paragraph ${idx + 1}</div>
+                            <div class="field-value editable" contenteditable="true" data-field="body_${idx}" oninput="markModified(this)">
+                                ${escapeHtml(para)}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Quotes
+            if (quotes.length > 0) {
+                html += `<div class="field-group"><div class="field-label">Quotes (${quotes.length})</div>`;
+                quotes.forEach((quote, idx) => {
+                    const conf = getConfidenceLevel(quote.confidence || 0.8);
+                    html += `
+                        <div class="quote-box">
+                            <div class="field-label">
+                                Quote ${idx + 1}
+                                <span class="confidence-badge confidence-${conf.level}">${conf.percent}%</span>
+                            </div>
+                            <div class="quote-text editable" contenteditable="true" data-field="quote_${idx}_text" oninput="markModified(this)">
+                                "${escapeHtml(quote.quote_text)}"
+                            </div>
+                            <div class="quote-attribution editable" contenteditable="true" data-field="quote_${idx}_attr" oninput="markModified(this)">
+                                — ${escapeHtml(quote.speaker_name || 'Unknown')}${quote.speaker_title ? ', ' + escapeHtml(quote.speaker_title) : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            document.getElementById('parsedContent').innerHTML = html;
+        }
+
+        function markModified(element) {
+            element.classList.add('modified');
+            const field = element.getAttribute('data-field');
+            corrections[field] = element.textContent.trim();
+            document.getElementById('correctionsIndicator').style.display = 'block';
+        }
+
+        function approveRelease() {
+            const reviewerName = document.getElementById('reviewerName').value.trim();
+            if (!reviewerName) {
+                alert('Please enter your name before approving');
+                return;
+            }
+
+            // Collect all field values (including corrections)
+            const fields = {};
+            document.querySelectorAll('[data-field]').forEach(el => {
+                fields[el.getAttribute('data-field')] = el.textContent.trim();
+            });
+
+            const approval = {
+                releaseId: currentRelease.id,
+                filename: currentRelease.filename,
+                reviewer: reviewerName,
+                timestamp: new Date().toISOString(),
+                corrections: corrections,
+                approvedFields: fields,
+                parsedData: parsedData
+            };
+
+            // Save to localStorage
+            approvals[currentRelease.id] = approval;
+            localStorage.setItem('prApprovals', JSON.stringify(approvals));
+
+            // Update UI
+            currentRelease.approved = true;
+            currentRelease.approvedBy = reviewerName;
+            currentRelease.approvedAt = approval.timestamp;
+
+            const releaseElement = document.querySelector(`[data-id="${currentRelease.id}"]`);
+            releaseElement.classList.add('approved');
+            releaseElement.innerHTML = `
+                <div class="release-title">${capitalizeWords(currentRelease.title)}</div>
+                <div class="release-meta">
+                    <span class="status-badge status-approved">✓ Approved</span>
+                    <span>by ${reviewerName}</span>
+                </div>
+            `;
+
+            updateStats();
+
+            // Move to next
+            const nextRelease = releases.find(r => !r.approved);
+            if (nextRelease) {
+                selectRelease(nextRelease.id);
+            } else {
+                alert('All releases approved! 🎉');
+            }
+        }
+
+        function skipRelease() {
+            const nextRelease = releases.find(r => !r.approved && r.id !== currentRelease.id);
+            if (nextRelease) {
+                selectRelease(nextRelease.id);
+            }
+        }
+
+        function updateApproveButton() {
+            const reviewerName = document.getElementById('reviewerName').value.trim();
+            document.getElementById('approveBtn').disabled = !reviewerName;
+        }
+
+        function updateStats() {
+            const approved = releases.filter(r => r.approved).length;
+            document.getElementById('statsApproved').textContent = approved;
+            document.getElementById('statsTotal').textContent = releases.length;
+        }
+
+        function getConfidenceLevel(confidence) {
+            const percent = Math.round(confidence * 100);
+            let level = 'low';
+            if (percent >= 80) level = 'high';
+            else if (percent >= 60) level = 'medium';
+            return { percent, level };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function capitalizeWords(str) {
+            return str.split(' ').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        // Enable approve button when reviewer name changes
+        document.getElementById('reviewerName').addEventListener('input', updateApproveButton);
+
+        // Export approvals
+        function exportApprovals() {
+            const dataStr = JSON.stringify(approvals, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `pr-approvals-${new Date().toISOString().split('T')[0]}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

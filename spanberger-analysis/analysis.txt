@@ -1,0 +1,31 @@
+📊 SEO + AIO OPTIMIZATION REPORT
+======================================================================
+
+🎯 SCORES:
+  SEO Score: 79/100 (C)
+  AIO Score: 70/100 (C)
+  Overall:   75/100 (C)
+
+📝 Status: Fair - Acceptable, but significant improvements recommended
+✅ Ready to Publish: YES
+
+🚨 CRITICAL ISSUES:
+  • No structured claims with evidence
+    → Add cpo:claims array with factual claims and evidence sources for AI fact-checking
+
+⚠️  WARNINGS:
+  • [SEO] Content too short (183 words)
+    → Aim for 300-800 words for better ranking potential
+  • [SEO] Missing call-to-action
+    → Add CTA to improve engagement signals and conversions
+  • [AIO] No source attribution detected
+    → Add sources or citations for AI to verify claims and build trust
+
+💡 OPTIMIZATION TIPS:
+  • [SEO] Headline too long (> 70 chars)
+    → Shorten headline for better SERP display. Current: 75 chars
+  • [SEO] Low keyword density for "taxes"
+    → Mention "taxes" 2-3 times naturally throughout the content
+  • [AIO] No Q&A format detected
+    → Consider adding FAQ-style content to improve AI answer extraction
+

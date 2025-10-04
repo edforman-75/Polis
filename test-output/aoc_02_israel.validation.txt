@@ -1,0 +1,8 @@
+✅ JSON-LD is valid!
+
+WARNINGS:
+  ⚠️  cpo:cta: No call-to-action specified. Consider adding one.
+
+RECOMMENDATIONS:
+  💡 cpo:claims: Consider adding factual claims with evidence to strengthen credibility
+

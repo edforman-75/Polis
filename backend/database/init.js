@@ -747,7 +747,67 @@ class Database {
                 validation_attempted_at DATETIME,
                 FOREIGN KEY (claim_id) REFERENCES extracted_claims(id) ON DELETE CASCADE,
                 FOREIGN KEY (added_by) REFERENCES users(id)
-            )`
+            )`,
+
+            // Boilerplate library - stores known boilerplate paragraphs
+            `CREATE TABLE IF NOT EXISTS boilerplate_library (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                candidate_name TEXT NOT NULL,
+                campaign_id TEXT,
+                boilerplate_text TEXT NOT NULL,
+                boilerplate_hash TEXT NOT NULL UNIQUE,
+                is_active BOOLEAN DEFAULT 1,
+                first_seen_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                last_used_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                usage_count INTEGER DEFAULT 1,
+                first_seen_in_release TEXT,
+                boilerplate_type TEXT DEFAULT 'campaign',
+                confidence_score REAL DEFAULT 1.0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`,
+
+            // Boilerplate indexes
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_candidate ON boilerplate_library(candidate_name)`,
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_hash ON boilerplate_library(boilerplate_hash)`,
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_active ON boilerplate_library(is_active)`,
+
+            // Boilerplate usage tracking
+            `CREATE TABLE IF NOT EXISTS boilerplate_usage (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                boilerplate_id INTEGER NOT NULL,
+                assignment_id INTEGER,
+                was_modified BOOLEAN DEFAULT 0,
+                original_text TEXT,
+                modified_text TEXT,
+                modification_type TEXT,
+                similarity_score REAL,
+                modified_by TEXT,
+                modification_notes TEXT,
+                used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (boilerplate_id) REFERENCES boilerplate_library(id) ON DELETE CASCADE
+            )`,
+
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_usage_assignment ON boilerplate_usage(assignment_id)`,
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_usage_modified ON boilerplate_usage(was_modified)`,
+
+            // Boilerplate modification warnings
+            `CREATE TABLE IF NOT EXISTS boilerplate_warnings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                assignment_id INTEGER,
+                boilerplate_id INTEGER,
+                warning_type TEXT NOT NULL,
+                warning_severity TEXT DEFAULT 'medium',
+                original_text TEXT,
+                attempted_change TEXT,
+                editor_user TEXT,
+                editor_acknowledged BOOLEAN DEFAULT 0,
+                acknowledged_at DATETIME,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (boilerplate_id) REFERENCES boilerplate_library(id) ON DELETE CASCADE
+            )`,
+
+            `CREATE INDEX IF NOT EXISTS idx_boilerplate_warnings_assignment ON boilerplate_warnings(assignment_id)`
         ];
 
         for (const query of queries) {

@@ -1,0 +1,32 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://campaign-press-ontology.org/ns/v1#"
+  ],
+  "@type": [
+    "PressRelease"
+  ],
+  "@id": "https://example.org/press/aoc_03_healthy_start",
+  "headline": "Energy & Commerce Health Subcommittee Advances Ocasio-Cortez, Malliotakis Bill To Support Parents and Infants",
+  "datePublished": "2025-10-03",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Organization",
+    "name": "Campaign Organization",
+    "url": "https://example.org",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "press",
+      "email": "press@example.org"
+    }
+  },
+  "articleBody": "Energy & Commerce Health Subcommittee Advances Ocasio-Cortez, Malliotakis Bill To Support Parents and Infants\n\nSeptember 12, 2025\n\nWashington, D.C.\n\nThe Energy & Commerce Health Subcommittee passed the Healthy Start Reauthorization Act of 2025, a bipartisan bill led by Representatives Alexandria Ocasio-Cortez and Nicole Malliotakis.\n\nThe bill reauthorizes the Healthy Start program through Fiscal Year 2030. The program provides funding for community-based maternal and infant health efforts.\n\n\"The United States has the highest rate of maternal deaths among all wealthy countries. We also have the highest rate of infant deaths compared to other high income countries,\" said Ocasio-Cortez.\n\nShe highlighted that over 115 Healthy Start programs exist across 50 states. The program was originally created in 1991 by President George H.W. Bush.\n\n\"The Bronx Healthy Start Partnership serves almost 500 families annually,\" Ocasio-Cortez noted.\n\nThe subcommittee passed the bill, which will now move to the full committee for a vote.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Press"
+  },
+  "cpo:releaseType": "news_release",
+  "cpo:subtype": "legislative_action",
+  "cpo:tone": "neutral",
+  "cpo:issueArea": "general"
+}

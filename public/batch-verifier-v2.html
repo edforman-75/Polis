@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Batch Verifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-stats {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Selection Screen */
+        #selectionScreen {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .release-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .release-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .release-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .release-card.approved {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .release-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .release-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Verifier Screen */
+        #verifierScreen {
+            display: none;
+            height: calc(100vh - 70px);
+        }
+
+        .verifier-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .panel-original {
+            background: white;
+            border-right: 2px solid #e1e8ed;
+        }
+
+        .panel-parsed {
+            background: #f8fafc;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .original-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        /* Parsed Content Styling (from content-flow-test.html) */
+        .section-label {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-top: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .section-label.headline { background: #fef3c7; color: #92400e; }
+        .section-label.dateline { background: #dbeafe; color: #1e40af; }
+        .section-label.lead { background: #dcfce7; color: #166534; }
+        .section-label.body { background: #e5e7eb; color: #374151; }
+        .section-label.quote { background: #fce7f3; color: #9f1239; }
+
+        .confidence-indicator {
+            display: inline-block;
+            font-size: 10px;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .confidence-high { background: #d1fae5; color: #065f46; }
+        .confidence-medium { background: #fef3c7; color: #92400e; }
+        .confidence-low { background: #fee2e2; color: #991b1b; }
+
+        .type-badge {
+            background: #059669;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .parsed-headline {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            cursor: text;
+        }
+
+        .parsed-headline:focus {
+            outline: 2px solid #667eea;
+        }
+
+        .parsed-dateline {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #555;
+            margin: 15px 0;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .parsed-lead {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .parsed-body {
+            font-size: 16px;
+            line-height: 1.8;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .parsed-quote {
+            margin: 20px 0;
+            padding: 25px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .quote-text {
+            font-size: 18px;
+            font-style: italic;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .quote-attribution {
+            font-size: 13px;
+            color: #666;
+            font-style: normal;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .btn-skip {
+            background: #e1e8ed;
+            color: #333;
+        }
+
+        .btn-skip:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Batch Press Release Verifier</h1>
+        <div class="header-stats" id="progressStats">0 / 14 Approved</div>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selectionScreen">
+        <h2 style="margin-bottom: 10px;">Select a Release to Verify</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Click on any release to begin verification</p>
+
+        <div class="release-grid" id="releaseGrid"></div>
+    </div>
+
+    <!-- Verifier Screen -->
+    <div id="verifierScreen">
+        <div class="verifier-container">
+            <div class="panel panel-original">
+                <div class="panel-title">📄 Original Text</div>
+                <pre class="original-text" id="originalText"></pre>
+            </div>
+
+            <div class="panel panel-parsed">
+                <div class="panel-title">🔍 Parsed Structure</div>
+                <div id="parsedContent"></div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-back" onclick="backToSelection()">← Back to List</button>
+            <button class="btn btn-skip" onclick="skipRelease()">Skip</button>
+            <button class="btn btn-approve" onclick="approveRelease()">✓ Approve & Next</button>
+        </div>
+    </div>
+
+    <script>
+        const SPANBERGER_RELEASES = [
+            { id: 1, filename: 'spanberger_01_mass_firings.txt', title: '01 Mass Firings' },
+            { id: 2, filename: 'spanberger_02_jobs_economy.txt', title: '02 Jobs Economy' },
+            { id: 3, filename: 'spanberger_03_abortion_ad.txt', title: '03 Abortion Ad' },
+            { id: 4, filename: 'spanberger_04_shutdown_statement.txt', title: '04 Shutdown Statement' },
+            { id: 5, filename: 'spanberger_05_trump_norfolk_visit.txt', title: '05 Trump Norfolk Visit' },
+            { id: 6, filename: 'spanberger_06_one_month_election.txt', title: '06 One Month Election' },
+            { id: 7, filename: 'spanberger_07_msnbc_appearance.txt', title: '07 Msnbc Appearance' },
+            { id: 8, filename: 'spanberger_08_mass_firings_shutdown.txt', title: '08 Mass Firings Shutdown' },
+            { id: 9, filename: 'spanberger_09_jobs_data.txt', title: '09 Jobs Data' },
+            { id: 10, filename: 'spanberger_10_abortion_ad.txt', title: '10 Abortion Ad' },
+            { id: 11, filename: 'spanberger_11_fire_fighters_endorsement.txt', title: '11 Fire Fighters Endorsement' },
+            { id: 12, filename: 'spanberger_12_votevets_endorsement.txt', title: '12 Votevets Endorsement' },
+            { id: 13, filename: 'spanberger_13_trump_tax_ad.txt', title: '13 Trump Tax Ad' },
+            { id: 14, filename: 'spanberger_14_healthcare_costs.txt', title: '14 Healthcare Costs' }
+        ];
+
+        let approvals = JSON.parse(localStorage.getItem('prApprovals') || '{}');
+        let currentRelease = null;
+        let parsedData = null;
+
+        // Initialize selection screen
+        function initSelectionScreen() {
+            const grid = document.getElementById('releaseGrid');
+            grid.innerHTML = '';
+
+            SPANBERGER_RELEASES.forEach(release => {
+                const approved = approvals[release.id];
+                const card = document.createElement('div');
+                card.className = `release-card ${approved ? 'approved' : ''}`;
+                card.innerHTML = `
+                    <div class="release-title">${release.title}</div>
+                    <div class="release-status ${approved ? 'status-approved' : 'status-pending'}">
+                        ${approved ? 'Approved' : 'Pending'}
+                    </div>
+                `;
+                card.onclick = () => loadRelease(release);
+                grid.appendChild(card);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const approvedCount = Object.keys(approvals).length;
+            document.getElementById('progressStats').textContent = `${approvedCount} / 14 Approved`;
+        }
+
+        async function loadRelease(release) {
+            currentRelease = release;
+
+            // Show verifier screen
+            document.getElementById('selectionScreen').style.display = 'none';
+            document.getElementById('verifierScreen').style.display = 'block';
+
+            // Load original text
+            try {
+                const textResponse = await fetch(`/cpo/examples/${release.filename}`);
+                const text = await textResponse.text();
+                document.getElementById('originalText').textContent = text;
+
+                // Parse text
+                const parseResponse = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        verifiedData: {
+                            release_type: 'NEWS_RELEASE',
+                            subtypes: [],
+                            issues: [],
+                            reviewed_by: 'Batch Verifier'
+                        }
+                    })
+                });
+
+                const apiResponse = await parseResponse.json();
+                parsedData = apiResponse.parsed || apiResponse;
+                renderParsedContent();
+
+            } catch (error) {
+                document.getElementById('parsedContent').innerHTML = `
+                    <p style="color: #dc2626;">Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        function renderParsedContent() {
+            const content = parsedData.content_structure || parsedData;
+            const quotes = parsedData.quotes || [];
+            let html = '';
+
+            // Type badge
+            html += `<div class="type-badge">NEWS RELEASE</div>`;
+
+            // Headline
+            if (content.headline) {
+                const conf = getConfidenceLevel(content.headline_confidence || 0.9);
+                html += `
+                    <div class="section-label headline">Headline
+                        <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                    </div>
+                    <div class="parsed-headline" contenteditable="true">${escapeHtml(content.headline)}</div>
+                `;
+            }
+
+            // Dateline
+            if (content.dateline) {
+                html += `<div class="section-label dateline">Dateline</div>`;
+                if (typeof content.dateline === 'object') {
+                    const loc = content.dateline.location || '';
+                    const date = content.dateline.date || '';
+                    html += `<div class="parsed-dateline" contenteditable="true">${escapeHtml(loc ? `${loc} - ${date}` : date)}</div>`;
+                } else {
+                    html += `<div class="parsed-dateline" contenteditable="true">${escapeHtml(content.dateline)}</div>`;
+                }
+            }
+
+            // Lead
+            if (content.lead_paragraph) {
+                const conf = getConfidenceLevel(content.lead_confidence || 0.9);
+                html += `
+                    <div class="section-label lead">Lead Paragraph
+                        <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                    </div>
+                    <div class="parsed-lead" contenteditable="true">${escapeHtml(content.lead_paragraph)}</div>
+                `;
+            }
+
+            // Build content flow (body paragraphs and quotes interwoven)
+            const contentFlow = [];
+
+            if (content.body_paragraphs) {
+                content.body_paragraphs.forEach((para, idx) => {
+                    contentFlow.push({ type: 'body', index: idx + 2, text: para });
+                });
+            }
+
+            quotes.forEach((quote, idx) => {
+                contentFlow.push({ type: 'quote', index: idx + 1, data: quote });
+            });
+
+            // Render content flow
+            contentFlow.forEach(item => {
+                if (item.type === 'body') {
+                    html += `
+                        <div class="section-label body">Body Paragraph ${item.index}</div>
+                        <div class="parsed-body" contenteditable="true">${escapeHtml(item.text)}</div>
+                    `;
+                } else if (item.type === 'quote') {
+                    const conf = getConfidenceLevel(item.data.confidence || 0.8);
+                    const speaker = item.data.speaker_title
+                        ? `${item.data.speaker_name}, ${item.data.speaker_title}`
+                        : item.data.speaker_name || 'Unknown';
+
+                    html += `
+                        <div class="section-label quote">Quote ${item.index} - ${escapeHtml(item.data.speaker_name || 'Unknown')}
+                            <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                        </div>
+                        <div class="parsed-quote">
+                            <div class="quote-text" contenteditable="true">"${escapeHtml(item.data.quote_text)}"</div>
+                            <div class="quote-attribution" contenteditable="true">— ${escapeHtml(speaker)}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('parsedContent').innerHTML = html;
+        }
+
+        function getConfidenceLevel(confidence) {
+            const percent = Math.round(confidence * 100);
+            let level = 'low';
+            if (percent >= 80) level = 'high';
+            else if (percent >= 60) level = 'medium';
+            return { percent, level };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function backToSelection() {
+            document.getElementById('verifierScreen').style.display = 'none';
+            document.getElementById('selectionScreen').style.display = 'block';
+            currentRelease = null;
+            parsedData = null;
+        }
+
+        function skipRelease() {
+            const nextRelease = findNextUnapproved();
+            if (nextRelease) {
+                loadRelease(nextRelease);
+            } else {
+                backToSelection();
+            }
+        }
+
+        function approveRelease() {
+            if (!currentRelease) return;
+
+            approvals[currentRelease.id] = {
+                timestamp: new Date().toISOString(),
+                parsedData: parsedData
+            };
+
+            localStorage.setItem('prApprovals', JSON.stringify(approvals));
+            updateProgress();
+
+            const nextRelease = findNextUnapproved();
+            if (nextRelease) {
+                loadRelease(nextRelease);
+            } else {
+                alert('All releases approved! 🎉');
+                backToSelection();
+            }
+        }
+
+        function findNextUnapproved() {
+            const currentIndex = SPANBERGER_RELEASES.findIndex(r => r.id === currentRelease.id);
+            for (let i = currentIndex + 1; i < SPANBERGER_RELEASES.length; i++) {
+                if (!approvals[SPANBERGER_RELEASES[i].id]) {
+                    return SPANBERGER_RELEASES[i];
+                }
+            }
+            return null;
+        }
+
+        // Initialize on page load
+        initSelectionScreen();
+    </script>
+</body>
+</html>
