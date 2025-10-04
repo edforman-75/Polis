@@ -38,6 +38,10 @@ const factCheckingRoutes = require('./backend/routes/fact-checking');
 const toneSettingsRoutes = require('./backend/routes/tone-settings');
 const toneCheckRoutes = require('./backend/routes/tone-check');
 const toneReviewRoutes = require('./backend/routes/tone-review');
+const electionLawComplianceRoutes = require('./backend/routes/election-law-compliance');
+const grammarStyleRoutes = require('./backend/routes/grammar-style');
+const grammarLearningRoutes = require('./backend/routes/grammar-learning');
+const validationQueueRoutes = require('./backend/routes/validation-queue');
 
 // Import database
 const db = require('./backend/database/init');
@@ -153,6 +157,10 @@ app.use('/api/fact-checking', factCheckingRoutes);
 app.use('/api', toneSettingsRoutes);
 app.use('/api', toneCheckRoutes);
 app.use('/api', toneReviewRoutes);
+app.use('/api/election-law-compliance', electionLawComplianceRoutes);
+app.use('/api/grammar-style', grammarStyleRoutes);
+app.use('/api/grammar-learning', grammarLearningRoutes);
+app.use('/api/validation', validationQueueRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');

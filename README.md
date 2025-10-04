@@ -26,6 +26,10 @@ A comprehensive AI-powered campaign communications platform that transforms basi
 - **Human Review Queue**: Verify AI suggestions with structured approve/reject/modify workflow
 - **Opposition Research Integration**: Defensive messaging and vulnerability analysis
 - **Quality Control**: Automated brief scoring and improvement recommendations
+- **Grammar & AP Style Checking**: Context-aware grammar, AP Style, and capitalization validation
+- **Self-Learning System**: Captures user feedback to enhance rules and improve accuracy over time
+- **Election Law Compliance**: Automated checking for FEC and Virginia election law compliance
+- **Press Release Validation Queue**: Page-by-page review system with knowledge base enhancement
 
 ### 🎯 Professional Workflows
 - **Assignment Management**: Task routing with priority levels and deadline tracking
@@ -111,6 +115,39 @@ SESSION_SECRET=your_secure_session_secret
 ```
 
 ## 📖 Usage
+
+### Quality Control Systems
+
+#### 1. Grammar & AP Style Learning System
+```
+http://localhost:3001/grammar-style-checker.html
+http://localhost:3001/grammar-learning-dashboard.html
+```
+- Context-aware grammar and AP Style checking
+- Custom terminology dictionary (campaign-specific names, organizations)
+- Self-learning from user feedback
+- Pattern detection and rule enhancement
+- See [GRAMMAR_LEARNING_SYSTEM.md](GRAMMAR_LEARNING_SYSTEM.md) for details
+
+#### 2. Election Law Compliance Checker
+```
+http://localhost:3001/election-law-compliance-checker.html
+```
+- Federal (FEC) and Virginia state law knowledge bases
+- Automated compliance scanning
+- Risk assessment (CRITICAL, HIGH, MEDIUM, LOW, MINIMAL)
+- Dual-jurisdiction support
+
+#### 3. Press Release Validation Queue
+```
+http://localhost:3001/validation-review.html
+```
+- Page-by-page review workflow
+- Issue tracking with reviewer accountability (initials)
+- Knowledge base enhancement from comments
+- Accept/Reject/Modify/Add-to-KB actions per issue
+- Session statistics and progress tracking
+- See [VALIDATION_QUEUE_SYSTEM.md](VALIDATION_QUEUE_SYSTEM.md) for details
 
 ### Creating Professional Briefs
 

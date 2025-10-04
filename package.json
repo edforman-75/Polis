@@ -27,9 +27,12 @@
     "express-session": "^1.18.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "languagetool-api": "^1.1.2",
+    "node-fetch": "^2.7.0",
     "openai": "^5.22.1",
     "schema-dts": "^1.1.5",
     "sqlite3": "^5.1.7",
+    "write-good": "^1.0.8",
     "ws": "^8.18.3"
   }
 }

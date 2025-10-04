@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar & AP Style Checker - Campaign AI Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+
+        .panel h2 {
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            min-height: 300px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .score-number {
+            font-size: 4em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .score-A { color: #10b981; }
+        .score-B { color: #3b82f6; }
+        .score-C { color: #f59e0b; }
+        .score-D { color: #ef4444; }
+        .score-F { color: #dc2626; }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+
+        .category-scores {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .category-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #cbd5e0;
+        }
+
+        .category-card h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .category-card .score {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .issues-container {
+            margin-top: 20px;
+        }
+
+        .issue {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+
+        .issue.warning {
+            background: #fffbeb;
+            border-left-color: #fbbf24;
+        }
+
+        .issue.suggestion {
+            background: #eff6ff;
+            border-left-color: #60a5fa;
+        }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .issue-type {
+            font-weight: 600;
+            color: #1a202c;
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+
+        .issue-severity {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .severity-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .severity-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .severity-suggestion {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .issue-message {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .issue-context {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .issue-correction {
+            color: #059669;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .summary {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary h3 {
+            color: #065f46;
+            margin-bottom: 15px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #065f46;
+        }
+
+        .summary-label {
+            color: #047857;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ap-style-note {
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Grammar & AP Style Checker</h1>
+            <p class="subtitle">Professional grammar, AP Style, and campaign messaging review</p>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>Content to Check</h2>
+
+                <div class="ap-style-note">
+                    <strong>📰 AP Style Standard</strong><br>
+                    NO Oxford commas • Spell out 1-9, use figures for 10+ • Use "percent" not "%"
+                </div>
+
+                <div class="form-group">
+                    <label for="contentText">Enter or paste content</label>
+                    <textarea id="contentText" placeholder="Paste press release, statement, or other content here for grammar and style review..."></textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="checkGrammar" checked>
+                        <label for="checkGrammar">Grammar & Spelling</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="checkAPStyle" checked>
+                        <label for="checkAPStyle">AP Style</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="checkCampaignStyle" checked>
+                        <label for="checkCampaignStyle">Campaign Messaging</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="checkClarity" checked>
+                        <label for="checkClarity">Clarity & Readability</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="checkBtn">
+                    Check Content
+                </button>
+            </div>
+
+            <div class="panel">
+                <h2>Results</h2>
+                <div id="results">
+                    <p style="color: #718096; text-align: center; padding: 60px 20px;">
+                        Enter content and click "Check Content" to see results
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('checkBtn').addEventListener('click', async function() {
+            const text = document.getElementById('contentText').value.trim();
+
+            if (!text) {
+                alert('Please enter content to check');
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Analyzing content...</p></div>';
+
+            try {
+                const response = await fetch('/api/grammar-style/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        options: {
+                            checkGrammar: document.getElementById('checkGrammar').checked,
+                            checkAPStyle: document.getElementById('checkAPStyle').checked,
+                            checkCampaignStyle: document.getElementById('checkCampaignStyle').checked,
+                            checkClarity: document.getElementById('checkClarity').checked
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: #e53e3e; padding: 20px;">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Check Content';
+            }
+        });
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+
+            const gradeClass = result.summary.overallGrade.charAt(0);
+
+            let html = `
+                <div class="score-display">
+                    <div class="score-number score-${gradeClass}">${result.overallScore}</div>
+                    <span class="grade-badge score-${gradeClass}">${result.summary.overallGrade}</span>
+                </div>
+
+                <div class="summary">
+                    <h3>Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-number">${result.summary.totalIssues}</div>
+                            <div class="summary-label">Total Issues</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${result.summary.bySeverity.error}</div>
+                            <div class="summary-label">Errors</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-number">${result.summary.bySeverity.warning}</div>
+                            <div class="summary-label">Warnings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-scores">
+                    <div class="category-card">
+                        <h4>Grammar</h4>
+                        <div class="score">${result.categories.grammar.score}</div>
+                        <small>${result.categories.grammar.issues.length} issue(s)</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>AP Style</h4>
+                        <div class="score">${result.categories.apStyle.score}</div>
+                        <small>${result.categories.apStyle.issues.length} issue(s)</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Campaign Style</h4>
+                        <div class="score">${result.categories.campaignStyle.score}</div>
+                        <small>${result.categories.campaignStyle.issues.length} issue(s)</small>
+                    </div>
+                    <div class="category-card">
+                        <h4>Clarity</h4>
+                        <div class="score">${result.categories.clarity.score}</div>
+                        <small>${result.categories.clarity.issues.length} issue(s)</small>
+                    </div>
+                </div>
+            `;
+
+            if (result.issues.length > 0) {
+                html += '<div class="issues-container"><h3>Issues Found</h3>';
+
+                // Group by severity
+                const errors = result.issues.filter(i => i.severity === 'error');
+                const warnings = result.issues.filter(i => i.severity === 'warning');
+                const suggestions = result.issues.filter(i => i.severity === 'suggestion');
+
+                if (errors.length > 0) {
+                    html += `<h4 style="color: #991b1b; margin-top: 20px;">Errors (${errors.length})</h4>`;
+                    errors.forEach(issue => html += formatIssue(issue));
+                }
+
+                if (warnings.length > 0) {
+                    html += `<h4 style="color: #92400e; margin-top: 20px;">Warnings (${warnings.length})</h4>`;
+                    warnings.forEach(issue => html += formatIssue(issue));
+                }
+
+                if (suggestions.length > 0) {
+                    html += `<h4 style="color: #1e40af; margin-top: 20px;">Suggestions (${suggestions.length})</h4>`;
+                    suggestions.forEach(issue => html += formatIssue(issue));
+                }
+
+                html += '</div>';
+            } else {
+                html += `
+                    <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; text-align: center;">
+                        <h3 style="color: #065f46;">✓ Excellent!</h3>
+                        <p style="color: #047857;">No issues found. Content meets all standards.</p>
+                    </div>
+                `;
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        function formatIssue(issue) {
+            const severityClass = `severity-${issue.severity}`;
+            const issueClass = issue.severity;
+
+            return `
+                <div class="issue ${issueClass}">
+                    <div class="issue-header">
+                        <span class="issue-type">${issue.category} - ${issue.type.replace(/_/g, ' ')}</span>
+                        <span class="issue-severity ${severityClass}">${issue.severity}</span>
+                    </div>
+                    <div class="issue-message">${issue.message}</div>
+                    ${issue.context ? `
+                        <div class="issue-context">
+                            ${typeof issue.context === 'string' ? issue.context : issue.context.text}
+                        </div>
+                    ` : ''}
+                    ${issue.correction ? `
+                        <div class="issue-correction">✓ Suggestion: ${issue.correction}</div>
+                    ` : ''}
+                    ${issue.replacements && issue.replacements.length > 0 ? `
+                        <div class="issue-correction">✓ Suggestions: ${issue.replacements.join(', ')}</div>
+                    ` : ''}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

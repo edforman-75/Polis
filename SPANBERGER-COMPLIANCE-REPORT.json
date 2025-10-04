@@ -1,0 +1,772 @@
+[
+  {
+    "file": "spanberger_01_mass_firings.txt",
+    "title": "WHAT VIRGINIANS ARE SEEING: Spanberger Slams Trump Administration's Promised Mass Firings Amid Shutdown",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.319Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_02_jobs_economy.txt",
+    "title": "NEW DATA: U.S. Businesses Shed Jobs as Virginians Face Economic Uncertainty",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.320Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_03_abortion_ad.txt",
+    "title": "NEW TV AD: Winsome Earle-Sears Supports An Abortion Ban With No Exceptions For Rape Or Incest",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.320Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_04_shutdown_statement.txt",
+    "title": "Spanberger Statement on Government Shutdown, Trump Administration's Mass Firing Plans",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.320Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_05_trump_norfolk_visit.txt",
+    "title": "Spanberger Statement on Donald Trump's Visit to Norfolk While He Threatens DOGE 2.0",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.321Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_06_one_month_election.txt",
+    "title": "One Month Until Election Day, Spanberger Remains Focused on Lowering Costs, Putting Virginia First",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.321Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_07_msnbc_appearance.txt",
+    "title": "ICYMI: On MSNBC, Spanberger Calls Out Winsome Earle-Sears for Refusing to Stand Up to Trump's Mass Firings",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.321Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_08_mass_firings_shutdown.txt",
+    "title": "WHAT VIRGINIANS ARE SEEING: Spanberger Slams Trump Administration's Promised Mass Firings Amid Shutdown",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.321Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_09_jobs_data.txt",
+    "title": "NEW DATA: U.S. Businesses Shed Jobs as Virginians Face Economic Uncertainty",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.321Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_10_abortion_ad.txt",
+    "title": "NEW TV AD: Winsome Earle-Sears Supports An Abortion Ban With No Exceptions For Rape Or Incest",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.322Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_11_fire_fighters_endorsement.txt",
+    "title": "Virginia Professional Fire Fighters Endorse Abigail Spanberger for Governor of Virginia, Hails Her Track Record of Delivering for First Responders",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.322Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_12_votevets_endorsement.txt",
+    "title": "VoteVets PAC Endorses Spanberger for Governor of Virginia",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.322Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_13_trump_tax_ad.txt",
+    "title": "NEW TV AD: Winsome Earle-Sears Supports Trump Tax Law That Raises Costs for Virginians",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.322Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  },
+  {
+    "file": "spanberger_14_healthcare_costs.txt",
+    "title": "NEW: Spanberger Announces Priorities to Make Virginia More Affordable, Lower Virginians' Healthcare & Prescription Drug Costs",
+    "result": {
+      "overallRiskScore": 0,
+      "riskLevel": "MINIMAL",
+      "jurisdiction": "Virginia",
+      "violations": [],
+      "categoryResults": [
+        {
+          "category": "VIRGINIA_DISCLAIMERS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "CONTRIBUTION_SOLICITATION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "FRAUD_INDICATORS",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VIOLENCE_LANGUAGE",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        },
+        {
+          "category": "VOTER_SUPPRESSION",
+          "riskScore": 0,
+          "violations": [],
+          "compliant": true
+        }
+      ],
+      "checkedAt": "2025-10-04T18:53:42.322Z",
+      "version": "1.0.0-VA",
+      "metadata": {
+        "communicationType": "press_release",
+        "candidate": "Abigail Spanberger",
+        "office": "Governor",
+        "medium": "print",
+        "isFederalRace": false
+      },
+      "recommendedActions": [
+        "Continue routine monitoring",
+        "No immediate action needed"
+      ]
+    }
+  }
+]

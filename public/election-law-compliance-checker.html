@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Law Compliance Checker - Campaign AI Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #1a202c;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .jurisdiction-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .jurisdiction-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .jurisdiction-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .jurisdiction-btn:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .jurisdiction-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .jurisdiction-note {
+            margin-top: 15px;
+            padding: 12px;
+            background: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            border-radius: 4px;
+            color: #2c5282;
+            font-size: 0.9em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+
+        .panel h2 {
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .risk-CRITICAL {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+
+        .risk-HIGH {
+            background: #fbd38d;
+            color: #7c2d12;
+        }
+
+        .risk-MEDIUM {
+            background: #faf089;
+            color: #744210;
+        }
+
+        .risk-LOW {
+            background: #9ae6b4;
+            color: #22543d;
+        }
+
+        .risk-MINIMAL {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .score-CRITICAL { color: #e53e3e; }
+        .score-HIGH { color: #dd6b20; }
+        .score-MEDIUM { color: #d69e2e; }
+        .score-LOW { color: #38a169; }
+        .score-MINIMAL { color: #3182ce; }
+
+        .violation {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .violation h4 {
+            color: #742a2a;
+            margin-bottom: 10px;
+        }
+
+        .violation p {
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .violation .citation {
+            background: #fed7d7;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .violation .penalty {
+            color: #c53030;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .compliance-summary {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .compliance-summary h3 {
+            color: #22543d;
+            margin-bottom: 15px;
+        }
+
+        .actions-list {
+            background: #ebf8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .actions-list h4 {
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+
+        .actions-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .actions-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #2d3748;
+        }
+
+        .actions-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #3182ce;
+            font-weight: bold;
+        }
+
+        .test-cases {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .test-case-btn {
+            padding: 8px 16px;
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .test-case-btn:hover {
+            background: #bee3f8;
+            border-color: #4299e1;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .category-result {
+            background: #f7fafc;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #cbd5e0;
+        }
+
+        .category-result.has-violations {
+            background: #fff5f5;
+            border-left-color: #fc8181;
+        }
+
+        .category-result h5 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .metadata-display {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚖️ Election Law Compliance Checker</h1>
+            <p class="subtitle">Analyze campaign communications for federal and Virginia state election law compliance</p>
+        </div>
+
+        <div class="jurisdiction-selector">
+            <h3 style="margin-bottom: 15px;">Select Jurisdiction</h3>
+            <div class="jurisdiction-buttons">
+                <button class="jurisdiction-btn active" data-jurisdiction="federal">
+                    <strong>Federal (FEC)</strong><br>
+                    <small>U.S. House, Senate, President</small>
+                </button>
+                <button class="jurisdiction-btn" data-jurisdiction="virginia">
+                    <strong>Virginia State</strong><br>
+                    <small>Governor, Lt. Governor, House of Delegates</small>
+                </button>
+            </div>
+            <div class="jurisdiction-note" id="jurisdictionNote">
+                Federal election law (FEC) - Contribution limits apply ($3,300 per election)
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>Content to Check</h2>
+
+                <div class="test-cases" id="testCases">
+                    <!-- Test cases will be loaded here -->
+                </div>
+
+                <div class="form-group">
+                    <label for="contentText">Content</label>
+                    <textarea id="contentText" placeholder="Paste press release, social media post, ad copy, or other campaign communication here..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="communicationType">Communication Type</label>
+                        <select id="communicationType">
+                            <option value="press_release">Press Release</option>
+                            <option value="social_media">Social Media</option>
+                            <option value="ad">Advertisement</option>
+                            <option value="email">Email</option>
+                            <option value="fundraising_email">Fundraising Email</option>
+                            <option value="statement">Statement</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="medium">Medium</label>
+                        <select id="medium">
+                            <option value="print">Print</option>
+                            <option value="online">Online/Digital</option>
+                            <option value="television">Television</option>
+                            <option value="radio">Radio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="candidate">Candidate Name</label>
+                        <input type="text" id="candidate" placeholder="Abigail Spanberger">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="office">Office Sought</label>
+                        <input type="text" id="office" placeholder="Governor of Virginia">
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="isFederalRace">
+                    <label for="isFederalRace">This is a federal race (apply FEC coordination rules)</label>
+                </div>
+
+                <button class="btn btn-primary" id="checkBtn">
+                    Check Compliance
+                </button>
+            </div>
+
+            <div class="panel">
+                <h2>Compliance Results</h2>
+                <div id="results">
+                    <p style="color: #718096; text-align: center; padding: 60px 20px;">
+                        Enter content and click "Check Compliance" to see results
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentJurisdiction = 'federal';
+
+        // Jurisdiction selector
+        document.querySelectorAll('.jurisdiction-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.jurisdiction-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentJurisdiction = this.dataset.jurisdiction;
+
+                const note = document.getElementById('jurisdictionNote');
+                if (currentJurisdiction === 'federal') {
+                    note.innerHTML = 'Federal election law (FEC) - Contribution limits apply ($3,300 per election)';
+                } else {
+                    note.innerHTML = '<strong>Virginia State:</strong> NO contribution limits for state candidates. Contributions of $10,000+ trigger 72-hour reporting requirement.';
+                }
+
+                loadTestCases();
+            });
+        });
+
+        // Load test cases
+        async function loadTestCases() {
+            try {
+                const response = await fetch(`/api/election-law-compliance/test-cases?jurisdiction=${currentJurisdiction}`);
+                const testCases = await response.json();
+
+                const container = document.getElementById('testCases');
+                container.innerHTML = testCases.map(tc =>
+                    `<button class="test-case-btn" data-test-case='${JSON.stringify(tc)}'>${tc.name}</button>`
+                ).join('');
+
+                container.querySelectorAll('.test-case-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const testCase = JSON.parse(this.dataset.testCase);
+                        loadTestCase(testCase);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading test cases:', error);
+            }
+        }
+
+        function loadTestCase(testCase) {
+            document.getElementById('contentText').value = testCase.text;
+            document.getElementById('communicationType').value = testCase.metadata.communicationType;
+            document.getElementById('medium').value = testCase.metadata.medium;
+            document.getElementById('candidate').value = testCase.metadata.candidate;
+            document.getElementById('office').value = testCase.metadata.office;
+            document.getElementById('isFederalRace').checked = testCase.metadata.isFederalRace;
+        }
+
+        // Check compliance
+        document.getElementById('checkBtn').addEventListener('click', async function() {
+            const text = document.getElementById('contentText').value.trim();
+
+            if (!text) {
+                alert('Please enter content to check');
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Analyzing compliance...</p></div>';
+
+            try {
+                const response = await fetch('/api/election-law-compliance/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        jurisdiction: currentJurisdiction,
+                        communicationType: document.getElementById('communicationType').value,
+                        candidate: document.getElementById('candidate').value,
+                        office: document.getElementById('office').value,
+                        isFederalRace: document.getElementById('isFederalRace').checked,
+                        medium: document.getElementById('medium').value
+                    })
+                });
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div style="color: #e53e3e; padding: 20px;">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Check Compliance';
+            }
+        });
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+
+            let html = `
+                <div class="metadata-display">
+                    <strong>Jurisdiction:</strong> ${result.jurisdiction}<br>
+                    <strong>Checked:</strong> ${new Date(result.checkedAt).toLocaleString()}
+                </div>
+
+                <div class="score-display score-${result.riskLevel}">
+                    ${result.overallRiskScore}
+                </div>
+
+                <div style="text-align: center;">
+                    <span class="risk-badge risk-${result.riskLevel}">
+                        ${result.riskLevel} RISK
+                    </span>
+                </div>
+            `;
+
+            if (result.violations.length > 0) {
+                html += '<h3 style="color: #c53030; margin-top: 20px;">Violations Detected</h3>';
+
+                result.violations.forEach(violation => {
+                    html += `
+                        <div class="violation">
+                            <h4>${violation.category}: ${violation.type.replace(/_/g, ' ').toUpperCase()}</h4>
+                            <p><strong>Description:</strong> ${violation.description}</p>
+                            ${violation.regulatoryCitation ? `<div class="citation">${violation.regulatoryCitation}</div>` : ''}
+                            ${violation.penalty ? `<p class="penalty">Penalty: ${violation.penalty}</p>` : ''}
+                            ${violation.recommendedAction ? `<p><strong>Recommended Action:</strong> ${violation.recommendedAction}</p>` : ''}
+                            ${violation.context ? `<p><em>${violation.context}</em></p>` : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div class="compliance-summary">
+                        <h3>✓ No Violations Detected</h3>
+                        <p>This content appears to be compliant with ${result.jurisdiction} election law based on automated analysis.</p>
+                    </div>
+                `;
+            }
+
+            if (result.recommendedActions && result.recommendedActions.length > 0) {
+                html += `
+                    <div class="actions-list">
+                        <h4>Recommended Actions</h4>
+                        <ul>
+                            ${result.recommendedActions.map(action => `<li>${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Category results
+            if (result.categoryResults && result.categoryResults.length > 0) {
+                html += '<h3 style="margin-top: 30px; color: #2d3748;">Category Analysis</h3>';
+                result.categoryResults.forEach(cat => {
+                    html += `
+                        <div class="category-result ${cat.violations.length > 0 ? 'has-violations' : ''}">
+                            <h5>${cat.category}: ${cat.compliant ? '✓ Compliant' : `⚠ ${cat.violations.length} issue(s)`}</h5>
+                            ${cat.riskScore > 0 ? `<small>Risk Score: ${cat.riskScore}</small>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            html += `
+                <div style="margin-top: 30px; padding: 15px; background: #fffaf0; border-radius: 8px; font-size: 0.9em; color: #744210;">
+                    <strong>⚠️ Disclaimer:</strong> This is an automated compliance checker and does not constitute legal advice.
+                    Always consult qualified legal counsel licensed in the relevant jurisdiction for final compliance review.
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Load initial test cases
+        loadTestCases();
+    </script>
+</body>
+</html>
