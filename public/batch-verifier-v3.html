@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Press Release Batch Verifier v3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-stats {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* Selection Screen */
+        #selectionScreen {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .release-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .release-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .release-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .release-card.approved {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .release-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .release-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Verifier Screen */
+        #verifierScreen {
+            display: none;
+            height: calc(100vh - 70px);
+        }
+
+        .verifier-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            scroll-behavior: smooth;
+        }
+
+        .panel-original {
+            background: white;
+            border-right: 2px solid #e1e8ed;
+        }
+
+        .panel-parsed {
+            background: #f8fafc;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #667eea;
+            position: sticky;
+            top: 0;
+            background: inherit;
+            padding: 10px 0;
+            z-index: 10;
+        }
+
+        .original-text {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            cursor: pointer;
+            user-select: text;
+        }
+
+        .original-text:hover {
+            background: #e9ecef;
+        }
+
+        .highlight-text {
+            background: yellow;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .parsed-highlight {
+            background: #fff3cd !important;
+            border: 2px solid #ffc107 !important;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+            transition: all 0.3s;
+        }
+
+        /* Container Wrapper with Controls */
+        .container-wrapper {
+            position: relative;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .container-wrapper:hover {
+            transform: translateX(4px);
+        }
+
+        .container-wrapper:hover .container-controls {
+            opacity: 1;
+        }
+
+        .container-controls {
+            position: absolute;
+            right: -40px;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .control-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .control-btn.delete:hover {
+            background: #dc2626;
+        }
+
+        /* Parsed Content Styling */
+        .section-label {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-top: 20px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .section-label:hover {
+            opacity: 0.8;
+        }
+
+        .section-label.headline { background: #fef3c7; color: #92400e; }
+        .section-label.dateline { background: #dbeafe; color: #1e40af; }
+        .section-label.lead { background: #dcfce7; color: #166534; }
+        .section-label.body { background: #e5e7eb; color: #374151; }
+        .section-label.quote { background: #fce7f3; color: #9f1239; }
+        .section-label.contact { background: #fed7aa; color: #7c2d12; }
+
+        .confidence-indicator {
+            display: inline-block;
+            font-size: 10px;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .confidence-high { background: #d1fae5; color: #065f46; }
+        .confidence-medium { background: #fef3c7; color: #92400e; }
+        .confidence-low { background: #fee2e2; color: #991b1b; }
+
+        .type-badge {
+            background: #059669;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .parsed-headline {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            cursor: text;
+            min-height: 40px;
+        }
+
+        .parsed-headline:focus {
+            outline: 2px solid #667eea;
+        }
+
+        .parsed-dateline {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #555;
+            margin: 15px 0;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            min-height: 30px;
+        }
+
+        .parsed-lead {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .parsed-body {
+            font-size: 16px;
+            line-height: 1.8;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            min-height: 40px;
+        }
+
+        .parsed-quote {
+            margin: 20px 0;
+            padding: 25px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .quote-text {
+            font-size: 18px;
+            font-style: italic;
+            margin-bottom: 10px;
+            line-height: 1.6;
+            min-height: 30px;
+        }
+
+        .quote-attribution {
+            font-size: 13px;
+            color: #666;
+            font-style: normal;
+            min-height: 20px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        /* Add padding to parsed content to prevent overlap with fixed buttons */
+        .right-panel {
+            padding-bottom: 120px;
+        }
+
+        /* Extraneous container styling */
+        .container-wrapper.extraneous {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            position: relative;
+        }
+
+        .container-wrapper.extraneous::before {
+            content: "⚠️ EXTRANEOUS - Should not exist";
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: #fc8181;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+        }
+
+        .btn-skip {
+            background: #e1e8ed;
+            color: #333;
+        }
+
+        .btn-skip:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-approve:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        /* Correction Log Indicator */
+        .correction-indicator {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            display: none;
+            z-index: 100;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .correction-indicator:hover {
+            background: #f7fafc;
+        }
+
+        .correction-indicator.active {
+            display: block;
+        }
+
+        .corrections-panel {
+            position: fixed;
+            top: 120px;
+            right: 30px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            z-index: 99;
+            max-height: 400px;
+            width: 350px;
+            display: none;
+            flex-direction: column;
+        }
+
+        .corrections-panel.show {
+            display: flex;
+        }
+
+        .corrections-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 13px;
+            color: #2d3748;
+        }
+
+        .corrections-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .correction-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 11px;
+        }
+
+        .correction-item:last-child {
+            border-bottom: none;
+        }
+
+        .correction-time {
+            color: #94a3b8;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .correction-action {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .correction-details {
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .correction-details strong {
+            color: #1e293b;
+        }
+
+        /* Type Selector Menu */
+        .type-selector {
+            position: absolute;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .type-selector.active {
+            display: block;
+        }
+
+        .type-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 4px 0;
+        }
+
+        .type-option:hover {
+            background: #f3f4f6;
+        }
+
+        .type-option.headline { color: #92400e; }
+        .type-option.dateline { color: #1e40af; }
+        .type-option.lead { color: #166534; }
+        .type-option.body { color: #374151; }
+        .type-option.quote { color: #9f1239; }
+        .type-option.contact { color: #7c2d12; }
+
+        .speaker-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 4px 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .speaker-option:hover {
+            background: #f9fafb;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Batch Press Release Verifier v3</h1>
+        <div class="header-stats" id="progressStats">0 / 14 Approved</div>
+    </div>
+
+    <div class="correction-indicator" id="correctionIndicator" onclick="toggleCorrectionsPanel()">
+        ✏️ <span id="correctionCount">0</span> corrections logged
+    </div>
+
+    <!-- Corrections Panel -->
+    <div class="corrections-panel" id="correctionsPanel">
+        <div class="corrections-header">Recent Corrections</div>
+        <div class="corrections-list" id="correctionsList">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selectionScreen">
+        <h2 style="margin-bottom: 10px;">Select a Release to Verify</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">Click on any release to begin verification</p>
+
+        <div class="release-grid" id="releaseGrid"></div>
+    </div>
+
+    <!-- Verifier Screen -->
+    <div id="verifierScreen">
+        <div class="verifier-container">
+            <div class="panel panel-original" id="panelOriginal">
+                <div class="panel-title">📄 Original Text</div>
+                <pre class="original-text" id="originalText"></pre>
+            </div>
+
+            <div class="panel panel-parsed" id="panelParsed">
+                <div class="panel-title">🔍 Parsed Structure (Click labels to change type)</div>
+                <div id="parsedContent"></div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-back" onclick="backToSelection()">← Back to List</button>
+            <button class="btn btn-skip" onclick="skipRelease()">Skip</button>
+            <button class="btn btn-approve" onclick="approveRelease()">✓ Approve & Next</button>
+        </div>
+    </div>
+
+    <!-- Type Selector Menu (hidden, shown on label click) -->
+    <div class="type-selector" id="typeSelector">
+        <div class="type-option headline" onclick="changeContainerType('headline')">Headline</div>
+        <div class="type-option dateline" onclick="changeContainerType('dateline')">Dateline</div>
+        <div class="type-option lead" onclick="changeContainerType('lead')">Lead Paragraph</div>
+        <div class="type-option body" onclick="changeContainerType('body')">Body Paragraph</div>
+        <div class="type-option quote" onclick="changeContainerType('quote')">Quote</div>
+        <div class="type-option contact" onclick="changeContainerType('contact')">Contact Info</div>
+    </div>
+
+    <div class="type-selector" id="speakerSelector" style="max-height: 300px; overflow-y: auto;">
+        <!-- Populated dynamically -->
+    </div>
+
+    <!-- Speaker Selection Dialog -->
+    <div id="speakerDialog" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 20px 0; font-size: 20px; color: #2d3748;">Who said this quote?</h3>
+            <div id="speakerDialogList" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Populated dynamically -->
+            </div>
+            <button onclick="closeSpeakerDialog()" style="padding: 10px 20px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const SPANBERGER_RELEASES = [
+            { id: 1, filename: 'spanberger_01_mass_firings.txt', title: '01 Mass Firings' },
+            { id: 2, filename: 'spanberger_02_jobs_economy.txt', title: '02 Jobs Economy' },
+            { id: 3, filename: 'spanberger_03_abortion_ad.txt', title: '03 Abortion Ad' },
+            { id: 4, filename: 'spanberger_04_shutdown_statement.txt', title: '04 Shutdown Statement' },
+            { id: 5, filename: 'spanberger_05_trump_norfolk_visit.txt', title: '05 Trump Norfolk Visit' },
+            { id: 6, filename: 'spanberger_06_one_month_election.txt', title: '06 One Month Election' },
+            { id: 7, filename: 'spanberger_07_msnbc_appearance.txt', title: '07 Msnbc Appearance' },
+            { id: 8, filename: 'spanberger_08_mass_firings_shutdown.txt', title: '08 Mass Firings Shutdown' },
+            { id: 9, filename: 'spanberger_09_jobs_data.txt', title: '09 Jobs Data' },
+            { id: 10, filename: 'spanberger_10_abortion_ad.txt', title: '10 Abortion Ad' },
+            { id: 11, filename: 'spanberger_11_fire_fighters_endorsement.txt', title: '11 Fire Fighters Endorsement' },
+            { id: 12, filename: 'spanberger_12_votevets_endorsement.txt', title: '12 Votevets Endorsement' },
+            { id: 13, filename: 'spanberger_13_trump_tax_ad.txt', title: '13 Trump Tax Ad' },
+            { id: 14, filename: 'spanberger_14_healthcare_costs.txt', title: '14 Healthcare Costs' }
+        ];
+
+        let approvals = JSON.parse(localStorage.getItem('prApprovals') || '{}');
+        let corrections = JSON.parse(localStorage.getItem('prCorrections') || '[]');
+        let currentRelease = null;
+        let parsedData = null;
+        let syncScrolling = true;
+        let currentEditingContainer = null;
+
+        // Initialize selection screen
+        function initSelectionScreen() {
+            const grid = document.getElementById('releaseGrid');
+            grid.innerHTML = '';
+
+            SPANBERGER_RELEASES.forEach(release => {
+                const approved = approvals[release.id];
+                const card = document.createElement('div');
+                card.className = `release-card ${approved ? 'approved' : ''}`;
+                card.innerHTML = `
+                    <div class="release-title">${release.title}</div>
+                    <div class="release-status ${approved ? 'status-approved' : 'status-pending'}">
+                        ${approved ? 'Approved' : 'Pending'}
+                    </div>
+                `;
+                card.onclick = () => loadRelease(release);
+                grid.appendChild(card);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const approvedCount = Object.keys(approvals).length;
+            document.getElementById('progressStats').textContent = `${approvedCount} / 14 Approved`;
+        }
+
+        function updateCorrectionCount() {
+            const count = corrections.length;
+            document.getElementById('correctionCount').textContent = count;
+            if (count > 0) {
+                document.getElementById('correctionIndicator').classList.add('active');
+            }
+
+            // Update corrections list
+            updateCorrectionsList();
+        }
+
+        function toggleCorrectionsPanel() {
+            const panel = document.getElementById('correctionsPanel');
+            panel.classList.toggle('show');
+        }
+
+        function formatCorrectionDetails(correction) {
+            const time = new Date(correction.timestamp).toLocaleTimeString();
+
+            let detailsHtml = '';
+            let actionLabel = '';
+
+            // Handle old format from logEdit (has field, original, corrected)
+            if (correction.field && 'original' in correction && 'corrected' in correction) {
+                const fieldName = correction.field.replace(/_/g, ' ');
+                const original = correction.original || '(empty)';
+                const corrected = correction.corrected || '(empty)';
+
+                // Truncate long values
+                const maxLen = 40;
+                const origDisplay = original.length > maxLen ? original.substring(0, maxLen) + '...' : original;
+                const corrDisplay = corrected.length > maxLen ? corrected.substring(0, maxLen) + '...' : corrected;
+
+                actionLabel = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+
+                if (correction.field === 'quote_attribution') {
+                    detailsHtml = `<strong>Quote speaker:</strong> ${origDisplay} → ${corrDisplay}`;
+                } else {
+                    detailsHtml = `<strong>${fieldName}:</strong> "${origDisplay}" → "${corrDisplay}"`;
+                }
+            }
+            // Handle new format from logCorrection (has action, data)
+            else if (correction.action && correction.data) {
+                const action = correction.action;
+                const data = correction.data;
+
+                switch(action) {
+                    case 'edit_text':
+                        detailsHtml = `<strong>${data.field}:</strong> "${data.oldValue}" → "${data.newValue}"`;
+                        break;
+                    case 'change_container_type':
+                        detailsHtml = `<strong>Changed type:</strong> ${data.from} → ${data.to}`;
+                        if (data.speaker) {
+                            detailsHtml += `<br><strong>Speaker:</strong> ${data.speaker}`;
+                        }
+                        break;
+                    case 'change_speaker':
+                        detailsHtml = `<strong>Quote speaker:</strong> ${data.oldSpeaker} → ${data.newSpeaker}`;
+                        break;
+                    case 'add_container':
+                        detailsHtml = `<strong>Added:</strong> ${data.type}`;
+                        break;
+                    case 'delete_container':
+                        detailsHtml = `<strong>Deleted:</strong> ${data.type}`;
+                        break;
+                    default:
+                        detailsHtml = JSON.stringify(data).substring(0, 80);
+                }
+
+                actionLabel = action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+            else {
+                actionLabel = 'Unknown';
+                detailsHtml = JSON.stringify(correction).substring(0, 80);
+            }
+
+            return `
+                <div class="correction-item">
+                    <div class="correction-time">${time}</div>
+                    <div class="correction-action">${actionLabel}</div>
+                    <div class="correction-details">${detailsHtml}</div>
+                </div>
+            `;
+        }
+
+        function updateCorrectionsList() {
+            const list = document.getElementById('correctionsList');
+
+            if (corrections.length === 0) {
+                list.innerHTML = '<div class="correction-item" style="color: #94a3b8; text-align: center;">No corrections yet</div>';
+                return;
+            }
+
+            // Show most recent corrections first (last 10)
+            const recentCorrections = corrections.slice(-10).reverse();
+            list.innerHTML = recentCorrections.map(c => formatCorrectionDetails(c)).join('');
+        }
+
+        // Synchronized scrolling
+        function setupSyncScroll() {
+            const panelOriginal = document.getElementById('panelOriginal');
+            const panelParsed = document.getElementById('panelParsed');
+            let isScrolling = false;
+
+            panelOriginal.addEventListener('scroll', () => {
+                if (!syncScrolling || isScrolling) return;
+                isScrolling = true;
+                const scrollPercent = panelOriginal.scrollTop / (panelOriginal.scrollHeight - panelOriginal.clientHeight);
+                panelParsed.scrollTop = scrollPercent * (panelParsed.scrollHeight - panelParsed.clientHeight);
+                setTimeout(() => isScrolling = false, 50);
+            });
+
+            panelParsed.addEventListener('scroll', () => {
+                if (!syncScrolling || isScrolling) return;
+                isScrolling = true;
+                const scrollPercent = panelParsed.scrollTop / (panelParsed.scrollHeight - panelParsed.clientHeight);
+                panelOriginal.scrollTop = scrollPercent * (panelOriginal.scrollHeight - panelOriginal.clientHeight);
+                setTimeout(() => isScrolling = false, 50);
+            });
+        }
+
+        async function loadRelease(release) {
+            currentRelease = release;
+
+            // Show verifier screen
+            document.getElementById('selectionScreen').style.display = 'none';
+            document.getElementById('verifierScreen').style.display = 'block';
+
+            // Load original text
+            try {
+                const textResponse = await fetch(`/cpo/examples/${release.filename}`);
+                const text = await textResponse.text();
+                document.getElementById('originalText').textContent = text;
+
+                // Parse text
+                const parseResponse = await fetch('/api/press-release-parser/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        verifiedData: {
+                            release_type: 'NEWS_RELEASE',
+                            subtypes: [],
+                            issues: [],
+                            reviewed_by: 'Batch Verifier'
+                        }
+                    })
+                });
+
+                const apiResponse = await parseResponse.json();
+                parsedData = apiResponse.parsed || apiResponse;
+
+                // Strip dateline from lead paragraph if present
+                if (parsedData.content_structure && parsedData.content_structure.lead_paragraph && parsedData.content_structure.dateline) {
+                    let lead = parsedData.content_structure.lead_paragraph.trim();
+
+                    // Build dateline pattern to search for (case-insensitive)
+                    if (typeof parsedData.content_structure.dateline === 'object') {
+                        const loc = parsedData.content_structure.dateline.location || '';
+                        const date = parsedData.content_structure.dateline.date || '';
+
+                        // Try to match and remove various dateline formats from start of lead
+                        // Case-insensitive, handle different separators
+                        if (loc && date) {
+                            // Try: "LOCATION - DATE" or "Location, State — Date"
+                            const patterns = [
+                                new RegExp(`^${loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-–—]\\s*${date.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-–—]?\\s*`, 'i'),
+                                new RegExp(`^${loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-–—]\\s*`, 'i'),
+                            ];
+
+                            for (const pattern of patterns) {
+                                if (pattern.test(lead)) {
+                                    lead = lead.replace(pattern, '').trim();
+                                    break;
+                                }
+                            }
+                        } else if (date) {
+                            // Try: "DATE —"
+                            const datePattern = new RegExp(`^${date.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*[-–—]?\\s*`, 'i');
+                            if (datePattern.test(lead)) {
+                                lead = lead.replace(datePattern, '').trim();
+                            }
+                        }
+                    }
+
+                    parsedData.content_structure.lead_paragraph = lead;
+                }
+
+                renderParsedContent();
+                setupSyncScroll();
+                setupClickHandlers();
+
+            } catch (error) {
+                document.getElementById('parsedContent').innerHTML = `
+                    <p style="color: #dc2626;">Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        function renderParsedContent() {
+            const content = parsedData.content_structure || parsedData;
+            const quotes = parsedData.quotes || [];
+            let html = '';
+            let containerIndex = 0;
+
+            // Type badge
+            html += `<div class="type-badge">NEWS RELEASE</div>`;
+
+            // Headline
+            if (content.headline) {
+                const conf = getConfidenceLevel(content.headline_confidence || 0.9);
+                html += `
+                    <div class="container-wrapper" data-container-id="${containerIndex}" data-container-type="headline">
+                        <div class="section-label headline" onclick="showTypeSelector(event, ${containerIndex})">Headline
+                            <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                        </div>
+                        <div class="parsed-headline" contenteditable="true" data-original="${escapeHtml(content.headline)}" onblur="logEdit(this, 'headline')">${escapeHtml(content.headline)}</div>
+                        <div class="container-controls">
+                            <button class="control-btn" onclick="addContainerAbove(${containerIndex})" title="Add container above">↑</button>
+                            <button class="control-btn" onclick="toggleExtraneous(${containerIndex})" title="Mark as extraneous (should not exist)" style="background: #fc8181; color: white;">⚠️</button>
+                            <button class="control-btn delete" onclick="deleteContainer(${containerIndex})" title="Delete container">✕</button>
+                            <button class="control-btn" onclick="addContainerBelow(${containerIndex})" title="Add container below">↓</button>
+                        </div>
+                    </div>
+                `;
+                containerIndex++;
+            }
+
+            // Dateline
+            if (content.dateline) {
+                const datelineConf = getConfidenceLevel(content.dateline_confidence || parsedData.dateline_confidence || 0.85);
+                html += `<div class="container-wrapper" data-container-id="${containerIndex}" data-container-type="dateline">`;
+                html += `<div class="section-label dateline" onclick="showTypeSelector(event, ${containerIndex})">Dateline
+                    <span class="confidence-indicator confidence-${datelineConf.level}">${datelineConf.percent}%</span>
+                </div>`;
+
+                let datelineText = '';
+                if (typeof content.dateline === 'object') {
+                    // Prefer the full field if available
+                    if (content.dateline.full) {
+                        datelineText = content.dateline.full;
+                    } else {
+                        // Build from parts
+                        const loc = content.dateline.location || '';
+                        const date = content.dateline.date || '';
+                        datelineText = loc && date ? `${loc} - ${date}` : (loc || date);
+                    }
+                } else {
+                    datelineText = content.dateline;
+                }
+
+                html += `
+                    <div class="parsed-dateline" contenteditable="true" data-original="${escapeHtml(datelineText)}" onblur="logEdit(this, 'dateline')">${escapeHtml(datelineText)}</div>
+                    <div class="container-controls">
+                        <button class="control-btn" onclick="addContainerAbove(${containerIndex})" title="Add container above">↑</button>
+                        <button class="control-btn" onclick="toggleExtraneous(${containerIndex})" title="Mark as extraneous (should not exist)" style="background: #fc8181; color: white;">⚠️</button>
+                        <button class="control-btn delete" onclick="deleteContainer(${containerIndex})" title="Delete container">✕</button>
+                        <button class="control-btn" onclick="addContainerBelow(${containerIndex})" title="Add container below">↓</button>
+                    </div>
+                </div>`;
+                containerIndex++;
+            }
+
+            // Lead
+            if (content.lead_paragraph) {
+                const conf = getConfidenceLevel(content.lead_confidence || 0.9);
+                html += `
+                    <div class="container-wrapper" data-container-id="${containerIndex}" data-container-type="lead">
+                        <div class="section-label lead" onclick="showTypeSelector(event, ${containerIndex})">Lead Paragraph
+                            <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                        </div>
+                        <div class="parsed-lead" contenteditable="true" data-original="${escapeHtml(content.lead_paragraph)}" onblur="logEdit(this, 'lead')">${escapeHtml(content.lead_paragraph)}</div>
+                        <div class="container-controls">
+                            <button class="control-btn" onclick="addContainerAbove(${containerIndex})" title="Add container above">↑</button>
+                            <button class="control-btn" onclick="toggleExtraneous(${containerIndex})" title="Mark as extraneous (should not exist)" style="background: #fc8181; color: white;">⚠️</button>
+                            <button class="control-btn delete" onclick="deleteContainer(${containerIndex})" title="Delete container">✕</button>
+                            <button class="control-btn" onclick="addContainerBelow(${containerIndex})" title="Add container below">↓</button>
+                        </div>
+                    </div>
+                `;
+                containerIndex++;
+            }
+
+            // Build content flow (body paragraphs and quotes interwoven)
+            const contentFlow = [];
+
+            if (content.body_paragraphs) {
+                content.body_paragraphs.forEach((para, idx) => {
+                    contentFlow.push({ type: 'body', index: idx + 2, text: para });
+                });
+            }
+
+            quotes.forEach((quote, idx) => {
+                contentFlow.push({ type: 'quote', index: idx + 1, data: quote });
+            });
+
+            // Render content flow
+            contentFlow.forEach(item => {
+                if (item.type === 'body') {
+                    // Body paragraphs get a default confidence of 85%
+                    const bodyConf = getConfidenceLevel(0.85);
+                    html += `
+                        <div class="container-wrapper" data-container-id="${containerIndex}" data-container-type="body">
+                            <div class="section-label body" onclick="showTypeSelector(event, ${containerIndex})">Body Paragraph ${item.index}
+                                <span class="confidence-indicator confidence-${bodyConf.level}">${bodyConf.percent}%</span>
+                            </div>
+                            <div class="parsed-body" contenteditable="true" data-original="${escapeHtml(item.text)}" onblur="logEdit(this, 'body')">${formatBulletPoints(escapeHtml(item.text))}</div>
+                            <div class="container-controls">
+                                <button class="control-btn" onclick="addContainerAbove(${containerIndex})" title="Add container above">↑</button>
+                                <button class="control-btn" onclick="toggleExtraneous(${containerIndex})" title="Mark as extraneous (should not exist)" style="background: #fc8181; color: white;">⚠️</button>
+                                <button class="control-btn delete" onclick="deleteContainer(${containerIndex})" title="Delete container">✕</button>
+                                <button class="control-btn" onclick="addContainerBelow(${containerIndex})" title="Add container below">↓</button>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'quote') {
+                    const conf = getConfidenceLevel(item.data.confidence || 0.8);
+                    const speaker = item.data.speaker_title
+                        ? `${item.data.speaker_name}, ${item.data.speaker_title}`
+                        : item.data.speaker_name || 'Unknown';
+
+                    html += `
+                        <div class="container-wrapper" data-container-id="${containerIndex}" data-container-type="quote">
+                            <div class="section-label quote" onclick="showTypeSelector(event, ${containerIndex})">Quote ${item.index} - ${escapeHtml(item.data.speaker_name || 'Unknown')}
+                                <span class="confidence-indicator confidence-${conf.level}">${conf.percent}%</span>
+                            </div>
+                            <div class="parsed-quote">
+                                <div class="quote-text" contenteditable="true" data-original="${escapeHtml(item.data.quote_text)}" onblur="logEdit(this, 'quote_text')">"${escapeHtml(item.data.quote_text)}"</div>
+                                <div class="quote-attribution" style="position: relative;">
+                                    <span style="user-select: none; pointer-events: none;">— </span><span contenteditable="true" data-original="${escapeHtml(speaker)}" onblur="logEdit(this, 'quote_attribution')" data-speaker-field="true" style="display: inline; min-width: 100px;">${escapeHtml(speaker)}</span>
+                                    <button class="speaker-selector-btn" onclick="showSpeakerSelector(this, event)" title="Select speaker" style="margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">▼</button>
+                                </div>
+                            </div>
+                            <div class="container-controls">
+                                <button class="control-btn" onclick="addContainerAbove(${containerIndex})" title="Add container above">↑</button>
+                                <button class="control-btn" onclick="toggleExtraneous(${containerIndex})" title="Mark as extraneous (should not exist)" style="background: #fc8181; color: white;">⚠️</button>
+                                <button class="control-btn delete" onclick="deleteContainer(${containerIndex})" title="Delete container">✕</button>
+                                <button class="control-btn" onclick="addContainerBelow(${containerIndex})" title="Add container below">↓</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                containerIndex++;
+            });
+
+            document.getElementById('parsedContent').innerHTML = html;
+
+            // Set up click handlers for highlighting
+            setupClickHandlers();
+        }
+
+        function getConfidenceLevel(confidence) {
+            const percent = Math.round(confidence * 100);
+            let level = 'low';
+            if (percent >= 80) level = 'high';
+            else if (percent >= 60) level = 'medium';
+            return { percent, level };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Format bullet points - convert dashes to proper bullet display
+        function formatBulletPoints(text) {
+            // Replace "- Item" with line break and bullet, but handle first bullet after colon differently
+            // First, add line break after colons that are followed by bullets
+            text = text.replace(/:\s*-\s/g, ':<br>• ');
+            // Then replace remaining standalone bullets
+            text = text.replace(/([^:])(\s*-\s)/g, '$1<br>• ');
+            return text;
+        }
+
+        // Logging edits for parser improvement
+        function logEdit(element, fieldType) {
+            const original = element.getAttribute('data-original');
+            const edited = element.textContent.trim();
+
+            if (original !== edited) {
+                const correction = {
+                    timestamp: new Date().toISOString(),
+                    release: currentRelease.filename,
+                    field: fieldType,
+                    original: original,
+                    corrected: edited
+                };
+
+                corrections.push(correction);
+                localStorage.setItem('prCorrections', JSON.stringify(corrections));
+                updateCorrectionCount();
+
+                // Update data-original to prevent duplicate logging
+                element.setAttribute('data-original', edited);
+            }
+        }
+
+        // Container manipulation functions
+        function addContainerAbove(containerId) {
+            const wrapper = document.querySelector(`[data-container-id="${containerId}"]`);
+            const newContainer = document.createElement('div');
+            newContainer.className = 'container-wrapper';
+            newContainer.innerHTML = `
+                <div class="section-label body">New Paragraph</div>
+                <div class="parsed-body" contenteditable="true" data-original="">Click to edit...</div>
+            `;
+            wrapper.parentNode.insertBefore(newContainer, wrapper);
+
+            logCorrection('add_container_above', { afterContainer: containerId });
+        }
+
+        function addContainerBelow(containerId) {
+            const wrapper = document.querySelector(`[data-container-id="${containerId}"]`);
+            const newContainer = document.createElement('div');
+            newContainer.className = 'container-wrapper';
+            newContainer.innerHTML = `
+                <div class="section-label body">New Paragraph</div>
+                <div class="parsed-body" contenteditable="true" data-original="">Click to edit...</div>
+            `;
+            wrapper.parentNode.insertBefore(newContainer, wrapper.nextSibling);
+
+            logCorrection('add_container_below', { beforeContainer: containerId });
+        }
+
+        function deleteContainer(containerId) {
+            if (!confirm('Delete this container?')) return;
+
+            const wrapper = document.querySelector(`[data-container-id="${containerId}"]`);
+            const containerType = wrapper.getAttribute('data-container-type');
+
+            logCorrection('delete_container', {
+                containerId: containerId,
+                type: containerType,
+                content: wrapper.textContent.trim()
+            });
+
+            wrapper.remove();
+        }
+
+        function toggleExtraneous(containerId) {
+            const wrapper = document.querySelector(`[data-container-id="${containerId}"]`);
+            const isExtraneous = wrapper.classList.contains('extraneous');
+
+            if (isExtraneous) {
+                wrapper.classList.remove('extraneous');
+            } else {
+                wrapper.classList.add('extraneous');
+
+                // Log as correction
+                const containerType = wrapper.getAttribute('data-container-type');
+                const textElement = wrapper.querySelector('[contenteditable="true"]');
+                const text = textElement ? textElement.textContent.trim().substring(0, 50) : '';
+
+                corrections.push({
+                    file: currentFileName,
+                    type: 'extraneous',
+                    field: containerType,
+                    text: text,
+                    note: 'Marked as extraneous - should not exist'
+                });
+
+                updateCorrectionCount();
+            }
+        }
+
+        function showTypeSelector(event, containerId) {
+            event.stopPropagation();
+            currentEditingContainer = containerId;
+
+            const selector = document.getElementById('typeSelector');
+            selector.style.left = event.pageX + 'px';
+            selector.style.top = event.pageY + 'px';
+            selector.classList.add('active');
+
+            // Close on click outside
+            setTimeout(() => {
+                document.addEventListener('click', closeTypeSelector);
+            }, 100);
+        }
+
+        function closeTypeSelector() {
+            document.getElementById('typeSelector').classList.remove('active');
+            document.removeEventListener('click', closeTypeSelector);
+        }
+
+        function changeContainerType(newType) {
+            const wrapper = document.querySelector(`[data-container-id="${currentEditingContainer}"]`);
+            const oldType = wrapper.getAttribute('data-container-type');
+
+            if (oldType === newType) {
+                closeTypeSelector();
+                return;
+            }
+
+            closeTypeSelector();
+
+            // If converting to quote, ask for speaker
+            if (newType === 'quote' && oldType !== 'quote') {
+                showSpeakerDialogForConversion(wrapper, oldType, newType);
+                return;
+            }
+
+            // Update label
+            const label = wrapper.querySelector('.section-label');
+            label.className = `section-label ${newType}`;
+
+            const typeNames = {
+                headline: 'Headline',
+                dateline: 'Dateline',
+                lead: 'Lead Paragraph',
+                body: 'Body Paragraph',
+                quote: 'Quote',
+                contact: 'Contact Info'
+            };
+
+            label.textContent = typeNames[newType];
+            wrapper.setAttribute('data-container-type', newType);
+
+            logCorrection('change_container_type', {
+                containerId: currentEditingContainer,
+                from: oldType,
+                to: newType
+            });
+        }
+
+        let pendingQuoteConversion = null;
+
+        function showSpeakerDialogForConversion(wrapper, oldType, newType) {
+            pendingQuoteConversion = { wrapper, oldType, newType };
+
+            const dialog = document.getElementById('speakerDialog');
+            const speakerList = document.getElementById('speakerDialogList');
+
+            // Get all speakers
+            const speakers = getAllSpeakers();
+
+            // Build speaker options
+            let html = '';
+            speakers.forEach(speaker => {
+                html += `<div class="speaker-option" onclick="selectSpeakerForConversion('${escapeHtml(speaker)}')">${escapeHtml(speaker)}</div>`;
+            });
+            html += `<div class="speaker-option" onclick="addNewSpeakerForConversion()" style="border-top: 2px solid #ccc; font-weight: bold; background: #f0f0f0;">+ Add New Speaker...</div>`;
+
+            speakerList.innerHTML = html;
+            dialog.style.display = 'flex';
+        }
+
+        function closeSpeakerDialog() {
+            document.getElementById('speakerDialog').style.display = 'none';
+            pendingQuoteConversion = null;
+        }
+
+        function selectSpeakerForConversion(speaker) {
+            if (!pendingQuoteConversion) return;
+
+            const { wrapper, oldType, newType } = pendingQuoteConversion;
+
+            // Get the text content
+            const textElement = wrapper.querySelector('[contenteditable="true"]');
+            const quoteText = textElement ? textElement.textContent.trim() : '';
+
+            // Transform the container to quote structure
+            const label = wrapper.querySelector('.section-label');
+            label.className = 'section-label quote';
+            label.textContent = `Quote - ${speaker}`;
+            wrapper.setAttribute('data-container-type', 'quote');
+
+            // Replace content with quote structure
+            const contentDiv = wrapper.querySelector('[contenteditable="true"]').parentElement;
+            contentDiv.innerHTML = `
+                <div class="parsed-quote">
+                    <div class="quote-text" contenteditable="true" onblur="logEdit(this, 'quote_text')">"${escapeHtml(quoteText)}"</div>
+                    <div class="quote-attribution" style="position: relative;">
+                        <span style="user-select: none; pointer-events: none;">— </span><span contenteditable="true" onblur="logEdit(this, 'quote_attribution')" data-speaker-field="true" style="display: inline; min-width: 100px;">${escapeHtml(speaker)}</span>
+                        <button class="speaker-selector-btn" onclick="showSpeakerSelector(this, event)" title="Select speaker" style="margin-left: 8px; padding: 2px 8px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">▼</button>
+                    </div>
+                </div>
+            `;
+
+            logCorrection('change_container_type', {
+                containerId: wrapper.getAttribute('data-container-id'),
+                from: oldType,
+                to: newType,
+                speaker: speaker
+            });
+
+            closeSpeakerDialog();
+        }
+
+        function addNewSpeakerForConversion() {
+            const newSpeaker = prompt('Enter speaker name:');
+            if (newSpeaker && newSpeaker.trim()) {
+                selectSpeakerForConversion(newSpeaker.trim());
+            } else {
+                closeSpeakerDialog();
+            }
+        }
+
+        function logCorrection(action, data) {
+            const correction = {
+                timestamp: new Date().toISOString(),
+                release: currentRelease.filename,
+                action: action,
+                data: data
+            };
+
+            corrections.push(correction);
+            localStorage.setItem('prCorrections', JSON.stringify(corrections));
+            updateCorrectionCount();
+        }
+
+        let currentSpeakerField = null;
+
+        function getAllSpeakers() {
+            const speakers = new Set();
+            speakers.add('Abigail Spanberger');
+            speakers.add('Congresswoman Abigail Spanberger');
+            speakers.add('Abigail Spanberger, Democratic Nominee for Governor of Virginia');
+
+            // Extract speakers from current file's quotes
+            if (parsedData && parsedData.quotes) {
+                parsedData.quotes.forEach(quote => {
+                    if (quote.speaker_name && quote.speaker_name !== 'Unknown' && quote.speaker_name.trim().length > 0) {
+                        // Only add if it looks like a real name (not quote text)
+                        const name = quote.speaker_title
+                            ? `${quote.speaker_name}, ${quote.speaker_title}`
+                            : quote.speaker_name;
+
+                        // Filter out anything that looks like quote text or media titles
+                        const isValid = name.length < 80 &&
+                            !name.includes('"') &&
+                            !name.includes('the ') &&
+                            !name.match(/called out|called on|for refusing|vows to|must stop/i) && // Action phrases
+                            !name.match(/\bwith\b|\band\b.*\band\b/i) && // "with Lawrence" or "X and Y and Z"
+                            name.split(/\s+/).length <= 6; // Reasonable name length (max 6 words)
+
+                        if (isValid) {
+                            speakers.add(name);
+                        }
+                    }
+                });
+            }
+
+            return Array.from(speakers).sort();
+        }
+
+        function showSpeakerSelector(button, event) {
+            event.stopPropagation();
+
+            const speakerField = button.previousElementSibling.querySelector('[data-speaker-field]');
+            currentSpeakerField = speakerField;
+
+            const selector = document.getElementById('speakerSelector');
+            const speakers = getAllSpeakers();
+
+            // Build speaker list
+            let html = '';
+            speakers.forEach(speaker => {
+                html += `<div class="type-option" onclick="selectSpeaker('${escapeHtml(speaker)}')">${escapeHtml(speaker)}</div>`;
+            });
+            html += `<div class="type-option" onclick="addNewSpeaker()" style="border-top: 2px solid #ccc; font-weight: bold;">+ Add New Speaker...</div>`;
+
+            selector.innerHTML = html;
+            selector.style.left = button.getBoundingClientRect().left + 'px';
+            selector.style.top = (button.getBoundingClientRect().bottom + 5) + 'px';
+            selector.classList.add('active');
+
+            // Close on click outside
+            setTimeout(() => {
+                document.addEventListener('click', closeSpeakerSelector);
+            }, 100);
+        }
+
+        function closeSpeakerSelector() {
+            document.getElementById('speakerSelector').classList.remove('active');
+            document.removeEventListener('click', closeSpeakerSelector);
+            currentSpeakerField = null;
+        }
+
+        function selectSpeaker(speaker) {
+            if (currentSpeakerField) {
+                const oldValue = currentSpeakerField.textContent;
+                currentSpeakerField.textContent = speaker;
+
+                // Update the quote label to show the new speaker
+                const wrapper = currentSpeakerField.closest('.container-wrapper');
+                if (wrapper) {
+                    const label = wrapper.querySelector('.section-label');
+                    if (label) {
+                        // Extract the quote number from the current label
+                        const quoteNumMatch = label.textContent.match(/Quote (\d+)/);
+                        const quoteNum = quoteNumMatch ? quoteNumMatch[1] : '';
+
+                        // Update label with new speaker name
+                        label.textContent = `Quote ${quoteNum} - ${speaker}`;
+                    }
+                }
+
+                // Log the edit
+                logEdit(currentSpeakerField, 'quote_attribution');
+            }
+            closeSpeakerSelector();
+        }
+
+        function addNewSpeaker() {
+            const newSpeaker = prompt('Enter new speaker name:');
+            if (newSpeaker && newSpeaker.trim()) {
+                selectSpeaker(newSpeaker.trim());
+            } else {
+                closeSpeakerSelector();
+            }
+        }
+
+        function backToSelection() {
+            document.getElementById('verifierScreen').style.display = 'none';
+            document.getElementById('selectionScreen').style.display = 'block';
+            currentRelease = null;
+            parsedData = null;
+        }
+
+        function skipRelease() {
+            const nextRelease = findNextUnapproved();
+            if (nextRelease) {
+                loadRelease(nextRelease);
+            } else {
+                backToSelection();
+            }
+        }
+
+        function approveRelease() {
+            if (!currentRelease) return;
+
+            approvals[currentRelease.id] = {
+                timestamp: new Date().toISOString(),
+                parsedData: parsedData
+            };
+
+            localStorage.setItem('prApprovals', JSON.stringify(approvals));
+            updateProgress();
+
+            const nextRelease = findNextUnapproved();
+            if (nextRelease) {
+                loadRelease(nextRelease);
+            } else {
+                alert('All releases approved! 🎉');
+                backToSelection();
+            }
+        }
+
+        function findNextUnapproved() {
+            const currentIndex = SPANBERGER_RELEASES.findIndex(r => r.id === currentRelease.id);
+            for (let i = currentIndex + 1; i < SPANBERGER_RELEASES.length; i++) {
+                if (!approvals[SPANBERGER_RELEASES[i].id]) {
+                    return SPANBERGER_RELEASES[i];
+                }
+            }
+            return null;
+        }
+
+        // Click-to-highlight and scroll function
+        let originalTextContent = '';
+        let currentHighlight = null;
+
+        function highlightInOriginal(textToFind) {
+            // Remove previous highlight
+            const originalTextElement = document.getElementById('originalText');
+            originalTextElement.textContent = originalTextContent || originalTextElement.textContent;
+
+            if (!originalTextContent) {
+                originalTextContent = originalTextElement.textContent;
+            }
+
+            // Find and highlight the text
+            const text = originalTextElement.textContent;
+            const index = text.indexOf(textToFind);
+
+            if (index !== -1) {
+                // Split text and insert highlight
+                const before = text.substring(0, index);
+                const match = text.substring(index, index + textToFind.length);
+                const after = text.substring(index + textToFind.length);
+
+                originalTextElement.innerHTML = `${escapeHtmlForDisplay(before)}<span class="highlight-text">${escapeHtmlForDisplay(match)}</span>${escapeHtmlForDisplay(after)}`;
+
+                // Scroll to highlighted text
+                const highlight = originalTextElement.querySelector('.highlight-text');
+                if (highlight) {
+                    const panelOriginal = document.getElementById('panelOriginal');
+
+                    // Calculate scroll position to center the highlight
+                    const highlightTop = highlight.offsetTop;
+                    const panelHeight = panelOriginal.clientHeight;
+                    const scrollTo = highlightTop - (panelHeight / 3);
+
+                    panelOriginal.scrollTo({
+                        top: Math.max(0, scrollTo),
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+
+        function escapeHtmlForDisplay(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add click handlers to containers
+        function setupClickHandlers() {
+            // Add click handlers to contenteditable elements to highlight instead of edit
+            document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    let textToFind = element.textContent.trim();
+
+                    // Strip quotation marks for quote text to match original
+                    textToFind = textToFind.replace(/^[""]/, '').replace(/[""]$/, '');
+
+                    highlightInOriginal(textToFind);
+
+                    // Blur to prevent entering edit mode
+                    element.blur();
+                });
+
+                // Double-click to edit
+                element.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    // Let the element become editable on double-click
+                    element.focus();
+                });
+            });
+
+            // Add click handler to original text for reverse highlighting
+            const originalText = document.getElementById('originalText');
+            if (originalText) {
+                // Remove old listener if exists
+                if (originalText._clickHandler) {
+                    originalText.removeEventListener('click', originalText._clickHandler);
+                }
+
+                // Create new handler
+                const clickHandler = (e) => {
+                    const clickedText = window.getSelection().toString().trim();
+
+                    if (clickedText && clickedText.length > 3) {
+                        // User selected text, find it in parsed content
+                        highlightInParsed(clickedText);
+                    } else {
+                        // No selection, get a snippet around the click position
+                        const textNode = e.target;
+                        if (textNode.nodeType === Node.TEXT_NODE || textNode.tagName === 'PRE') {
+                            const fullText = originalText.textContent;
+                            const range = document.caretRangeFromPoint(e.clientX, e.clientY);
+
+                            if (range) {
+                                const offset = getTextOffset(originalText, range.startContainer, range.startOffset);
+
+                                // Extract a small snippet around the click (15 chars before and after)
+                                const snippetStart = Math.max(0, offset - 15);
+                                const snippetEnd = Math.min(fullText.length, offset + 15);
+                                let snippet = fullText.substring(snippetStart, snippetEnd).trim();
+
+                                // Extend to word boundaries
+                                snippet = expandToWordBoundaries(fullText, snippetStart, snippetEnd);
+
+                                // Limit snippet to reasonable size (max 100 chars)
+                                if (snippet.length > 100) {
+                                    snippet = snippet.substring(0, 100);
+                                    // Re-trim to last complete word
+                                    const lastSpace = snippet.lastIndexOf(' ');
+                                    if (lastSpace > 50) {
+                                        snippet = snippet.substring(0, lastSpace);
+                                    }
+                                }
+
+                                if (snippet && snippet.length > 10) {
+                                    highlightInParsed(snippet);
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // Store handler reference and add listener
+                originalText._clickHandler = clickHandler;
+                originalText.addEventListener('click', clickHandler);
+            }
+        }
+
+        function getTextOffset(root, node, offset) {
+            let totalOffset = 0;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+            while (walker.nextNode()) {
+                if (walker.currentNode === node) {
+                    return totalOffset + offset;
+                }
+                totalOffset += walker.currentNode.length;
+            }
+            return totalOffset;
+        }
+
+        function expandToWordBoundaries(text, start, end) {
+            // Expand start to beginning of word (but limit expansion to 20 chars)
+            const originalStart = start;
+            while (start > 0 && start > originalStart - 20 && /\w/.test(text[start - 1])) {
+                start--;
+            }
+
+            // Expand end to end of word (but limit expansion to 20 chars)
+            const originalEnd = end;
+            while (end < text.length && end < originalEnd + 20 && /\w/.test(text[end])) {
+                end++;
+            }
+
+            // Extract the snippet
+            let snippet = text.substring(start, end).trim();
+
+            return snippet;
+        }
+
+        function highlightInParsed(textToFind) {
+            // Remove any existing highlights
+            document.querySelectorAll('.parsed-highlight').forEach(el => {
+                el.classList.remove('parsed-highlight');
+            });
+
+            // Search through all parsed elements to find match
+            const allParsed = document.querySelectorAll('[contenteditable="true"]');
+            let bestMatch = null;
+            let bestMatchScore = 0;
+            let bestMatchType = '';
+
+            allParsed.forEach(element => {
+                let elementText = element.textContent.trim();
+
+                // Strip quotes for comparison
+                elementText = elementText.replace(/^[""]/, '').replace(/[""]$/, '');
+
+                // Check if this element contains the searched text
+                if (elementText.includes(textToFind)) {
+                    // Calculate match quality score
+                    // Prefer tighter matches (where textToFind is larger portion of element)
+                    const coverageScore = textToFind.length / elementText.length;
+
+                    // Get element type priority (prefer exact matches to headlines/quotes over body)
+                    const wrapper = element.closest('.container-wrapper');
+                    const type = wrapper ? wrapper.getAttribute('data-container-type') : 'unknown';
+                    let typePriority = 1;
+
+                    // Boost score for better match types
+                    if (elementText === textToFind) {
+                        typePriority = 10; // Exact match gets highest priority
+                    } else if (type === 'headline' || type === 'quote') {
+                        typePriority = 3; // Headlines and quotes are more specific
+                    } else if (type === 'lead' || type === 'dateline') {
+                        typePriority = 2; // Lead and dateline are medium priority
+                    }
+
+                    const score = coverageScore * typePriority;
+
+                    if (score > bestMatchScore) {
+                        bestMatchScore = score;
+                        bestMatch = element;
+                        bestMatchType = type;
+                    }
+                }
+            });
+
+            if (bestMatch) {
+                // Find the container wrapper
+                const wrapper = bestMatch.closest('.container-wrapper');
+                if (wrapper) {
+                    // Highlight the wrapper
+                    wrapper.classList.add('parsed-highlight');
+
+                    // Scroll to it
+                    const panelParsed = document.getElementById('panelParsed');
+                    const wrapperTop = wrapper.offsetTop;
+                    const panelHeight = panelParsed.clientHeight;
+                    const scrollTo = wrapperTop - (panelHeight / 3);
+
+                    panelParsed.scrollTo({
+                        top: Math.max(0, scrollTo),
+                        behavior: 'smooth'
+                    });
+
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        wrapper.classList.remove('parsed-highlight');
+                    }, 2000);
+                }
+            }
+        }
+
+        // Initialize on page load
+        initSelectionScreen();
+        updateCorrectionCount();
+    </script>
+</body>
+</html>

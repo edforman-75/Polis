@@ -111,27 +111,105 @@ class PressReleaseParser {
 
     /**
      * Parse a complete press release and extract all components
+     *
+     * @param {string} pressReleaseText - The press release text to parse
+     * @param {object} verifiedData - Optional verified categorization from QC dashboard
+     *                                 { release_type, subtypes, issues, reviewed_by }
+     * @returns {object} Parsed press release with structure and metadata
      */
-    parse(pressReleaseText) {
+    parse(pressReleaseText, verifiedData = null) {
         const text = pressReleaseText.trim();
 
-        // PHASE 1: Detect release type (non-breaking addition - just adds metadata)
-        const release_type = this.detectReleaseType(text);
+        let release_type, subtypes, issues, reviewed_by;
 
-        // PHASE 1b: Detect subtypes and issues (training-based detection)
-        const subtypes = this.detectSubtypes(text, release_type.type);
-        const issues = this.detectIssues(text);
+        // NEW: Accept verified data from QC dashboard
+        if (verifiedData && verifiedData.release_type) {
+            // Use human-verified categorization
+            release_type = {
+                type: verifiedData.release_type,
+                confidence: 'verified',
+                score: 100,
+                indicators: ['Human verified'],
+                all_scores: { [verifiedData.release_type]: 100 }
+            };
+            subtypes = verifiedData.subtypes || [];
+            issues = verifiedData.issues || [];
+            reviewed_by = verifiedData.reviewed_by;
+        } else {
+            // BACKWARD COMPATIBILITY: Auto-detect using TypeClassifier
+            const typeClassifier = require('./type-classifier');
+            const classification = typeClassifier.classify(text);
 
-        // Extract content structure first to get subhead
-        const content_structure = this.extractContentStructure(text);
+            release_type = {
+                type: classification.release_type,
+                confidence: classification.confidence,
+                score: classification.score,
+                indicators: classification.indicators,
+                all_scores: classification.all_scores
+            };
+            subtypes = classification.subtype_details;
+            issues = classification.issue_details;
+            reviewed_by = null;
+        }
+
+        // Store verified data for type-specific parsers
+        this.verified_type = release_type.type;
+        this.verified_subtypes = Array.isArray(subtypes) && subtypes.length > 0
+            ? (typeof subtypes[0] === 'string' ? subtypes : subtypes.map(s => s.subtype))
+            : [];
+        this.verified_issues = Array.isArray(issues) && issues.length > 0
+            ? (typeof issues[0] === 'string' ? issues : issues.map(i => i.issue))
+            : [];
+
+        // Route to type-specific parser based on verified type
+        let type_specific_data = {};
+        switch (release_type.type) {
+            case 'STATEMENT':
+                type_specific_data = this.parseStatement(text);
+                break;
+            case 'NEWS_RELEASE':
+                type_specific_data = this.parseNewsRelease(text);
+                break;
+            case 'FACT_SHEET':
+                type_specific_data = this.parseFactSheet(text);
+                break;
+            case 'MEDIA_ADVISORY':
+                type_specific_data = this.parseMediaAdvisory(text);
+                break;
+            case 'LETTER':
+                type_specific_data = this.parseLetter(text);
+                break;
+            case 'TRANSCRIPT':
+                type_specific_data = this.parseTranscript(text);
+                break;
+            default:
+                // Fall back to standard parsing for unknown types
+                const content_structure = this.extractContentStructure(text);
+                type_specific_data = {
+                    content_structure: content_structure,
+                    quotes: this.extractQuotes(text, content_structure.headline, content_structure.subhead)
+                };
+        }
 
         return {
+            // Verification metadata (always included)
+            verification_metadata: {
+                verified_type: release_type.type,
+                verified_subtypes: this.verified_subtypes,
+                verified_issues: this.verified_issues,
+                reviewed_by: reviewed_by,
+                confidence: release_type.confidence,
+                classification_source: verifiedData ? 'human_verified' : 'auto_detected'
+            },
             release_info: this.extractReleaseInfo(text),
-            release_type: release_type,  // NEW: Type detection metadata
-            subtypes: subtypes,  // NEW: Subtype detection
-            issues: issues,  // NEW: Issue detection
-            content_structure: content_structure,
-            quotes: this.extractQuotes(text, content_structure.headline, content_structure.subhead),
+            release_type: release_type,  // Type detection metadata
+            subtypes: subtypes,  // Subtype detection
+            issues: issues,  // Issue detection
+
+            // Type-specific parsed data
+            ...type_specific_data,
+
+            // Standard metadata (backward compatibility)
             contact_info: this.extractContactInfo(text),
             metadata: this.extractMetadata(text),
             fields_data: this.mapToFieldsData(text),
@@ -219,6 +297,45 @@ class PressReleaseParser {
     /**
      * Extract content structure (headline, dateline, paragraphs)
      */
+    /**
+     * Calculate confidence score for an extracted field
+     * @param {Object} criteria - Scoring criteria
+     * @returns {number} Confidence score 0-1
+     */
+    calculateFieldConfidence(criteria) {
+        let score = 0;
+        let maxScore = 0;
+
+        // Pattern match strength (0-40 points)
+        if (criteria.patternMatch !== undefined) {
+            maxScore += 40;
+            if (criteria.patternMatch === 'strong') score += 40;
+            else if (criteria.patternMatch === 'medium') score += 25;
+            else if (criteria.patternMatch === 'weak') score += 10;
+        }
+
+        // Expected position (0-20 points)
+        if (criteria.expectedPosition !== undefined) {
+            maxScore += 20;
+            if (criteria.expectedPosition) score += 20;
+            else score += 5;
+        }
+
+        // Completeness (0-20 points)
+        if (criteria.completeness !== undefined) {
+            maxScore += 20;
+            score += criteria.completeness * 20;
+        }
+
+        // Format validation (0-20 points)
+        if (criteria.formatValid !== undefined) {
+            maxScore += 20;
+            if (criteria.formatValid) score += 20;
+        }
+
+        return maxScore > 0 ? score / maxScore : 0.5;
+    }
+
     extractContentStructure(text) {
         const lines = text.split('\n').filter(line => line.trim());
 
@@ -235,6 +352,12 @@ class PressReleaseParser {
 
         // Enhanced headline detection - look for short, impactful opening
         const headline = this.findHeadlineEnhanced(text);
+        const headlineConfidence = this.calculateFieldConfidence({
+            patternMatch: headline && headline.length < 100 ? 'strong' : headline ? 'medium' : 'weak',
+            expectedPosition: contentStartIndex < 3,
+            completeness: headline ? 1.0 : 0,
+            formatValid: headline && headline.length > 0
+        });
 
         // Flexible dateline extraction with confidence scoring
         const dateline = this.extractDatelineFlexible(text);
@@ -242,11 +365,39 @@ class PressReleaseParser {
         // Enhanced paragraph extraction with better segmentation
         const paragraphs = this.extractParagraphsEnhanced(text);
 
+        // Strip dateline from lead paragraph if present
+        let leadParagraph = paragraphs[0] || '';
+        if (leadParagraph && dateline && (dateline.location || dateline.date)) {
+            // Build flexible pattern that handles:
+            // - "RICHMOND, VA" vs "RICHMOND, Va." (case + period)
+            // - Different dash types: - – —
+            // - Optional trailing dash
+
+            if (dateline.location && dateline.date) {
+                // Escape and make pattern flexible for state abbreviations with/without periods
+                // e.g., "VA" or "Va." both match
+                let loc = dateline.location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                // Add optional period for state abbreviations
+                loc = loc.replace(/([A-Z]{2})$/i, '$1\\.?');
+
+                const date = dateline.date.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pattern = new RegExp(`^${loc}\\s*[-–—]\\s*${date}\\s*[-–—]?\\s*`, 'i');
+                leadParagraph = leadParagraph.replace(pattern, '').trim();
+            } else if (dateline.date) {
+                // Only date, no location
+                const date = dateline.date.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pattern = new RegExp(`^${date}\\s*[-–—]?\\s*`, 'i');
+                leadParagraph = leadParagraph.replace(pattern, '').trim();
+            }
+        }
+
         return {
             headline: headline || '',
+            headline_confidence: headlineConfidence,
             subhead: this.findSubhead(contentLines, headline),
             dateline: dateline,
-            lead_paragraph: paragraphs[0] || '',
+            lead_paragraph: leadParagraph,
+            lead_confidence: leadParagraph ? 0.9 : 0.3,
             body_paragraphs: paragraphs.slice(1),
             total_paragraphs: paragraphs.length
         };
@@ -877,6 +1028,9 @@ class PressReleaseParser {
         // STEP 0: Detect statement format - if someone "released a statement", apply speaker to all quotes
         const statementFormat = this.detectStatementFormat(text);
 
+        // STEP 0.25: Extract ad transcript dialogue (Speaker: "Quote" format)
+        const adTranscriptQuotes = this.extractAdTranscriptDialogue(text);
+
         // STEP 0.5: Extract joint statements (unquoted statement text after "released the following statement:")
         const jointStatementQuotes = this.extractJointStatements(text);
 
@@ -884,24 +1038,49 @@ class PressReleaseParser {
         // Format: "Para 1...\n\n"Para 2...\n\n"Para 3..." said Speaker
         const multiParaQuotes = this.extractMultiParagraphQuotes(text);
 
-        // Track positions of multi-paragraph quotes to skip them in regular extraction
-        const multiParaPositions = multiParaQuotes.map(q => ({
-            start: q.position,
-            end: q.position + q.fullText.length
-        }));
+        // Track positions of quotes to skip them in regular extraction
+        const skipPositions = [];
+
+        // Add multi-paragraph quote positions
+        multiParaQuotes.forEach(q => {
+            skipPositions.push({
+                start: q.position,
+                end: q.position + q.fullText.length
+            });
+        });
+
+        // Add ad transcript quote positions
+        adTranscriptQuotes.forEach(q => {
+            skipPositions.push({
+                start: q.position,
+                end: q.position + q.quote_text.length + 20  // Add buffer for quote marks and speaker
+            });
+        });
 
         // STEP 2: Extract regular quotes (single paragraph or properly paired)
-        const regularQuotes = this.extractRegularQuotes(text, multiParaPositions);
+        const regularQuotes = this.extractRegularQuotes(text, skipPositions);
 
         // STEP 3: Combine and filter
-        const allQuotes = [...jointStatementQuotes, ...multiParaQuotes, ...regularQuotes];
+        const allQuotes = [...adTranscriptQuotes, ...jointStatementQuotes, ...multiParaQuotes, ...regularQuotes];
 
-        // Filter out quotes from headline/subhead
+        // Find Background section position (to exclude quotes from it)
+        const backgroundMatch = text.match(/^Background:/im);
+        const backgroundStart = backgroundMatch ? backgroundMatch.index : -1;
+
+        // Filter out quotes from headline/subhead and Background section
         const filteredQuotes = allQuotes.filter(quote => {
             const quoteText = quote.quote_text;
+
+            // Filter out headline/subhead quotes
             if ((headline && headline.includes(quoteText)) || (subhead && subhead.includes(quoteText))) {
                 return false;
             }
+
+            // Filter out quotes from Background section
+            if (backgroundStart >= 0 && quote.position >= backgroundStart) {
+                return false;
+            }
+
             return true;
         });
 
@@ -921,6 +1100,111 @@ class PressReleaseParser {
         filteredQuotes.sort((a, b) => a.position - b.position);
 
         return filteredQuotes;
+    }
+
+    /**
+     * Extract ad transcript dialogue
+     * Format: Speaker: "Quote"
+     * Handles TV/radio ad scripts with dialogue between speakers
+     * Example:
+     *   AD TRANSCRIPT:
+     *   V/O: "Opponent's name"
+     *   Opponent: "Quote from opponent"
+     */
+    extractAdTranscriptDialogue(text) {
+        const quotes = [];
+
+        // Look for "AD TRANSCRIPT:" or similar markers
+        const adMarkerPattern = /(?:AD|VIDEO|RADIO)\s+(?:TRANSCRIPT|SCRIPT):/i;
+        const adMarkerMatch = text.match(adMarkerPattern);
+
+        if (!adMarkerMatch) {
+            return quotes; // No ad transcript found
+        }
+
+        // Extract the text after the ad marker
+        const startPos = adMarkerMatch.index + adMarkerMatch[0].length;
+        const adSection = text.substring(startPos);
+
+        // Pattern: Speaker: "Quote" or Speaker: "Quote"
+        // Common speakers: V/O (voice-over), Sears, opponent names, etc.
+        const dialoguePattern = /^([A-Z][A-Za-z/]*(?:\s+[A-Z][A-Za-z]*)?)\s*:\s*[""](.+?)[""]$/gm;
+
+        let match;
+        let lineNum = 0;
+        const adLines = adSection.split('\n');
+
+        for (const line of adLines) {
+            // Stop if we hit another section marker
+            if (line.match(/^Background:/i) ||
+                line.match(/^###/) ||
+                line.match(/^Contact:/i) ||
+                line.match(/^The ad /i)) {
+                break;
+            }
+
+            const trimmed = line.trim();
+            const dialogueMatch = trimmed.match(/^([A-Z][A-Za-z/]*(?:\s+[A-Z][A-Za-z]*)?)\s*:\s*["""](.+?)["""]$/);
+
+            if (dialogueMatch) {
+                let speakerLabel = dialogueMatch[1].trim();
+                const quoteText = dialogueMatch[2].trim();
+
+                // Expand speaker labels using general rules
+                let speakerName = speakerLabel;
+                let speakerTitle = '';
+
+                if (speakerLabel === 'V/O' || speakerLabel === 'VO') {
+                    // General rule: V/O is voice-over narrator in any ad
+                    speakerName = 'Narrator';
+                    speakerTitle = 'Voice-over';
+                } else {
+                    // General rule: Search document for full name containing this label
+                    // Speaker label is likely a last name - search backward for full name
+                    const contextWindow = text.substring(0, text.indexOf(trimmed));
+
+                    // Look for pattern: "First Last" or "First Middle Last" or "First Hyphen-Last"
+                    // where Last (or Hyphen-Last) contains speakerLabel
+                    // Handle hyphenated names (e.g., Earle-Sears)
+                    const escapedLabel = speakerLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                    // Try different patterns:
+                    // 1. Full match with hyphens: "Winsome Earle-Sears"
+                    const hyphenatedPattern = new RegExp(`\\b([A-Z][a-z]+(?:\\s+[A-Z][-a-z]+)*\\s+[A-Z][-a-z]*${escapedLabel}[-a-z]*)\\b`, 'gi');
+                    let nameMatches = contextWindow.match(hyphenatedPattern);
+
+                    // 2. If not found, try without hyphen requirements: "Winsome Sears"
+                    if (!nameMatches || nameMatches.length === 0) {
+                        const simplePattern = new RegExp(`\\b([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\s+${escapedLabel})\\b`, 'gi');
+                        nameMatches = contextWindow.match(simplePattern);
+                    }
+
+                    if (nameMatches && nameMatches.length > 0) {
+                        // Use the last (most recent) occurrence
+                        const fullName = nameMatches[nameMatches.length - 1].trim();
+                        speakerName = fullName;
+
+                        // Try to extract title (Governor, Senator, etc.)
+                        speakerTitle = this.extractSpeakerTitle(fullName, text);
+                    }
+                    // If no full name found, keep the label as-is
+                }
+
+                quotes.push({
+                    quote_text: quoteText,
+                    speaker_name: speakerName,
+                    speaker_title: speakerTitle,
+                    full_attribution: speakerTitle ? `${speakerName} (${speakerTitle})` : speakerName,
+                    position: text.indexOf(trimmed),
+                    confidence: 0.9,
+                    type: 'ad-transcript'
+                });
+            }
+
+            lineNum++;
+        }
+
+        return quotes;
     }
 
     /**
@@ -1236,12 +1520,50 @@ class PressReleaseParser {
                 speaker_name = this.extractSpeakerName(attribution, text);
                 speaker_title = this.extractSpeakerTitle(attribution, text);
             } else if (reversedMatch) {
-                // Handle "Name verb" pattern (e.g., "Porter continued")
+                // Handle "Name verb" pattern (e.g., "Porter continued" or "Chen said")
                 const name = reversedMatch[1].trim();
                 const verb = reversedMatch[2].trim();
                 attribution = `${name} ${verb}`;
-                speaker_name = name;
-                speaker_title = this.extractSpeakerTitle(name, text);
+
+                // If name appears to be just a last name (single word), search backward for full name
+                const isSingleWord = !name.includes(' ');
+                if (isSingleWord) {
+                    // Search backward in the text for a full name containing this last name
+                    const contextWindow = text.substring(Math.max(0, quoteStartPos - 1000), quoteStartPos);
+
+                    // Look for "Title FirstName LastName" pattern
+                    const titlesPattern = this.titles.map(t => t.replace(/\./g, '\\.')).join('|');
+                    const fullNamePattern = new RegExp(`((?:${titlesPattern})\\s+[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\s+${name})\\b`, 'gi');
+                    const fullNameMatch = fullNamePattern.exec(contextWindow);
+
+                    if (fullNameMatch) {
+                        // Found full name with title - extract title and name separately
+                        const fullNameWithTitle = fullNameMatch[1].trim();
+                        speaker_title = this.extractSpeakerTitle(fullNameWithTitle, text);
+
+                        // Strip title from speaker_name to avoid duplication
+                        // e.g., "Governor John Chen" -> "John Chen"
+                        const titlePattern = new RegExp(`^(${titlesPattern})\\s+`, 'i');
+                        speaker_name = fullNameWithTitle.replace(titlePattern, '').trim();
+                    } else {
+                        // Look for "FirstName LastName" pattern (without title)
+                        const namePattern = new RegExp(`\\b([A-Z][a-z]+\\s+${name})\\b`, 'g');
+                        const nameMatch = namePattern.exec(contextWindow);
+
+                        if (nameMatch) {
+                            speaker_name = nameMatch[1].trim();
+                            speaker_title = this.extractSpeakerTitle(speaker_name, text);
+                        } else {
+                            // Fallback: use the last name only
+                            speaker_name = name;
+                            speaker_title = this.extractSpeakerTitle(name, text);
+                        }
+                    }
+                } else {
+                    // Name already includes first and last name
+                    speaker_name = name;
+                    speaker_title = this.extractSpeakerTitle(name, text);
+                }
             } else if (pronounMatch) {
                 // Handle pronoun attribution - try to find the actual speaker from context
                 const pronoun = pronounMatch[1];
@@ -1364,15 +1686,87 @@ class PressReleaseParser {
                 }
             }
 
-            rawQuotes.push({
-                quote_text: quoteText,
-                speaker_name: speaker_name,
-                speaker_title: speaker_title,
-                full_attribution: attribution || 'Unknown Speaker',
-                position: quoteStartPos,
-                isMultiPart: isMultiPartQuote,
-                isEnd: isEndOfQuote
+            // Calculate quote confidence
+            const quoteConfidence = this.calculateFieldConfidence({
+                patternMatch: speaker_name ? 'strong' : attribution ? 'medium' : 'weak',
+                completeness: quoteText && quoteText.length > 10 ? 1.0 : 0.5,
+                formatValid: quoteText && quoteText.length > 0
             });
+
+            // FILTER OUT: Quoted phrases in descriptive text without proper attribution
+            // Skip if:
+            // 1. Short quote (1-5 words) without attribution AND in descriptive context
+            // 2. Quote in bullet list without attribution
+            // 3. Quote in descriptive phrase (titled, calling, saying, etc.)
+
+            const wordCount = quoteText.split(/\s+/).length;
+            const hasAttribution = speaker_name || (attribution && attribution !== 'Unknown Speaker');
+
+            // Check for descriptive phrase patterns in context before quote
+            // Patterns like: "titled 'X'", "calling X 'Y'", "saying she is 'Y'", "note being 'Y'"
+            const descriptivePatterns = [
+                /titled\s+$/i,                    // titled "X"
+                /calling\s+\w+\s+$/i,             // calling abortion "wicked"
+                /saying\s+[\w\s]+\s+$/i,          // saying she is "morally opposed"
+                /note\s+being\s+$/i,              // note being "morally opposed"
+                /note\s+stating\s+[\w\s]+\s+$/i   // note stating she is "X"
+            ];
+
+            const isDescriptivePhrase = descriptivePatterns.some(pattern =>
+                contextBefore.match(pattern)
+            );
+
+            // Check if quote is in a bullet list (preceded by dash and newline)
+            // Fixed: contextBefore ends BEFORE the opening quote, so no quote mark at end
+            const bulletPattern = /\n\s*-\s+/;
+            const isInBulletList = contextBefore.match(bulletPattern);
+
+            // Check if quote appears after "including:" or "highlights:" (list introduction)
+            // Fixed: contextBefore ends BEFORE the opening quote
+            const listIntroPattern = /(?:including|highlights|statements|notes that [^:]+):\s*\n/i;
+            const isAfterListIntro = contextBefore.match(listIntroPattern);
+
+            // Check if quote is a media/show title reference (e.g., on MSNBC's "The Last Word")
+            const mediaTitlePattern = /(?:on|in|from)\s+(?:[A-Z][A-Za-z]*(?:'s)?(?:\s+[A-Z][A-Za-z]*)*'s)\s*$/i;
+            const isMediaTitle = contextBefore.match(mediaTitlePattern);
+
+            // Check if quote is immediately followed by "for" or "about" (indicating it's a title/reference, not a spoken quote)
+            // Example: on MSNBC's "The Last Word" for refusing...
+            const followedByDescriptive = /^\s*(?:for|about|regarding|concerning)\s+/i.test(contextAfter);
+
+            // Check if this is narrative text with embedded quoted phrases (not actual spoken quotes)
+            // Patterns: "announced her 'Plan' focused on", "lost its 'Ranking' as"
+            // Also: "criticized Trump's 'approach'", "noted that opponent has 'defended'"
+            const narrativeWithQuotesPattern = /(?:announced|launched|unveiled|released|introduced|titled|called|named|lost|gained|earned|received|known as|dubbed|criticized|noted that[^'"]+has|described|characterized)\s+(?:her|his|their|its|a|an|the|[A-Z][a-zA-Z-]+'s)\s+$/i;
+            const isNarrativeWithQuotes = contextBefore.match(narrativeWithQuotesPattern);
+
+            // Check if quote is immediately followed by text that indicates it's a proper name/title, not speech
+            // Patterns: "Plan" focused on, "Ranking" as, "Award" for
+            // Also: "approach" and noted, "defended" in response
+            const followedByNarrativePattern = /^\s*(?:focused on|as|for|to|that|which|and noted|and said|in response|and added)\s+/i;
+            const isFollowedByNarrative = contextAfter.match(followedByNarrativePattern);
+
+            // Skip this quote if it's a descriptive phrase or bullet list item without attribution
+            const shouldSkipQuote = !hasAttribution && (
+                (wordCount <= 5 && isDescriptivePhrase) ||
+                (isInBulletList) ||
+                (isAfterListIntro) ||
+                (isMediaTitle && followedByDescriptive) ||
+                (isNarrativeWithQuotes && isFollowedByNarrative)
+            );
+
+            if (!shouldSkipQuote) {
+                rawQuotes.push({
+                    quote_text: quoteText,
+                    speaker_name: speaker_name,
+                    speaker_title: speaker_title,
+                    full_attribution: attribution || 'Unknown Speaker',
+                    position: quoteStartPos,
+                    confidence: quoteConfidence,
+                    isMultiPart: isMultiPartQuote,
+                    isEnd: isEndOfQuote
+                });
+            }
 
             // Update previousSpeaker for next quote's continuation verb resolution
             if (speaker_name) {
@@ -1403,10 +1797,15 @@ class PressReleaseParser {
                     // Check if quotes are close together (within ~300 characters)
                     const distance = nextQuote.position - (currentQuote.position + 200);
 
-                    // Only combine if same speaker OR next quote has no attribution (true continuation)
-                    const sameSpeaker = nextQuote.speaker_name === currentQuote.speaker_name ||
-                                       nextQuote.speaker_name === '' ||
-                                       nextQuote.full_attribution === 'Unknown Speaker';
+                    // FIXED: Only combine if EXPLICITLY the same speaker
+                    // Don't combine if either quote has Unknown Speaker - those should stand alone
+                    const bothHaveSpeaker = currentQuote.speaker_name &&
+                                          currentQuote.full_attribution !== 'Unknown Speaker' &&
+                                          nextQuote.speaker_name &&
+                                          nextQuote.full_attribution !== 'Unknown Speaker';
+
+                    const sameSpeaker = bothHaveSpeaker &&
+                                       (nextQuote.speaker_name === currentQuote.speaker_name);
 
                     // Don't combine if next quote has its own separate attribution
                     // (e.g., "Porter continued", "she added" - these are separate quotes)
@@ -2036,6 +2435,661 @@ class PressReleaseParser {
             .trim();
     }
 
+    // ============================================================================
+    // TYPE-SPECIFIC PARSING METHODS
+    // ============================================================================
+
+    /**
+     * Parse STATEMENT type press releases
+     * Characteristics: Single speaker, quote-heavy, minimal structure
+     */
+    parseStatement(text) {
+        const content_structure = this.extractContentStructure(text);
+        const headline = content_structure.headline;
+
+        // Extract attribution line (e.g., "Senator X released the following statement:")
+        const attributionPattern = /(.+?(?:released|issued)\s+(?:the\s+)?(?:following\s+)?statement[s]?[:\s]+)/i;
+        const attributionMatch = text.match(attributionPattern);
+        let attribution = null;
+
+        if (attributionMatch) {
+            const attrText = attributionMatch[1].trim();
+            // Extract speaker name from attribution using title patterns
+            const speakerPattern = /(?:Senator|Representative|Governor|Mayor|Dr\.|Mr\.|Ms\.|Mrs\.)\s+([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)/i;
+            const speakerMatch = attrText.match(speakerPattern);
+
+            attribution = {
+                text: attrText,
+                speaker: speakerMatch ? speakerMatch[0].trim() : null
+            };
+        }
+
+        // Extract main statement (often a single large quote or unquoted text)
+        const quotes = this.extractQuotes(text, headline, content_structure.subhead);
+        const mainQuote = quotes.length > 0 ? quotes[0] : null;
+
+        // Extract context (what this is responding to)
+        const contextPatterns = [
+            /in response to\s+(.+?)(?:\.|,|\n)/i,
+            /following\s+(.+?)(?:\.|,|\n)/i,
+            /reacting to\s+(.+?)(?:\.|,|\n)/i
+        ];
+        let context = null;
+        for (const pattern of contextPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                context = { response_to: match[1].trim() };
+                break;
+            }
+        }
+
+        // Extract subtype-specific metadata
+        const subtype_metadata = this.extractStatementSubtypeMetadata(text);
+
+        return {
+            content_structure: content_structure,
+            headline: headline,
+            attribution: attribution,
+            statement: mainQuote && mainQuote.text ? {
+                text: mainQuote.text,
+                is_quoted: true,
+                word_count: mainQuote.text.split(/\s+/).length
+            } : null,
+            context: context,
+            quotes: quotes,
+            type_specific_metadata: subtype_metadata
+        };
+    }
+
+    /**
+     * Parse NEWS_RELEASE type press releases
+     * Characteristics: Full traditional structure with dateline, multiple speakers
+     */
+    parseNewsRelease(text) {
+        const content_structure = this.extractContentStructure(text);
+        const quotes = this.extractQuotes(text, content_structure.headline, content_structure.subhead);
+
+        // Extract subtype-specific metadata based on verified subtypes
+        const subtype_metadata = this.extractNewsReleaseSubtypeMetadata(text, quotes);
+
+        // Build unified content flow preserving original document order
+        // Lead paragraph is displayed separately, so only include body paragraphs in content flow
+        const contentFlow = this.buildContentFlow(text, content_structure.body_paragraphs, quotes);
+
+        return {
+            content_structure: content_structure,
+            quotes: quotes,
+            content_flow: contentFlow,
+            type_specific_metadata: subtype_metadata
+        };
+    }
+
+    /**
+     * Parse FACT_SHEET type press releases
+     * Characteristics: Bullets, sections, data-heavy
+     */
+    parseFactSheet(text) {
+        const content_structure = this.extractContentStructure(text);
+
+        // Extract sections with headers
+        const sections = this.extractFactSheetSections(text);
+
+        // Extract all statistics
+        const statistics = this.extractStatistics(text);
+
+        return {
+            content_structure: content_structure,
+            sections: sections,
+            key_figures: statistics,
+            type_specific_metadata: {
+                section_count: sections.length,
+                statistic_count: statistics.length
+            }
+        };
+    }
+
+    /**
+     * Parse MEDIA_ADVISORY type press releases
+     * Characteristics: WHO/WHAT/WHEN/WHERE event structure
+     */
+    parseMediaAdvisory(text) {
+        const content_structure = this.extractContentStructure(text);
+
+        // Extract event details
+        const eventDetails = this.extractEventDetails(text);
+
+        return {
+            content_structure: content_structure,
+            event_details: eventDetails,
+            type_specific_metadata: {
+                event_type: eventDetails.what ? 'specified' : 'unspecified',
+                has_location: !!eventDetails.where,
+                has_datetime: !!eventDetails.when
+            }
+        };
+    }
+
+    /**
+     * Parse LETTER type press releases
+     * Characteristics: Formal letter format with Dear X, closing, signature
+     */
+    parseLetter(text) {
+        const content_structure = this.extractContentStructure(text);
+
+        // Extract letter components
+        const recipient = this.extractLetterRecipient(text);
+        const body = this.extractLetterBody(text);
+        const closing = this.extractLetterClosing(text);
+        const subject = this.extractLetterSubject(text);
+
+        return {
+            content_structure: content_structure,
+            recipient: recipient,
+            subject: subject,
+            body: body,
+            closing: closing,
+            type_specific_metadata: {
+                has_recipient: !!recipient,
+                has_subject: !!subject,
+                paragraph_count: body ? body.length : 0
+            }
+        };
+    }
+
+    /**
+     * Parse TRANSCRIPT type press releases
+     * Characteristics: Dialogue format with speaker labels
+     */
+    parseTranscript(text) {
+        const content_structure = this.extractContentStructure(text);
+
+        // Extract dialogue
+        const dialogue = this.extractTranscriptDialogue(text);
+
+        // Identify speakers
+        const speakers = this.identifyTranscriptSpeakers(dialogue);
+
+        return {
+            content_structure: content_structure,
+            dialogue: dialogue,
+            speakers: speakers,
+            type_specific_metadata: {
+                speaker_count: speakers.length,
+                exchange_count: dialogue.length
+            }
+        };
+    }
+
+    // ============================================================================
+    // SUBTYPE-SPECIFIC METADATA EXTRACTION
+    // ============================================================================
+
+    /**
+     * Extract metadata specific to STATEMENT subtypes
+     */
+    extractStatementSubtypeMetadata(text) {
+        const metadata = {};
+
+        // Check for response_statement indicators
+        if (this.verified_subtypes.includes('response_statement')) {
+            const responsePatterns = [/in response to/i, /following/i, /reacting to/i];
+            for (const pattern of responsePatterns) {
+                if (pattern.test(text)) {
+                    metadata.response_indicators = metadata.response_indicators || [];
+                    metadata.response_indicators.push(pattern.source.replace(/\\/g, '').replace(/i/g, ''));
+                }
+            }
+        }
+
+        // Check for condemnation language
+        if (this.verified_subtypes.includes('condemnation')) {
+            const condemnPatterns = [/condemn/i, /denounce/i, /oppose/i, /reject/i];
+            for (const pattern of condemnPatterns) {
+                if (pattern.test(text)) {
+                    metadata.tone = 'critical';
+                    metadata.condemnation_language = metadata.condemnation_language || [];
+                    metadata.condemnation_language.push(pattern.source.replace(/\\/g, '').replace(/i/g, ''));
+                }
+            }
+        }
+
+        // Check for support language
+        if (this.verified_subtypes.includes('support_statement')) {
+            const supportPatterns = [/support/i, /commend/i, /applaud/i, /endorse/i];
+            for (const pattern of supportPatterns) {
+                if (pattern.test(text)) {
+                    metadata.tone = 'supportive';
+                    metadata.support_language = metadata.support_language || [];
+                    metadata.support_language.push(pattern.source.replace(/\\/g, '').replace(/i/g, ''));
+                }
+            }
+        }
+
+        return metadata;
+    }
+
+    /**
+     * Extract metadata specific to NEWS_RELEASE subtypes
+     */
+    extractNewsReleaseSubtypeMetadata(text, quotes) {
+        const metadata = {};
+
+        // Endorsement metadata
+        if (this.verified_subtypes.includes('endorsement')) {
+            metadata.endorsement = this.extractEndorsementMetadata(text, quotes);
+        }
+
+        // Attack metadata
+        if (this.verified_subtypes.some(st => st.startsWith('attack_'))) {
+            metadata.attack = this.extractAttackMetadata(text);
+        }
+
+        // Poll results metadata
+        if (this.verified_subtypes.includes('poll_results')) {
+            metadata.poll = this.extractPollMetadata(text);
+        }
+
+        // Funding announcement metadata
+        if (this.verified_subtypes.includes('funding_announcement')) {
+            metadata.funding = this.extractFundingMetadata(text);
+        }
+
+        return metadata;
+    }
+
+    /**
+     * Extract endorsement-specific metadata
+     */
+    extractEndorsementMetadata(text, quotes) {
+        const metadata = {
+            endorser: null,
+            endorsee: null,
+            reasoning: []
+        };
+
+        // Find endorser (usually in headline or first quote)
+        const endorserPattern = /(.+?)\s+endorse[sd]?\s+(.+?)(?:\.|for|,)/i;
+        const match = text.match(endorserPattern);
+        if (match) {
+            metadata.endorser = { name: match[1].trim() };
+            metadata.endorsee = { name: match[2].trim() };
+        }
+
+        // Extract reasoning from quotes
+        if (quotes.length > 0) {
+            metadata.reasoning = quotes.slice(0, 2).map(q => q.text);
+        }
+
+        return metadata;
+    }
+
+    /**
+     * Extract attack-specific metadata
+     */
+    extractAttackMetadata(text) {
+        const metadata = {
+            target: null,
+            claims: [],
+            tone: 'critical'
+        };
+
+        // Find attack target
+        const targetPatterns = [
+            /attacks?\s+(.+?)(?:'s|for)/i,
+            /criticizes?\s+(.+?)(?:'s|for)/i,
+            /slams?\s+(.+?)(?:'s|for)/i
+        ];
+
+        for (const pattern of targetPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                metadata.target = match[1].trim();
+                break;
+            }
+        }
+
+        return metadata;
+    }
+
+    /**
+     * Extract poll-specific metadata
+     */
+    extractPollMetadata(text) {
+        const metadata = {
+            numbers: [],
+            methodology: null
+        };
+
+        // Extract percentages
+        const percentPattern = /(\d+(?:\.\d+)?)\s*%/g;
+        let match;
+        while ((match = percentPattern.exec(text)) !== null) {
+            metadata.numbers.push(parseFloat(match[1]));
+        }
+
+        // Extract methodology
+        const methodPattern = /poll(?:ed)?\s+(.+?(?:voters|respondents|people))/i;
+        const methodMatch = text.match(methodPattern);
+        if (methodMatch) {
+            metadata.methodology = methodMatch[1].trim();
+        }
+
+        return metadata;
+    }
+
+    /**
+     * Extract funding-specific metadata
+     */
+    extractFundingMetadata(text) {
+        const metadata = {
+            amounts: [],
+            recipients: []
+        };
+
+        // Extract dollar amounts
+        const dollarPattern = /\$\s*(\d+(?:,\d+)*(?:\.\d+)?)\s*(million|billion|thousand)?/gi;
+        let match;
+        while ((match = dollarPattern.exec(text)) !== null) {
+            const amount = match[1].replace(/,/g, '');
+            const unit = match[2] || '';
+            metadata.amounts.push({ value: parseFloat(amount), unit: unit });
+        }
+
+        return metadata;
+    }
+
+    // ============================================================================
+    // HELPER METHODS FOR TYPE-SPECIFIC PARSING
+    // ============================================================================
+
+    /**
+     * Extract sections from fact sheet
+     */
+    extractFactSheetSections(text) {
+        const sections = [];
+        const lines = text.split('\n');
+        let currentSection = null;
+
+        for (const line of lines) {
+            // Section header indicators
+            if (this.isFactSheetSectionHeader(line)) {
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    header: line.trim(),
+                    content: [],
+                    bullets: []
+                };
+            } else if (currentSection && line.trim()) {
+                currentSection.content.push(line.trim());
+
+                // Check if it's a bullet point
+                if (/^[-•●○*]\s+/.test(line.trim()) || /^\d+\.\s+/.test(line.trim())) {
+                    const bulletText = line.trim().replace(/^[-•●○*]\s+/, '').replace(/^\d+\.\s+/, '');
+                    currentSection.bullets.push(bulletText);
+                }
+            }
+        }
+
+        if (currentSection) {
+            sections.push(currentSection);
+        }
+
+        return sections;
+    }
+
+    /**
+     * Check if line is a fact sheet section header
+     */
+    isFactSheetSectionHeader(line) {
+        const trimmed = line.trim();
+
+        // All caps line (but not too long)
+        if (trimmed === trimmed.toUpperCase() && trimmed.length > 0 && trimmed.length <= 80) {
+            return true;
+        }
+
+        // Line ending with colon
+        if (trimmed.endsWith(':') && trimmed.length <= 80) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract statistics from text
+     */
+    extractStatistics(text) {
+        const statistics = [];
+
+        // Dollar amounts
+        const dollarPattern = /\$\s*(\d+(?:,\d+)*(?:\.\d+)?)\s*(million|billion|thousand)?/gi;
+        let match;
+        while ((match = dollarPattern.exec(text)) !== null) {
+            statistics.push({
+                type: 'currency',
+                value: parseFloat(match[1].replace(/,/g, '')),
+                unit: match[2] || '',
+                raw_text: match[0]
+            });
+        }
+
+        // Percentages
+        const percentPattern = /(\d+(?:\.\d+)?)\s*%/g;
+        while ((match = percentPattern.exec(text)) !== null) {
+            statistics.push({
+                type: 'percentage',
+                value: parseFloat(match[1]),
+                raw_text: match[0]
+            });
+        }
+
+        return statistics;
+    }
+
+    /**
+     * Extract WHO/WHAT/WHEN/WHERE event details
+     */
+    extractEventDetails(text) {
+        const details = {
+            who: null,
+            what: null,
+            when: null,
+            where: null,
+            why: null
+        };
+
+        // Look for labeled sections
+        const patterns = {
+            who: /WHO:\s*(.+?)(?=\n\n|\nWHAT:|\nWHEN:|\nWHERE:|\nWHY:|$)/is,
+            what: /WHAT:\s*(.+?)(?=\n\n|\nWHO:|\nWHEN:|\nWHERE:|\nWHY:|$)/is,
+            when: /WHEN:\s*(.+?)(?=\n\n|\nWHO:|\nWHAT:|\nWHERE:|\nWHY:|$)/is,
+            where: /WHERE:\s*(.+?)(?=\n\n|\nWHO:|\nWHAT:|\nWHEN:|\nWHY:|$)/is,
+            why: /WHY:\s*(.+?)(?=\n\n|\nWHO:|\nWHAT:|\nWHEN:|\nWHERE:|$)/is
+        };
+
+        for (const [key, pattern] of Object.entries(patterns)) {
+            const match = text.match(pattern);
+            if (match) {
+                details[key] = match[1].trim();
+            }
+        }
+
+        return details;
+    }
+
+    /**
+     * Extract letter recipient (Dear X)
+     */
+    extractLetterRecipient(text) {
+        const pattern = /Dear\s+(.+?)[:,]/i;
+        const match = text.match(pattern);
+
+        if (match) {
+            return {
+                salutation: match[0].trim(),
+                name: match[1].trim()
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract letter body paragraphs
+     */
+    extractLetterBody(text) {
+        const lines = text.split('\n');
+        const bodyLines = [];
+        let inBody = false;
+
+        for (const line of lines) {
+            // Start collecting after "Dear X:"
+            if (/Dear\s+.+?[:,]/i.test(line)) {
+                inBody = true;
+                continue;
+            }
+
+            // Stop at closing
+            if (/^\s*(Sincerely|Best regards|Respectfully|Cordially),?\s*$/i.test(line)) {
+                break;
+            }
+
+            if (inBody && line.trim()) {
+                bodyLines.push(line.trim());
+            }
+        }
+
+        // Group into paragraphs
+        const paragraphs = [];
+        let currentPara = [];
+
+        for (const line of bodyLines) {
+            if (line.trim()) {
+                currentPara.push(line);
+            } else if (currentPara.length > 0) {
+                paragraphs.push(currentPara.join(' '));
+                currentPara = [];
+            }
+        }
+
+        if (currentPara.length > 0) {
+            paragraphs.push(currentPara.join(' '));
+        }
+
+        return paragraphs;
+    }
+
+    /**
+     * Extract letter closing and signature
+     */
+    extractLetterClosing(text) {
+        const closingPattern = /(Sincerely|Best regards|Respectfully|Cordially),?\s*\n\s*(.+?)(?:\n|$)/i;
+        const match = text.match(closingPattern);
+
+        if (match) {
+            return {
+                closing: match[1].trim(),
+                signature: match[2].trim()
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract letter subject line
+     */
+    extractLetterSubject(text) {
+        const patterns = [
+            /(?:RE|Subject):\s*(.+?)(?:\n|$)/i,
+            /(?:Regarding|In re):\s*(.+?)(?:\n|$)/i
+        ];
+
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) {
+                return match[1].trim();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract transcript dialogue with speaker labels
+     */
+    extractTranscriptDialogue(text) {
+        const dialogue = [];
+        const lines = text.split('\n');
+
+        const speakerPatterns = [
+            /^([A-Z\s.]+):\s*(.+)$/,           // SPEAKER: text
+            /^\[([A-Z\s.]+)\]:?\s*(.+)$/,      // [SPEAKER] text
+            /^([A-Z\s.]+)\s*[-–—]\s*(.+)$/     // SPEAKER - text
+        ];
+
+        let currentSpeaker = null;
+        let currentText = [];
+
+        for (const line of lines) {
+            let matched = false;
+
+            // Check for speaker label
+            for (const pattern of speakerPatterns) {
+                const match = line.trim().match(pattern);
+                if (match) {
+                    // Save previous speaker's text
+                    if (currentSpeaker && currentText.length > 0) {
+                        dialogue.push({
+                            speaker: currentSpeaker,
+                            text: currentText.join(' ').trim()
+                        });
+                    }
+
+                    // Start new speaker
+                    currentSpeaker = match[1].trim();
+                    currentText = [match[2].trim()];
+                    matched = true;
+                    break;
+                }
+            }
+
+            // If no speaker label, add to current speaker's text
+            if (!matched && currentSpeaker && line.trim()) {
+                currentText.push(line.trim());
+            }
+        }
+
+        // Save last speaker
+        if (currentSpeaker && currentText.length > 0) {
+            dialogue.push({
+                speaker: currentSpeaker,
+                text: currentText.join(' ').trim()
+            });
+        }
+
+        return dialogue;
+    }
+
+    /**
+     * Identify unique speakers in transcript
+     */
+    identifyTranscriptSpeakers(dialogue) {
+        const speakerSet = new Set();
+
+        for (const exchange of dialogue) {
+            speakerSet.add(exchange.speaker);
+        }
+
+        return Array.from(speakerSet).map(name => ({
+            name: name,
+            exchange_count: dialogue.filter(d => d.speaker === name).length
+        }));
+    }
+
     /**
      * Safe pattern removal that handles special characters like $ correctly
      * Generic solution for any text content with special regex characters
@@ -2237,19 +3291,24 @@ class PressReleaseParser {
 
         // Generic dateline patterns that work for ANY city/state combination
         // Handles both UPPERCASE (DETROIT, MI) and Mixed Case (Detroit, MI)
+        // IMPORTANT: Use [ ] (space only) not \s (which includes newlines) to prevent matching across lines
         const datelinePatterns = [
             // Standard dash patterns with various separators (—, –, -)
             // All caps: CITY, ST - Date
-            /([A-Z][A-Z\s,]+)\s*[–—-]\s*([A-Z][a-z]+\s+\d+,?\s+\d{4})/,
-            /([A-Z][A-Z\s,]+)\s*[–—-]\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})/,
-            /([A-Z][A-Z\s,]+)\s*[–—-]\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
+            /([A-Z][A-Z ,]+)[ ]*[–—-][ ]*([A-Z][a-z]+ +\d+,? +\d{4})/,
+            /([A-Z][A-Z ,]+)[ ]*[–—-][ ]*((?:January|February|March|April|May|June|July|August|September|October|November|December) +\d+,? +\d{4})/,
+            /([A-Z][A-Z ,]+)[ ]*[–—-][ ]*(\d{1,2}\/\d{1,2}\/\d{4})/,
             // Mixed case: City, ST - Date
-            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*([A-Z][a-z]+\s+\d+,?\s+\d{4})/,
-            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})/,
-            /([A-Z][a-zA-Z\s,\.]+)\s*[–—-]\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
+            /([A-Z][a-zA-Z ,\.]+)[ ]*[–—-][ ]*([A-Z][a-z]+ +\d+,? +\d{4})/,
+            /([A-Z][a-zA-Z ,\.]+)[ ]*[–—-][ ]*((?:January|February|March|April|May|June|July|August|September|October|November|December) +\d+,? +\d{4})/,
+            /([A-Z][a-zA-Z ,\.]+)[ ]*[–—-][ ]*(\d{1,2}\/\d{1,2}\/\d{4})/,
             // Parenthesis patterns like "City, ST (Date)"
             /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})\s*\)/,
-            /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*\)/
+            /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*\)/,
+            // Date-only patterns (no city) - for simpler press releases
+            // "Oct 01, 2025" or "October 1, 2025" on its own line
+            /^((?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+\d+,?\s+\d{4})$/m,
+            /^(\d{1,2}\/\d{1,2}\/\d{4})$/m
         ];
 
         // Look for dateline anywhere in text
@@ -2305,6 +3364,7 @@ class PressReleaseParser {
         }
 
         // Fallback: look for generic dateline pattern with simple string operations
+        // Must have space before dash to avoid matching hyphens in names (e.g., "Earle-Sears")
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if ((line.includes(' — ') || line.includes(' – ') || line.includes(' - ')) && line.match(/[A-Z]{2,}/)) {
@@ -2373,11 +3433,15 @@ class PressReleaseParser {
      */
     extractDatelineEnhanced(text) {
         // Look for dateline patterns anywhere in the text
+        // IMPORTANT: Use [ ] (space only) not \s (which includes newlines) to prevent matching across lines
         const patterns = [
-            // Patterns with dashes
-            /([A-Z][A-Z\s,]+)(?:\s*[–—-]\s*)([A-Z][a-z]+\s+\d+,?\s+\d{4})/g,
-            /([A-Z][A-Z\s,]+)(?:\s*[–—-]\s*)((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})/g,
-            /([A-Z][A-Z\s,]+)(?:\s*[–—-]\s*)(\d{1,2}\/\d{1,2}\/\d{4})/g,
+            // Patterns with dashes - UPDATED to handle mixed case (RICHMOND, Va.)
+            // Also handle dates with or without day number (Sep 2025 or Sep 02, 2025)
+            /([A-Z][A-Z ,]+(?:[ ]+[A-Z][a-z]*\.?)?)(?:[ ]*[–—-][ ]*)((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?[ ]+\d{4})/g,
+            /([A-Z][A-Z ,]+(?:[ ]+[A-Z][a-z]*\.?)?)(?:[ ]*[–—-][ ]*)((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\.?[ ]+\d+,?[ ]+\d{4})/g,
+            /([A-Z][A-Z ,]+(?:[ ]+[A-Z][a-z]*\.?)?)(?:[ ]*[–—-][ ]*)((?:January|February|March|April|May|June|July|August|September|October|November|December)[ ]+\d{4})/g,
+            /([A-Z][A-Z ,]+(?:[ ]+[A-Z][a-z]*\.?)?)(?:[ ]*[–—-][ ]*)((?:January|February|March|April|May|June|July|August|September|October|November|December)[ ]+\d+,?[ ]+\d{4})/g,
+            /([A-Z][A-Z ,]+(?:[ ]+[A-Z][a-z]*\.?)?)(?:[ ]*[–—-][ ]*)(\d{1,2}\/\d{1,2}\/\d{4})/g,
             // Patterns with parentheses - like "Independence, Ky. (June 26, 2025)"
             /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4})\s*\)/g,
             /([A-Z][a-zA-Z\s,\.]+)\s*\(\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*\)/g
@@ -2408,13 +3472,23 @@ class PressReleaseParser {
 
         // Fallback: look for standalone location and date
         const locationMatch = text.match(/\b([A-Z][A-Z\s,]{8,25})\s*[–—-]/);
-        const dateMatch = text.match(/\b((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{4})/);
+        const dateMatch = text.match(/\b((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{4}|\d{1,2}\/\d{1,2}\/\d{4})/);
 
         if (locationMatch && dateMatch) {
             return {
                 location: locationMatch[1].trim(),
                 date: dateMatch[1].trim(),
                 full: `${locationMatch[1].trim()} — ${dateMatch[1].trim()}`
+            };
+        }
+
+        // NEW: Handle standalone date (no location) - for press releases with just a date
+        // Match patterns like "Oct 02, 2025" or "October 2, 2025" on their own line
+        if (dateMatch) {
+            return {
+                location: '',
+                date: dateMatch[1].trim(),
+                full: dateMatch[1].trim()
             };
         }
 
@@ -2705,17 +3779,30 @@ class PressReleaseParser {
             this.releasePatterns.iso_date
         ]);
 
-        // Remove only the headline from content, keep dateline as part of lead paragraph
+        // Remove ad transcript sections to prevent duplication (they're handled by extractAdTranscriptDialogue)
+        // Match from "AD TRANSCRIPT:" until we hit a section marker (Background:, Contact:, ###) or end of text
+        const adMarkerPattern = /(?:AD|VIDEO|RADIO)\s+(?:TRANSCRIPT|SCRIPT):[\s\S]*?(?=(?:\n\n)?(?:Background:|Contact:|###|$))/gi;
+        content = content.replace(adMarkerPattern, '').trim();
+
+        // Remove headline and dateline from content before extracting paragraphs
         const headline = this.findHeadlineEnhanced(content);
         const dateline = this.extractDatelineEnhanced(content);
 
-        // Remove headline but keep everything after it (including dateline)
-        // However, for short releases where headline IS the entire content, preserve it (Improvement #004)
+        // Remove headline first
+        // For short releases where headline IS the entire content, preserve it (Improvement #004)
         const originalContent = content;
         if (headline) {
             const headlineIndex = content.indexOf(headline);
             if (headlineIndex >= 0) {
                 content = content.substring(headlineIndex + headline.length).trim();
+            }
+        }
+
+        // Now remove dateline if found
+        if (dateline && dateline.full) {
+            const datelineIndex = content.indexOf(dateline.full);
+            if (datelineIndex >= 0) {
+                content = content.substring(datelineIndex + dateline.full.length).trim();
             }
         }
 
@@ -2788,6 +3875,96 @@ class PressReleaseParser {
         }
 
         return paragraphs;
+    }
+
+    /**
+     * Build a unified content flow that preserves the original document order
+     * Combines paragraphs and quotes based on their positions in the text
+     * Returns: Array of content blocks in document order
+     */
+    buildContentFlow(text, paragraphs, quotes) {
+        const contentBlocks = [];
+
+        // Create a set of quote texts for quick lookup
+        const quoteTexts = new Set(quotes.map(q => q.quote_text));
+
+        // Add paragraphs with position tracking
+        // Handle embedded quotes: keep paragraph intact if quote is embedded with context
+        // Only filter out standalone quote attribution paragraphs (like "Quote," Speaker said.)
+        paragraphs.forEach((para, index) => {
+            let isStandaloneQuote = false;
+
+            // Check if this paragraph ends with a quote attribution pattern
+            // Pattern: ends with ", Speaker said." or '," said Speaker.' or ', Speaker said.'
+            // Examples:
+            //   - "Quote text," Speaker said. <- Standalone (filter out)
+            //   - "Quote text," said Speaker. <- Standalone (filter out)
+            //   - "Context. Quote text," Speaker said. <- Standalone (filter out)
+            //   - "Context. Org called it 'quote.'" <- Embedded (keep - ends with quote, not attribution)
+            const attributionPattern = /["'""][,.]?\s+(?:(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+)?(?:said|stated|continued|added|noted|explained|remarked|commented|declared|announced|told|responded|replied)|(?:said|stated|continued|added|noted|explained|remarked|commented|declared|announced|told|responded|replied)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\.?\s*$/i;
+
+            if (attributionPattern.test(para.trim())) {
+                isStandaloneQuote = true;
+            }
+
+            // Only add paragraphs that aren't standalone quote attributions
+            // Embedded quotes (with substantial context) stay in the paragraph
+            if (!isStandaloneQuote) {
+                const position = text.indexOf(para);
+                if (position >= 0) {
+                    contentBlocks.push({
+                        type: 'paragraph',
+                        content: para,
+                        position: position,
+                        index: index
+                    });
+                }
+            }
+        });
+
+        // Add quotes with position tracking
+        // But skip quotes that are embedded in paragraphs (don't end with attribution)
+        // Only show quotes that are in standalone attribution paragraphs
+        quotes.forEach((quote, index) => {
+            let isEmbedded = false;
+
+            // Check if this quote appears in a paragraph that doesn't end with attribution
+            const attributionPattern = /["'""][,.]?\s+(?:(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+)?(?:said|stated|continued|added|noted|explained|remarked|commented|declared|announced|told|responded|replied)|(?:said|stated|continued|added|noted|explained|remarked|commented|declared|announced|told|responded|replied)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\.?\s*$/i;
+
+            for (const para of paragraphs) {
+                const normalizedPara = para.replace(/["""]/g, '"').replace(/\s+/g, ' ').trim();
+                const normalizedQuote = quote.quote_text.replace(/["""]/g, '"').replace(/\s+/g, ' ').trim();
+
+                if (normalizedPara.includes(normalizedQuote)) {
+                    // If paragraph contains this quote but doesn't end with attribution pattern,
+                    // the quote is embedded (can't be separated without creating a fragment)
+                    if (!attributionPattern.test(para.trim())) {
+                        isEmbedded = true;
+                        break;
+                    }
+                }
+            }
+
+            // Only add standalone quotes (not embedded ones)
+            if (!isEmbedded) {
+                contentBlocks.push({
+                    type: 'quote',
+                    content: quote.quote_text,
+                    speaker: quote.speaker_name,
+                    speaker_title: quote.speaker_title,
+                    attribution: quote.full_attribution,
+                    confidence: quote.confidence,
+                    position: quote.position || 0,
+                    index: index,
+                    quote_data: quote
+                });
+            }
+        });
+
+        // Sort by position to reconstruct original flow
+        contentBlocks.sort((a, b) => a.position - b.position);
+
+        return contentBlocks;
     }
 
     extractBoilerplate(text) {
