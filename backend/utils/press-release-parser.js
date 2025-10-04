@@ -1670,9 +1670,10 @@ class PressReleaseParser {
             // Handles: "quote," said Speaker at event
             // Handles: "quote" said Speaker
             // Handles: "quote", according to Speaker
-            // NEW: Also handles pronouns and generic titles
-            // UPDATED: Allow periods in names for abbreviated titles like "Rep. Dave Min"
-            const afterPattern = /^[,\s]*(said|according to|stated|announced|noted|explained|added|continued|emphasized)\s+([A-Z][^,]+?)(?:\s+at\s|\s+in\s|\s+during\s|\s+on\s|\.$|$)/i;
+            // Handles: "quote," said Connor Joseph, Communications Director for...
+            // UPDATED: Allow commas in the name capture for long titles
+            // Pattern: verb + Name (can include commas for titles) + optional ending
+            const afterPattern = /^[,\s]*(said|according to|stated|announced|noted|explained|added|continued|emphasized)\s+([A-Z][^\.!?]+?)(?:\s+at\s|\s+in\s|\s+during\s|\s+on\s|[\.!?]\s|$)/i;
             const afterMatch = contextAfter.match(afterPattern);
 
             // Also handle reversed attribution: "quote," Name verb.
@@ -1682,8 +1683,9 @@ class PressReleaseParser {
             const reversedPattern = /^[,\s]*([A-Z][a-zA-Z'-]+(?:\s+[A-Z][a-zA-Z'-]+)*)\s+(said|stated|announced|noted|explained|added|continued|emphasized|told)/;
             const reversedMatch = contextAfter.match(reversedPattern);
 
-            // Also check for simple pronoun attribution: "quote," she said. or "quote," he said.
-            const pronounPattern = /^[,\s]*(she|he|they)\s+(said|stated|announced|noted|explained|added|told)/i;
+            // Also check for simple pronoun attribution: "quote," she said. or "quote," she continued.
+            // BUG FIX: Added "continued" to verb list (was missing, causing failure on continuation quotes)
+            const pronounPattern = /^[,\s]*(she|he|they)\s+(said|stated|announced|noted|explained|added|continued|told)/i;
             const pronounMatch = contextAfter.match(pronounPattern);
 
             let attribution = null;
@@ -1913,7 +1915,8 @@ class PressReleaseParser {
             // Patterns: "announced her 'Plan' focused on", "lost its 'Ranking' as"
             // Also: "criticized Trump's 'approach'", "noted that opponent has 'defended'"
             // NEW (per user policy A): "ranking as 'Title'", "lost its 'Name'", "maintained their 'Status'"
-            const narrativeWithQuotesPattern = /(?:announced|launched|unveiled|released|introduced|titled|called|named|lost|gained|earned|received|known as|dubbed|criticized|noted that[^'"]+has|described|characterized|ranking|title|designation|status|position|maintained|holds?)\s+(?:as|of|her|his|their|its|a|an|the|[A-Z][a-zA-Z-]+'s)\s+$/i;
+            // BUG FIX: Allow text between verb and keyword (e.g., "lost its CNBC ranking as")
+            const narrativeWithQuotesPattern = /(?:announced|launched|unveiled|released|introduced|titled|called|named|lost|gained|earned|received|known as|dubbed|criticized|noted that[^'"]+has|described|characterized|ranking|title|designation|status|position|maintained|holds?)\s+(?:her|his|their|its)?\s*[^'"]*?(?:as|of|for)\s+$/i;
             const isNarrativeWithQuotes = contextBefore.match(narrativeWithQuotesPattern);
 
             // Check if quote is immediately followed by text that indicates it's a proper name/title, not speech
@@ -1923,12 +1926,14 @@ class PressReleaseParser {
             const isFollowedByNarrative = contextAfter.match(followedByNarrativePattern);
 
             // Skip this quote if it's a descriptive phrase or bullet list item without attribution
+            // BUG FIX: Skip if isNarrativeWithQuotes alone (don't require isFollowedByNarrative)
+            // The narrativeWithQuotesPattern already checks for full context like "lost its ... as"
             const shouldSkipQuote = !hasAttribution && (
                 (wordCount <= 5 && isDescriptivePhrase) ||
                 (isInBulletList) ||
                 (isAfterListIntro) ||
                 (isMediaTitle && followedByDescriptive) ||
-                (isNarrativeWithQuotes && isFollowedByNarrative)
+                (isNarrativeWithQuotes)  // Skip if narrative pattern matches (e.g., "lost its ranking as")
             );
 
             if (!shouldSkipQuote) {
