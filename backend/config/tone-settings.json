@@ -1,0 +1,239 @@
+{
+  "_comment": "Tone configuration for campaign content - customize based on your candidate's strategic positioning",
+  "_instructions": [
+    "1. Set campaignTone.enabled = true to use custom tone settings",
+    "2. Configure emotional tone, rhetorical approach, and urgency for different content types",
+    "3. Tone analyzer will flag content that doesn't match your configured tone preferences"
+  ],
+
+  "defaultTone": {
+    "comment": "Default balanced tone suitable for most Democratic campaigns",
+    "emotional": "empathetic and determined",
+    "rhetorical": "inspire and inform",
+    "urgency": "important",
+    "audience": "general public",
+    "description": "Balanced approach that shows concern while offering solutions"
+  },
+
+  "campaignTone": {
+    "enabled": false,
+    "comment": "SET enabled=true TO ACTIVATE YOUR CUSTOM TONE SETTINGS",
+
+    "candidate": {
+      "name": "Your Candidate Name",
+      "district": "District description",
+      "personality": "folksy | professional | academic | passionate | measured",
+      "politicalPositioning": "progressive | mainstream Democrat | moderate | conservative Democrat"
+    },
+
+    "contentTypes": {
+      "press_release": {
+        "attacking_republicans": {
+          "emotional": "concerned and determined",
+          "rhetorical": "attack with solutions",
+          "urgency": "crisis",
+          "audience": "base supporters and swing voters",
+          "guidelines": [
+            "Name who's responsible for harm",
+            "Show impact on real people",
+            "Offer concrete alternative",
+            "Avoid sounding desperate or shrill"
+          ]
+        },
+        "policy_announcement": {
+          "emotional": "hopeful and confident",
+          "rhetorical": "inspire and inform",
+          "urgency": "important",
+          "audience": "all constituents",
+          "guidelines": [
+            "Lead with benefits to people",
+            "Use simple, concrete language",
+            "Show candidate as problem-solver",
+            "Build coalition, not division"
+          ]
+        },
+        "defending_record": {
+          "emotional": "proud and factual",
+          "rhetorical": "inform and reassure",
+          "urgency": "routine",
+          "audience": "general public",
+          "guidelines": [
+            "Lead with accomplishments",
+            "Use specific numbers and results",
+            "Avoid defensive language",
+            "Project confidence not arrogance"
+          ]
+        }
+      },
+
+      "social_media": {
+        "default": {
+          "emotional": "authentic and relatable",
+          "rhetorical": "engage and inspire",
+          "urgency": "varies by topic",
+          "audience": "younger voters and activists",
+          "guidelines": [
+            "Shorter, punchier sentences",
+            "More emotional, less formal",
+            "Clear call to action",
+            "Shareable and memorable"
+          ]
+        }
+      },
+
+      "speech": {
+        "town_hall": {
+          "emotional": "empathetic and listening",
+          "rhetorical": "dialogue and inform",
+          "urgency": "important",
+          "audience": "local constituents",
+          "guidelines": [
+            "Conversational, not lecturing",
+            "Acknowledge concerns",
+            "Invite participation",
+            "Show you're listening"
+          ]
+        },
+        "rally": {
+          "emotional": "energized and inspiring",
+          "rhetorical": "motivate and unite",
+          "urgency": "urgent",
+          "audience": "base supporters",
+          "guidelines": [
+            "Higher energy and emotion",
+            "Use of repetition and rhythm",
+            "Build to crescendo",
+            "Collective 'we' language"
+          ]
+        }
+      },
+
+      "fundraising": {
+        "default": {
+          "emotional": "urgent but hopeful",
+          "rhetorical": "persuade and motivate",
+          "urgency": "deadline-driven",
+          "audience": "donors and potential donors",
+          "guidelines": [
+            "Specific ask with deadline",
+            "Stakes clearly explained",
+            "Personal connection to cause",
+            "Gratitude and recognition"
+          ]
+        }
+      }
+    },
+
+    "toneProfiles": {
+      "_comment": "Pre-configured tone profiles for different campaign strategies",
+
+      "progressive_fighter": {
+        "description": "Bold progressive voice, high contrast with opponents",
+        "emotional": "passionate and determined",
+        "rhetorical": "attack and inspire",
+        "urgency": "crisis",
+        "whenToUse": "Progressive districts, primary campaigns, activist-driven campaigns"
+      },
+
+      "pragmatic_problem_solver": {
+        "description": "Moderate, solutions-focused, bipartisan appeal",
+        "emotional": "determined and reasonable",
+        "rhetorical": "inform and solve",
+        "urgency": "important",
+        "whenToUse": "Swing districts, suburban voters, coalition-building"
+      },
+
+      "empathetic_listener": {
+        "description": "Community-focused, listening campaign, inclusive",
+        "emotional": "empathetic and hopeful",
+        "rhetorical": "dialogue and unite",
+        "urgency": "routine to important",
+        "whenToUse": "Diverse districts, healing divisions, new candidates building trust"
+      },
+
+      "experienced_leader": {
+        "description": "Confident, accomplished, authoritative",
+        "emotional": "confident and proud",
+        "rhetorical": "inform and reassure",
+        "urgency": "varies",
+        "whenToUse": "Incumbents with strong records, leadership positions"
+      }
+    }
+  },
+
+  "toneDimensions": {
+    "comment": "Available tone dimensions for analysis and configuration",
+
+    "emotional": {
+      "positive": ["hopeful", "optimistic", "inspiring", "confident", "enthusiastic", "determined", "proud", "empathetic"],
+      "negative": ["angry", "fearful", "frustrated", "concerned", "worried", "outraged"],
+      "neutral": ["factual", "informative", "analytical", "objective", "measured", "professional"]
+    },
+
+    "rhetorical": {
+      "options": ["attack", "defend", "inspire", "inform", "persuade", "motivate", "unite", "dialogue", "reassure", "solve"],
+      "combinations": [
+        "attack with solutions",
+        "inspire and inform",
+        "persuade and motivate",
+        "dialogue and unite"
+      ]
+    },
+
+    "urgency": {
+      "levels": ["crisis", "urgent", "important", "routine", "celebratory"],
+      "indicators": ["deadline-driven", "immediate action", "ongoing concern", "long-term planning"]
+    },
+
+    "audience": {
+      "primary": ["base supporters", "swing voters", "opposition voters", "donors", "media", "general public", "youth", "seniors"],
+      "targeting": "Can specify primary and secondary audiences for each content type"
+    }
+  },
+
+  "examples": {
+    "_progressive_district_example": {
+      "campaignTone": {
+        "enabled": true,
+        "candidate": {
+          "name": "Progressive Candidate",
+          "personality": "passionate",
+          "politicalPositioning": "progressive"
+        },
+        "useProfile": "progressive_fighter",
+        "contentTypes": {
+          "press_release": {
+            "attacking_republicans": {
+              "emotional": "outraged and determined",
+              "rhetorical": "attack",
+              "urgency": "crisis",
+              "guidelines": ["Name names", "Show moral outrage", "Demand accountability"]
+            }
+          }
+        }
+      }
+    },
+
+    "_swing_district_example": {
+      "campaignTone": {
+        "enabled": true,
+        "candidate": {
+          "name": "Moderate Candidate",
+          "personality": "professional",
+          "politicalPositioning": "moderate"
+        },
+        "useProfile": "pragmatic_problem_solver",
+        "contentTypes": {
+          "press_release": {
+            "attacking_republicans": {
+              "emotional": "concerned but measured",
+              "rhetorical": "inform with alternatives",
+              "urgency": "important",
+              "guidelines": ["Focus on policy not personality", "Offer bipartisan solutions", "Appeal to reason"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

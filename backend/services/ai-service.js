@@ -408,6 +408,28 @@ RESPONSE LENGTH REQUIREMENT:
         return checks;
     }
 
+    /**
+     * Generate a simple AI response for a given prompt
+     * Used by tone-analyzer and other services that need direct AI responses
+     */
+    async generateResponse(prompt, options = {}) {
+        try {
+            const completion = await this.openai.chat.completions.create({
+                model: options.model || "gpt-4-turbo-preview",
+                messages: [
+                    { role: "user", content: prompt }
+                ],
+                temperature: options.temperature || 0.7,
+                max_tokens: options.maxLength || 500
+            });
+
+            return completion.choices[0].message.content;
+        } catch (error) {
+            console.error('AI generateResponse failed:', error);
+            throw error;
+        }
+    }
+
     extractFirstNumber(text) {
         const match = text.match(/\d+,?\d*/);
         return match ? match[0] : null;
