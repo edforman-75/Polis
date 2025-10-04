@@ -187,7 +187,7 @@
 <body>
     <div class="header">
         <h1>🏛️ Campaign Press Office Portal</h1>
-        <p>Integrated ML Training & Content Management System</p>
+        <p>Integrated ML Training, Quality Control & Content Management System</p>
     </div>
 
     <div class="container">
@@ -295,6 +295,68 @@
                 <a href="/parser-dashboard.html" class="btn btn-secondary">📊 Dashboard</a>
             </div>
 
+            <!-- Grammar & AP Style Learning System -->
+            <div class="portal-card">
+                <span class="card-icon">📝</span>
+                <h2 class="card-title">
+                    Grammar & AP Style Learning
+                    <span class="status-indicator status-active">Active</span>
+                </h2>
+                <p class="card-description">
+                    Self-improving grammar and AP Style checker with custom terminology and pattern learning.
+                </p>
+                <ul class="card-features">
+                    <li>Context-aware grammar checking</li>
+                    <li>AP Style validation (no Oxford commas)</li>
+                    <li>Custom campaign terminology</li>
+                    <li>Self-learning from feedback</li>
+                    <li>Pattern detection & clustering</li>
+                </ul>
+                <a href="/grammar-style-checker.html" class="btn">✍️ Check Content</a>
+                <a href="/grammar-learning-dashboard.html" class="btn btn-secondary">📊 Admin Dashboard</a>
+            </div>
+
+            <!-- Election Law Compliance -->
+            <div class="portal-card">
+                <span class="card-icon">⚖️</span>
+                <h2 class="card-title">
+                    Election Law Compliance
+                    <span class="status-indicator status-active">Active</span>
+                </h2>
+                <p class="card-description">
+                    Automated FEC and Virginia state law compliance checker with risk assessment.
+                </p>
+                <ul class="card-features">
+                    <li>Federal (FEC) regulations knowledge base</li>
+                    <li>Virginia state law (no contribution limits)</li>
+                    <li>Automated compliance scanning</li>
+                    <li>Risk levels: CRITICAL to MINIMAL</li>
+                    <li>100% compliant on Spanberger releases</li>
+                </ul>
+                <a href="/election-law-compliance-checker.html" class="btn">🔍 Check Compliance</a>
+            </div>
+
+            <!-- Press Release Validation Queue -->
+            <div class="portal-card">
+                <span class="card-icon">📋</span>
+                <h2 class="card-title">
+                    Validation Queue
+                    <span class="status-indicator status-active">Active</span>
+                </h2>
+                <p class="card-description">
+                    Page-by-page review system with issue tracking and knowledge base enhancement.
+                </p>
+                <ul class="card-features">
+                    <li>Page-by-page review workflow</li>
+                    <li>Reviewer accountability (initials)</li>
+                    <li>Accept/Reject/Modify/Add-to-KB actions</li>
+                    <li>Knowledge base enhancement</li>
+                    <li>Session statistics & progress</li>
+                </ul>
+                <a href="/validation-review.html" class="btn">🎯 Start Review</a>
+                <button onclick="setupValidationQueue()" class="btn btn-secondary">⚙️ Setup Queue</button>
+            </div>
+
             <!-- Integration Tools -->
             <div class="portal-card">
                 <span class="card-icon">🔧</span>
@@ -334,6 +396,18 @@
                 <div class="status-item status-online">
                     <strong>Text Analysis API</strong><br>
                     <span id="text-analysis-status">●</span> Active
+                </div>
+                <div class="status-item status-online">
+                    <strong>Grammar & AP Style</strong><br>
+                    <span id="grammar-status">●</span> Active
+                </div>
+                <div class="status-item status-online">
+                    <strong>Compliance Checker</strong><br>
+                    <span id="compliance-status">●</span> Active
+                </div>
+                <div class="status-item status-online">
+                    <strong>Validation Queue</strong><br>
+                    <span id="validation-status">●</span> Active
                 </div>
                 <div class="status-item" id="cpo-status-item">
                     <strong>CPO Integration</strong><br>
@@ -400,6 +474,55 @@
 
         function showIntegrationTools() {
             alert('Integration tools coming soon!\n\nPlanned features:\n• Content validation pipeline\n• Batch classification tools\n• API workflow automation\n• Advanced analytics dashboard');
+        }
+
+        async function setupValidationQueue() {
+            if (confirm('Load Spanberger press releases into validation queue?\n\nThis will:\n• Load all press releases from cpo_examples\n• Analyze them for grammar/AP Style issues\n• Prepare them for review\n\nContinue?')) {
+                try {
+                    // Show loading
+                    const btn = event.target;
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Loading...';
+
+                    // Load press releases
+                    const loadResponse = await fetch('/api/validation/load-press-releases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ addedBy: 'cpo-portal' })
+                    });
+                    const loadResult = await loadResponse.json();
+
+                    // Analyze all items
+                    const analyzeResponse = await fetch('/api/validation/analyze-all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const analyzeResult = await analyzeResponse.json();
+
+                    // Get summary
+                    const summaryResponse = await fetch('/api/validation/summary');
+                    const summaryResult = await summaryResponse.json();
+
+                    const summary = summaryResult.summary.find(s => s.review_status === 'pending') || {};
+
+                    alert(`✅ Validation Queue Setup Complete!\n\n` +
+                          `Loaded: ${loadResult.loaded} press releases\n` +
+                          `Analyzed: ${analyzeResult.analyzed} items\n` +
+                          `Avg Score: ${summary.avg_score?.toFixed(1) || 'N/A'}\n` +
+                          `Total Issues: ${summary.total_issues || 0}\n\n` +
+                          `Ready for review!`);
+
+                    btn.disabled = false;
+                    btn.textContent = '✓ Queue Ready';
+
+                    // Update validation status
+                    document.getElementById('validation-status').innerHTML = `● ${loadResult.loaded} items`;
+                } catch (error) {
+                    alert('Error setting up validation queue: ' + error.message);
+                    event.target.disabled = false;
+                    event.target.textContent = '⚙️ Setup Queue';
+                }
+            }
         }
     </script>
 </body>
