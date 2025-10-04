@@ -1,0 +1,128 @@
+{
+  "_comment": "Example: How to customize readability settings for your campaign",
+  "_instructions": [
+    "1. Copy this example to readability-settings.json (or edit existing file)",
+    "2. Set campaignSettings.enabled = true to activate your custom settings",
+    "3. Add content types under campaignSettings.contentTypes to override defaults",
+    "4. Only specify content types you want to customize - others use defaults"
+  ],
+
+  "defaultSettings": {
+    "comment": "Default readability targets - do not modify unless you want to change system defaults",
+    "contentTypes": {
+      "press_release": {
+        "target": 8,
+        "range": [7, 10],
+        "note": "General public audience"
+      },
+      "social_media": {
+        "target": 6,
+        "range": [5, 8],
+        "note": "Broad accessibility"
+      },
+      "policy_document": {
+        "target": 12,
+        "range": [11, 14],
+        "note": "Informed audience"
+      },
+      "speech": {
+        "target": 8,
+        "range": [7, 9],
+        "note": "Spoken word, general public"
+      },
+      "talking_points": {
+        "target": 7,
+        "range": [6, 8],
+        "note": "Quick comprehension"
+      },
+      "op_ed": {
+        "target": 11,
+        "range": [10, 13],
+        "note": "Newspaper readers"
+      },
+      "email_blast": {
+        "target": 7,
+        "range": [6, 9],
+        "note": "Wide audience"
+      },
+      "fundraising": {
+        "target": 8,
+        "range": [7, 10],
+        "note": "Donor audience"
+      }
+    },
+    "tolerance": 1.0,
+    "description": "Grade level tolerance determines how strict the readability check is. 1.0 = within 1 grade level is acceptable."
+  },
+
+  "campaignSettings": {
+    "comment": "CAMPAIGN CUSTOMIZATION: Set enabled=true and add your overrides below",
+    "enabled": true,
+
+    "_example_scenarios": {
+      "_scenario_1": "Progressive campaign targeting younger, diverse voters - simpler language",
+      "_scenario_2": "Policy-focused campaign for educated district - more sophisticated",
+      "_scenario_3": "Rural campaign emphasizing accessibility - very simple language"
+    },
+
+    "contentTypes": {
+      "press_release": {
+        "target": 7,
+        "range": [6, 8],
+        "note": "Accessible to all voters - our campaign prioritizes clarity"
+      },
+      "social_media": {
+        "target": 5,
+        "range": [4, 6],
+        "note": "Maximum reach on social platforms"
+      },
+      "speech": {
+        "target": 7,
+        "range": [6, 8],
+        "note": "Town halls and community events - conversational tone"
+      },
+      "fundraising": {
+        "target": 9,
+        "range": [8, 10],
+        "note": "Donor communications - slightly more sophisticated"
+      }
+    },
+
+    "tolerance": 0.8,
+    "description": "Stricter tolerance - we want to stay very close to target"
+  },
+
+  "_alternative_example_for_educated_district": {
+    "campaignSettings": {
+      "enabled": true,
+      "contentTypes": {
+        "press_release": {
+          "target": 10,
+          "range": [9, 12],
+          "note": "Educated suburban district - can handle complexity"
+        },
+        "policy_document": {
+          "target": 14,
+          "range": [13, 16],
+          "note": "Policy wonks and activists appreciate detail"
+        }
+      },
+      "tolerance": 1.5,
+      "description": "More relaxed - allow more variation in complexity"
+    }
+  },
+
+  "_tips": [
+    "Target Grade Levels:",
+    "  5-6: Maximum accessibility (elementary school)",
+    "  7-8: General public (middle school) - RECOMMENDED for most campaigns",
+    "  9-10: High school level",
+    "  11-12: College-bound / newspaper readers",
+    "  13+: College and professional",
+    "",
+    "Tolerance:",
+    "  0.5: Very strict - must be very close to target",
+    "  1.0: Standard - within 1 grade level (default)",
+    "  1.5: Relaxed - allows more variation"
+  ]
+}

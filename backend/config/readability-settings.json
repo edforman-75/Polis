@@ -1,0 +1,54 @@
+{
+  "defaultSettings": {
+    "comment": "Default readability targets for different content types. Campaigns can customize these values.",
+    "contentTypes": {
+      "press_release": {
+        "target": 8,
+        "range": [7, 10],
+        "note": "General public audience"
+      },
+      "social_media": {
+        "target": 6,
+        "range": [5, 8],
+        "note": "Broad accessibility"
+      },
+      "policy_document": {
+        "target": 12,
+        "range": [11, 14],
+        "note": "Informed audience"
+      },
+      "speech": {
+        "target": 8,
+        "range": [7, 9],
+        "note": "Spoken word, general public"
+      },
+      "talking_points": {
+        "target": 7,
+        "range": [6, 8],
+        "note": "Quick comprehension"
+      },
+      "op_ed": {
+        "target": 11,
+        "range": [10, 13],
+        "note": "Newspaper readers"
+      },
+      "email_blast": {
+        "target": 7,
+        "range": [6, 9],
+        "note": "Wide audience"
+      },
+      "fundraising": {
+        "target": 8,
+        "range": [7, 10],
+        "note": "Donor audience"
+      }
+    },
+    "tolerance": 1.0,
+    "description": "Grade level tolerance determines how strict the readability check is. 1.0 = within 1 grade level is acceptable."
+  },
+  "campaignSettings": {
+    "comment": "Campaign-specific overrides. Add your custom settings here to override defaults.",
+    "enabled": false,
+    "contentTypes": {}
+  }
+}

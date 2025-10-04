@@ -3,8 +3,11 @@
  * Calculates multiple readability scores and provides suggestions to hit target grade levels
  */
 
+const fs = require('fs');
+const path = require('path');
+
 class ReadabilityAnalyzer {
-    constructor() {
+    constructor(customSettings = null) {
         // Grade level interpretations
         this.gradeLevels = {
             1: { label: '1st Grade', age: '6-7', description: 'Very simple, basic vocabulary' },
@@ -27,20 +30,108 @@ class ReadabilityAnalyzer {
             18: { label: 'Professional', age: 'Adult', description: 'Professional/Academic' }
         };
 
-        // Recommended grade levels for different content types
-        this.recommendedLevels = {
-            'press_release': { target: 8, range: [7, 10], note: 'General public audience' },
-            'social_media': { target: 6, range: [5, 8], note: 'Broad accessibility' },
-            'policy_document': { target: 12, range: [11, 14], note: 'Informed audience' },
-            'speech': { target: 8, range: [7, 9], note: 'Spoken word, general public' },
-            'talking_points': { target: 7, range: [6, 8], note: 'Quick comprehension' },
-            'op_ed': { target: 11, range: [10, 13], note: 'Newspaper readers' },
-            'email_blast': { target: 7, range: [6, 9], note: 'Wide audience' },
-            'fundraising': { target: 8, range: [7, 10], note: 'Donor audience' }
-        };
+        // Load settings from config file and merge with custom settings
+        this.loadSettings(customSettings);
 
         // Syllable dictionary for common words (improves performance)
         this.syllableCache = new Map();
+    }
+
+    /**
+     * Load readability settings from config file and merge with custom settings
+     */
+    loadSettings(customSettings = null) {
+        try {
+            // Default hardcoded settings (fallback if config file not found)
+            const defaultSettings = {
+                'press_release': { target: 8, range: [7, 10], note: 'General public audience' },
+                'social_media': { target: 6, range: [5, 8], note: 'Broad accessibility' },
+                'policy_document': { target: 12, range: [11, 14], note: 'Informed audience' },
+                'speech': { target: 8, range: [7, 9], note: 'Spoken word, general public' },
+                'talking_points': { target: 7, range: [6, 8], note: 'Quick comprehension' },
+                'op_ed': { target: 11, range: [10, 13], note: 'Newspaper readers' },
+                'email_blast': { target: 7, range: [6, 9], note: 'Wide audience' },
+                'fundraising': { target: 8, range: [7, 10], note: 'Donor audience' }
+            };
+
+            // Try to load from config file
+            const configPath = path.join(__dirname, '../config/readability-settings.json');
+            if (fs.existsSync(configPath)) {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+                // Start with default settings from config
+                this.recommendedLevels = { ...config.defaultSettings.contentTypes };
+                this.tolerance = config.defaultSettings.tolerance || 1.0;
+
+                // Apply campaign-specific overrides if enabled
+                if (config.campaignSettings.enabled && config.campaignSettings.contentTypes) {
+                    Object.keys(config.campaignSettings.contentTypes).forEach(contentType => {
+                        this.recommendedLevels[contentType] = {
+                            ...this.recommendedLevels[contentType],
+                            ...config.campaignSettings.contentTypes[contentType]
+                        };
+                    });
+                }
+            } else {
+                // Use hardcoded defaults if config file doesn't exist
+                this.recommendedLevels = { ...defaultSettings };
+                this.tolerance = 1.0;
+            }
+
+            // Apply custom settings passed to constructor (highest priority)
+            if (customSettings && customSettings.contentTypes) {
+                Object.keys(customSettings.contentTypes).forEach(contentType => {
+                    this.recommendedLevels[contentType] = {
+                        ...this.recommendedLevels[contentType],
+                        ...customSettings.contentTypes[contentType]
+                    };
+                });
+            }
+            if (customSettings && customSettings.tolerance !== undefined) {
+                this.tolerance = customSettings.tolerance;
+            }
+
+        } catch (error) {
+            console.error('Error loading readability settings:', error);
+            // Fall back to hardcoded defaults
+            this.recommendedLevels = {
+                'press_release': { target: 8, range: [7, 10], note: 'General public audience' },
+                'social_media': { target: 6, range: [5, 8], note: 'Broad accessibility' },
+                'policy_document': { target: 12, range: [11, 14], note: 'Informed audience' },
+                'speech': { target: 8, range: [7, 9], note: 'Spoken word, general public' },
+                'talking_points': { target: 7, range: [6, 8], note: 'Quick comprehension' },
+                'op_ed': { target: 11, range: [10, 13], note: 'Newspaper readers' },
+                'email_blast': { target: 7, range: [6, 9], note: 'Wide audience' },
+                'fundraising': { target: 8, range: [7, 10], note: 'Donor audience' }
+            };
+            this.tolerance = 1.0;
+        }
+    }
+
+    /**
+     * Update settings dynamically (useful for campaign-specific configurations)
+     */
+    updateSettings(contentType, settings) {
+        if (!this.recommendedLevels[contentType]) {
+            this.recommendedLevels[contentType] = {};
+        }
+        this.recommendedLevels[contentType] = {
+            ...this.recommendedLevels[contentType],
+            ...settings
+        };
+    }
+
+    /**
+     * Get current settings for a content type
+     */
+    getSettings(contentType = null) {
+        if (contentType) {
+            return this.recommendedLevels[contentType] || null;
+        }
+        return {
+            contentTypes: this.recommendedLevels,
+            tolerance: this.tolerance
+        };
     }
 
     /**
@@ -85,7 +176,7 @@ class ReadabilityAnalyzer {
         analysis.difficulty = this.getDifficultyLevel(analysis.averageGradeLevel);
 
         // Check if on target
-        const tolerance = 1.0; // Within 1 grade level
+        const tolerance = this.tolerance || 1.0; // Use configured tolerance
         analysis.deviation = analysis.averageGradeLevel - targetGrade;
         analysis.onTarget = Math.abs(analysis.deviation) <= tolerance;
 
