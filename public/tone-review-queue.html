@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tone Review Queue - Human Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .accuracy {
+            color: #27ae60;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+        }
+
+        .review-section, .ai-analysis-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .queue-info {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .content-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .content-text {
+            line-height: 1.6;
+            color: #2c3e50;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ai-section {
+            margin-bottom: 20px;
+        }
+
+        .ai-section h3 {
+            font-size: 15px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alignment-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .alignment-STRONG {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alignment-MODERATE {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .alignment-WEAK {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .ai-list {
+            list-style: none;
+        }
+
+        .ai-list li {
+            padding: 8px 12px;
+            background: #e7f3ff;
+            border-left: 3px solid #3498db;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .gap-item {
+            padding: 10px;
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .gap-item .area {
+            font-weight: 600;
+            color: #856404;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .decision-section {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+        }
+
+        .decision-section h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .decision-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #229954;
+        }
+
+        .btn-reject {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c0392b;
+        }
+
+        .btn-modify {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-modify:hover {
+            background: #d68910;
+        }
+
+        .feedback-area {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .feedback-area:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .empty-queue {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-queue svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modifications-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 4px;
+        }
+
+        .modifications-section.active {
+            display: block;
+        }
+
+        .modifications-section h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+
+        .mod-field {
+            margin-bottom: 10px;
+        }
+
+        .mod-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .mod-field input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>Tone Review Queue</h1>
+                <p class="subtitle">Human verification of AI tone analysis</p>
+            </div>
+            <div class="stats-bar" id="statsBar">
+                <div class="stat">
+                    <div class="stat-value" id="queueCount">-</div>
+                    <div class="stat-label">In Queue</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalReviewed">-</div>
+                    <div class="stat-label">Reviewed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value accuracy" id="accuracyRate">-</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="review-section" id="reviewSection">
+                <!-- Content loaded here -->
+            </div>
+
+            <div class="ai-analysis-section" id="analysisSection">
+                <!-- AI analysis loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentItem = null;
+        let selectedDecision = null;
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/tone-review/stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('queueCount').textContent = data.stats.pending;
+                    document.getElementById('totalReviewed').textContent = data.stats.total;
+                    document.getElementById('accuracyRate').textContent = data.stats.accuracyRate + '%';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        async function loadNextItem() {
+            const reviewSection = document.getElementById('reviewSection');
+            const analysisSection = document.getElementById('analysisSection');
+
+            reviewSection.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading next item...</p></div>';
+            analysisSection.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/tone-review/next');
+                const data = await response.json();
+
+                if (!data.hasNext) {
+                    reviewSection.innerHTML = `
+                        <div class="empty-queue">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                            </svg>
+                            <h3>Queue Empty!</h3>
+                            <p>No items pending review. Great work!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                currentItem = data.item;
+                displayReviewItem(currentItem);
+                displayAnalysis(currentItem.analysis);
+                await loadStats();
+
+            } catch (error) {
+                console.error('Failed to load next item:', error);
+                reviewSection.innerHTML = `
+                    <div class="empty-queue">
+                        <h3>Error Loading Item</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayReviewItem(item) {
+            const reviewSection = document.getElementById('reviewSection');
+
+            reviewSection.innerHTML = `
+                <div class="queue-info">
+                    <span><strong>Content Type:</strong> ${item.contentType.replace(/_/g, ' ')}</span>
+                    <span><strong>Context:</strong> ${item.context}</span>
+                </div>
+
+                <div class="content-box">
+                    <div class="content-meta">
+                        <span>📅 Queued: ${new Date(item.queuedAt).toLocaleString()}</span>
+                        ${item.metadata.filename ? `<span>📄 ${item.metadata.filename}</span>` : ''}
+                    </div>
+                    <div class="content-text">${item.content}</div>
+                </div>
+
+                <div class="decision-section">
+                    <h3>Your Review Decision</h3>
+
+                    <div class="decision-buttons">
+                        <button class="btn-approve" onclick="selectDecision('approve')">
+                            ✅ Approve<br>
+                            <small>AI analysis is accurate</small>
+                        </button>
+                        <button class="btn-reject" onclick="selectDecision('reject')">
+                            ❌ Reject<br>
+                            <small>AI analysis is wrong</small>
+                        </button>
+                        <button class="btn-modify" onclick="selectDecision('modify')">
+                            ✏️ Modify<br>
+                            <small>Needs adjustments</small>
+                        </button>
+                    </div>
+
+                    <div id="modificationsSection" class="modifications-section">
+                        <h4>What needs to be corrected?</h4>
+                        <div class="mod-field">
+                            <label>Corrected Alignment:</label>
+                            <input type="text" id="modAlignment" placeholder="e.g., STRONG, MODERATE, WEAK">
+                        </div>
+                        <div class="mod-field">
+                            <label>Corrected Score (0-100):</label>
+                            <input type="number" id="modScore" min="0" max="100" placeholder="e.g., 75">
+                        </div>
+                    </div>
+
+                    <textarea id="feedbackText" class="feedback-area" placeholder="Add your feedback or notes (optional)..."></textarea>
+
+                    <button class="btn-approve" onclick="submitDecision()" style="width: 100%; margin-top: 15px;">
+                        Submit Review & Next →
+                    </button>
+                </div>
+            `;
+        }
+
+        function displayAnalysis(analysis) {
+            const analysisSection = document.getElementById('analysisSection');
+
+            let html = `
+                <div class="ai-section">
+                    <h3>🤖 AI Assessment</h3>
+                    <div class="alignment-badge alignment-${analysis.alignment}">${analysis.alignment}</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 15px;">
+                        ${analysis.alignmentScore}/100
+                    </div>
+                </div>
+
+                <div class="ai-section">
+                    <h3>🎯 Target Tone</h3>
+                    <ul class="ai-list">
+                        <li>😊 ${analysis.targetTone.emotional}</li>
+                        <li>🎯 ${analysis.targetTone.rhetorical}</li>
+                        <li>⚡ ${analysis.targetTone.urgency}</li>
+                    </ul>
+                </div>
+            `;
+
+            if (analysis.strengths && analysis.strengths.length > 0) {
+                html += `
+                    <div class="ai-section">
+                        <h3>✅ Strengths</h3>
+                        <ul class="ai-list">
+                            ${analysis.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (analysis.gaps && analysis.gaps.length > 0) {
+                html += `
+                    <div class="ai-section">
+                        <h3>⚠️ Gaps</h3>
+                        ${analysis.gaps.map(gap => `
+                            <div class="gap-item">
+                                <div class="area">${gap.area}</div>
+                                <div>${gap.suggestion}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (analysis.quickWins && analysis.quickWins.length > 0) {
+                html += `
+                    <div class="ai-section">
+                        <h3>⚡ Quick Wins</h3>
+                        <ul class="ai-list">
+                            ${analysis.quickWins.map(qw => `<li>${qw}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            analysisSection.innerHTML = html;
+        }
+
+        function selectDecision(decision) {
+            selectedDecision = decision;
+
+            // Update button styles
+            document.querySelectorAll('.decision-buttons button').forEach(btn => {
+                btn.style.opacity = '0.5';
+            });
+
+            if (decision === 'approve') {
+                document.querySelector('.btn-approve').style.opacity = '1';
+            } else if (decision === 'reject') {
+                document.querySelector('.btn-reject').style.opacity = '1';
+            } else if (decision === 'modify') {
+                document.querySelector('.btn-modify').style.opacity = '1';
+            }
+
+            // Show/hide modifications section
+            const modSection = document.getElementById('modificationsSection');
+            if (decision === 'modify') {
+                modSection.classList.add('active');
+            } else {
+                modSection.classList.remove('active');
+            }
+        }
+
+        async function submitDecision() {
+            if (!selectedDecision) {
+                alert('Please select a decision (Approve, Reject, or Modify)');
+                return;
+            }
+
+            const feedback = document.getElementById('feedbackText').value;
+            const modifications = {};
+
+            if (selectedDecision === 'modify') {
+                const modAlignment = document.getElementById('modAlignment').value;
+                const modScore = document.getElementById('modScore').value;
+
+                if (modAlignment) modifications.alignment = modAlignment;
+                if (modScore) modifications.alignmentScore = parseInt(modScore);
+            }
+
+            try {
+                const response = await fetch('/api/tone-review/decision', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        itemId: currentItem.id,
+                        decision: selectedDecision,
+                        feedback,
+                        modifications
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reset
+                    selectedDecision = null;
+
+                    // Load next item
+                    await loadNextItem();
+                } else {
+                    alert('Failed to submit: ' + data.error);
+                }
+
+            } catch (error) {
+                alert('Error submitting review: ' + error.message);
+            }
+        }
+
+        // Initialize
+        loadStats();
+        loadNextItem();
+
+        // Refresh stats every 10 seconds
+        setInterval(loadStats, 10000);
+    </script>
+</body>
+</html>

@@ -609,6 +609,123 @@ Format as JSON.`;
         }
     }
 
+    /**
+     * Analyze content against campaign's configured tone profile
+     * Returns specific suggestions for aligning with campaign strategy
+     */
+    async analyzeAgainstCampaignProfile(content, contentType = 'press_release', context = 'default') {
+        const fs = require('fs');
+        const path = require('path');
+
+        try {
+            // Load campaign tone settings
+            const settingsPath = path.join(__dirname, '../config/tone-settings.json');
+            const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+
+            // Determine active tone configuration
+            const activeTone = settings.campaignTone.enabled
+                ? settings.campaignTone
+                : settings.defaultTone;
+
+            // Get content-specific tone requirements
+            let targetTone;
+            if (settings.campaignTone.enabled && settings.campaignTone.contentTypes[contentType]) {
+                const contentTypeSettings = settings.campaignTone.contentTypes[contentType];
+                targetTone = contentTypeSettings[context] || contentTypeSettings.default || activeTone;
+            } else {
+                targetTone = activeTone;
+            }
+
+            // If using a tone profile, get its definition
+            let profileDescription = '';
+            if (settings.campaignTone.useProfile) {
+                const profile = settings.campaignTone.toneProfiles[settings.campaignTone.useProfile];
+                if (profile) {
+                    profileDescription = `\n\nCAMPAIGN TONE PROFILE: ${settings.campaignTone.useProfile}
+- Description: ${profile.description}
+- Emotional: ${profile.emotional}
+- Rhetorical: ${profile.rhetorical}
+- Urgency: ${profile.urgency}`;
+                }
+            }
+
+            const prompt = `Analyze this ${contentType} content against the campaign's TARGET TONE:
+
+TARGET TONE REQUIREMENTS:
+- Emotional: ${targetTone.emotional}
+- Rhetorical: ${targetTone.rhetorical}
+- Urgency: ${targetTone.urgency}
+- Audience: ${targetTone.audience}${profileDescription}
+
+CONTENT (first 1000 chars):
+${content.substring(0, 1000)}${content.length > 1000 ? '...' : ''}
+
+Analyze:
+1. How well does this content match the target tone?
+2. What specific elements align with the target tone?
+3. What specific elements need adjustment?
+4. Concrete suggestions to improve alignment
+
+Return JSON:
+{
+  "alignment": "STRONG | MODERATE | WEAK",
+  "alignmentScore": 0-100,
+  "strengths": ["specific strength 1", "specific strength 2"],
+  "gaps": [
+    {
+      "area": "emotional | rhetorical | urgency | audience",
+      "current": "what it currently does",
+      "target": "what it should do",
+      "suggestion": "specific fix"
+    }
+  ],
+  "quickWins": ["quick fix 1", "quick fix 2"],
+  "rewriteSuggestion": "Optional 1-2 sentence rewrite of opening if major changes needed"
+}`;
+
+            const response = await aiService.generateResponse(prompt, {
+                maxLength: 600,
+                temperature: 0.3
+            });
+
+            // Parse JSON from response (may be wrapped in markdown)
+            let analysis;
+            try {
+                const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
+                                 response.match(/```\s*([\s\S]*?)\s*```/);
+                const jsonStr = jsonMatch ? jsonMatch[1] : response;
+                analysis = JSON.parse(jsonStr);
+            } catch (e) {
+                console.error('Failed to parse campaign tone analysis:', e);
+                analysis = {
+                    alignment: "ERROR",
+                    alignmentScore: 50,
+                    strengths: [],
+                    gaps: [],
+                    quickWins: [],
+                    rewriteSuggestion: ""
+                };
+            }
+
+            // Add metadata
+            analysis.targetTone = targetTone;
+            analysis.profileUsed = settings.campaignTone.useProfile || 'default';
+
+            return analysis;
+
+        } catch (error) {
+            console.error('Campaign profile analysis failed:', error);
+            return {
+                alignment: "ERROR",
+                alignmentScore: 50,
+                strengths: [],
+                gaps: [],
+                quickWins: [],
+                error: error.message
+            };
+        }
+    }
+
     parseAIResponse(response) {
         try {
             return JSON.parse(response);

@@ -157,6 +157,15 @@
         "rhetorical": "inform and reassure",
         "urgency": "varies",
         "whenToUse": "Incumbents with strong records, leadership positions"
+      },
+
+      "concerned_protector": {
+        "description": "Protective of constituents, critical of opponents' harmful actions",
+        "emotional": "concerned and protective",
+        "rhetorical": "critique and advocate",
+        "urgency": "crisis to highly important",
+        "whenToUse": "Moderate districts, defending constituents from harmful policies, responsive to immediate threats",
+        "_basedOn": "Analysis of Rep. Abigail Spanberger press releases - 86% of content uses this strategic approach"
       }
     }
   },

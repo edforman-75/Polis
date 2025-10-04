@@ -36,6 +36,8 @@ const quotesRoutes = require('./backend/routes/quotes');
 const textAnalysisRoutes = require('./backend/routes/text-analysis');
 const factCheckingRoutes = require('./backend/routes/fact-checking');
 const toneSettingsRoutes = require('./backend/routes/tone-settings');
+const toneCheckRoutes = require('./backend/routes/tone-check');
+const toneReviewRoutes = require('./backend/routes/tone-review');
 
 // Import database
 const db = require('./backend/database/init');
@@ -149,6 +151,8 @@ app.use('/api/quotes', quotesRoutes);
 app.use('/api/text-analysis', textAnalysisRoutes);
 app.use('/api/fact-checking', factCheckingRoutes);
 app.use('/api', toneSettingsRoutes);
+app.use('/api', toneCheckRoutes);
+app.use('/api', toneReviewRoutes);
 
 // Prose enhancement endpoint for editor (no auth required for simplicity)
 const aiService = require('./backend/services/ai-service');
