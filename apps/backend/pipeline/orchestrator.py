@@ -5,8 +5,14 @@ from .base import run_pipeline
 
 def _auto_import_stages(pkg_root: str = "apps.backend.pipeline.stages") -> None:
     pkg = importlib.import_module(pkg_root)
-    pkg_path = pathlib.Path(pkg.__file__).parent
-    for mod in pkgutil.iter_modules([str(pkg_path)]):
+    pkg_paths = []
+    if hasattr(pkg, "__path__"):
+        pkg_paths = [str(p) for p in pkg.__path__]  # type: ignore[attr-defined]
+    if not pkg_paths and getattr(pkg, "__file__", None):
+        pkg_paths = [str(pathlib.Path(pkg.__file__).parent)]  # type: ignore
+    if not pkg_paths:
+        raise RuntimeError(f"Could not resolve paths for package {pkg_root}")
+    for mod in pkgutil.iter_modules(pkg_paths):
         importlib.import_module(f"{pkg_root}.{mod.name}")
 
 def _load_plan(path: str) -> List[Tuple[str, Dict[str, Any]]]:
