@@ -5,4 +5,5 @@ setup:
 run:
 	@. .venv/bin/activate 2>/dev/null || true; python apps/backend/smoke_runner.py
 test:
+	@PYTHONPATH=. . .venv/bin/activate 2>/dev/null || true; PYTHONPATH=. pytest -q
 	@. .venv/bin/activate 2>/dev/null || true; pytest -q
