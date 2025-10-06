@@ -1,3 +1,5 @@
+[![CI](https://github.com/edforman-75/Polis/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/edforman-75/Polis/actions/workflows/ci.yml)
+
 # 🏛️ Campaign AI Editor - Professional Political Communications Platform
 
 A comprehensive AI-powered campaign communications platform that transforms basic content creation into professional-grade political campaign workflows with strategic briefing systems, multi-stage review processes, and AI-enhanced quality control.

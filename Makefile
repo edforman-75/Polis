@@ -1,3 +1,4 @@
+
 .PHONY: setup run test
 setup:
 	@python3 -m venv .venv || true
