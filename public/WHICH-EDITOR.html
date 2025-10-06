@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editor Router - Polis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .editor-card {
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+        }
+        .editor-card.main {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #10b98122 0%, #059f4622 100%);
+        }
+        h1 {
+            color: #667eea;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .feature-list {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn.main {
+            background: #10b981;
+            font-size: 18px;
+            padding: 16px 32px;
+        }
+        .btn.main:hover {
+            background: #059f46;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Polis Editor Selection</h1>
+
+    <div class="editor-card main">
+        <h2>✅ Unified Editor v2 (CURRENT WORK)</h2>
+        <p class="timestamp">Last modified: Oct 6, 15:58 (TODAY - Latest)</p>
+        <p><strong>This is the editor we've been working on together.</strong></p>
+
+        <div class="feature-list">
+            <strong>Recent features added:</strong>
+            <ul>
+                <li>✨ Full Document view + By Section view (side-by-side)</li>
+                <li>✨ Section insertion menu (add body paragraphs, quotes before/after)</li>
+                <li>✨ Improved quote parsing (handles multi-part quotes, proper attribution)</li>
+                <li>✨ Slide-out animations when dismissing/applying quality checks</li>
+                <li>✨ Resolved Issues section (tracks fixed vs dismissed)</li>
+                <li>✨ Auto-sync between views</li>
+                <li>✨ Dateline/Lead paragraph separation</li>
+            </ul>
+        </div>
+
+        <a href="/unified-editor-v2.html" class="btn main">Open Unified Editor v2 →</a>
+    </div>
+
+    <div class="editor-card">
+        <h2>Unified Editor v1 (Workflow-based)</h2>
+        <p class="timestamp">Last modified: Oct 6, 13:29</p>
+        <p>Stage-based workflow interface (Import → Structure → Enhance → Review)</p>
+        <a href="/unified-editor.html" class="btn">Open Unified Editor v1</a>
+    </div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 2px solid #e5e7eb;">
+
+    <h3>Other Available Editors:</h3>
+    <ul style="line-height: 2;">
+        <li><a href="/press-release-editor.html">Press Release Editor</a></li>
+        <li><a href="/op-ed-editor.html">Op-Ed Editor</a></li>
+        <li><a href="/speech-editor-thin.html">Speech Editor</a></li>
+        <li><a href="/social-media-editor.html">Social Media Editor</a></li>
+        <li><a href="/talking-points-editor.html">Talking Points Editor</a></li>
+    </ul>
+
+    <p style="margin-top: 40px; padding: 20px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+        <strong>📌 Bookmark this for later:</strong><br>
+        <code>http://localhost:3001/unified-editor-v2.html</code>
+    </p>
+</body>
+</html>

@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Campaign Editor v2 - Polis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .status-badge.status-draft {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .status-badge.status-awaiting-research {
+            background: rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.status-ready-for-review {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .status-badge.status-approved {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .status-badge.status-published {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--gray-100);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 0;
+            height: calc(100vh - 60px);
+        }
+
+        /* Left Panel - Document Editor */
+        .editor-panel {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--gray-200);
+        }
+
+        .editor-toolbar {
+            padding: 12px 20px;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-toolbar h2 {
+            font-size: 16px;
+            color: var(--gray-900);
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--gray-100);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .document-editor {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .doc-headline {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            line-height: 1.4;
+            min-height: 30px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .doc-headline:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .doc-subhead {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            color: var(--gray-700);
+            font-style: italic;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .doc-subhead:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .doc-dateline {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding: 6px 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            color: var(--gray-700);
+            letter-spacing: 0.5px;
+            max-height: 50px;
+            overflow-y: auto;
+        }
+
+        .doc-dateline:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        .doc-lede {
+            font-size: 15px;
+            line-height: 1.6;
+            padding: 8px;
+            border: 2px solid transparent;
+            border-left: 4px solid var(--info);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #eff6ff;
+            font-weight: 500;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .doc-lede:focus {
+            outline: none;
+            border-color: var(--info);
+            background: #dbeafe;
+        }
+
+        .doc-body {
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 8px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            min-height: 60px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .doc-body:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--gray-50);
+        }
+
+        /* Quote Styles */
+        .quote-candidate {
+            background: #d1fae5;
+            border-left: 4px solid var(--success);
+            padding: 8px;
+            margin: 0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .quote-candidate::before {
+            content: "💬 CANDIDATE QUOTE - Editable";
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 4px;
+        }
+
+        .quote-staff {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 8px;
+            margin: 0;
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .quote-staff::before {
+            content: "💼 STAFF QUOTE - Confirm before editing";
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .quote-outsider {
+            background: #fee2e2;
+            border-left: 4px solid var(--danger);
+            padding: 8px;
+            margin: 0;
+            border-radius: 4px;
+            position: relative;
+            cursor: not-allowed;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .quote-outsider::before {
+            content: "🔒 OUTSIDER QUOTE - Permission Required";
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--danger);
+            margin-bottom: 4px;
+        }
+
+        .quote-speaker {
+            font-size: 11px;
+            color: var(--gray-700);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Highlighted changes */
+        .highlight-change {
+            background: #fef3c7;
+            border-bottom: 2px solid var(--warning);
+            animation: highlight-flash 1s ease-in-out;
+        }
+
+        @keyframes highlight-flash {
+            0%, 100% { background: #fef3c7; }
+            50% { background: #fde68a; }
+        }
+
+        .highlight-issue {
+            background: #fef3c7;
+            border: 2px solid var(--warning);
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            animation: pulse-highlight 1s ease-in-out infinite;
+        }
+
+        .highlight-issue:hover {
+            background: #fde68a;
+        }
+
+        @keyframes pulse-highlight {
+            0%, 100% { background: #fef3c7; }
+            50% { background: #fde68a; }
+        }
+
+        .highlight-applied {
+            background: #d1fae5;
+            border: 2px solid var(--success);
+            padding: 2px 4px;
+            border-radius: 3px;
+            animation: success-flash 2s ease-in-out;
+        }
+
+        @keyframes success-flash {
+            0% { background: #86efac; }
+            50% { background: #d1fae5; }
+            100% { background: transparent; border: none; }
+        }
+
+        /* Right Panel - Recommendations */
+        .recommendations-panel {
+            background: var(--gray-50);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .panel-header h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .progress-summary {
+            display: flex;
+            gap: 12px;
+        }
+
+        .progress-badge {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .progress-badge.blocking {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .progress-badge.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .progress-badge.suggestion {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .progress-badge strong {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .panel-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .panel-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .panel-tab:hover {
+            background: var(--gray-50);
+        }
+
+        .panel-tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        /* Recommendation Cards */
+        .rec-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--gray-300);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s ease-out;
+            transform-origin: left center;
+        }
+
+        .rec-card.resolving {
+            transform: translateX(100%) scale(0.8);
+            opacity: 0;
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .rec-card.blocking {
+            border-left-color: var(--danger);
+        }
+
+        .rec-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .rec-card.suggestion {
+            border-left-color: var(--success);
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .rec-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .rec-severity {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .rec-severity.blocking {
+            background: var(--danger);
+            color: white;
+        }
+
+        .rec-severity.warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .rec-severity.suggestion {
+            background: var(--success);
+            color: white;
+        }
+
+        .rec-description {
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+        }
+
+        /* Diff View */
+        .diff-view {
+            background: var(--gray-50);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .diff-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: var(--gray-700);
+        }
+
+        .diff-before {
+            background: #fee2e2;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            text-decoration: line-through;
+            color: #991b1b;
+        }
+
+        .diff-after {
+            background: #d1fae5;
+            padding: 8px;
+            border-radius: 4px;
+            color: #065f46;
+        }
+
+        .rec-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        /* Resolved Issues Section */
+        .resolved-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid var(--gray-200);
+        }
+
+        .resolved-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .resolved-header:hover {
+            color: var(--primary);
+        }
+
+        .resolved-card {
+            background: var(--gray-50);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--gray-300);
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .resolved-card.fixed {
+            border-left-color: var(--success);
+        }
+
+        .resolved-card.dismissed {
+            border-left-color: var(--gray-400);
+        }
+
+        .resolved-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .resolved-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .resolved-badge.fixed {
+            background: var(--success);
+            color: white;
+        }
+
+        .resolved-badge.dismissed {
+            background: var(--gray-400);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid var(--gray-300);
+            color: var(--gray-700);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-100);
+        }
+
+        /* Preferences Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .pref-group {
+            margin-bottom: 20px;
+        }
+
+        .pref-group h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: var(--gray-700);
+        }
+
+        .pref-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: var(--gray-50);
+            border-radius: 6px;
+        }
+
+        .pref-option input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .pref-option label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Section View */
+        .section-view {
+            display: none;
+        }
+
+        .section-view.active {
+            display: block;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            position: relative;
+        }
+
+        .section-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .section-card:hover .section-actions {
+            opacity: 1;
+        }
+
+        .section-action-btn {
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .section-action-btn:hover {
+            background: var(--gray-200);
+        }
+
+        .section-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            min-width: 200px;
+            display: none;
+        }
+
+        .section-menu.active {
+            display: block;
+        }
+
+        .section-menu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .section-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .section-menu-item:hover {
+            background: var(--gray-50);
+        }
+
+        .section-menu-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .section-menu-item.disabled:hover {
+            background: white;
+        }
+
+        .section-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .section-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .section-status.found {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .section-status.missing {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .section-status.optional {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .section-status.ignored {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .section-content {
+            font-size: 13px;
+            color: var(--gray-700);
+            font-style: italic;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>📝 Unified Campaign Editor v2</h1>
+            <span id="documentStatus" class="status-badge status-draft">📝 Draft</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="window.location.href='/editor-queue.html'" title="Back to Queue">◀️</button>
+            <button class="btn-icon" onclick="showPreferences()" title="Preferences">⚙️</button>
+            <button class="btn btn-secondary" onclick="saveDraft()">💾 Save</button>
+            <button class="btn btn-primary" onclick="exportDocument()">📤 Export</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Panel - Document Editor -->
+        <div class="editor-panel">
+            <div class="editor-toolbar">
+                <h2>Document Editor</h2>
+                <div class="toolbar-actions">
+                    <button class="toolbar-btn active" data-view="full" onclick="switchView('full')">Full Document</button>
+                    <button class="toolbar-btn" data-view="sections" onclick="switchView('sections')">By Section</button>
+                </div>
+            </div>
+
+            <!-- Full Document View -->
+            <div class="document-editor" id="fullDocView">
+                <div contenteditable="true" id="fullDocText" oninput="syncFromFullDocument()" placeholder="Paste your press release here or click 'Load Sample'..." style="white-space: pre-wrap; line-height: 1.8; padding: 20px; min-height: 400px;">Click "Load Sample" or paste your press release</div>
+            </div>
+
+            <!-- Section View -->
+            <div class="section-view" id="sectionView">
+                <div id="sectionsContainer" style="padding: 20px;">
+                    <!-- Sections will be dynamically rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Recommendations -->
+        <div class="recommendations-panel">
+            <div class="panel-header">
+                <h2>Quality Checks</h2>
+                <div class="progress-summary">
+                    <div class="progress-badge blocking">
+                        <strong id="blockingCount">0</strong>
+                        <span>Blocking</span>
+                    </div>
+                    <div class="progress-badge warning">
+                        <strong id="warningCount">0</strong>
+                        <span>Warnings</span>
+                    </div>
+                    <div class="progress-badge suggestion">
+                        <strong id="suggestionCount">0</strong>
+                        <span>Tips</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-tabs">
+                <div class="panel-tab active" data-tab="all" onclick="switchTab('all')">All</div>
+                <div class="panel-tab" data-tab="compliance" onclick="switchTab('compliance')">Legal</div>
+                <div class="panel-tab" data-tab="style" onclick="switchTab('style')">Style</div>
+            </div>
+
+            <div class="panel-content" id="recommendationsContent">
+                <div style="text-align: center; color: var(--gray-700); padding: 40px 20px;">
+                    <p style="margin-bottom: 12px;">👆 Start editing your document</p>
+                    <button class="btn btn-primary" onclick="loadSample()">📄 Load Sample Release</button>
+                    <p style="margin-top: 12px; font-size: 12px;">Or paste your own content in the editor</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preferences Modal -->
+    <div class="modal-overlay" id="preferencesModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Editor Preferences</h3>
+            </div>
+            <div class="modal-body">
+                <div class="pref-group">
+                    <h4>Section Checks</h4>
+                    <p style="font-size: 13px; color: var(--gray-700); margin-bottom: 12px;">
+                        Skip these sections if they're in your page template:
+                    </p>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-skip-boilerplate" checked>
+                        <label for="pref-skip-boilerplate">Skip boilerplate/"About" section</label>
+                    </div>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-skip-contact" checked>
+                        <label for="pref-skip-contact">Skip contact information</label>
+                    </div>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-skip-disclaimer">
+                        <label for="pref-skip-disclaimer">Skip FEC disclaimer (only if in template)</label>
+                    </div>
+                </div>
+
+                <div class="pref-group">
+                    <h4>Compliance Checks</h4>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-check-plausible-deniability" checked>
+                        <label for="pref-check-plausible-deniability">Check for evasive language</label>
+                    </div>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-check-unsupported-claims" checked>
+                        <label for="pref-check-unsupported-claims">Flag unsupported claims</label>
+                    </div>
+                </div>
+
+                <div class="pref-group">
+                    <h4>Display</h4>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-show-diffs" checked>
+                        <label for="pref-show-diffs">Show before/after diffs for suggestions</label>
+                    </div>
+                    <div class="pref-option">
+                        <input type="checkbox" id="pref-auto-highlight" checked>
+                        <label for="pref-auto-highlight">Highlight issues in document</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closePreferences()">Cancel</button>
+                <button class="btn btn-primary" onclick="savePreferences()">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        window.editorState = {
+            document: {
+                headline: '',
+                dateline: '',
+                lede: '',
+                quotes: [],
+                body: '',
+                fullText: '',
+                status: 'draft', // draft, awaiting-research, ready-for-review, approved, published
+                dueDate: null,
+                priority: 'normal', // low, normal, high, urgent
+                lastModified: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            },
+            recommendations: [],
+            resolvedIssues: {
+                fixed: [],
+                dismissed: []
+            },
+            researchRequests: [],
+            preferences: {
+                skipBoilerplate: true,
+                skipContact: true,
+                skipDisclaimer: false,
+                checkPlausibleDeniability: true,
+                checkUnsupportedClaims: true,
+                showDiffs: true,
+                autoHighlight: true
+            },
+            currentView: 'full',
+            currentTab: 'all',
+            candidateName: 'Smith'  // TODO: Make this configurable
+        };
+
+        // Load preferences from localStorage
+        function loadPreferences() {
+            const saved = localStorage.getItem('editorPreferences');
+            if (saved) {
+                window.editorState.preferences = JSON.parse(saved);
+                applyPreferencesToUI();
+            }
+        }
+
+        function applyPreferencesToUI() {
+            const prefs = window.editorState.preferences;
+            document.getElementById('pref-skip-boilerplate').checked = prefs.skipBoilerplate;
+            document.getElementById('pref-skip-contact').checked = prefs.skipContact;
+            document.getElementById('pref-skip-disclaimer').checked = prefs.skipDisclaimer;
+            document.getElementById('pref-check-plausible-deniability').checked = prefs.checkPlausibleDeniability;
+            document.getElementById('pref-check-unsupported-claims').checked = prefs.checkUnsupportedClaims;
+            document.getElementById('pref-show-diffs').checked = prefs.showDiffs;
+            document.getElementById('pref-auto-highlight').checked = prefs.autoHighlight;
+        }
+
+        // Show/hide preferences modal
+        window.showPreferences = function() {
+            document.getElementById('preferencesModal').classList.add('active');
+        };
+
+        window.closePreferences = function() {
+            document.getElementById('preferencesModal').classList.remove('active');
+        };
+
+        window.savePreferences = function() {
+            const prefs = window.editorState.preferences;
+            prefs.skipBoilerplate = document.getElementById('pref-skip-boilerplate').checked;
+            prefs.skipContact = document.getElementById('pref-skip-contact').checked;
+            prefs.skipDisclaimer = document.getElementById('pref-skip-disclaimer').checked;
+            prefs.checkPlausibleDeniability = document.getElementById('pref-check-plausible-deniability').checked;
+            prefs.checkUnsupportedClaims = document.getElementById('pref-check-unsupported-claims').checked;
+            prefs.showDiffs = document.getElementById('pref-show-diffs').checked;
+            prefs.autoHighlight = document.getElementById('pref-auto-highlight').checked;
+
+            localStorage.setItem('editorPreferences', JSON.stringify(prefs));
+            closePreferences();
+
+            // Re-run checks with new preferences
+            runAllChecks();
+        };
+
+        // Switch between full/section view
+        window.switchView = function(view) {
+            window.editorState.currentView = view;
+
+            // Update toolbar buttons
+            document.querySelectorAll('.toolbar-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.view === view) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Show/hide views
+            if (view === 'full') {
+                document.getElementById('fullDocView').style.display = 'block';
+                document.getElementById('sectionView').classList.remove('active');
+            } else {
+                document.getElementById('fullDocView').style.display = 'none';
+                document.getElementById('sectionView').classList.add('active');
+                syncSectionView();
+            }
+        };
+
+        // Sync section view with full document
+        function syncSectionView() {
+            document.getElementById('sectionHeadline').textContent = document.getElementById('docHeadline').textContent;
+            document.getElementById('sectionDateline').textContent = document.getElementById('docDateline').textContent;
+            document.getElementById('sectionBody').textContent = document.getElementById('docBody').textContent;
+        }
+
+        // Switch recommendation tabs
+        window.switchTab = function(tab) {
+            window.editorState.currentTab = tab;
+
+            document.querySelectorAll('.panel-tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.dataset.tab === tab) {
+                    t.classList.add('active');
+                }
+            });
+
+            displayRecommendations();
+        };
+
+        // Parse quotes from text
+        // Parse document into structured sections with quotes and body interleaved
+        function parseDocumentStructure(text) {
+            const lines = text.split('\n');
+            const structure = [];
+            let sectionIndex = 0;
+
+            // Extract headline (line 0)
+            const headline = lines[0] || '';
+            structure.push({ type: 'headline', content: headline, index: sectionIndex++ });
+
+            // Find first non-empty line after headline (skip blank lines)
+            let currentLine = 1;
+            while (currentLine < lines.length && !lines[currentLine].trim()) {
+                currentLine++;
+            }
+
+            // Check if this line has a dateline pattern
+            if (currentLine < lines.length && lines[currentLine].trim()) {
+                const datelineData = parseDateline(lines[currentLine].trim());
+
+                // Only create separate dateline/lede if we successfully parsed them
+                if (datelineData.lede) {
+                    structure.push({ type: 'dateline', content: datelineData.fullDateline, index: sectionIndex++ });
+                    structure.push({ type: 'lede', content: datelineData.lede, index: sectionIndex++ });
+                    currentLine++;
+                } else {
+                    // No dateline pattern found, treat as regular paragraph
+                    // Don't increment currentLine, let it be processed below
+                }
+            }
+
+            // Process remaining paragraphs, identifying quotes
+            const remainingText = lines.slice(currentLine).join('\n');
+            const paragraphs = remainingText.split('\n\n').filter(p => p.trim());
+
+            paragraphs.forEach(para => {
+                const trimmed = para.trim();
+
+                // Check if paragraph contains quotes - look for ALL quotes
+                const allQuotes = [];
+                const quotePattern = /"([^"]+)"/g;
+                let quoteMatch;
+
+                while ((quoteMatch = quotePattern.exec(trimmed)) !== null) {
+                    allQuotes.push({
+                        text: quoteMatch[1],
+                        index: quoteMatch.index
+                    });
+                }
+
+                if (allQuotes.length > 0) {
+                    // Look for attribution in the paragraph
+                    const attributionMatch = trimmed.match(/,?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(said|stated|added|noted|explained|continued)/i);
+
+                    // Also check BEFORE the first quote for attribution
+                    const beforeFirstQuote = trimmed.substring(0, allQuotes[0].index);
+                    const beforeMatch = beforeFirstQuote.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(said|stated|added|noted|explained|continued)/i);
+
+                    let speaker = 'Unknown';
+                    let type = 'outsider';
+                    const speakerMatch = attributionMatch || beforeMatch;
+
+                    if (speakerMatch) {
+                        speaker = speakerMatch[1];
+
+                        if (speaker.toLowerCase().includes(window.editorState.candidateName.toLowerCase()) ||
+                            speaker.toLowerCase() === 'smith') {
+                            type = 'candidate';
+                        } else if (speaker.match(/Press Secretary|Campaign Manager|Communications Director|Deputy|Director|Manager|John Doe/i)) {
+                            type = 'staff';
+                        }
+                    }
+
+                    // Combine all quotes from the same paragraph/speaker
+                    // Clean up the quotes: if first quote ends with comma, change to period
+                    const combinedQuoteText = allQuotes.map((q, idx) => {
+                        let text = q.text;
+                        // If this isn't the last quote and it ends with a comma, replace with period
+                        if (idx < allQuotes.length - 1 && text.endsWith(',')) {
+                            text = text.slice(0, -1) + '.';
+                        }
+                        return text;
+                    }).join(' ');
+
+                    structure.push({
+                        type: 'quote',
+                        content: combinedQuoteText,
+                        speaker: speaker,
+                        quoteType: type,
+                        fullText: trimmed,
+                        index: sectionIndex++
+                    });
+                } else {
+                    // Regular body paragraph
+                    structure.push({
+                        type: 'body',
+                        content: trimmed,
+                        index: sectionIndex++
+                    });
+                }
+            });
+
+            return structure;
+        }
+
+        function parseQuotes(text) {
+            const quotes = [];
+            const quotePattern = /"([^"]+)"/g;
+            let match;
+
+            while ((match = quotePattern.exec(text)) !== null) {
+                const quoteText = match[1];
+                const fullMatch = match[0];
+
+                // Look for attribution AFTER the quote
+                const afterQuote = text.substring(match.index + fullMatch.length, match.index + fullMatch.length + 100);
+                const afterMatch = afterQuote.match(/,?\s*(Smith|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(said|stated|added|noted|explained|continued)/i);
+
+                // Look for attribution BEFORE the quote
+                const beforeQuote = text.substring(Math.max(0, match.index - 100), match.index);
+                const beforeMatch = beforeQuote.match(/(Smith|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(said|stated|added|noted|explained|continued)[^"]*$/i);
+
+                let speaker = 'Unknown';
+                let type = 'outsider';
+                let attributionMatch = afterMatch || beforeMatch;
+
+                if (attributionMatch) {
+                    speaker = attributionMatch[1];
+
+                    // Determine quote type
+                    if (speaker.toLowerCase().includes(window.editorState.candidateName.toLowerCase()) ||
+                        speaker.toLowerCase() === 'smith') {
+                        type = 'candidate';
+                    } else if (speaker.match(/Press Secretary|Campaign Manager|Communications Director|Deputy|Director|Manager/i)) {
+                        type = 'staff';
+                    } else {
+                        type = 'outsider';
+                    }
+                }
+
+                quotes.push({
+                    id: `quote-${quotes.length}`,
+                    text: quoteText,
+                    speaker: speaker,
+                    type: type,
+                    fullMatch: fullMatch,
+                    position: match.index
+                });
+            }
+
+            return quotes;
+        }
+
+        // Generate section header with action menu
+        function getSectionHeader(title, status, sectionIndex, showMenu = true) {
+            const menuHtml = showMenu ? `
+                <div class="section-actions">
+                    <button class="section-action-btn" onclick="toggleSectionMenu(${sectionIndex}, event)">⋮</button>
+                    <div class="section-menu" id="menu-${sectionIndex}">
+                        <div class="section-menu-item" onclick="insertSection(${sectionIndex}, 'before', 'body')">⬆️ Insert Body Paragraph Before</div>
+                        <div class="section-menu-item" onclick="insertSection(${sectionIndex}, 'after', 'body')">⬇️ Insert Body Paragraph After</div>
+                        <div class="section-menu-item" onclick="insertSection(${sectionIndex}, 'after', 'quote')">⬇️ Insert Quote After</div>
+                    </div>
+                </div>
+            ` : '';
+
+            return `
+                <div class="section-header">
+                    <span class="section-title">${title}</span>
+                    <div style="display: flex; align-items: center;">
+                        <span class="section-status ${status.toLowerCase()}">${status}</span>
+                        ${menuHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle section menu dropdown
+        window.toggleSectionMenu = function(sectionIndex, event) {
+            event.stopPropagation();
+            const menu = document.getElementById(`menu-${sectionIndex}`);
+
+            // Close all other menus
+            document.querySelectorAll('.section-menu').forEach(m => {
+                if (m.id !== `menu-${sectionIndex}`) {
+                    m.classList.remove('active');
+                }
+            });
+
+            // Toggle this menu
+            menu.classList.toggle('active');
+        };
+
+        // Insert a new section at the specified position
+        window.insertSection = function(sectionIndex, position, sectionType) {
+            const structure = window.editorState.document.structure;
+
+            // Determine insertion index
+            let insertIndex;
+            if (position === 'before') {
+                insertIndex = sectionIndex;
+            } else { // 'after'
+                insertIndex = sectionIndex + 1;
+            }
+
+            // Create new section based on type
+            let newSection;
+            if (sectionType === 'body') {
+                newSection = {
+                    type: 'body',
+                    content: '[New body paragraph - click to edit]',
+                    index: insertIndex
+                };
+            } else if (sectionType === 'quote') {
+                newSection = {
+                    type: 'quote',
+                    content: 'New quote text',
+                    speaker: 'Speaker Name',
+                    quoteType: 'candidate',
+                    index: insertIndex
+                };
+            }
+
+            // Insert the new section
+            structure.splice(insertIndex, 0, newSection);
+
+            // Re-index all sections
+            structure.forEach((section, idx) => {
+                section.index = idx;
+            });
+
+            // Rebuild full document from structure
+            const fullText = reconstructFullDocument(structure);
+            const fullDocEl = document.getElementById('fullDocText');
+
+            // Update full document view
+            fullDocEl.oninput = null;
+            fullDocEl.textContent = fullText;
+            fullDocEl.oninput = () => window.syncFromFullDocument();
+
+            // Update state
+            window.editorState.document.fullText = fullText;
+            window.editorState.document.structure = structure;
+
+            // Re-render sections
+            renderSections();
+
+            // Close all menus
+            document.querySelectorAll('.section-menu').forEach(m => {
+                m.classList.remove('active');
+            });
+
+            // Trigger quality check
+            debouncedQualityCheck();
+        };
+
+        // Render all sections in order
+        function renderSections() {
+            const container = document.getElementById('sectionsContainer');
+            const structure = window.editorState.document.structure || [];
+
+            if (structure.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray-700); padding: 40px;">Load a document to see sections</p>';
+                return;
+            }
+
+            const html = structure.map(section => {
+                const sectionId = `section-${section.index}`;
+
+                switch (section.type) {
+                    case 'headline':
+                        return `
+                            <div class="section-card" data-section-type="headline" data-section-index="${section.index}">
+                                <div class="section-header">
+                                    <span class="section-title">📰 Headline</span>
+                                    <span class="section-status found">FOUND</span>
+                                </div>
+                                <div class="doc-headline" contenteditable="true" id="${sectionId}" oninput="syncFromSection(${section.index})">${escapeHtml(section.content)}</div>
+                            </div>
+                        `;
+
+                    case 'subhead':
+                        return `
+                            <div class="section-card" data-section-type="subhead" data-section-index="${section.index}">
+                                <div class="section-header">
+                                    <span class="section-title">📝 Subhead</span>
+                                    <span class="section-status optional">OPTIONAL</span>
+                                </div>
+                                <div class="doc-subhead" contenteditable="true" id="${sectionId}" oninput="syncFromSection(${section.index})">${escapeHtml(section.content)}</div>
+                            </div>
+                        `;
+
+                    case 'dateline':
+                        return `
+                            <div class="section-card" data-section-type="dateline" data-section-index="${section.index}">
+                                <div class="section-header">
+                                    <span class="section-title">📅 Dateline (Location & Date)</span>
+                                    <span class="section-status found">FOUND</span>
+                                </div>
+                                <div class="doc-dateline" contenteditable="true" id="${sectionId}" oninput="syncFromSection(${section.index})">${escapeHtml(section.content)}</div>
+                            </div>
+                        `;
+
+                    case 'lede':
+                        return `
+                            <div class="section-card" data-section-type="lede" data-section-index="${section.index}">
+                                <div class="section-header">
+                                    <span class="section-title">📰 Lead Paragraph</span>
+                                    <span class="section-status found">FOUND</span>
+                                </div>
+                                <div class="section-lede-content" contenteditable="true" id="${sectionId}" oninput="syncFromSection(${section.index})" style="font-size: 14px; line-height: 1.6; padding: 8px; border: 2px solid transparent; border-radius: 4px; min-height: 60px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;">${escapeHtml(section.content)}</div>
+                            </div>
+                        `;
+
+                    case 'quote':
+                        const className = `quote-${section.quoteType}`;
+                        const editable = section.quoteType !== 'outsider';
+                        const onclick = section.quoteType === 'outsider' ?
+                            `onclick="handleOutsiderQuoteClick('${sectionId}')"` :
+                            (section.quoteType === 'staff' ? `onclick="handleStaffQuoteClick('${sectionId}')"` : '');
+
+                        return `
+                            <div class="section-card" data-section-type="quote" data-section-index="${section.index}">
+                                ${getSectionHeader('💬 Quote', 'FOUND', section.index)}
+                                <div class="${className}" ${onclick}>
+                                    <div contenteditable="${editable}" id="${sectionId}" oninput="syncFromSection(${section.index})">"${escapeHtml(section.content)}"</div>
+                                    <div class="quote-speaker">— ${escapeHtml(section.speaker)}</div>
+                                </div>
+                            </div>
+                        `;
+
+                    case 'body':
+                        return `
+                            <div class="section-card" data-section-type="body" data-section-index="${section.index}">
+                                ${getSectionHeader('📄 Body Paragraph', 'FOUND', section.index)}
+                                <div class="doc-body" contenteditable="true" id="${sectionId}" oninput="syncFromSection(${section.index})">${escapeHtml(section.content)}</div>
+                            </div>
+                        `;
+
+                    default:
+                        return '';
+                }
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Debounced quality check timer
+        let qualityCheckTimeout = null;
+
+        function debouncedQualityCheck() {
+            if (qualityCheckTimeout) {
+                clearTimeout(qualityCheckTimeout);
+            }
+            qualityCheckTimeout = setTimeout(() => {
+                runAllChecks();
+            }, 1000); // Wait 1 second after user stops typing
+        }
+
+        // Sync changes from section view back to full document
+        window.syncFromSection = function(sectionIndex) {
+            const structure = window.editorState.document.structure;
+            const section = structure[sectionIndex];
+            const sectionEl = document.getElementById(`section-${sectionIndex}`);
+
+            if (!sectionEl || !section) return;
+
+            // Update structure - get the actual text content
+            // For quotes, strip the quotes that are in the display
+            let newContent = sectionEl.textContent;
+            if (section.type === 'quote') {
+                // Remove surrounding quotes if present
+                newContent = newContent.replace(/^[""](.*)[""]$/, '$1');
+            }
+            section.content = newContent;
+
+            // Rebuild full document from structure
+            const fullText = reconstructFullDocument(structure);
+            const fullDocEl = document.getElementById('fullDocText');
+
+            // Temporarily remove event listener to avoid infinite loop
+            fullDocEl.oninput = null;
+            fullDocEl.textContent = fullText;
+            fullDocEl.oninput = () => window.syncFromFullDocument();
+
+            // Update state
+            window.editorState.document.fullText = fullText;
+
+            // Trigger debounced quality check
+            debouncedQualityCheck();
+        };
+
+        // Sync changes from full document back to section view
+        window.syncFromFullDocument = function() {
+            const fullDocEl = document.getElementById('fullDocText');
+            const fullText = fullDocEl.textContent;
+
+            // Reparse the document structure
+            const structure = parseDocumentStructure(fullText);
+            window.editorState.document.structure = structure;
+            window.editorState.document.fullText = fullText;
+
+            // Re-render sections
+            renderSections();
+
+            // Trigger debounced quality check
+            debouncedQualityCheck();
+        };
+
+        // Reconstruct full document from structure
+        function reconstructFullDocument(structure) {
+            const parts = [];
+
+            structure.forEach(section => {
+                switch (section.type) {
+                    case 'headline':
+                        parts.push(section.content);
+                        parts.push('');  // Empty line after headline
+                        break;
+
+                    case 'subhead':
+                        parts.push(section.content);
+                        parts.push('');
+                        break;
+
+                    case 'dateline':
+                        // Dateline and lede are combined on same line
+                        const nextSection = structure[section.index + 1];
+                        if (nextSection && nextSection.type === 'lede') {
+                            parts.push(`${section.content} – ${nextSection.content}`);
+                            parts.push('');
+                        } else {
+                            parts.push(section.content);
+                            parts.push('');
+                        }
+                        break;
+
+                    case 'lede':
+                        // Skip - handled with dateline
+                        break;
+
+                    case 'quote':
+                        parts.push(`"${section.content}" ${section.speaker} said.`);
+                        parts.push('');
+                        break;
+
+                    case 'body':
+                        parts.push(section.content);
+                        parts.push('');
+                        break;
+                }
+            });
+
+            return parts.join('\n');
+        }
+
+        // Handle outsider quote click
+        window.handleOutsiderQuoteClick = function(quoteId) {
+            const confirmed = confirm(
+                '🔒 OUTSIDER QUOTE\n\n' +
+                'This quote is from someone outside the campaign. ' +
+                'You must obtain permission from the speaker before editing.\n\n' +
+                'Do you have permission to edit this quote?'
+            );
+
+            if (confirmed) {
+                const textEl = document.getElementById(`${quoteId}-text`);
+                textEl.contentEditable = 'true';
+                textEl.focus();
+                textEl.style.cursor = 'text';
+            }
+        };
+
+        // Handle staff quote click
+        window.handleStaffQuoteClick = function(quoteId) {
+            const confirmed = confirm(
+                '💼 STAFF QUOTE\n\n' +
+                'This quote is from campaign staff. ' +
+                'Consider confirming changes with the speaker.\n\n' +
+                'Continue editing?'
+            );
+
+            if (confirmed) {
+                const textEl = document.getElementById(`${quoteId}-text`);
+                textEl.focus();
+            }
+        };
+
+        // Parse dateline format: "LOCATION – DATE – Lead sentence"
+        function parseDateline(text) {
+            // Match pattern: LOCATION – DATE – Lede
+            const datelinePattern = /^([A-Z\s,]+)\s*[–—-]\s*([^–—-]+)\s*[–—-]\s*(.+)$/;
+            const match = text.match(datelinePattern);
+
+            if (match) {
+                return {
+                    location: match[1].trim(),
+                    date: match[2].trim(),
+                    lede: match[3].trim(),
+                    fullDateline: `${match[1].trim()} – ${match[2].trim()}`
+                };
+            }
+
+            // Fallback: treat entire line as dateline
+            return {
+                location: '',
+                date: '',
+                lede: '',
+                fullDateline: text
+            };
+        }
+
+        // Load sample press release
+        window.loadSample = function() {
+            const sampleText = `Smith Announces Weekend Canvass Launch to Register New Voters
+
+CLEVELAND, OH – October 15, 2025 – Congressional candidate Jane Smith today announced a grassroots canvassing effort launching this Saturday to register new voters ahead of the upcoming election.
+
+"Some say voter registration isn't important, but we know every voice matters in our democracy," Smith stated at a press conference this morning. "This weekend, our volunteers will knock on thousands of doors across the district."
+
+The canvass launch will begin at 10 AM on Saturday at the campaign headquarters located at 123 Main Street. Volunteers will receive training and materials before heading out into neighborhoods.
+
+According to recent polling, many believe turnout will be decisive in this race. Smith's campaign has set a goal of registering 5,000 new voters before the registration deadline.
+
+"We're building a movement that puts people first," Smith added. "Whether it's healthcare, education, or jobs, working families deserve a champion in Congress."
+
+Smith is running for Congress in Ohio's 7th district. She previously served on Cleveland City Council for six years.
+
+For more information, visit janesmithforcongress.org or contact Press Secretary John Doe at press@janesmithforcongress.org.`;
+
+            // 1. Update Full Document View - just the raw text with paragraph breaks
+            document.getElementById('fullDocText').textContent = sampleText;
+
+            // 2. Parse document into structured sections
+            const structure = parseDocumentStructure(sampleText);
+            window.editorState.document.structure = structure;
+            window.editorState.document.fullText = sampleText;
+
+            // 3. Render section view with interleaved quotes and body sections
+            renderSections();
+
+            runAllChecks();
+        };
+
+        // Run all quality checks
+        function runAllChecks() {
+            const fullDocEl = document.getElementById('fullDocText');
+            const fullText = fullDocEl ? fullDocEl.textContent : window.editorState.document.fullText || '';
+
+            window.editorState.document.fullText = fullText;
+
+            const recommendations = [];
+
+            // FEC Disclaimer check (unless skipped in preferences)
+            if (!window.editorState.preferences.skipDisclaimer && !fullText.match(/paid for by/i)) {
+                recommendations.push({
+                    id: 'fec-disclaimer',
+                    category: 'compliance',
+                    severity: 'blocking',
+                    title: 'Missing FEC Disclaimer',
+                    description: 'Federal law requires "Paid for by" disclaimer on campaign communications.',
+                    original: '',
+                    suggestion: 'Paid for by [Campaign Name]. Not authorized by any candidate or candidate\'s committee.',
+                    location: 'end',
+                    autoFix: true
+                });
+            }
+
+            // Plausible deniability checks
+            if (window.editorState.preferences.checkPlausibleDeniability) {
+                const pdPhrases = [
+                    { phrase: 'some say', replacement: 'According to [source],' },
+                    { phrase: 'many believe', replacement: 'Studies show' },
+                    { phrase: 'it is said', replacement: 'Research indicates' },
+                    { phrase: 'critics claim', replacement: '[Specific source] states' }
+                ];
+
+                pdPhrases.forEach(({ phrase, replacement }) => {
+                    const regex = new RegExp(phrase, 'gi');
+                    const matches = fullText.match(regex);
+                    if (matches) {
+                        // Find the sentence containing this phrase
+                        const sentences = fullText.split(/\.\s+/);
+                        sentences.forEach(sentence => {
+                            if (sentence.toLowerCase().includes(phrase)) {
+                                const suggested = sentence.replace(regex, replacement);
+                                recommendations.push({
+                                    id: `pd-${phrase.replace(/\s/g, '-')}`,
+                                    category: 'style',
+                                    severity: 'warning',
+                                    title: 'Evasive Language Detected',
+                                    description: `Phrase "${phrase}" weakens credibility. Use direct attribution.`,
+                                    original: sentence + '.',
+                                    suggestion: suggested + '.',
+                                    location: 'inline',
+                                    autoFix: false
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Unsupported claims
+            if (window.editorState.preferences.checkUnsupportedClaims) {
+                if (/according to recent polling/i.test(fullText)) {
+                    const match = fullText.match(/([^.]*according to recent polling[^.]*\.)/i);
+                    if (match) {
+                        recommendations.push({
+                            id: 'unsupported-polling',
+                            category: 'compliance',
+                            severity: 'warning',
+                            title: 'Unsupported Claim - Needs Citation',
+                            description: 'Polling data requires specific source citation.',
+                            original: match[1],
+                            suggestion: match[1].replace(/according to recent polling/i, (matched) => {
+                                // Preserve capitalization of original
+                                const startsWithCap = matched.charAt(0) === matched.charAt(0).toUpperCase();
+                                return startsWithCap ? 'According to [Poll Name, Date],' : 'according to [Poll Name, Date],';
+                            }),
+                            location: 'inline',
+                            autoFix: false,
+                            requiresResearch: true,
+                            researchQuery: 'polling data on voter turnout ' + new Date().getFullYear()
+                        });
+                    }
+                }
+            }
+
+            window.editorState.recommendations = recommendations;
+            displayRecommendations();
+            updateProgressSummary();
+        }
+
+        // Display recommendations
+        function displayRecommendations() {
+            const recs = window.editorState.recommendations;
+            const currentTab = window.editorState.currentTab;
+
+            let filtered = recs;
+            if (currentTab !== 'all') {
+                filtered = recs.filter(r => r.category === currentTab);
+            }
+
+            if (filtered.length === 0) {
+                document.getElementById('recommendationsContent').innerHTML = `
+                    <div style="text-align: center; color: var(--gray-700); padding: 40px 20px;">
+                        <p>✓ No issues found in this category</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const showDiffs = window.editorState.preferences.showDiffs;
+
+            const html = filtered.map(rec => {
+                const diffHTML = showDiffs && rec.original ? `
+                    <div class="diff-view">
+                        <div class="diff-label">Before:</div>
+                        <div class="diff-before">${escapeHtml(rec.original)}</div>
+                        <div class="diff-label">After:</div>
+                        <div class="diff-after">${escapeHtml(rec.suggestion)}</div>
+                    </div>
+                ` : `
+                    <div class="diff-view">
+                        <div class="diff-after">${escapeHtml(rec.suggestion)}</div>
+                    </div>
+                `;
+
+                return `
+                    <div class="rec-card ${rec.severity}" data-rec-id="${rec.id}" onclick="highlightIssueInDocument('${rec.id}')" style="cursor: pointer;">
+                        <div class="rec-header">
+                            <span class="rec-title">${rec.title}</span>
+                            <span class="rec-severity ${rec.severity}">${rec.severity}</span>
+                        </div>
+                        <div class="rec-description">${rec.description}</div>
+                        ${diffHTML}
+                        <div class="rec-actions" onclick="event.stopPropagation()">
+                            <button class="btn-sm btn-success" onclick="applyRecommendation('${rec.id}')">
+                                ✓ Apply
+                            </button>
+                            <button class="btn-sm btn-outline" onclick="editAndApply('${rec.id}')">
+                                ✎ Edit & Apply
+                            </button>
+                            <button class="btn-sm btn-outline" onclick="dismissRecommendation('${rec.id}')">
+                                ✕ Dismiss
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Add resolved issues section
+            const fixedIssues = window.editorState.resolvedIssues.fixed;
+            const dismissedIssues = window.editorState.resolvedIssues.dismissed;
+            const totalResolved = fixedIssues.length + dismissedIssues.length;
+
+            let resolvedHTML = '';
+            if (totalResolved > 0) {
+                const resolvedItemsHTML = [
+                    ...fixedIssues.map(issue => `
+                        <div class="resolved-card fixed">
+                            <div class="resolved-title">
+                                ${issue.title}
+                                <span class="resolved-badge fixed">FIXED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--gray-700);">${issue.description}</div>
+                        </div>
+                    `),
+                    ...dismissedIssues.map(issue => `
+                        <div class="resolved-card dismissed">
+                            <div class="resolved-title">
+                                ${issue.title}
+                                <span class="resolved-badge dismissed">DISMISSED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--gray-700);">${issue.description}</div>
+                        </div>
+                    `)
+                ].join('');
+
+                resolvedHTML = `
+                    <div class="resolved-section">
+                        <div class="resolved-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                            <span>✓ Resolved Issues (${totalResolved})</span>
+                            <span style="font-size: 12px; font-weight: normal; opacity: 0.7;">${fixedIssues.length} fixed, ${dismissedIssues.length} dismissed</span>
+                        </div>
+                        <div style="display: none;">
+                            ${resolvedItemsHTML}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('recommendationsContent').innerHTML = html + resolvedHTML;
+        }
+
+        // Highlight issue in document when clicking on recommendation
+        window.highlightIssueInDocument = function(recId) {
+            const rec = window.editorState.recommendations.find(r => r.id === recId);
+            if (!rec) return;
+
+            const textToFind = rec.original || rec.suggestion;
+            if (!textToFind) return;
+
+            // Remove any existing highlights
+            clearHighlights();
+
+            // Determine which view is active
+            const fullDocView = document.getElementById('fullDocView');
+            const sectionView = document.getElementById('sectionView');
+            const isFullView = fullDocView && !fullDocView.classList.contains('hidden');
+
+            if (isFullView) {
+                // Highlight in full document view
+                highlightInFullDocument(textToFind);
+            } else {
+                // Highlight in section view
+                highlightInSectionView(textToFind);
+            }
+        };
+
+        function highlightInFullDocument(textToFind) {
+            const fullDocEl = document.getElementById('fullDocText');
+            if (!fullDocEl) return;
+
+            const fullText = fullDocEl.textContent;
+            const index = fullText.indexOf(textToFind);
+
+            if (index === -1) return;
+
+            // Create a temporary span to wrap the highlight
+            const range = document.createRange();
+            const textNode = findTextNodeAtOffset(fullDocEl, index);
+
+            if (textNode) {
+                const localOffset = index - getTextNodeOffset(fullDocEl, textNode);
+                range.setStart(textNode, localOffset);
+                range.setEnd(textNode, localOffset + textToFind.length);
+
+                const span = document.createElement('span');
+                span.className = 'highlight-issue';
+                span.id = 'current-highlight';
+                range.surroundContents(span);
+
+                // Scroll to highlight
+                span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function highlightInSectionView(textToFind) {
+            // Search through all section elements
+            const sections = document.querySelectorAll('[data-section-index]');
+            let found = false;
+
+            sections.forEach(section => {
+                const contentEl = section.querySelector('[contenteditable]');
+                if (!contentEl || found) return;
+
+                const text = contentEl.textContent;
+                if (text.includes(textToFind)) {
+                    // Highlight this section card
+                    section.style.boxShadow = '0 0 0 3px #fef3c7';
+                    section.style.background = '#fffbeb';
+
+                    // Try to highlight the specific text within the section
+                    try {
+                        const fullText = contentEl.textContent;
+                        const index = fullText.indexOf(textToFind);
+
+                        if (index !== -1) {
+                            const textNode = findTextNodeAtOffset(contentEl, index);
+                            if (textNode) {
+                                const range = document.createRange();
+                                const localOffset = index - getTextNodeOffset(contentEl, textNode);
+                                range.setStart(textNode, localOffset);
+                                range.setEnd(textNode, localOffset + textToFind.length);
+
+                                const span = document.createElement('span');
+                                span.className = 'highlight-issue';
+                                span.id = 'current-highlight';
+                                range.surroundContents(span);
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Could not highlight text:', e);
+                    }
+
+                    // Scroll to section
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    found = true;
+                }
+            });
+        }
+
+        // Helper function to find text node at specific offset
+        function findTextNodeAtOffset(element, targetOffset) {
+            let currentOffset = 0;
+            const walker = document.createTreeWalker(
+                element,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+
+            let node;
+            while (node = walker.nextNode()) {
+                const nodeLength = node.textContent.length;
+                if (currentOffset + nodeLength >= targetOffset) {
+                    return node;
+                }
+                currentOffset += nodeLength;
+            }
+            return null;
+        }
+
+        // Helper function to get offset of text node within parent
+        function getTextNodeOffset(parent, targetNode) {
+            let offset = 0;
+            const walker = document.createTreeWalker(
+                parent,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+
+            let node;
+            while (node = walker.nextNode()) {
+                if (node === targetNode) {
+                    return offset;
+                }
+                offset += node.textContent.length;
+            }
+            return 0;
+        }
+
+        // Clear all highlights
+        function clearHighlights() {
+            // Clear highlights in full document view
+            const fullDocEl = document.getElementById('fullDocText');
+            if (fullDocEl) {
+                const highlights = fullDocEl.querySelectorAll('.highlight-issue, .highlight-applied');
+                highlights.forEach(el => {
+                    const parent = el.parentNode;
+                    if (parent) {
+                        parent.replaceChild(document.createTextNode(el.textContent), el);
+                    }
+                });
+            }
+
+            // Clear highlights in section view
+            const sections = document.querySelectorAll('[data-section-index]');
+            sections.forEach(section => {
+                // Clear card highlighting
+                section.style.boxShadow = '';
+                section.style.background = '';
+
+                // Clear text highlights within sections
+                const highlights = section.querySelectorAll('.highlight-issue, .highlight-applied');
+                highlights.forEach(el => {
+                    const parent = el.parentNode;
+                    if (parent) {
+                        parent.replaceChild(document.createTextNode(el.textContent), el);
+                    }
+                });
+            });
+        }
+
+        // Apply recommendation
+        window.applyRecommendation = function(recId) {
+            const rec = window.editorState.recommendations.find(r => r.id === recId);
+            if (!rec) return;
+
+            // Add animation class to the card
+            const cardEl = document.querySelector(`.rec-card[data-rec-id="${recId}"]`);
+            if (cardEl) {
+                cardEl.classList.add('resolving');
+            }
+
+            // Wait for animation to complete before applying changes
+            setTimeout(() => {
+                const bodyEl = document.getElementById('docBody');
+
+                // Clear existing highlights first
+                clearHighlights();
+
+                let content = bodyEl.textContent;
+
+                if (rec.location === 'inline' && rec.original) {
+                    // Replace the original text with suggestion
+                    content = content.replace(rec.original, rec.suggestion);
+                    bodyEl.textContent = content;
+
+                    // Highlight the applied change with persistent green highlight
+                    const currentHTML = bodyEl.innerHTML;
+                    const escapedSuggestion = escapeHtml(rec.suggestion);
+                    const highlightedHTML = currentHTML.replace(
+                        escapedSuggestion,
+                        `<span class="highlight-applied" id="applied-highlight">${escapedSuggestion}</span>`
+                    );
+
+                    bodyEl.innerHTML = highlightedHTML;
+
+                    // Scroll to the change
+                    const appliedEl = document.getElementById('applied-highlight');
+                    if (appliedEl) {
+                        appliedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => {
+                        bodyEl.innerHTML = bodyEl.textContent;
+                    }, 3000);
+
+                } else if (rec.location === 'end') {
+                    // Append to end
+                    content += '\n\n' + rec.suggestion;
+                    bodyEl.textContent = content;
+
+                    // Scroll to bottom
+                    bodyEl.scrollTop = bodyEl.scrollHeight;
+                }
+
+                // Add to fixed issues
+                window.editorState.resolvedIssues.fixed.push({
+                    ...rec,
+                    resolvedAt: new Date().toISOString()
+                });
+
+                // Remove from recommendations
+                window.editorState.recommendations = window.editorState.recommendations.filter(r => r.id !== recId);
+                displayRecommendations();
+                updateProgressSummary();
+            }, 300); // Match animation duration
+        };
+
+        // Edit and apply
+        window.editAndApply = function(recId) {
+            const rec = window.editorState.recommendations.find(r => r.id === recId);
+            if (!rec) return;
+
+            const edited = prompt('Edit the suggestion:', rec.suggestion);
+            if (edited && edited.trim()) {
+                rec.suggestion = edited.trim();
+
+                // If this still contains placeholder brackets, mark as needing research
+                if (edited.includes('[') && edited.includes(']') && rec.requiresResearch) {
+                    // Add to research requests
+                    window.editorState.researchRequests.push({
+                        id: `research-${Date.now()}`,
+                        query: rec.researchQuery || 'Research needed for: ' + rec.title,
+                        context: edited,
+                        createdAt: new Date().toISOString(),
+                        status: 'pending', // pending, in-progress, completed
+                        relatedIssue: recId
+                    });
+
+                    // Update document status
+                    window.editorState.document.status = 'awaiting-research';
+                    updateDocumentStatus();
+
+                    console.log('🔍 Research request created:', rec.researchQuery);
+                }
+
+                applyRecommendation(recId);
+            }
+        };
+
+        // Dismiss recommendation
+        window.dismissRecommendation = function(recId) {
+            const rec = window.editorState.recommendations.find(r => r.id === recId);
+            if (!rec) return;
+
+            // Add animation class to the card
+            const cardEl = document.querySelector(`.rec-card[data-rec-id="${recId}"]`);
+            if (cardEl) {
+                cardEl.classList.add('resolving');
+            }
+
+            // Wait for animation to complete before removing
+            setTimeout(() => {
+                // Add to dismissed issues
+                window.editorState.resolvedIssues.dismissed.push({
+                    ...rec,
+                    resolvedAt: new Date().toISOString()
+                });
+
+                // Remove from recommendations
+                window.editorState.recommendations = window.editorState.recommendations.filter(r => r.id !== recId);
+                displayRecommendations();
+                updateProgressSummary();
+            }, 300); // Match animation duration
+        };
+
+
+        // Update progress summary
+        function updateProgressSummary() {
+            const recs = window.editorState.recommendations;
+            const blocking = recs.filter(r => r.severity === 'blocking').length;
+            const warnings = recs.filter(r => r.severity === 'warning').length;
+            const suggestions = recs.filter(r => r.severity === 'suggestion').length;
+
+            document.getElementById('blockingCount').textContent = blocking;
+            document.getElementById('warningCount').textContent = warnings;
+            document.getElementById('suggestionCount').textContent = suggestions;
+        }
+
+        // Update document status display
+        function updateDocumentStatus() {
+            const status = window.editorState.document.status;
+            const researchCount = window.editorState.researchRequests.filter(r => r.status === 'pending').length;
+
+            // Update status badge in header (we'll add this to HTML)
+            const statusBadge = document.getElementById('documentStatus');
+            if (statusBadge) {
+                const statusLabels = {
+                    'draft': '📝 Draft',
+                    'awaiting-research': `🔍 Awaiting Research (${researchCount})`,
+                    'ready-for-review': '✅ Ready for Review',
+                    'approved': '👍 Approved',
+                    'published': '🚀 Published'
+                };
+                statusBadge.textContent = statusLabels[status] || status;
+                statusBadge.className = `status-badge status-${status}`;
+            }
+
+            console.log(`📊 Document status: ${status}, Research requests: ${researchCount}`);
+        }
+
+        // Auto-run checks on content change
+        ['docHeadline', 'docDateline', 'docBody'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', debounce(() => {
+                runAllChecks();
+            }, 500));
+        });
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Save draft
+        window.saveDraft = function() {
+            // Save to queue
+            saveDocumentToQueue();
+
+            // Show confirmation
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Saved';
+            btn.style.background = 'var(--success)';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        };
+
+        // Export document
+        window.exportDocument = function() {
+            const fullText = window.editorState.document.fullText;
+            const blob = new Blob([fullText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'press-release.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // Close menus when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.section-actions')) {
+                document.querySelectorAll('.section-menu').forEach(m => {
+                    m.classList.remove('active');
+                });
+            }
+        });
+
+        // Load document from queue
+        function loadDocumentFromQueue() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const docId = urlParams.get('docId');
+
+            if (docId) {
+                const documents = JSON.parse(localStorage.getItem('polisDocuments') || '[]');
+                const doc = documents.find(d => d.id === docId);
+
+                if (doc) {
+                    // Store current document ID
+                    window.editorState.currentDocId = docId;
+
+                    // Load document data
+                    window.editorState.document = {
+                        ...window.editorState.document,
+                        ...doc
+                    };
+
+                    // Load text into Full Document view
+                    const fullDocEl = document.getElementById('fullDocText');
+                    if (fullDocEl && doc.fullText) {
+                        fullDocEl.textContent = doc.fullText;
+
+                        // Parse and render sections
+                        syncFromFullDocument();
+
+                        // Run quality checks
+                        runAllChecks();
+                    }
+
+                    // Update status display
+                    updateDocumentStatus();
+
+                    console.log('✅ Loaded document:', doc.headline);
+                }
+            }
+        }
+
+        // Save document back to queue
+        function saveDocumentToQueue() {
+            const docId = window.editorState.currentDocId;
+            if (!docId) {
+                console.log('No document ID, not saving to queue');
+                return;
+            }
+
+            const documents = JSON.parse(localStorage.getItem('polisDocuments') || '[]');
+            const docIndex = documents.findIndex(d => d.id === docId);
+
+            if (docIndex >= 0) {
+                // Update document
+                documents[docIndex] = {
+                    ...documents[docIndex],
+                    headline: window.editorState.document.structure?.[0]?.content || documents[docIndex].headline,
+                    fullText: window.editorState.document.fullText,
+                    status: window.editorState.document.status,
+                    priority: window.editorState.document.priority,
+                    dueDate: window.editorState.document.dueDate,
+                    lastModified: new Date().toISOString(),
+                    researchCount: window.editorState.researchRequests.filter(r => r.status === 'pending').length
+                };
+
+                localStorage.setItem('polisDocuments', JSON.stringify(documents));
+                console.log('💾 Saved to queue:', documents[docIndex].headline);
+            }
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            if (window.editorState.currentDocId) {
+                saveDocumentToQueue();
+            }
+        }, 30000);
+
+        // Initialize
+        loadPreferences();
+        loadDocumentFromQueue();
+        console.log('Unified Editor v2 initialized');
+    </script>
+</body>
+</html>
