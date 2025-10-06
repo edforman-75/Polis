@@ -1,0 +1,5 @@
+stages = [
+  { name = "example_parse", fixture = "tests/fixtures/sample_press_release.txt" },
+  "example_label",
+  { name = "example_write", out = "artifacts/pipeline_output.json" },
+]
