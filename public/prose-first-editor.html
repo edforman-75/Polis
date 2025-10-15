@@ -896,6 +896,130 @@
                         });
                     }
                 }
+            } else if (contentType === 'qapage' || contentType === 'faqpage') {
+                // Q&A and FAQ validation based on QAPage/FAQPage JSON-LD schema
+
+                // Parse questions and answers from prose
+                const questions = [];
+                const paragraphs = prose.split('\n').filter(p => p.trim());
+
+                // Extract Q&A pairs (looking for bold questions or "Question:"/"Answer:" patterns)
+                for (let i = 0; i < paragraphs.length; i++) {
+                    const para = paragraphs[i];
+
+                    // Check if this is a question (starts with bold ** or contains "Question:")
+                    if (para.match(/^<strong>|^\*\*|Question:/i)) {
+                        const questionText = para.replace(/<\/?strong>/g, '').replace(/^\*\*|\*\*$/g, '').replace(/^Question:\s*/i, '').trim();
+                        const nextPara = paragraphs[i + 1] || '';
+                        const answerText = nextPara.replace(/^(Answer:|Emma's Answer:)\s*/i, '').trim();
+
+                        questions.push({ question: questionText, answer: answerText });
+                    }
+                }
+
+                if (contentType === 'qapage') {
+                    // ❌ Required: mainEntity.name (question text)
+                    const mainQuestion = questions[0]?.question || '';
+                    if (!mainQuestion) {
+                        recs.errors.push({
+                            label: 'Missing question text',
+                            description: 'Add clear question in headline or first paragraph',
+                            field: 'mainEntity.name',
+                            suggestion: 'Example: "Where do you stand on reproductive rights?"'
+                        });
+                    }
+
+                    // ❌ Required: acceptedAnswer.text
+                    const mainAnswer = questions[0]?.answer || '';
+                    if (!mainAnswer) {
+                        recs.errors.push({
+                            label: 'Missing answer text',
+                            description: 'Provide substantive answer to the question',
+                            field: 'mainEntity.acceptedAnswer.text',
+                            suggestion: 'Policy Q&A requires detailed position statement (100+ words)'
+                        });
+                    } else if (mainAnswer.split(/\s+/).length < 20) {
+                        recs.warnings.push({
+                            label: 'Answer is very short',
+                            description: `Answer is ${mainAnswer.split(/\s+/).length} words, consider expanding to 100+ words`,
+                            field: 'mainEntity.acceptedAnswer.text',
+                            suggestion: 'Detailed answers help AI systems provide complete, accurate information'
+                        });
+                    }
+
+                    // ⚠️ Recommended: citation[] for policy claims
+                    const hasPolicyClaim = prose.match(/will|support|oppose|vote|fight for/i);
+                    const hasCitation = prose.includes('https://') || prose.includes('http://');
+
+                    if (hasPolicyClaim && !hasCitation) {
+                        recs.warnings.push({
+                            label: 'Add citations for policy positions',
+                            description: 'Include source URLs in JSON-LD citation[] field for substantiation',
+                            field: 'mainEntity.acceptedAnswer.citation',
+                            suggestion: 'Example: citation: ["https://example.org/policy/clean-energy-plan.pdf"]'
+                        });
+                    }
+
+                    // ⚠️ Recommended: about[] for policy taxonomy
+                    const policyTopics = prose.match(/(reproductive rights|healthcare|climate|housing|education|jobs|economy)/gi);
+                    if (policyTopics && policyTopics.length > 0) {
+                        recs.suggestions.push({
+                            label: 'Add policy taxonomy tags',
+                            description: `Detected: ${[...new Set(policyTopics.map(t => t.toLowerCase()))].join(', ')}`,
+                            field: 'about',
+                            suggestion: 'Add to about[] field: { "@type": "DefinedTerm", "termCode": "reproductive-rights" }'
+                        });
+                    }
+
+                } else if (contentType === 'faqpage') {
+                    // ❌ Required: At least one question with answer
+                    if (questions.length === 0) {
+                        recs.errors.push({
+                            label: 'No Q&A pairs found',
+                            description: 'Add questions and answers in format: <strong>Question?</strong> Answer text.',
+                            field: 'mainEntity',
+                            suggestion: 'FAQ pages require at least one complete Q&A pair'
+                        });
+                    }
+
+                    // Check each question
+                    questions.forEach((qa, idx) => {
+                        if (!qa.question || qa.question.length < 5) {
+                            recs.errors.push({
+                                label: `Question ${idx + 1} missing or unclear`,
+                                description: 'Each FAQ entry needs a clear question',
+                                field: `mainEntity[${idx}].name`,
+                                suggestion: 'Use concise, direct questions: "How can I volunteer?"'
+                            });
+                        }
+
+                        if (!qa.answer || qa.answer.trim().length === 0) {
+                            recs.errors.push({
+                                label: `Answer ${idx + 1} is empty`,
+                                description: `Question "${qa.question.substring(0, 40)}..." has no answer`,
+                                field: `mainEntity[${idx}].acceptedAnswer.text`,
+                                suggestion: 'Provide clear, actionable answer with URLs where appropriate'
+                            });
+                        } else if (qa.answer.split(/\s+/).length < 3) {
+                            recs.warnings.push({
+                                label: `Answer ${idx + 1} is very short`,
+                                description: `Answer for "${qa.question.substring(0, 30)}..." is < 3 words`,
+                                field: `mainEntity[${idx}].acceptedAnswer.text`,
+                                suggestion: 'Expand to provide useful, complete information'
+                            });
+                        }
+                    });
+
+                    // Suggest adding more questions if only 1-2
+                    if (questions.length > 0 && questions.length < 3) {
+                        recs.suggestions.push({
+                            label: 'Add more FAQ entries',
+                            description: `Only ${questions.length} Q&A pair(s) found. Consider adding common questions`,
+                            field: 'mainEntity',
+                            suggestion: 'Typical FAQ: volunteer, donate, events, contact, policy positions (5-12 items)'
+                        });
+                    }
+                }
             }
 
             // General CTA check (only if no website mentioned)
@@ -1092,34 +1216,113 @@
                     }
                 };
             } else if (contentType === 'qapage') {
+                // Extract question and answer from prose
+                const paragraphs = prose.split('\n').filter(p => p.trim());
+                let questionText = headline;
+                let answerText = '';
+
+                // Look for "Question:" and "Answer:" patterns
+                for (let i = 0; i < paragraphs.length; i++) {
+                    const para = paragraphs[i];
+                    if (para.match(/Question:/i)) {
+                        questionText = para.replace(/^<strong>|<\/strong>$/g, '').replace(/Question:\s*/i, '').trim();
+                    } else if (para.match(/Answer:|Emma's Answer:/i)) {
+                        // Get answer text (may span multiple paragraphs until next heading)
+                        answerText = para.replace(/^<strong>|<\/strong>$/g, '').replace(/(Answer:|Emma's Answer:)\s*/i, '').trim();
+
+                        // Collect subsequent paragraphs as part of answer
+                        for (let j = i + 1; j < paragraphs.length && !paragraphs[j].match(/^<h[12]>|Question:/i); j++) {
+                            answerText += ' ' + paragraphs[j].replace(/<[^>]+>/g, '').trim();
+                        }
+                        break;
+                    }
+                }
+
+                // Extract policy topics for about[] field
+                const policyTopics = prose.match(/(reproductive rights|healthcare|climate|housing|education|jobs|economy)/gi) || [];
+                const uniqueTopics = [...new Set(policyTopics.map(t => t.toLowerCase().replace(/\s+/g, '-')))];
+
                 return {
                     "@context": "https://schema.org",
                     "@type": "QAPage",
                     "@id": "https://emmacarterforcongress.org/qa/reproductive-rights",
                     "mainEntity": {
                         "@type": "Question",
-                        "name": headline,
+                        "name": questionText,
+                        "author": { "@type": "Person", "name": "Emma Carter" },
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "<< From answer section >>"
+                            "text": answerText || "<< MISSING: Add policy answer (100+ words recommended) >>",
+                            "author": { "@type": "Person", "name": "Emma Carter" }
                         }
+                    },
+                    "about": uniqueTopics.length > 0 ? uniqueTopics.map(topic => ({
+                        "@type": "DefinedTerm",
+                        "termCode": topic
+                    })) : undefined,
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/qa/reproductive-rights"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
                     }
                 };
             } else if (contentType === 'faqpage') {
+                // Extract all Q&A pairs from prose
+                const questions = [];
+                const paragraphs = prose.split('\n').filter(p => p.trim());
+
+                for (let i = 0; i < paragraphs.length; i++) {
+                    const para = paragraphs[i];
+
+                    // Check for bold questions (using <strong> tags in contenteditable)
+                    if (para.match(/^<strong>/) && para.includes('?')) {
+                        const questionText = para.replace(/<\/?strong>/g, '').trim();
+                        const nextPara = paragraphs[i + 1] || '';
+                        const answerText = nextPara.replace(/<[^>]+>/g, '').trim();
+
+                        questions.push({
+                            "@type": "Question",
+                            "name": questionText,
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": answerText || "<< MISSING: Add answer >>"
+                            }
+                        });
+                    }
+                }
+
+                // If no questions found, provide template
+                if (questions.length === 0) {
+                    questions.push({
+                        "@type": "Question",
+                        "name": "<< MISSING: Add question text >>",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "<< MISSING: Add answer >>"
+                        }
+                    });
+                }
+
                 return {
                     "@context": "https://schema.org",
                     "@type": "FAQPage",
                     "@id": "https://emmacarterforcongress.org/faq",
-                    "mainEntity": [
-                        {
-                            "@type": "Question",
-                            "name": "<< From Q&A pairs >>",
-                            "acceptedAnswer": {
-                                "@type": "Answer",
-                                "text": "<< From Q&A pairs >>"
-                            }
-                        }
-                    ]
+                    "mainEntity": questions,
+                    "about": {
+                        "@type": "Person",
+                        "name": "Emma Carter"
+                    },
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/faq"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
+                    }
                 };
             }
 
