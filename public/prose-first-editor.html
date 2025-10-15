@@ -627,41 +627,108 @@
             if (contentType === 'press') {
                 const lines = prose.split('\n').filter(l => l.trim());
 
-                // Check for proper dateline with time (only if dateline exists)
+                // ❌ Required: headline ≤110 chars
+                const headlineText = lines[0] || '';
+                if (!headlineText) {
+                    recs.errors.push({
+                        label: 'Missing headline',
+                        description: 'Add press release headline',
+                        field: 'headline',
+                        suggestion: '📝 Keep headline ≤110 characters for optimal display in search results'
+                    });
+                } else if (headlineText.length > 110) {
+                    recs.warnings.push({
+                        label: 'Headline too long',
+                        description: `Headline is ${headlineText.length} chars, should be ≤110`,
+                        field: 'headline',
+                        suggestion: `📝 Shorten to: "${headlineText.substring(0, 90)}..." (${headlineText.length - 90} chars to cut)`
+                    });
+                }
+
+                // ❌ Required: description (DEK) 120-200 chars
+                const firstPara = lines[2] || '';
+                if (!firstPara || firstPara.length < 80) {
+                    recs.errors.push({
+                        label: 'Missing or weak summary/DEK',
+                        description: 'First paragraph should be 120-200 characters summarizing the news',
+                        field: 'description',
+                        suggestion: '📝 Add lede paragraph: who, what, when, where, why (100-150 words recommended)'
+                    });
+                } else if (firstPara.length < 120) {
+                    recs.warnings.push({
+                        label: 'Summary/DEK too short',
+                        description: `First paragraph is ${firstPara.length} chars, target 120-200 for description field`,
+                        field: 'description',
+                        suggestion: '📝 Expand to include key details: location, specific actions, expected impact'
+                    });
+                } else if (firstPara.length > 200) {
+                    recs.warnings.push({
+                        label: 'Summary/DEK too long',
+                        description: `First paragraph is ${firstPara.length} chars, target 120-200 for optimal meta description`,
+                        field: 'description',
+                        suggestion: `📝 Trim to: "${firstPara.substring(0, 180)}..."`
+                    });
+                }
+
+                // ❌ Required: datePublished in ISO 8601 with timezone
                 const hasDateline = prose.includes('—') && prose.match(/\d{4}/);
                 const hasTime = prose.match(/\d{1,2}:\d{2}\s*(AM|PM|am|pm)/i);
 
                 if (!hasDateline) {
                     recs.errors.push({
-                        label: 'Missing publication date in dateline',
-                        description: 'Add dateline after headline: "Oakland, CA — October 14, 2025, 9:00 AM PT"',
+                        label: 'Missing publication date',
+                        description: 'Add dateline after headline with full date and time',
                         field: 'datePublished',
-                        suggestion: 'Format: [City, State] — [Month Day, Year, Time AM/PM TZ]'
+                        suggestion: '📝 Format: "Oakland, CA — October 14, 2025, 9:00 AM PT"'
                     });
                 } else if (!hasTime) {
-                    // Only suggest adding time if there's a dateline without time
                     const dateline = lines.find(l => l.includes('—')) || '';
                     recs.warnings.push({
-                        label: 'Add time to dateline for precision',
-                        description: `In dateline "${dateline.substring(0, 50)}...", add time: "9:00 AM PT"`,
+                        label: 'Add time to dateline',
+                        description: `Complete dateline "${dateline.substring(0, 50)}..." needs time`,
                         field: 'datePublished',
-                        suggestion: 'AI systems prefer exact timestamps for news articles'
+                        suggestion: '⚠️ ISO 8601 requires: YYYY-MM-DDThh:mm:ss±TZ | 📝 Add: "9:00 AM PT"'
                     });
                 }
 
-                // Check lede paragraph (only if it exists but is weak)
-                const firstPara = lines[2] || '';
-                if (firstPara && firstPara.length < 80) {
+                // ⚠️ Recommended: articleSection (taxonomy)
+                const hasSection = prose.match(/press release|statement|news/i);
+                const sectionType = prose.toLowerCase().includes('statement') ? 'Statements' : 'Press Releases';
+
+                if (!hasSection) {
+                    recs.suggestions.push({
+                        label: 'Add article section taxonomy',
+                        description: 'Categorize as "Press Releases", "Statements", or "News"',
+                        field: 'articleSection',
+                        suggestion: `📋 Add to JSON-LD: "articleSection": "${sectionType}"`
+                    });
+                }
+
+                // ⚠️ Recommended: author.name (campaign committee)
+                const hasAuthor = prose.toLowerCase().includes('emma carter for congress') ||
+                                 prose.toLowerCase().includes('campaign');
+
+                if (!hasAuthor) {
                     recs.warnings.push({
-                        label: 'Strengthen lede paragraph',
-                        description: 'First paragraph should be 100-150 words summarizing who, what, when, where, why',
-                        field: 'description',
-                        suggestion: 'Add more context: location, specific actions, expected impact'
+                        label: 'Add author/publisher attribution',
+                        description: 'Specify campaign committee as author',
+                        field: 'author.name',
+                        suggestion: '📋 JSON-LD: { "@type": "Organization", "name": "Emma Carter for Congress" }'
                     });
                 }
 
-                // Check for citations on data claims (only if there are uncited claims)
-                const hasDataClaim = prose.match(/\d+%|percent/i);
+                // ⚠️ Recommended: image[] (hero image ≥1200px)
+                const hasImageRef = prose.toLowerCase().includes('image') || prose.toLowerCase().includes('photo');
+
+                recs.warnings.push({
+                    label: 'Add hero image URL',
+                    description: 'Press releases should include a high-resolution image (≥1200px)',
+                    field: 'image',
+                    suggestion: '📋 Upload image and add: "image": ["https://emmacarterforcongress.org/images/press/...jpg"]'
+                });
+
+                // ⚠️ Recommended: citation[] for data claims
+                const hasDataClaim = prose.match(/\d+%|percent|\$\d+/i);
                 const hasCitation = prose.includes('(Source:') || prose.includes('according to') || prose.includes('data from');
 
                 if (hasDataClaim && !hasCitation) {
@@ -682,47 +749,38 @@
                         recs.warnings.push({
                             label: 'Add citation for data claim',
                             description: `Need source for: "${excerpt}..."`,
-                            field: 'claims.evidence',
-                            suggestion: `🔍 <a href="${webSearch}" target="_blank">Search for this statistic</a> | 💡 Try: ${suggestedSources} | ✉️ Request from research team | 📝 Add inline: "(Source: [Organization], [Year])"`,
+                            field: 'citation',
+                            suggestion: `🔍 <a href="${webSearch}" target="_blank">Search for this statistic</a> | 💡 Try: ${suggestedSources} | ✉️ Request from research team | 📋 Add inline: "(Source: [Organization], [Year])" and to JSON-LD citation: ["https://..."]`,
                             actionable: true
                         });
                     }
                 }
 
-                // Check for contact info (only if missing)
+                // ✅ Optional: about (linkage to candidate Person)
+                const hasCandidateMention = prose.toLowerCase().includes('emma carter');
+
+                if (hasCandidateMention) {
+                    recs.suggestions.push({
+                        label: 'Link to candidate Person schema',
+                        description: 'Connect press release to candidate bio',
+                        field: 'about',
+                        suggestion: '📋 Add to JSON-LD: "about": { "@type": "Person", "name": "Emma Carter", "@id": "https://emmacarterforcongress.org/candidate" }',
+                        actionable: true
+                    });
+                }
+
+                // Check for media contact info (only if missing)
                 const hasContact = prose.toLowerCase().includes('contact:') ||
                                    prose.match(/\w+@\w+\.\w+/) ||
                                    prose.match(/\d{3}-\d{3}-\d{4}/);
 
                 if (!hasContact) {
-                    recs.warnings.push({
+                    recs.suggestions.push({
                         label: 'Add media contact info',
                         description: 'After "###", add: "Contact: press@emmacarterforcongress.org"',
                         field: 'publisher.contactPoint',
                         suggestion: 'Helps journalists reach campaign for follow-up questions'
                     });
-                }
-
-                // Check for opponent contrast (only if opponent is mentioned vaguely)
-                const hasOpponentMention = prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('john doe');
-                const hasSpecificContrast = prose.includes('voted against') ||
-                                           prose.includes('opposed') ||
-                                           prose.includes('supports') ||
-                                           prose.includes('record');
-
-                if (hasOpponentMention && !hasSpecificContrast) {
-                    const opponentSentence = prose.split(/[.!?]/).find(s =>
-                        s.toLowerCase().includes('opponent') || s.toLowerCase().includes('john doe')
-                    );
-
-                    if (opponentSentence) {
-                        recs.suggestions.push({
-                            label: 'Strengthen opponent contrast with specifics',
-                            description: `Replace "${opponentSentence.trim().substring(0, 60)}..." with specific voting record or policy position`,
-                            field: 'mentions',
-                            suggestion: 'Example: "Her opponent voted against the 2024 Housing Investment Act"'
-                        });
-                    }
                 }
 
             } else if (contentType === 'person') {
@@ -1227,28 +1285,90 @@
 
             if (contentType === 'press') {
                 const firstPara = lines[2] || '';
-                const description = firstPara.length > 80 ? firstPara.substring(0, 150) + '...' : '';
+
+                // Description: Target 120-200 chars (from first paragraph)
+                let description = '';
+                if (firstPara.length >= 120 && firstPara.length <= 200) {
+                    description = firstPara;
+                } else if (firstPara.length > 200) {
+                    description = firstPara.substring(0, 180) + '...';
+                } else if (firstPara.length > 0) {
+                    description = firstPara; // Use what we have
+                } else {
+                    description = "<< MISSING: Add first paragraph (120-200 chars summarizing who, what, when, where, why) >>";
+                }
+
+                // Build ISO 8601 datePublished with timezone
+                let isoDate = "<< MISSING: Add dateline with date and time (format: YYYY-MM-DDThh:mm:ss-07:00) >>";
+                if (dateMatch && timeMatch) {
+                    // Parse date: "October 14, 2025"
+                    const dateStr = dateMatch[0];
+                    const timeStr = timeMatch[0];
+
+                    const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+                    const dateParts = dateStr.match(/(\w+)\s+(\d+),?\s+(\d{4})/);
+
+                    if (dateParts) {
+                        const monthNum = months[dateParts[1].toLowerCase().substring(0,3)];
+                        const day = dateParts[2].padStart(2, '0');
+                        const year = dateParts[3];
+
+                        // Parse time: "9:00 AM PT"
+                        const timeParts = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+                        if (monthNum && timeParts) {
+                            let hour = parseInt(timeParts[1]);
+                            const min = timeParts[2];
+                            const ampm = timeParts[3].toUpperCase();
+
+                            // Convert to 24-hour
+                            if (ampm === 'PM' && hour !== 12) hour += 12;
+                            if (ampm === 'AM' && hour === 12) hour = 0;
+
+                            isoDate = `${year}-${monthNum.toString().padStart(2,'0')}-${day}T${hour.toString().padStart(2,'0')}:${min}:00-07:00`;
+                        }
+                    }
+                } else if (dateMatch) {
+                    isoDate = `<< MISSING: Add time to dateline (format: "9:00 AM PT") >>`;
+                }
+
+                // Detect if statement vs press release
+                const articleSection = prose.toLowerCase().includes('statement') ? 'Statements' : 'Press Releases';
+
+                // Check if Emma Carter is mentioned for about linkage
+                const hasCandidateMention = prose.toLowerCase().includes('emma carter');
 
                 return {
                     "@context": "https://schema.org",
                     "@type": "NewsArticle",
                     "@id": "https://emmacarterforcongress.org/news/housing-plan",
-                    "headline": headline,
-                    "description": description || "<< From first paragraph >>",
-                    "articleSection": "Press Releases",
-                    "datePublished": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : dateMatch ? `${dateMatch[0]}` : "<< From dateline >>",
+                    "headline": headline.substring(0, 110), // Enforce ≤110 chars
+                    "description": description,
+                    "articleSection": articleSection,
+                    "image": ["<< MISSING: Add hero image URL ≥1200px (e.g., https://emmacarterforcongress.org/images/press/housing-hero-1600.jpg) >>"],
                     "author": {
                         "@type": "Organization",
                         "name": "Emma Carter for Congress"
                     },
-                    "about": {
+                    "about": hasCandidateMention ? {
                         "@type": "Person",
-                        "name": "Emma Carter"
+                        "name": "Emma Carter",
+                        "@id": "https://emmacarterforcongress.org/candidate"
+                    } : undefined,
+                    "datePublished": isoDate,
+                    "dateModified": isoDate, // Same as published unless updated later
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/news/housing-plan"
                     },
                     "publisher": {
                         "@type": "Organization",
-                        "name": "Emma Carter for Congress"
-                    }
+                        "name": "Emma Carter for Congress",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "<< MISSING: Add campaign logo URL ≥120x60px >>"
+                        }
+                    },
+                    "citation": prose.match(/\d+%|percent/i) ? ["<< MISSING: Add source URLs for data claims in citation[] field >>"] : undefined
                 };
             } else if (contentType === 'person') {
                 // Extract candidate name
