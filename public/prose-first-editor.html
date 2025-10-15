@@ -329,6 +329,7 @@
         <div class="toolbar">
             <select id="content-type">
                 <option value="press">Press Release</option>
+                <option value="speech">Speech</option>
                 <option value="person">Person/Bio</option>
                 <option value="issues">Issues Page</option>
                 <option value="event">Event</option>
@@ -423,6 +424,21 @@
 
         // Content templates
         const templates = {
+            speech: {
+                prose: `<h1>Remarks by Emma Carter at Oakland Labor Day Rally</h1>
+<h2>Remarks as prepared for delivery</h2>
+<p>Thank you so much for that warm welcome. It's an honor to be here with so many workers, organizers, and union members who are fighting every day for dignity on the job.</p>
+<p>I'm running for Congress because I believe that work should pay. I believe that if you put in a full day's work, you should be able to afford a roof over your head, food on your table, and a little bit left over to save for the future. But that's not the reality for too many working families in our district right now.</p>
+<p>The cost of living keeps going up, but wages aren't keeping pace. Families are working harder than ever, but they're still struggling to make ends meet. That's not right, and it doesn't have to be this way.</p>
+<p>When I talk to workers across CA-15, I hear the same concerns over and over. Teachers who can't afford to live in the communities where they teach. Healthcare workers who are stretched thin and burned out. Service workers juggling two or three jobs just to pay rent.</p>
+<p>My opponent talks about the economy like it's doing great. But whose economy is he talking about? Because the economy I see—the one working families are living in—looks very different.</p>
+<p>We need leaders in Washington who understand that a strong economy means strong wages, strong unions, and strong protections for workers. That's the economy I'll fight for in Congress.</p>
+<p>I'll fight to raise the minimum wage to $20 an hour, because nobody working full-time should be living in poverty. I'll fight to protect your right to organize and collectively bargain. And I'll fight to ensure that every worker has access to paid sick leave, paid family leave, and a secure retirement.</p>
+<p>This campaign is about you. It's about the nurse working the night shift. The teacher buying school supplies out of their own pocket. The union electrician building our future. You deserve a representative who will show up for you the way you show up for our community every single day.</p>
+<p>Together, we can build an economy that works for everyone, not just the wealthy and well-connected. Together, we can win this race and bring real change to Washington.</p>
+<p>Thank you, and let's get to work!</p>`,
+                schema: 'Article'
+            },
             press: {
                 prose: `<h1>Emma Carter Unveils Plan to Expand Affordable Housing in CA-15</h1>
 <h2>Oakland, CA — October 14, 2025, 9:00 AM PT</h2>
@@ -768,6 +784,74 @@
                         suggestion: 'Demonstrates commitment to inclusive, accessible events'
                     });
                 }
+
+            } else if (contentType === 'speech') {
+                // Check for location and date in subtitle (only if missing)
+                const hasSubtitle = prose.includes('Remarks as prepared');
+                const hasLocation = prose.match(/at ([A-Z][^,\n]+)/);
+                const hasDate = prose.match(/\w+ \d+, \d{4}/);
+
+                if (!hasLocation || !hasDate) {
+                    recs.warnings.push({
+                        label: 'Add location and date to speech header',
+                        description: 'After headline, add subtitle: "Remarks by Emma Carter at [Location], [Date]"',
+                        field: 'locationCreated',
+                        suggestion: 'Context helps AI systems understand when and where the speech was delivered'
+                    });
+                }
+
+                // Check for citations on data claims (only if there are uncited claims)
+                const hasDataClaim = prose.match(/\d+%|percent|\$\d+/i);
+                const hasCitation = prose.includes('(Source:') || prose.includes('according to') || prose.includes('data from');
+
+                if (hasDataClaim && !hasCitation) {
+                    const match = prose.match(/(\d+%|\$\d+[^\s]*)/);
+                    if (match) {
+                        recs.warnings.push({
+                            label: 'Add citation for statistics',
+                            description: `Add source after statistic "${match[0]}": "(Source: [Organization], [Year])"`,
+                            field: 'claims.evidence',
+                            suggestion: 'Cited statistics are more credible and AI-friendly'
+                        });
+                    }
+                }
+
+                // Check for opponent contrast (only if opponent is mentioned vaguely)
+                const hasOpponentMention = prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('my rival');
+                const hasSpecificContrast = prose.includes('voted against') ||
+                                           prose.includes('opposed') ||
+                                           prose.includes('record on') ||
+                                           prose.includes('stance on');
+
+                if (hasOpponentMention && !hasSpecificContrast) {
+                    const opponentSentence = prose.split(/[.!?]/).find(s =>
+                        s.toLowerCase().includes('opponent') || s.toLowerCase().includes('rival')
+                    );
+
+                    if (opponentSentence) {
+                        recs.suggestions.push({
+                            label: 'Make opponent contrast more specific',
+                            description: `Replace "${opponentSentence.trim().substring(0, 50)}..." with concrete voting record or policy stance`,
+                            field: 'mentions',
+                            suggestion: 'Example: "My opponent voted against raising the minimum wage three times"'
+                        });
+                    }
+                }
+
+                // Check for strong call-to-action (only if missing)
+                const hasCallToAction = prose.toLowerCase().includes('let\'s') ||
+                                       prose.toLowerCase().includes('join me') ||
+                                       prose.toLowerCase().includes('together') ||
+                                       prose.toLowerCase().includes('get to work');
+
+                if (!hasCallToAction) {
+                    recs.suggestions.push({
+                        label: 'Add inspiring call-to-action',
+                        description: 'End speech with action-oriented closing: "Together, we can [goal]. Let\'s get to work!"',
+                        field: 'potentialAction',
+                        suggestion: 'Strong CTAs mobilize supporters and create memorable endings'
+                    });
+                }
             }
 
             // General CTA check (only if no website mentioned)
@@ -890,6 +974,31 @@
                         "@type": "Organization",
                         "name": "Emma Carter for Congress"
                     }
+                };
+            } else if (contentType === 'speech') {
+                const subtitle = lines[1] || '';
+                const locationMatch = subtitle.match(/at ([^,\n]+)/);
+                const dateInSubtitle = subtitle.match(/(\w+ \d+, \d{4})/);
+
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    "@id": "https://emmacarterforcongress.org/speeches/labor-day-rally",
+                    "headline": headline,
+                    "articleSection": "Speeches",
+                    "datePublished": dateInSubtitle ? dateInSubtitle[0] : "<< Add in subtitle >>",
+                    "author": {
+                        "@type": "Person",
+                        "name": "Emma Carter"
+                    },
+                    "about": {
+                        "@type": "Person",
+                        "name": "Emma Carter"
+                    },
+                    "locationCreated": locationMatch ? {
+                        "@type": "Place",
+                        "name": locationMatch[1]
+                    } : undefined
                 };
             } else if (contentType === 'issues') {
                 return {
