@@ -237,6 +237,25 @@
             margin-top: 0.25rem;
         }
 
+        .rec-suggestion a {
+            color: #3b82f6;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .rec-suggestion a:hover {
+            color: #2563eb;
+        }
+
+        .rec-suggestion pre {
+            user-select: all;
+            cursor: pointer;
+        }
+
+        .rec-suggestion pre:hover {
+            background: #e5e7eb !important;
+        }
+
         /* JSON-LD Preview (collapsible) */
         .jsonld-preview {
             max-height: 300px;
@@ -648,12 +667,24 @@
                 if (hasDataClaim && !hasCitation) {
                     const match = prose.match(/("[^"]*\d+%[^"]*"|[^\."]*\d+%[^\."]*)/);
                     if (match) {
-                        const excerpt = match[0].substring(0, 60).replace(/^[^a-zA-Z0-9"]*/, '');
+                        const excerpt = match[0].substring(0, 60).replace(/^[^a-zA-Z0-9"]*/, '').replace(/"/g, '');
+                        const searchQuery = encodeURIComponent(excerpt);
+                        const webSearch = `https://www.google.com/search?q=${searchQuery}+statistics+source`;
+
+                        // Suggest likely authoritative sources based on topic
+                        let suggestedSources = 'Census Bureau, HUD, local housing authority';
+                        if (excerpt.toLowerCase().includes('housing')) {
+                            suggestedSources = 'Bay Area Housing Coalition, HUD, California Housing Partnership';
+                        } else if (excerpt.toLowerCase().includes('job')) {
+                            suggestedSources = 'Bureau of Labor Statistics, EDD, local workforce board';
+                        }
+
                         recs.warnings.push({
                             label: 'Add citation for data claim',
-                            description: `Add source: "${excerpt}..." → "${excerpt} (Source: [Organization], [Year])..."`,
+                            description: `Need source for: "${excerpt}..."`,
                             field: 'claims.evidence',
-                            suggestion: 'Example: "(Source: Bay Area Housing Coalition, 2025)"'
+                            suggestion: `🔍 <a href="${webSearch}" target="_blank">Search for this statistic</a> | 💡 Try: ${suggestedSources} | ✉️ Request from research team | 📝 Add inline: "(Source: [Organization], [Year])"`,
+                            actionable: true
                         });
                     }
                 }
@@ -846,11 +877,18 @@
                 const hasCitation = prose.includes('(Source:') || prose.includes('https://') || prose.includes('http://');
 
                 if (hasFactualClaim && !hasCitation) {
+                    // Extract the specific claim
+                    const claim = prose.match(/(\d+%[^\.]*|\$\d+[^\.]*)/) || [];
+                    const claimText = claim[0] || 'statistical claim';
+                    const searchQuery = encodeURIComponent(claimText);
+                    const webSearch = `https://www.google.com/search?q=${searchQuery}+source+statistics`;
+
                     recs.warnings.push({
                         label: 'Add citations for factual claims',
-                        description: 'Include source URLs in JSON-LD citation[] field for statistics and data claims',
+                        description: `Need source for: "${claimText}"`,
                         field: 'citation',
-                        suggestion: 'Example: citation: ["https://energy.gov/data/infrastructure.pdf"]'
+                        suggestion: `🔍 <a href="${webSearch}" target="_blank">Search for statistics source</a> | ✉️ Request from research team: "Need authoritative source for: ${claimText}" | 📋 Add to JSON-LD citation: ["https://..."]`,
+                        actionable: true
                     });
                 }
 
@@ -861,11 +899,17 @@
                                  prose.toLowerCase().includes('platform');
 
                 if (hasPolicy) {
+                    // Try to extract plan/policy name
+                    const policyMatch = prose.match(/(clean\s+\w+\s+(?:plan|agenda|proposal)|[\w\s]+\s+plan)/i);
+                    const policyName = policyMatch ? policyMatch[0] : 'this policy';
+                    const searchQuery = encodeURIComponent(`Emma Carter ${policyName} PDF`);
+
                     recs.suggestions.push({
                         label: 'Link to supporting policy documents',
-                        description: 'Add policy/plan URLs to JSON-LD isBasedOn[] field',
+                        description: `Reference detected: "${policyName}"`,
                         field: 'isBasedOn',
-                        suggestion: 'Example: isBasedOn: ["https://emmacarterforcongress.org/policy/clean-jobs-plan.pdf"]'
+                        suggestion: `🔍 <a href="https://www.google.com/search?q=${searchQuery}" target="_blank">Search for policy PDF</a> | 📄 Check campaign website policy section | 📋 Add: isBasedOn: ["https://emmacarterforcongress.org/policy/...pdf"]`,
+                        actionable: true
                     });
                 }
 
@@ -873,11 +917,15 @@
                 const hasTopics = prose.match(/(jobs|housing|climate|healthcare|education|infrastructure|economy)/gi);
 
                 if (hasTopics && hasTopics.length > 0) {
+                    const uniqueTopics = [...new Set(hasTopics.map(t => t.toLowerCase()))];
+                    const jsonSnippet = JSON.stringify(uniqueTopics.slice(0, 3).map(t => ({ "@type": "DefinedTerm", "termCode": t })), null, 2);
+
                     recs.suggestions.push({
                         label: 'Add topical tags to JSON-LD',
-                        description: `Detected topics: ${[...new Set(hasTopics.map(t => t.toLowerCase()))].join(', ')}`,
+                        description: `Auto-detected: ${uniqueTopics.join(', ')}`,
                         field: 'about',
-                        suggestion: 'Add to about[] field: { "@type": "DefinedTerm", "termCode": "infrastructure" }'
+                        suggestion: `📋 Copy this JSON to about[] field:\n<pre style="background:#f3f4f6;padding:0.5rem;margin:0.5rem 0;border-radius:4px;font-size:0.7rem;overflow-x:auto;">${jsonSnippet}</pre>`,
+                        actionable: true
                     });
                 }
 
@@ -952,22 +1000,35 @@
                     const hasCitation = prose.includes('https://') || prose.includes('http://');
 
                     if (hasPolicyClaim && !hasCitation) {
+                        // Extract the topic for targeted search
+                        const topic = policyTopics && policyTopics.length > 0
+                            ? policyTopics[0].toLowerCase()
+                            : questionText.toLowerCase();
+
+                        const searchQuery = encodeURIComponent(`${topic} policy Emma Carter campaign`);
+                        const webSearch = `https://www.google.com/search?q=${searchQuery}`;
+
                         recs.warnings.push({
                             label: 'Add citations for policy positions',
-                            description: 'Include source URLs in JSON-LD citation[] field for substantiation',
+                            description: `Need source for "${topic}" policy position`,
                             field: 'mainEntity.acceptedAnswer.citation',
-                            suggestion: 'Example: citation: ["https://example.org/policy/clean-energy-plan.pdf"]'
+                            suggestion: `🔍 <a href="${webSearch}" target="_blank">Search for sources</a> | ✉️ Request from policy team: "Need authoritative source for ${topic} position" | 📋 Add to JSON-LD: citation: ["https://..."]`,
+                            actionable: true
                         });
                     }
 
                     // ⚠️ Recommended: about[] for policy taxonomy
                     const policyTopics = prose.match(/(reproductive rights|healthcare|climate|housing|education|jobs|economy)/gi);
                     if (policyTopics && policyTopics.length > 0) {
+                        const uniqueTopics = [...new Set(policyTopics.map(t => t.toLowerCase().replace(/\s+/g, '-')))];
+                        const jsonSnippet = JSON.stringify(uniqueTopics.map(t => ({ "@type": "DefinedTerm", "termCode": t })), null, 2);
+
                         recs.suggestions.push({
                             label: 'Add policy taxonomy tags',
-                            description: `Detected: ${[...new Set(policyTopics.map(t => t.toLowerCase()))].join(', ')}`,
+                            description: `Auto-detected topics: ${uniqueTopics.join(', ')}`,
                             field: 'about',
-                            suggestion: 'Add to about[] field: { "@type": "DefinedTerm", "termCode": "reproductive-rights" }'
+                            suggestion: `📋 Copy this JSON to about[] field:\n<pre style="background:#f3f4f6;padding:0.5rem;margin:0.5rem 0;border-radius:4px;font-size:0.7rem;overflow-x:auto;">${jsonSnippet}</pre>`,
+                            actionable: true
                         });
                     }
 
@@ -1052,17 +1113,21 @@
                 return;
             }
 
-            list.innerHTML = allRecs.map((rec, index) => `
+            list.innerHTML = allRecs.map((rec, index) => {
+                // Escape field for onclick attribute
+                const escapedField = rec.field.replace(/'/g, "\\'");
+                return `
                 <div class="rec-item ${rec.type}"
                      data-field="${rec.field}"
                      data-search-text="${rec.searchText || ''}"
-                     onclick="highlightRecommendation('${rec.field}', ${index})">
+                     onclick="highlightRecommendation('${escapedField}', ${index})">
                     <div class="rec-label">${rec.icon} ${rec.label}</div>
                     <div class="rec-description">${rec.description}</div>
-                    ${rec.suggestion ? `<div class="rec-description" style="margin-top: 0.5rem; font-style: italic; color: #3b82f6;">💡 ${rec.suggestion}</div>` : ''}
+                    ${rec.suggestion ? `<div class="rec-suggestion" style="margin-top: 0.5rem; font-size: 0.75rem; color: #3b82f6; line-height: 1.6;">${rec.suggestion}</div>` : ''}
                     <div class="rec-field">${rec.field}</div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             // Store recommendations for click handlers
             window.currentRecommendations = allRecs;
