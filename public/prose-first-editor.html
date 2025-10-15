@@ -726,45 +726,130 @@
                 }
 
             } else if (contentType === 'person') {
-                // Party affiliation check (only if missing)
-                const hasParty = prose.toLowerCase().includes('democrat') || prose.toLowerCase().includes('republican');
-                if (!hasParty) {
-                    const firstSentence = prose.split(/[.!?]/)[0];
+                // Person/Bio validation based on Person JSON-LD schema
+
+                // ❌ Required: name
+                const lines = prose.split('\n').filter(l => l.trim());
+                const candidateName = lines[0] || '';
+                if (!candidateName || candidateName.length < 5) {
                     recs.errors.push({
-                        label: 'Add party affiliation',
-                        description: `In first sentence: "${firstSentence.substring(0, 60)}...", add party`,
-                        field: 'memberOf.name',
-                        suggestion: 'Change "Emma Carter is running" to "Emma Carter is a Democrat running"'
+                        label: 'Missing candidate name',
+                        description: 'Add candidate full name in headline',
+                        field: 'name',
+                        suggestion: 'Example: "About Emma Carter" or "Emma Carter for Congress"'
                     });
                 }
 
-                // Check for professional background (only if missing)
+                // ❌ Required: about.name (office/district)
+                const hasOffice = prose.match(/(?:candidate for|running for)\s+([^,\n\.]+)/i) ||
+                                 prose.match(/(U\.S\.\s+(?:House|Senate)[^,\n\.]*)/i) ||
+                                 prose.match(/(Congress[^,\n\.]*)/i);
+
+                if (!hasOffice) {
+                    recs.errors.push({
+                        label: 'Missing office/district information',
+                        description: 'Specify what office the candidate is running for',
+                        field: 'about.name',
+                        suggestion: '📝 Add: "Candidate for U.S. House, California\'s 15th District"'
+                    });
+                }
+
+                // ⚠️ Recommended: memberOf.name (party affiliation)
+                const hasParty = prose.toLowerCase().includes('democrat') || prose.toLowerCase().includes('republican');
+                if (!hasParty) {
+                    const firstSentence = prose.split(/[.!?]/)[0];
+                    recs.warnings.push({
+                        label: 'Add party affiliation',
+                        description: `Specify party in introduction`,
+                        field: 'memberOf.name',
+                        suggestion: `📝 Replace "${firstSentence.substring(0, 40)}..." with: "Emma Carter is a Democrat running for..."`,
+                        actionable: true
+                    });
+                }
+
+                // ⚠️ Recommended: potentialAction (donate & volunteer)
+                const hasDonate = prose.match(/donate|contribute|chip in/i);
+                const hasVolunteer = prose.match(/volunteer|get involved|join/i);
+
+                if (!hasDonate) {
+                    recs.warnings.push({
+                        label: 'Add donate call-to-action',
+                        description: 'Include link to donation page',
+                        field: 'potentialAction.DonateAction',
+                        suggestion: '🔗 Add to JSON-LD: { "@type": "DonateAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://emmacarterforcongress.org/donate" } }',
+                        actionable: true
+                    });
+                }
+
+                if (!hasVolunteer) {
+                    recs.warnings.push({
+                        label: 'Add volunteer call-to-action',
+                        description: 'Include link to volunteer signup',
+                        field: 'potentialAction.JoinAction',
+                        suggestion: '🔗 Add to JSON-LD: { "@type": "JoinAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://emmacarterforcongress.org/volunteer" } }',
+                        actionable: true
+                    });
+                }
+
+                // ⚠️ Recommended: sameAs[] (social links)
+                const hasSocial = prose.match(/twitter|facebook|instagram|youtube|linkedin/i) ||
+                                 prose.match(/https?:\/\/(twitter|facebook|instagram|youtube|linkedin)/i);
+
+                if (!hasSocial) {
+                    const socialSnippet = JSON.stringify([
+                        "https://emmacarterforcongress.org",
+                        "https://twitter.com/emmacarter",
+                        "https://facebook.com/emmacarter",
+                        "https://instagram.com/emmacarter"
+                    ], null, 2);
+
+                    recs.warnings.push({
+                        label: 'Add social media links',
+                        description: 'Include official social media profiles',
+                        field: 'sameAs',
+                        suggestion: `📋 Copy to sameAs[] in JSON-LD:\n<pre style="background:#f3f4f6;padding:0.5rem;margin:0.5rem 0;border-radius:4px;font-size:0.7rem;overflow-x:auto;">${socialSnippet}</pre>`,
+                        actionable: true
+                    });
+                }
+
+                // ⚠️ Recommended: identifier (FEC ID)
+                const hasFEC = prose.match(/FEC|C00\d{6}/i);
+                if (!hasFEC) {
+                    recs.suggestions.push({
+                        label: 'Add FEC identifier (if available)',
+                        description: 'Federal Election Commission ID for transparency',
+                        field: 'identifier',
+                        suggestion: '🔍 <a href="https://www.fec.gov/data/candidates/" target="_blank">Search FEC database</a> | 📋 Add: identifier: [{ "@type": "PropertyValue", "propertyID": "FEC", "value": "C00XXXXXX" }]',
+                        actionable: true
+                    });
+                }
+
+                // Suggest adding bio elements if missing
                 const hasEducation = prose.toLowerCase().includes('graduated') ||
                                     prose.toLowerCase().includes('degree') ||
                                     prose.toLowerCase().includes('university') ||
                                     prose.toLowerCase().includes('college');
 
                 if (!hasEducation) {
-                    recs.warnings.push({
+                    recs.suggestions.push({
                         label: 'Add educational background',
-                        description: 'Add education after work experience: "Emma graduated from [University] with a degree in [Field]"',
+                        description: 'Educational credentials build credibility',
                         field: 'alumniOf',
-                        suggestion: 'Educational credentials build credibility'
+                        suggestion: '📝 Add after work experience: "Emma graduated from [University] with a degree in [Field]"'
                     });
                 }
 
-                // Check for local connection (only if missing)
                 const hasResidency = prose.toLowerCase().includes('lives in') ||
                                     prose.toLowerCase().includes('resident of') ||
                                     prose.toLowerCase().includes('hometown') ||
                                     prose.toLowerCase().includes('born and raised');
 
                 if (!hasResidency) {
-                    recs.warnings.push({
+                    recs.suggestions.push({
                         label: 'Add local residency',
-                        description: 'Add where candidate lives: "She lives in Oakland\'s Fruitvale neighborhood with..."',
+                        description: 'Shows connection to the community',
                         field: 'homeLocation',
-                        suggestion: 'Shows you\'re part of the community you want to represent'
+                        suggestion: '📝 Add: "Emma lives in Oakland\'s Fruitvale neighborhood with her family"'
                     });
                 }
 
@@ -1166,23 +1251,87 @@
                     }
                 };
             } else if (contentType === 'person') {
+                // Extract candidate name
+                const candidateName = headline.replace(/^About\s+/i, '').trim() || "Emma Carter";
+
+                // Extract party
                 const hasDemocrat = prose.toLowerCase().includes('democrat');
-                const party = hasDemocrat ? 'Democratic Party' : '<< Add party in prose >>';
+                const hasRepublican = prose.toLowerCase().includes('republican');
+                const party = hasDemocrat ? 'Democratic Party' : hasRepublican ? 'Republican Party' : '';
+
+                // Extract office/district
+                const officeMatch = prose.match(/(?:candidate for|running for)\s+([^,\n\.]+)/i) ||
+                                   prose.match(/(U\.S\.\s+(?:House|Senate)[^,\n\.]*)/i) ||
+                                   prose.match(/(Congress[,\s]+(?:California's |CA-?)\d+)/i);
+                const office = officeMatch ? officeMatch[1].trim() : '';
+
+                // Extract donate/volunteer URLs
+                const donateMatch = prose.match(/(?:donate|contribute)[^\n]*?(?:at\s+)?(https?:\/\/[^\s<]+)/i);
+                const volunteerMatch = prose.match(/(?:volunteer|get involved)[^\n]*?(?:at\s+)?(https?:\/\/[^\s<]+)/i);
+
+                // Extract social links
+                const socialLinks = ["https://emmacarterforcongress.org"];
+                const twitterMatch = prose.match(/(?:twitter\.com|@)([a-zA-Z0-9_]+)/i);
+                const facebookMatch = prose.match(/facebook\.com\/([a-zA-Z0-9\.]+)/i);
+                const instagramMatch = prose.match(/instagram\.com\/([a-zA-Z0-9_\.]+)/i);
+
+                if (twitterMatch) socialLinks.push(`https://twitter.com/${twitterMatch[1]}`);
+                if (facebookMatch) socialLinks.push(`https://facebook.com/${facebookMatch[1]}`);
+                if (instagramMatch) socialLinks.push(`https://instagram.com/${instagramMatch[1]}`);
+
+                // Extract FEC ID
+                const fecMatch = prose.match(/C00\d{6}/);
+
+                // Build potentialAction array
+                const potentialActions = [];
+                if (donateMatch || prose.toLowerCase().includes('donate')) {
+                    potentialActions.push({
+                        "@type": "DonateAction",
+                        "target": {
+                            "@type": "EntryPoint",
+                            "urlTemplate": donateMatch ? donateMatch[1] : "https://emmacarterforcongress.org/donate"
+                        }
+                    });
+                }
+                if (volunteerMatch || prose.toLowerCase().includes('volunteer')) {
+                    potentialActions.push({
+                        "@type": "JoinAction",
+                        "target": {
+                            "@type": "EntryPoint",
+                            "urlTemplate": volunteerMatch ? volunteerMatch[1] : "https://emmacarterforcongress.org/volunteer"
+                        }
+                    });
+                }
 
                 return {
                     "@context": "https://schema.org",
                     "@type": "Person",
-                    "@id": "https://emmacarterforcongress.org/about",
-                    "name": "Emma Carter",
+                    "@id": "https://emmacarterforcongress.org/candidate",
+                    "name": candidateName,
                     "jobTitle": "Candidate for U.S. House",
-                    "memberOf": {
+                    "memberOf": party ? {
                         "@type": "Organization",
                         "name": party
+                    } : { "@type": "Organization", "name": "<< MISSING: Add party affiliation >>" },
+                    "identifier": fecMatch ? [{
+                        "@type": "PropertyValue",
+                        "propertyID": "FEC",
+                        "value": fecMatch[0]
+                    }] : [],
+                    "sameAs": socialLinks,
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/about"
                     },
-                    "address": {
-                        "@type": "PostalAddress",
-                        "addressLocality": "Oakland",
-                        "addressRegion": "CA"
+                    "about": {
+                        "@type": "Thing",
+                        "name": office || "<< MISSING: Add office/district (e.g., U.S. House, CA-15) >>",
+                        "startDate": "2026-11-03"  // General election date
+                    },
+                    "potentialAction": potentialActions.length > 0 ? potentialActions : undefined,
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
                     }
                 };
             } else if (contentType === 'event') {
