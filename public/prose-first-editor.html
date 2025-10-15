@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Content Editor — Prose First</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .toolbar select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .toolbar button {
+            padding: 0.5rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .toolbar button:hover {
+            background: #2563eb;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            height: calc(100vh - 100px);
+        }
+
+        /* PROSE EDITOR - Main focus */
+        .prose-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .prose-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #6b7280;
+            background: #f9fafb;
+        }
+
+        #prose-editor {
+            flex: 1;
+            padding: 3rem;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #1f2937;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        #prose-editor h1 {
+            font-size: 32px;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        #prose-editor h2 {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+        }
+
+        #prose-editor p {
+            margin-bottom: 1.5em;
+        }
+
+        /* ADVISOR PANEL - Guidance sidebar */
+        .advisor-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .advisor-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .advisor-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f9fafb;
+        }
+
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        .advisor-content {
+            padding: 1rem;
+        }
+
+        /* Recommendations */
+        .rec-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .rec-item {
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            line-height: 1.5;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .rec-item:hover {
+            background: #f3f4f6;
+            transform: translateX(2px);
+        }
+
+        .rec-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .rec-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .rec-item.suggestion {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .rec-label {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rec-description {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .rec-field {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        /* JSON-LD Preview (collapsible) */
+        .jsonld-preview {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            border-radius: 6px;
+        }
+
+        .json-key { color: #a78bfa; font-weight: 500; }
+        .json-string { color: #34d399; }
+        .json-bracket { color: #94a3b8; font-weight: 600; }
+        .json-colon { color: #94a3b8; }
+        .json-comma { color: #64748b; }
+        .json-empty {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.25);
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px dashed #ef4444;
+            font-weight: 600;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .expand-toggle {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem;
+        }
+
+        .expand-toggle:hover {
+            color: #374151;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📝 Campaign Content Editor</h1>
+        <div class="toolbar">
+            <select id="content-type">
+                <option value="press">Press Release</option>
+                <option value="person">Person/Bio</option>
+                <option value="issues">Issues Page</option>
+                <option value="event">Event</option>
+                <option value="qapage">Q&A Page</option>
+                <option value="faqpage">FAQ Page</option>
+            </select>
+            <button id="analyze-btn">🔍 Analyze Content</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- MAIN: Prose Editor -->
+        <div class="prose-panel">
+            <div class="prose-header">✍️ Your Campaign Content</div>
+            <div contenteditable="true" id="prose-editor" spellcheck="true">
+                <h1>Emma Carter Unveils Plan to Expand Affordable Housing in CA-15</h1>
+                <h2>Oakland, CA — October 14, 2025, 9:00 AM PT</h2>
+                <p>Congressional candidate Emma Carter today announced a comprehensive plan to address the Bay Area's affordable housing crisis, proposing new funding mechanisms and zoning reforms that would create 15,000 affordable units across California's 15th District over the next five years.</p>
+                <p>Speaking at a press conference outside Oakland City Hall, Carter outlined her three-pillar approach: expanding Community Land Trusts to preserve affordable units in perpetuity, streamlining permitting processes for affordable housing developers, and establishing a regional housing trust fund with contributions from large corporations.</p>
+                <p>"Working families in our district are being priced out of their own neighborhoods," Carter said. "According to recent data from the Bay Area Housing Coalition, over 60% of renters in CA-15 are now rent-burdened, paying more than 30% of their income on housing. This is unsustainable, and we need bold federal action to support local solutions."</p>
+                <p>The plan has already garnered support from the East Bay Housing Organizations coalition and the California Teachers Association, who praised Carter's focus on preserving naturally occurring affordable housing alongside new construction.</p>
+                <p>"Emma understands that we can't build our way out of this crisis alone—we need to protect the affordable housing we already have," said Maria Gonzalez, Executive Director of Oakland Community Housing. "Her Community Land Trust proposal is exactly what we need."</p>
+                <p>Carter's opponent, incumbent Representative John Doe, has previously voted against federal affordable housing funding bills, including the 2024 Housing Investment Act.</p>
+                <p>The full plan will be available on Carter's campaign website starting today, and she will host a community forum on housing policy this Saturday at Oakland Technical High School.</p>
+                <p>###</p>
+                <p>Contact: press@emmacarterforcongress.org</p>
+            </div>
+        </div>
+
+        <!-- SIDEBAR: AI Advisor -->
+        <div class="advisor-panel">
+            <!-- Completeness Score -->
+            <div class="advisor-card">
+                <div class="advisor-header">
+                    <span>🎯 AI Completeness</span>
+                    <span class="score-display" id="completeness-score">--</span>
+                </div>
+                <div class="advisor-content">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number" id="error-count">--</span>
+                            <span class="stat-label">Errors</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="warning-count">--</span>
+                            <span class="stat-label">Warnings</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="ok-count">--</span>
+                            <span class="stat-label">Complete</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="advisor-card">
+                <div class="advisor-header">💡 Recommendations</div>
+                <div class="advisor-content">
+                    <div class="rec-list" id="recommendations-list">
+                        <p style="color: #9ca3af; font-size: 0.8125rem; text-align: center; padding: 1rem;">
+                            Click "Analyze Content" to see recommendations
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON-LD Preview (collapsible) -->
+            <div class="advisor-card">
+                <div class="advisor-header">
+                    <span>⚙️ JSON-LD Preview</span>
+                    <button class="expand-toggle" onclick="toggleJsonPreview()">▼</button>
+                </div>
+                <div class="collapsible-content" id="jsonld-container">
+                    <div class="advisor-content">
+                        <div class="jsonld-preview" id="jsonld-preview">
+                            <span style="color: #64748b;">Click "Analyze Content" to generate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleJsonPreview() {
+            const container = document.getElementById('jsonld-container');
+            container.classList.toggle('expanded');
+        }
+
+        // Content templates
+        const templates = {
+            press: {
+                prose: `<h1>Emma Carter Unveils Plan to Expand Affordable Housing in CA-15</h1>
+<h2>Oakland, CA — October 14, 2025, 9:00 AM PT</h2>
+<p>Congressional candidate Emma Carter today announced a comprehensive plan to address the Bay Area's affordable housing crisis, proposing new funding mechanisms and zoning reforms that would create 15,000 affordable units across California's 15th District over the next five years.</p>
+<p>Speaking at a press conference outside Oakland City Hall, Carter outlined her three-pillar approach: expanding Community Land Trusts to preserve affordable units in perpetuity, streamlining permitting processes for affordable housing developers, and establishing a regional housing trust fund with contributions from large corporations.</p>
+<p>"Working families in our district are being priced out of their own neighborhoods," Carter said. "According to recent data from the Bay Area Housing Coalition, over 60% of renters in CA-15 are now rent-burdened, paying more than 30% of their income on housing. This is unsustainable, and we need bold federal action to support local solutions."</p>
+<p>The plan has already garnered support from the East Bay Housing Organizations coalition and the California Teachers Association, who praised Carter's focus on preserving naturally occurring affordable housing alongside new construction.</p>
+<p>"Emma understands that we can't build our way out of this crisis alone—we need to protect the affordable housing we already have," said Maria Gonzalez, Executive Director of Oakland Community Housing. "Her Community Land Trust proposal is exactly what we need."</p>
+<p>Carter's opponent, incumbent Representative John Doe, has previously voted against federal affordable housing funding bills, including the 2024 Housing Investment Act.</p>
+<p>The full plan will be available on Carter's campaign website starting today, and she will host a community forum on housing policy this Saturday at Oakland Technical High School.</p>
+<p>###</p>
+<p>Contact: press@emmacarterforcongress.org</p>`,
+                schema: 'NewsArticle'
+            },
+            person: {
+                prose: `<h1>About Emma Carter</h1>
+<h2>Candidate for U.S. House, California's 15th District</h2>
+<p>Emma Carter is a Democrat running for Congress to fight for working families, affordable housing, and climate action in California's 15th District.</p>
+<p>Born and raised in Oakland, Emma has spent her entire career fighting for her community. As a small business owner for over 15 years, she understands the challenges facing local entrepreneurs. As a community organizer with the East Bay Housing Coalition, she's helped hundreds of families stay in their homes and advocated for tenant protections at the state level.</p>
+<p>Emma serves on the Oakland Planning Commission, where she's been a leading voice for sustainable development and affordable housing. She also volunteers with Youth UpRising, mentoring young people interested in civic engagement and social justice.</p>
+<p>Emma graduated from UC Berkeley with a degree in Urban Studies and earned her MBA from Stanford's Graduate School of Business. She lives in Oakland's Fruitvale neighborhood with her partner and their rescue dog, Bailey.</p>
+<p>In Congress, Emma will fight to:</p>
+<p>• Expand affordable housing and protect tenants' rights<br>• Take bold action on climate change and create clean energy jobs<br>• Strengthen public education and make college affordable<br>• Protect reproductive freedom and voting rights<br>• Build an economy that works for working families, not just the wealthy</p>
+<p>Learn more and get involved at emmacarterforcongress.org</p>`,
+                schema: 'Person'
+            },
+            issues: {
+                prose: `<h1>Where Emma Stands</h1>
+<h2>Our Priorities for CA-15</h2>
+<p><strong>Affordable Housing:</strong> The Bay Area's housing crisis is pricing working families out of their own neighborhoods. Emma will fight for federal funding to build 15,000 new affordable units in CA-15, expand Community Land Trusts, and protect tenants from predatory landlords. She supports the Homes for All Act and will work to preserve naturally occurring affordable housing while streamlining construction of new units.</p>
+<p><strong>Climate Action:</strong> We don't have time for half-measures. Emma supports the Green New Deal and will fight for massive investments in clean energy, public transit, and green jobs. She'll push to make the Bay Area a national leader in climate solutions, from expanding BART to weatherizing every home in our district. Climate action is economic justice—and Emma will ensure the transition to clean energy creates good union jobs.</p>
+<p><strong>Education:</strong> Every child deserves access to excellent public schools, from pre-K through college. Emma will fight to fully fund public education, raise teacher pay, expand universal pre-K, and make public colleges tuition-free for working families. She opposes school privatization and will work to cancel student debt that's crushing a generation of young people.</p>`,
+                schema: 'WebPage'
+            },
+            event: {
+                prose: `<h1>Community Rally: Fighting for Our Future</h1>
+<h2>Saturday, October 20, 2025 • 2:00 PM - 4:00 PM PT</h2>
+<p>Join Emma Carter and special guests for a community rally at Jack London Square! We'll be rallying together to kick off the final months of our campaign and energize our grassroots movement for affordable housing, climate action, and economic justice.</p>
+<p>This free, family-friendly event will feature:</p>
+<p>• Speeches from Emma and local labor and community leaders<br>• Live music from Oakland artists<br>• Activities for kids<br>• Voter registration<br>• Opportunities to sign up to volunteer</p>
+<p><strong>Location:</strong> Jack London Square Amphitheater, 55 Harrison Street, Oakland, CA 94607</p>
+<p><strong>Accessibility:</strong> This event is wheelchair accessible with ASL interpretation available. For other accessibility needs, please email events@emmacarterforcongress.org at least 48 hours in advance.</p>
+<p>Can't make it? Sign up to volunteer at other events at emmacarterforcongress.org/volunteer</p>
+<p>RSVP today at emmacarterforcongress.org/rally</p>`,
+                schema: 'Event'
+            },
+            qapage: {
+                prose: `<h1>Where do you stand on reproductive rights?</h1>
+<h2>Voter Questions Answered</h2>
+<p><strong>Question:</strong> Many voters in CA-15 have asked how Emma Carter would protect reproductive freedom if elected to Congress.</p>
+<p><strong>Emma's Answer:</strong> I will always fight to protect reproductive freedom. Every person deserves the right to make their own healthcare decisions without government interference. The Supreme Court's decision to overturn Roe v. Wade was devastating, and we cannot sit by while extremist politicians ban abortion nationwide.</p>
+<p>In Congress, I will:</p>
+<p>• Vote to codify Roe v. Wade protections into federal law<br>• Oppose any national abortion ban<br>• Protect access to reproductive healthcare, including contraception and IVF<br>• Ensure medication abortion remains accessible<br>• Fight to repeal the Hyde Amendment so every person can access abortion care regardless of income</p>
+<p>Reproductive freedom is fundamental to economic freedom, bodily autonomy, and equality. I trust people to make their own healthcare decisions—not politicians.</p>`,
+                schema: 'QAPage'
+            },
+            faqpage: {
+                prose: `<h1>Frequently Asked Questions</h1>
+<h2>Everything you need to know about Emma's campaign</h2>
+<p><strong>How can I volunteer?</strong> We'd love your help! Sign up at emmacarterforcongress.org/volunteer to join our team. We have opportunities for phone banking, canvassing, event support, data entry, and more. No experience necessary—we'll train you!</p>
+<p><strong>How do I donate?</strong> You can donate online at emmacarterforcongress.org/donate using a credit card. We also accept donations by check made out to "Emma Carter for Congress" and mailed to: PO Box 12345, Oakland, CA 94612. Please include your occupation and employer (required by FEC rules). The maximum individual contribution is $3,300 for the primary and $3,300 for the general election.</p>
+<p><strong>Does Emma accept corporate PAC money?</strong> No. Emma has pledged not to accept contributions from corporate PACs. This campaign is funded by grassroots donors like you—our average online donation is $27.</p>
+<p><strong>When is the election?</strong> The primary election is March 5, 2026, and the general election is November 3, 2026. Make sure you're registered to vote at registertovote.ca.gov</p>`,
+                schema: 'FAQPage'
+            }
+        };
+
+        const proseEditor = document.getElementById('prose-editor');
+        const contentTypeSelect = document.getElementById('content-type');
+        const analyzeBtn = document.getElementById('analyze-btn');
+
+        // Load template on content type change
+        contentTypeSelect.addEventListener('change', () => {
+            const type = contentTypeSelect.value;
+            if (templates[type]) {
+                proseEditor.innerHTML = templates[type].prose;
+            }
+        });
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', () => {
+            const prose = proseEditor.innerText;
+            const contentType = contentTypeSelect.value;
+
+            // Generate JSON-LD first
+            const jsonld = generateJSONLD(prose, contentType);
+
+            // Generate recommendations based on mockup validation rules AND missing JSON-LD fields
+            const recommendations = analyzeContent(prose, contentType, jsonld);
+            displayRecommendations(recommendations);
+
+            displayJSONLD(jsonld);
+
+            // Calculate score
+            const score = calculateScore(recommendations);
+            displayScore(score, recommendations);
+        });
+
+        function analyzeContent(prose, contentType, jsonld) {
+            const recs = { errors: [], warnings: [], suggestions: [] };
+
+            // First, check for MISSING values in JSON-LD and generate recommendations
+            const jsonString = JSON.stringify(jsonld);
+            const missingMatches = jsonString.match(/<< MISSING: ([^>]+) >>/g);
+
+            if (missingMatches) {
+                missingMatches.forEach(match => {
+                    const description = match.replace(/<< MISSING: /, '').replace(/ >>/, '');
+
+                    // Determine field from the description
+                    if (description.includes('hero image') || description.includes('headshot')) {
+                        recs.errors.push({
+                            label: 'Missing image URL',
+                            description: description,
+                            field: 'image',
+                            suggestion: 'Upload image and add URL to metadata (images aren\'t added in prose)'
+                        });
+                    } else if (description.includes('logo')) {
+                        recs.warnings.push({
+                            label: 'Missing campaign logo',
+                            description: description,
+                            field: 'publisher.logo',
+                            suggestion: 'Upload campaign logo and add URL to metadata'
+                        });
+                    } else if (description.includes('summary') || description.includes('first paragraph')) {
+                        recs.errors.push({
+                            label: 'Missing description/summary',
+                            description: description,
+                            field: 'description',
+                            suggestion: 'Ensure first paragraph is substantial (100+ words) and summarizes the news'
+                        });
+                    } else if (description.includes('date') || description.includes('time')) {
+                        recs.errors.push({
+                            label: 'Missing or incomplete date/time',
+                            description: description,
+                            field: 'datePublished',
+                            suggestion: 'Add complete dateline: "City, State — Month Day, Year, Time AM/PM TZ"'
+                        });
+                    } else if (description.includes('party affiliation')) {
+                        recs.errors.push({
+                            label: 'Missing party affiliation in prose',
+                            description: description,
+                            field: 'memberOf.name',
+                            suggestion: 'Add to first sentence: "...is a Democrat/Republican running for..."'
+                        });
+                    } else if (description.includes('street address')) {
+                        recs.errors.push({
+                            label: 'Missing complete address',
+                            description: description,
+                            field: 'location.address',
+                            suggestion: 'Add full address: "Building, Street Number Street Name, City, State ZIP"'
+                        });
+                    }
+                });
+            }
+
+            if (contentType === 'press') {
+                // Check for proper dateline with time
+                const hasDateline = prose.includes('—') && prose.match(/\d{4}/);
+                const hasTime = prose.match(/\d{1,2}:\d{2}\s*(AM|PM|am|pm)/i);
+
+                if (!hasDateline) {
+                    recs.errors.push({
+                        label: 'Missing publication date in dateline',
+                        description: 'Replace dateline with: "Oakland, CA — October 14, 2025, 9:00 AM PT"',
+                        field: 'datePublished',
+                        suggestion: 'After the headline, add: Oakland, CA — [DATE], [TIME] PT'
+                    });
+                } else if (!hasTime) {
+                    recs.warnings.push({
+                        label: 'Add time to dateline for precision',
+                        description: 'Change "October 14, 2025" to "October 14, 2025, 9:00 AM PT"',
+                        field: 'datePublished',
+                        suggestion: 'AI systems prefer exact timestamps for news articles'
+                    });
+                }
+
+                // Check lede paragraph
+                const lines = prose.split('\n').filter(l => l.trim());
+                const firstPara = lines[2] || '';
+                if (firstPara.length < 80) {
+                    recs.errors.push({
+                        label: 'Lede paragraph too short',
+                        description: 'First paragraph should summarize who, what, when, where, why (100-150 words)',
+                        field: 'description',
+                        suggestion: 'Example: "[Candidate] today announced [action] at [location], proposing [specifics] that would [impact]"'
+                    });
+                }
+
+                // Check for citations on data claims
+                const hasDataClaim = prose.match(/\d+%|percent|\d+ (voters|people|families)/i);
+                const hasCitation = prose.includes('(Source:') || prose.includes('according to') || prose.includes('data from');
+
+                if (hasDataClaim && !hasCitation) {
+                    const match = prose.match(/("[^"]*\d+%[^"]*"|[^\.]*\d+%[^\.]*)/);
+                    if (match) {
+                        recs.warnings.push({
+                            label: 'Uncited data claim detected',
+                            description: `Add source after "${match[0].substring(0, 50)}..."`,
+                            field: 'claims.evidence',
+                            suggestion: 'Replace "60% of renters" with "60% of renters (Source: Bay Area Housing Coalition, 2025)"'
+                        });
+                    }
+                }
+
+                // Check for contact info
+                if (!prose.toLowerCase().includes('contact:') && !prose.toLowerCase().includes('@')) {
+                    recs.warnings.push({
+                        label: 'Missing media contact',
+                        description: 'Add at end: "Contact: press@emmacarterforcongress.org" or "Media inquiries: [name], [phone]"',
+                        field: 'publisher.contactPoint',
+                        suggestion: 'Standard press release format includes contact info after "###"'
+                    });
+                }
+
+                // Check for opponent contrast
+                if (prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('john doe')) {
+                    if (!prose.includes('voted against') && !prose.includes('opposed')) {
+                        recs.suggestions.push({
+                            label: 'Strengthen opponent contrast',
+                            description: 'Add specific voting record or policy position for context',
+                            field: 'mentions',
+                            suggestion: 'Example: "Her opponent voted against the 2024 Housing Investment Act"'
+                        });
+                    }
+                }
+
+            } else if (contentType === 'person') {
+                // Party affiliation check
+                if (!prose.toLowerCase().includes('democrat') && !prose.toLowerCase().includes('republican')) {
+                    const firstSentence = prose.split('.')[0];
+                    recs.errors.push({
+                        label: 'Missing party affiliation',
+                        description: `Change "${firstSentence.substring(0, 50)}..." to include party`,
+                        field: 'memberOf.name',
+                        suggestion: 'Replace "Emma Carter is running" with "Emma Carter is a Democrat running"'
+                    });
+                }
+
+                // Check for professional background
+                if (!prose.toLowerCase().includes('graduated') && !prose.toLowerCase().includes('degree')) {
+                    recs.warnings.push({
+                        label: 'Add educational background',
+                        description: 'Include education: "Emma graduated from [University] with a degree in [Field]"',
+                        field: 'alumniOf',
+                        suggestion: 'Educational credentials build credibility with voters'
+                    });
+                }
+
+                // Check for local connection
+                if (!prose.toLowerCase().includes('lives in') && !prose.toLowerCase().includes('resident of')) {
+                    recs.warnings.push({
+                        label: 'Add local residency',
+                        description: 'Mention where candidate lives: "She lives in Oakland\'s Fruitvale neighborhood"',
+                        field: 'homeLocation',
+                        suggestion: 'Voters want to know you\'re part of the community'
+                    });
+                }
+
+            } else if (contentType === 'event') {
+                // Check for full address
+                if (!prose.match(/\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)/)) {
+                    recs.errors.push({
+                        label: 'Missing complete street address',
+                        description: 'Add full address: "Jack London Square Amphitheater, 55 Harrison Street, Oakland, CA 94607"',
+                        field: 'location.address',
+                        suggestion: 'Google Maps and AI assistants need full street addresses'
+                    });
+                }
+
+                // Check for RSVP link
+                if (!prose.toLowerCase().includes('rsvp') && !prose.toLowerCase().includes('register')) {
+                    recs.warnings.push({
+                        label: 'Add RSVP/registration link',
+                        description: 'Add at end: "RSVP at emmacarterforcongress.org/events/rally"',
+                        field: 'offers.url',
+                        suggestion: 'Makes it easy for supporters to sign up'
+                    });
+                }
+
+                // Check for accessibility info
+                if (!prose.toLowerCase().includes('accessible') && !prose.toLowerCase().includes('accommodation')) {
+                    recs.suggestions.push({
+                        label: 'Add accessibility information',
+                        description: 'Include: "This event is wheelchair accessible. For accommodations, email..."',
+                        field: 'accessibilityFeature',
+                        suggestion: 'Shows commitment to inclusive events'
+                    });
+                }
+            }
+
+            // General CTA check
+            if (!prose.toLowerCase().includes('learn more at') &&
+                !prose.toLowerCase().includes('visit') &&
+                !prose.toLowerCase().includes('.org') &&
+                !prose.toLowerCase().includes('.com')) {
+                recs.suggestions.push({
+                    label: 'Add website call-to-action',
+                    description: 'End with: "Learn more at emmacarterforcongress.org"',
+                    field: 'potentialAction',
+                    suggestion: 'Drives traffic to campaign website for donations and volunteers'
+                });
+            }
+
+            return recs;
+        }
+
+        function displayRecommendations(recs) {
+            const list = document.getElementById('recommendations-list');
+            const allRecs = [
+                ...recs.errors.map(r => ({ ...r, type: 'error', icon: '❌' })),
+                ...recs.warnings.map(r => ({ ...r, type: 'warning', icon: '⚠️' })),
+                ...recs.suggestions.map(r => ({ ...r, type: 'suggestion', icon: '✨' }))
+            ];
+
+            if (allRecs.length === 0) {
+                list.innerHTML = '<p style="color: #10b981; text-align: center; padding: 1rem;">✅ All recommendations addressed!</p>';
+                return;
+            }
+
+            list.innerHTML = allRecs.map(rec => `
+                <div class="rec-item ${rec.type}">
+                    <div class="rec-label">${rec.icon} ${rec.label}</div>
+                    <div class="rec-description">${rec.description}</div>
+                    ${rec.suggestion ? `<div class="rec-description" style="margin-top: 0.5rem; font-style: italic; color: #3b82f6;">💡 ${rec.suggestion}</div>` : ''}
+                    <div class="rec-field">${rec.field}</div>
+                </div>
+            `).join('');
+        }
+
+        function generateJSONLD(prose, contentType) {
+            const lines = prose.split('\n').filter(l => l.trim());
+            const headline = lines[0] || '';
+            const dateline = lines.find(l => l.includes('—')) || '';
+            const dateMatch = dateline.match(/(\w+ \d+, \d{4})/);
+            const timeMatch = dateline.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+
+            if (contentType === 'press') {
+                const firstPara = lines[2] || '';
+                const description = firstPara.length > 80 ? firstPara.substring(0, 150) + '...' : '';
+
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "NewsArticle",
+                    "@id": "https://emmacarterforcongress.org/news/housing-plan",
+                    "headline": headline,
+                    "description": description || "<< MISSING: Add summary from first paragraph >>",
+                    "articleSection": "Press Releases",
+                    "datePublished": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : "<< MISSING: Add date and time in dateline >>",
+                    "dateModified": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : "<< MISSING >>",
+                    "image": ["<< MISSING: Add hero image URL >>"],
+                    "author": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
+                    },
+                    "about": {
+                        "@type": "Person",
+                        "name": "Emma Carter"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress",
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": "<< MISSING: Add campaign logo URL >>"
+                        }
+                    },
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/news/housing-plan"
+                    }
+                };
+            } else if (contentType === 'person') {
+                const hasDemocrat = prose.toLowerCase().includes('democrat');
+                const party = hasDemocrat ? 'Democratic Party' : '<< MISSING: Add party affiliation in prose >>';
+
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "Person",
+                    "@id": "https://emmacarterforcongress.org/about",
+                    "name": "Emma Carter",
+                    "image": "<< MISSING: Add headshot image URL >>",
+                    "jobTitle": "Candidate for U.S. House",
+                    "memberOf": {
+                        "@type": "Organization",
+                        "name": party
+                    },
+                    "sameAs": [
+                        "https://emmacarterforcongress.org",
+                        "<< OPTIONAL: Add Twitter/Facebook URLs >>"
+                    ],
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": "Oakland",
+                        "addressRegion": "CA"
+                    },
+                    "potentialAction": [
+                        {
+                            "@type": "DonateAction",
+                            "target": {
+                                "@type": "EntryPoint",
+                                "urlTemplate": "https://emmacarterforcongress.org/donate"
+                            }
+                        }
+                    ]
+                };
+            } else if (contentType === 'event') {
+                const addressMatch = prose.match(/(\d+\s+[A-Za-z\s]+(?:Street|Avenue|Road|Boulevard|St|Ave|Rd|Blvd)[^,]*,\s*[A-Za-z\s]+,\s*CA\s+\d{5})/i);
+                const dateMatch = prose.match(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(\w+ \d+, \d{4})/i);
+                const timeMatch = prose.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))\s*-\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "Event",
+                    "@id": "https://emmacarterforcongress.org/events/rally",
+                    "name": headline,
+                    "eventStatus": "https://schema.org/EventScheduled",
+                    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+                    "startDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[1]}` : "<< MISSING: Add start date/time >>",
+                    "endDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[2]}` : "<< MISSING: Add end date/time >>",
+                    "location": {
+                        "@type": "Place",
+                        "name": "Jack London Square",
+                        "address": addressMatch ? addressMatch[0] : "<< MISSING: Add full street address >>"
+                    },
+                    "organizer": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "url": "https://emmacarterforcongress.org/rsvp/rally",
+                        "price": "0",
+                        "priceCurrency": "USD",
+                        "availability": "https://schema.org/InStock"
+                    }
+                };
+            }
+
+            return { "@context": "https://schema.org", "@type": contentType };
+        }
+
+        function displayJSONLD(jsonld) {
+            const preview = document.getElementById('jsonld-preview');
+            const formatted = JSON.stringify(jsonld, null, 2);
+
+            // Enhanced syntax highlighting
+            let highlighted = formatted
+                // Highlight MISSING values first
+                .replace(/"<<\s*MISSING[^"]*>>"/g, '<span class="json-empty">$&</span>')
+                // Keys (@context, @type, etc.)
+                .replace(/"(@[^"]+)"(\s*):/g, '<span class="json-key">"$1"</span><span class="json-colon">$2:</span>')
+                // Regular keys
+                .replace(/"([^"]+)"(\s*):/g, '<span class="json-key">"$1"</span><span class="json-colon">$2:</span>')
+                // String values (but not keys or missing markers)
+                .replace(/:\s*"([^"]*(?:"[^"]*")*)"/g, (match, p1) => {
+                    if (match.includes('json-') || match.includes('MISSING')) return match;
+                    return `: <span class="json-string">"${p1}"</span>`;
+                })
+                // Brackets
+                .replace(/\[/g, '<span class="json-bracket">[</span>')
+                .replace(/\]/g, '<span class="json-bracket">]</span>')
+                .replace(/\{/g, '<span class="json-bracket">{</span>')
+                .replace(/\}/g, '<span class="json-bracket">}</span>')
+                // Commas
+                .replace(/,$/gm, '<span class="json-comma">,</span>');
+
+            preview.innerHTML = `<code>${highlighted}</code>`;
+        }
+
+        function calculateScore(recs) {
+            const criticalErrors = recs.errors.length;
+            const minorIssues = recs.warnings.length;
+            const totalIssues = criticalErrors + minorIssues;
+
+            if (totalIssues === 0) return 100;
+
+            // Weight errors more heavily than warnings
+            const errorPenalty = criticalErrors * 12;
+            const warningPenalty = minorIssues * 5;
+            const totalPenalty = errorPenalty + warningPenalty;
+
+            return Math.max(20, 100 - totalPenalty);
+        }
+
+        function displayScore(score, recs) {
+            const scoreEl = document.getElementById('completeness-score');
+            scoreEl.textContent = score + '%';
+
+            if (score >= 80) scoreEl.style.color = '#10b981';
+            else if (score >= 50) scoreEl.style.color = '#f59e0b';
+            else scoreEl.style.color = '#ef4444';
+
+            document.getElementById('error-count').textContent = recs.errors.length;
+            document.getElementById('warning-count').textContent = recs.warnings.length;
+            document.getElementById('ok-count').textContent = '✓';
+        }
+    </script>
+</body>
+</html>
