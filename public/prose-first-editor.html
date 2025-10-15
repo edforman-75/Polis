@@ -788,71 +788,113 @@
                 }
 
             } else if (contentType === 'speech') {
-                // Check for location and date in subtitle (only if missing)
-                const hasSubtitle = prose.includes('Remarks as prepared');
-                const hasLocation = prose.match(/at ([A-Z][^,\n]+)/);
-                const hasDate = prose.match(/\w+ \d+, \d{4}/);
+                // Speech validation based on Speech JSON-LD schema requirements
 
-                if (!hasLocation || !hasDate) {
+                // ❌ Required: name/title ≤110 chars
+                const lines = prose.split('\n').filter(l => l.trim());
+                const title = lines[0] || '';
+                if (!title) {
+                    recs.errors.push({
+                        label: 'Missing speech title',
+                        description: 'Add headline with speech title (≤110 characters)',
+                        field: 'name',
+                        suggestion: 'Example: "Remarks at Oakland Clean Jobs Rally"'
+                    });
+                } else if (title.length > 110) {
                     recs.warnings.push({
-                        label: 'Add location and date to speech header',
-                        description: 'After headline, add subtitle: "Remarks by Emma Carter at [Location], [Date]"',
-                        field: 'locationCreated',
-                        suggestion: 'Context helps AI systems understand when and where the speech was delivered'
+                        label: 'Speech title too long',
+                        description: `Title is ${title.length} chars, should be ≤110 for optimal display`,
+                        field: 'name',
+                        suggestion: 'Shorten to core message: "Clean Jobs in Oakland"'
                     });
                 }
 
-                // Check for citations on data claims (only if there are uncited claims)
-                const hasDataClaim = prose.match(/\d+%|percent|\$\d+/i);
-                const hasCitation = prose.includes('(Source:') || prose.includes('according to') || prose.includes('data from');
+                // ❌ Required: datePublished in ISO 8601 format
+                const hasDate = prose.match(/\w+ \d+,? \d{4}/);
+                const hasTime = prose.match(/\d{1,2}:\d{2}\s*(AM|PM|am|pm)/i);
 
-                if (hasDataClaim && !hasCitation) {
-                    const match = prose.match(/(\d+%|\$\d+[^\s]*)/);
-                    if (match) {
-                        recs.warnings.push({
-                            label: 'Add citation for statistics',
-                            description: `Add source after statistic "${match[0]}": "(Source: [Organization], [Year])"`,
-                            field: 'claims.evidence',
-                            suggestion: 'Cited statistics are more credible and AI-friendly'
-                        });
-                    }
+                if (!hasDate) {
+                    recs.errors.push({
+                        label: 'Missing speech date',
+                        description: 'Add date in subtitle or header: "September 28, 2025"',
+                        field: 'datePublished',
+                        suggestion: 'Required for JSON-LD: YYYY-MM-DDThh:mm:ss±TZ format'
+                    });
+                } else if (!hasTime) {
+                    recs.warnings.push({
+                        label: 'Add time to speech date',
+                        description: 'Include delivery time: "September 28, 2025, 7:00 PM PT"',
+                        field: 'datePublished',
+                        suggestion: 'Full ISO 8601 timestamp improves AI understanding of context'
+                    });
                 }
 
-                // Check for opponent contrast (only if opponent is mentioned vaguely)
-                const hasOpponentMention = prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('my rival');
-                const hasSpecificContrast = prose.includes('voted against') ||
-                                           prose.includes('opposed') ||
-                                           prose.includes('record on') ||
-                                           prose.includes('stance on');
+                // ⚠️ Recommended: location (venue/city)
+                const hasLocation = prose.match(/at ([A-Z][^,\n]+)/i) || prose.match(/in (Oakland|San Francisco|[A-Z][a-z]+)/);
 
-                if (hasOpponentMention && !hasSpecificContrast) {
-                    const opponentSentence = prose.split(/[.!?]/).find(s =>
-                        s.toLowerCase().includes('opponent') || s.toLowerCase().includes('rival')
-                    );
-
-                    if (opponentSentence) {
-                        recs.suggestions.push({
-                            label: 'Make opponent contrast more specific',
-                            description: `Replace "${opponentSentence.trim().substring(0, 50)}..." with concrete voting record or policy stance`,
-                            field: 'mentions',
-                            suggestion: 'Example: "My opponent voted against raising the minimum wage three times"'
-                        });
-                    }
+                if (!hasLocation) {
+                    recs.warnings.push({
+                        label: 'Add location/venue to speech',
+                        description: 'Include where speech was delivered: "at Oakland City Hall" or "in Oakland, CA"',
+                        field: 'location.name',
+                        suggestion: 'Location context helps AI systems categorize and surface the speech'
+                    });
                 }
 
-                // Check for strong call-to-action (only if missing)
-                const hasCallToAction = prose.toLowerCase().includes('let\'s') ||
-                                       prose.toLowerCase().includes('join me') ||
-                                       prose.toLowerCase().includes('together') ||
-                                       prose.toLowerCase().includes('get to work');
+                // ⚠️ Recommended: citation[] for factual claims
+                const hasFactualClaim = prose.match(/\d+%|percent|\$\d+|according to|studies show|data (shows?|reveals?)/i);
+                const hasCitation = prose.includes('(Source:') || prose.includes('https://') || prose.includes('http://');
 
-                if (!hasCallToAction) {
+                if (hasFactualClaim && !hasCitation) {
+                    recs.warnings.push({
+                        label: 'Add citations for factual claims',
+                        description: 'Include source URLs in JSON-LD citation[] field for statistics and data claims',
+                        field: 'citation',
+                        suggestion: 'Example: citation: ["https://energy.gov/data/infrastructure.pdf"]'
+                    });
+                }
+
+                // ⚠️ Recommended: isBasedOn[] for policy references
+                const hasPolicy = prose.toLowerCase().includes('plan') ||
+                                 prose.toLowerCase().includes('proposal') ||
+                                 prose.toLowerCase().includes('agenda') ||
+                                 prose.toLowerCase().includes('platform');
+
+                if (hasPolicy) {
                     recs.suggestions.push({
-                        label: 'Add inspiring call-to-action',
-                        description: 'End speech with action-oriented closing: "Together, we can [goal]. Let\'s get to work!"',
-                        field: 'potentialAction',
-                        suggestion: 'Strong CTAs mobilize supporters and create memorable endings'
+                        label: 'Link to supporting policy documents',
+                        description: 'Add policy/plan URLs to JSON-LD isBasedOn[] field',
+                        field: 'isBasedOn',
+                        suggestion: 'Example: isBasedOn: ["https://emmacarterforcongress.org/policy/clean-jobs-plan.pdf"]'
                     });
+                }
+
+                // ⚠️ Recommended: about[] and keywords for topical tags
+                const hasTopics = prose.match(/(jobs|housing|climate|healthcare|education|infrastructure|economy)/gi);
+
+                if (hasTopics && hasTopics.length > 0) {
+                    recs.suggestions.push({
+                        label: 'Add topical tags to JSON-LD',
+                        description: `Detected topics: ${[...new Set(hasTopics.map(t => t.toLowerCase()))].join(', ')}`,
+                        field: 'about',
+                        suggestion: 'Add to about[] field: { "@type": "DefinedTerm", "termCode": "infrastructure" }'
+                    });
+                }
+
+                // Alignment check: Title should relate to content
+                if (title) {
+                    const titleWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                    const contentLower = prose.toLowerCase();
+                    const matchingWords = titleWords.filter(w => contentLower.includes(w));
+
+                    if (titleWords.length > 2 && matchingWords.length < 2) {
+                        recs.warnings.push({
+                            label: 'Title-content alignment issue',
+                            description: 'Speech title doesn\'t match transcript content',
+                            field: 'name',
+                            suggestion: 'Ensure title accurately reflects speech topics and themes'
+                        });
+                    }
                 }
             }
 
@@ -978,29 +1020,65 @@
                     }
                 };
             } else if (contentType === 'speech') {
-                const subtitle = lines[1] || '';
-                const locationMatch = subtitle.match(/at ([^,\n]+)/);
-                const dateInSubtitle = subtitle.match(/(\w+ \d+, \d{4})/);
+                // Extract date and time for ISO 8601 format
+                const dateMatch = prose.match(/(\w+)\s+(\d+),?\s+(\d{4})/);
+                const timeMatch = prose.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)/i);
+                const locationMatch = prose.match(/at ([^,\n]+)/i) || prose.match(/in (Oakland|San Francisco|[A-Z][a-z]+(,\s*[A-Z]{2})?)/);
+
+                // Build ISO 8601 date
+                let isoDate = "<< MISSING: Add date in format YYYY-MM-DDThh:mm:ss-07:00 >>";
+                if (dateMatch) {
+                    const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+                    const monthNum = months[dateMatch[1].toLowerCase().substring(0,3)];
+                    const day = dateMatch[2].padStart(2, '0');
+                    const year = dateMatch[3];
+
+                    if (monthNum && timeMatch) {
+                        const hour24 = timeMatch[3].toLowerCase() === 'pm' && timeMatch[1] !== '12'
+                            ? parseInt(timeMatch[1]) + 12
+                            : timeMatch[1].padStart(2, '0');
+                        const min = timeMatch[2];
+                        isoDate = `${year}-${monthNum.toString().padStart(2,'0')}-${day}T${hour24}:${min}:00-07:00`;
+                    } else if (monthNum) {
+                        isoDate = `${year}-${monthNum.toString().padStart(2,'0')}-${day}`;
+                    }
+                }
+
+                // Extract topics for about[] field
+                const topicMatches = prose.match(/(jobs|housing|climate|healthcare|education|infrastructure|economy)/gi) || [];
+                const uniqueTopics = [...new Set(topicMatches.map(t => t.toLowerCase()))];
 
                 return {
                     "@context": "https://schema.org",
-                    "@type": "Article",
+                    "@type": "Speech",
                     "@id": "https://emmacarterforcongress.org/speeches/labor-day-rally",
-                    "headline": headline,
-                    "articleSection": "Speeches",
-                    "datePublished": dateInSubtitle ? dateInSubtitle[0] : "<< Add in subtitle >>",
+                    "name": headline.substring(0, 110),
                     "author": {
                         "@type": "Person",
                         "name": "Emma Carter"
                     },
-                    "about": {
-                        "@type": "Person",
-                        "name": "Emma Carter"
-                    },
-                    "locationCreated": locationMatch ? {
+                    "datePublished": isoDate,
+                    "temporalCoverage": dateMatch ? `${dateMatch[3]}-${months[dateMatch[1].toLowerCase().substring(0,3)]?.toString().padStart(2,'0') || '01'}-${dateMatch[2].padStart(2,'0')}` : undefined,
+                    "location": locationMatch ? {
                         "@type": "Place",
                         "name": locationMatch[1]
-                    } : undefined
+                    } : { "@type": "Place", "name": "<< MISSING: Add venue or city >>" },
+                    "text": "Full transcript is available on this page.",
+                    "about": uniqueTopics.length > 0 ? uniqueTopics.slice(0, 3).map(topic => ({
+                        "@type": "DefinedTerm",
+                        "termCode": topic
+                    })) : undefined,
+                    "keywords": uniqueTopics,
+                    "citation": ["<< MISSING: Add source URLs for factual claims >>"],
+                    "isBasedOn": [],
+                    "mainEntityOfPage": {
+                        "@type": "WebPage",
+                        "@id": "https://emmacarterforcongress.org/speeches/labor-day-rally"
+                    },
+                    "publisher": {
+                        "@type": "Organization",
+                        "name": "Emma Carter for Congress"
+                    }
                 };
             } else if (contentType === 'issues') {
                 return {
