@@ -93,18 +93,42 @@
 
         .prose-editor {
             min-height: 400px;
-            padding: 20px;
+            padding: 25px;
             border: 2px solid #e5e7eb;
             border-radius: 10px;
             font-size: 15px;
             line-height: 1.8;
-            background: #f9fafb;
+            background: white;
+            font-family: Georgia, 'Times New Roman', serif;
         }
 
         .prose-editor[contenteditable="true"]:focus {
             outline: none;
             border-color: #667eea;
-            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .prose-editor p {
+            margin-bottom: 1.2em;
+        }
+
+        .prose-editor h1, .prose-editor h2 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin-bottom: 0.8em;
+            font-weight: 700;
+        }
+
+        .prose-editor h1 {
+            font-size: 24px;
+            color: #1f2937;
+        }
+
+        .prose-editor h2 {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .claim-highlight {
@@ -124,28 +148,64 @@
         }
 
         .markup-view {
-            background: #1e293b;
+            background: #0f172a;
             color: #e2e8f0;
-            padding: 20px;
+            padding: 25px;
             border-radius: 10px;
-            font-family: 'Monaco', 'Menlo', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.8;
             overflow-x: auto;
             max-height: 500px;
             overflow-y: auto;
+            border: 2px solid #1e293b;
         }
 
         .json-key {
-            color: #8b5cf6;
+            color: #a78bfa;
+            font-weight: 500;
         }
 
         .json-string {
-            color: #10b981;
+            color: #34d399;
         }
 
         .json-number {
-            color: #f59e0b;
+            color: #fbbf24;
+        }
+
+        .json-bracket {
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        .json-colon {
+            color: #64748b;
+        }
+
+        .json-comma {
+            color: #64748b;
+        }
+
+        .json-empty {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px dashed #ef4444;
+        }
+
+        .json-missing {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fdba74;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-style: italic;
+        }
+
+        .json-comment {
+            color: #64748b;
+            font-style: italic;
         }
 
         .recommendations-list {
@@ -458,11 +518,29 @@ According to recent polling, 73% of voters support increased funding for public 
 The election will be held on November 5, 2025.`;
 
         function loadExample() {
-            document.getElementById('prose-editor').textContent = exampleProse;
+            // Format prose with proper HTML paragraphs
+            const lines = exampleProse.split('\n\n');
+            const proseEditor = document.getElementById('prose-editor');
+
+            let html = '';
+            lines.forEach((line, i) => {
+                if (i === 0) {
+                    // First line is headline
+                    html += `<h1>${line.trim()}</h1>`;
+                } else if (line.startsWith('CLEVELAND')) {
+                    // Dateline
+                    html += `<h2>${line.trim()}</h2>`;
+                } else if (line.trim()) {
+                    // Regular paragraphs
+                    html += `<p>${line.trim()}</p>`;
+                }
+            });
+
+            proseEditor.innerHTML = html;
         }
 
         function analyzeContent() {
-            const prose = document.getElementById('prose-editor').textContent.trim();
+            const prose = document.getElementById('prose-editor').innerText.trim();
 
             if (!prose) {
                 alert('Please enter some content to analyze');
@@ -548,31 +626,64 @@ The election will be held on November 5, 2025.`;
         }
 
         function generateCPOMarkup(analysis) {
+            // Include ALL claims, mark unsupported ones as empty
+            const allClaims = analysis.claims.map((claim, i) => {
+                if (claim.hasEvidence) {
+                    return {
+                        "@type": "cpo:Claim",
+                        "@id": `claim:${i}`,
+                        "cpo:claimText": claim.text,
+                        "cpo:evidence": [{
+                            "@type": "CreativeWork",
+                            "url": "https://news.example.com/rally-coverage"
+                        }]
+                    };
+                } else {
+                    // Mark as needing evidence
+                    return {
+                        "@type": "cpo:Claim",
+                        "@id": `claim:${i}`,
+                        "cpo:claimText": claim.text,
+                        "cpo:evidence": "__MISSING__"  // Will be highlighted
+                    };
+                }
+            });
+
             return {
                 "@context": ["https://schema.org", "https://campaign-press-ontology.org/ns/v1#"],
                 "@type": ["PressRelease"],
                 "@id": "https://janesmithforcongress.org/press/teacher-support",
                 "headline": "Jane Smith Responds to John Doe's Attacks on Teachers",
                 "datePublished": "2025-10-14",
+                "articleBody": "__FULL_TEXT_HERE__",  // Editor would add this
                 "cpo:releaseType": "contrast",
                 "cpo:subtype": "ATT.OPP.CHAR",
-                "cpo:claims": analysis.claims.filter(c => c.hasEvidence).map((claim, i) => ({
-                    "@type": "cpo:Claim",
-                    "@id": `claim:${i}`,
-                    "cpo:claimText": claim.text,
-                    "cpo:evidence": [{
-                        "@type": "CreativeWork",
-                        "url": "https://news.example.com/rally-coverage"
-                    }]
-                }))
+                "cpo:claims": allClaims,
+                "cpo:cta": "__MISSING__"  // Call to action
             };
         }
 
         function displayMarkup(markup) {
             const formatted = JSON.stringify(markup, null, 2);
-            const highlighted = formatted
-                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-                .replace(/"([^"]+)"/g, '<span class="json-string">"$1"</span>');
+
+            let highlighted = formatted
+                // First pass: Highlight missing values
+                .replace(/"__MISSING__"/g, '<span class="json-empty">[ ]  <span class="json-comment">← needs evidence</span></span>')
+                .replace(/"__FULL_TEXT_HERE__"/g, '<span class="json-missing">"[full article text]"</span>')
+                // Keys
+                .replace(/"(@[^"]+|cpo:[^"]+|[^"]+)"(\s*):/g, '<span class="json-key">"$1"</span><span class="json-colon">$2:</span>')
+                // String values (not already highlighted)
+                .replace(/:\s*"([^"]*(?:"[^"]*")*)"/g, (match, p1) => {
+                    if (match.includes('json-')) return match; // Already highlighted
+                    return `: <span class="json-string">"${p1}"</span>`;
+                })
+                // Brackets
+                .replace(/\[/g, '<span class="json-bracket">[</span>')
+                .replace(/\]/g, '<span class="json-bracket">]</span>')
+                .replace(/\{/g, '<span class="json-bracket">{</span>')
+                .replace(/\}/g, '<span class="json-bracket">}</span>')
+                // Commas
+                .replace(/,$/gm, '<span class="json-comma">,</span>');
 
             document.getElementById('markup-view').innerHTML = highlighted;
         }
