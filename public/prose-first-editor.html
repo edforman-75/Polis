@@ -1240,6 +1240,121 @@
                 });
             }
 
+            // ALIGNMENT CHECK: H1 vs JSON-LD headline/name (Global principle from alignment doc)
+            // This ensures visible content matches structured data (must_be_visible principle)
+            const lines = prose.split('\n').filter(l => l.trim());
+            const h1Text = lines[0] || '';
+
+            let jsonHeadlineField = null;
+            let jsonHeadlineValue = null;
+
+            if (contentType === 'press' && jsonld.headline) {
+                jsonHeadlineField = 'headline';
+                jsonHeadlineValue = jsonld.headline;
+            } else if (contentType === 'speech' && jsonld.name) {
+                jsonHeadlineField = 'name';
+                jsonHeadlineValue = jsonld.name;
+            } else if (contentType === 'person' && jsonld.name) {
+                jsonHeadlineField = 'name';
+                jsonHeadlineValue = jsonld.name;
+            } else if (contentType === 'event' && jsonld.name) {
+                jsonHeadlineField = 'name';
+                jsonHeadlineValue = jsonld.name;
+            } else if (contentType === 'qapage' && jsonld.mainEntity && jsonld.mainEntity.name) {
+                jsonHeadlineField = 'mainEntity.name';
+                jsonHeadlineValue = jsonld.mainEntity.name;
+            }
+
+            if (h1Text && jsonHeadlineField && jsonHeadlineValue && !jsonHeadlineValue.includes('<< MISSING')) {
+                // Normalize both for comparison (trim, handle truncation)
+                const h1Normalized = h1Text.trim();
+                const jsonNormalized = jsonHeadlineValue.trim();
+
+                // Check if they differ (allowing for headline truncation at 110 chars)
+                if (h1Normalized !== jsonNormalized && !jsonNormalized.startsWith(h1Normalized.substring(0, 110))) {
+                    recs.warnings.push({
+                        label: 'Alignment: H1 doesn\'t match JSON-LD',
+                        description: `Visible H1 differs from JSON-LD ${jsonHeadlineField}`,
+                        field: jsonHeadlineField,
+                        suggestion: `⚠️ Alignment principle: visible headline must match JSON-LD<br>Visible: "${h1Normalized.substring(0, 60)}..."<br>JSON-LD: "${jsonNormalized.substring(0, 60)}..."<br>📝 Ensure they are identical or JSON-LD is properly truncated version`
+                    });
+                }
+            }
+
+            // ALIGNMENT CHECKS: Discouraged and should_not_exist fields (from alignment principles doc)
+            // These check for fields that shouldn't appear on certain content types
+
+            // Helper to check if a field exists in JSON-LD (recursively)
+            function hasField(obj, fieldName) {
+                if (!obj || typeof obj !== 'object') return false;
+                if (fieldName in obj) return true;
+                for (const key in obj) {
+                    if (typeof obj[key] === 'object' && hasField(obj[key], fieldName)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Define discouraged and should_not_exist fields per content type
+            const alignmentRules = {
+                press: {
+                    discouraged: ['AggregateRating', 'Review', 'offers'],
+                    should_not_exist: ['price', 'performer', 'eventStatus']
+                },
+                event: {
+                    discouraged: ['AggregateRating', 'Review'],
+                    should_not_exist: ['headline', 'articleSection']
+                },
+                person: {
+                    discouraged: ['AggregateRating', 'Review'],
+                    should_not_exist: ['eventStatus', 'offers']
+                },
+                issues: {
+                    discouraged: ['AggregateRating', 'Review'],
+                    should_not_exist: ['offers', 'price']
+                },
+                qapage: {
+                    discouraged: ['AggregateRating', 'Review'],
+                    should_not_exist: ['offers', 'price']
+                },
+                faqpage: {
+                    discouraged: ['AggregateRating', 'Review'],
+                    should_not_exist: ['offers', 'price']
+                },
+                speech: {
+                    discouraged: ['AggregateRating', 'Review', 'offers'],
+                    should_not_exist: ['price', 'eventStatus']
+                }
+            };
+
+            const rules = alignmentRules[contentType];
+            if (rules) {
+                // Check for discouraged fields (warnings)
+                rules.discouraged.forEach(field => {
+                    if (hasField(jsonld, field)) {
+                        recs.warnings.push({
+                            label: `Alignment: ${field} discouraged`,
+                            description: `${field} is not recommended for ${contentType} pages`,
+                            field: field,
+                            suggestion: `⚠️ Alignment principle: ${field} should not be used on ${contentType} pages unless clearly supported by visible content. Consider removing this field.`
+                        });
+                    }
+                });
+
+                // Check for should_not_exist fields (errors)
+                rules.should_not_exist.forEach(field => {
+                    if (hasField(jsonld, field)) {
+                        recs.errors.push({
+                            label: `Alignment: ${field} not allowed`,
+                            description: `${field} is out of scope for ${contentType} pages`,
+                            field: field,
+                            suggestion: `🚫 Alignment principle: ${field} must not appear on ${contentType} pages. Remove this field from JSON-LD.`
+                        });
+                    }
+                });
+            }
+
             return recs;
         }
 
