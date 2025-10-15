@@ -1,0 +1,19 @@
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "@id": "https://emmacarterforcongress.org/news/infrastructure-plan",
+  "headline": "Emma Carter Outlines Plan for Infrastructure Investment",
+  "description": "",
+  "articleSection": "Press Releases",
+  "image": [""],
+  "author": { "@type": "Organization", "name": "Emma Carter for Congress" },
+  "about": { "@type": "Person", "name": "Emma Carter" },
+  "datePublished": "2025-10-01T09:00:00-07:00",
+  "dateModified": "",
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://emmacarterforcongress.org/news/infrastructure-plan" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Emma Carter for Congress",
+    "logo": { "@type": "ImageObject", "url": "" }
+  }
+}

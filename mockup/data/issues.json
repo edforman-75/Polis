@@ -1,0 +1,29 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://emmacarterforcongress.org/issues",
+  "name": "Issues",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "CreativeWork",
+        "name": "Affordable Housing",
+        "about": {
+          "@type": "DefinedTerm",
+          "termCode": "housing"
+        },
+        "text": "We must expand affordable housing options for working families."
+      },
+      {
+        "@type": "CreativeWork",
+        "name": "Climate Action",
+        "about": {
+          "@type": "DefinedTerm",
+          "termCode": "climate"
+        },
+        "text": ""
+      }
+    ]
+  }
+}

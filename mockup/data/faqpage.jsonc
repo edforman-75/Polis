@@ -1,0 +1,24 @@
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": "https://emmacarterforcongress.org/faq",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How can I volunteer?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Sign up on our website." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I donate by check?",
+      "acceptedAnswer": { "@type": "Answer", "text": "" }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Emma's plan for small business growth?",
+      "acceptedAnswer": { "@type": "Answer", "text": "" }
+    }
+  ],
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://emmacarterforcongress.org/faq" },
+  "about": { "@type": "Person", "name": "Emma Carter" }
+}
