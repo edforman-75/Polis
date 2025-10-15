@@ -121,6 +121,19 @@
             margin-bottom: 1.5em;
         }
 
+        .prose-highlight {
+            background: rgba(251, 191, 36, 0.3);
+            border-radius: 3px;
+            padding: 2px 4px;
+            transition: background 0.3s;
+            animation: pulse 1s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { background: rgba(251, 191, 36, 0.3); }
+            50% { background: rgba(251, 191, 36, 0.6); }
+        }
+
         /* ADVISOR PANEL - Guidance sidebar */
         .advisor-panel {
             display: flex;
@@ -179,6 +192,11 @@
         .rec-item:hover {
             background: #f3f4f6;
             transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .rec-item:active {
+            transform: translateX(3px);
         }
 
         .rec-item.error {
@@ -242,6 +260,13 @@
             border-radius: 4px;
             border: 1px dashed #ef4444;
             font-weight: 600;
+        }
+
+        .json-highlight {
+            background: rgba(251, 191, 36, 0.4);
+            padding: 3px 6px;
+            border-radius: 4px;
+            animation: pulse 1s ease-in-out;
         }
 
         /* Stats */
@@ -320,16 +345,15 @@
             <div class="prose-header">✍️ Your Campaign Content</div>
             <div contenteditable="true" id="prose-editor" spellcheck="true">
                 <h1>Emma Carter Unveils Plan to Expand Affordable Housing in CA-15</h1>
-                <h2>Oakland, CA — October 14, 2025, 9:00 AM PT</h2>
+                <h2>Oakland, CA — October 14, 2025</h2>
                 <p>Congressional candidate Emma Carter today announced a comprehensive plan to address the Bay Area's affordable housing crisis, proposing new funding mechanisms and zoning reforms that would create 15,000 affordable units across California's 15th District over the next five years.</p>
                 <p>Speaking at a press conference outside Oakland City Hall, Carter outlined her three-pillar approach: expanding Community Land Trusts to preserve affordable units in perpetuity, streamlining permitting processes for affordable housing developers, and establishing a regional housing trust fund with contributions from large corporations.</p>
-                <p>"Working families in our district are being priced out of their own neighborhoods," Carter said. "According to recent data from the Bay Area Housing Coalition, over 60% of renters in CA-15 are now rent-burdened, paying more than 30% of their income on housing. This is unsustainable, and we need bold federal action to support local solutions."</p>
+                <p>"Working families in our district are being priced out of their own neighborhoods," Carter said. "Over 60% of renters in CA-15 are now rent-burdened, paying more than 30% of their income on housing. This is unsustainable, and we need bold federal action to support local solutions."</p>
                 <p>The plan has already garnered support from the East Bay Housing Organizations coalition and the California Teachers Association, who praised Carter's focus on preserving naturally occurring affordable housing alongside new construction.</p>
                 <p>"Emma understands that we can't build our way out of this crisis alone—we need to protect the affordable housing we already have," said Maria Gonzalez, Executive Director of Oakland Community Housing. "Her Community Land Trust proposal is exactly what we need."</p>
-                <p>Carter's opponent, incumbent Representative John Doe, has previously voted against federal affordable housing funding bills, including the 2024 Housing Investment Act.</p>
+                <p>Her opponent has a different record on housing policy.</p>
                 <p>The full plan will be available on Carter's campaign website starting today, and she will host a community forum on housing policy this Saturday at Oakland Technical High School.</p>
                 <p>###</p>
-                <p>Contact: press@emmacarterforcongress.org</p>
             </div>
         </div>
 
@@ -361,7 +385,10 @@
 
             <!-- Recommendations -->
             <div class="advisor-card">
-                <div class="advisor-header">💡 Recommendations</div>
+                <div class="advisor-header">
+                    <span>💡 Recommendations</span>
+                    <span style="font-size: 0.7rem; font-weight: normal; color: #9ca3af;">Click to highlight</span>
+                </div>
                 <div class="advisor-content">
                     <div class="rec-list" id="recommendations-list">
                         <p style="color: #9ca3af; font-size: 0.8125rem; text-align: center; padding: 1rem;">
@@ -724,14 +751,20 @@
                 return;
             }
 
-            list.innerHTML = allRecs.map(rec => `
-                <div class="rec-item ${rec.type}">
+            list.innerHTML = allRecs.map((rec, index) => `
+                <div class="rec-item ${rec.type}"
+                     data-field="${rec.field}"
+                     data-search-text="${rec.searchText || ''}"
+                     onclick="highlightRecommendation('${rec.field}', ${index})">
                     <div class="rec-label">${rec.icon} ${rec.label}</div>
                     <div class="rec-description">${rec.description}</div>
                     ${rec.suggestion ? `<div class="rec-description" style="margin-top: 0.5rem; font-style: italic; color: #3b82f6;">💡 ${rec.suggestion}</div>` : ''}
                     <div class="rec-field">${rec.field}</div>
                 </div>
             `).join('');
+
+            // Store recommendations for click handlers
+            window.currentRecommendations = allRecs;
         }
 
         function generateJSONLD(prose, contentType) {
@@ -750,11 +783,9 @@
                     "@type": "NewsArticle",
                     "@id": "https://emmacarterforcongress.org/news/housing-plan",
                     "headline": headline,
-                    "description": description || "<< MISSING: Add summary from first paragraph >>",
+                    "description": description || "<< From first paragraph >>",
                     "articleSection": "Press Releases",
-                    "datePublished": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : "<< MISSING: Add date and time in dateline >>",
-                    "dateModified": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : "<< MISSING >>",
-                    "image": ["<< MISSING: Add hero image URL >>"],
+                    "datePublished": dateMatch && timeMatch ? `${dateMatch[0]}, ${timeMatch[0]}` : dateMatch ? `${dateMatch[0]}` : "<< From dateline >>",
                     "author": {
                         "@type": "Organization",
                         "name": "Emma Carter for Congress"
@@ -765,50 +796,28 @@
                     },
                     "publisher": {
                         "@type": "Organization",
-                        "name": "Emma Carter for Congress",
-                        "logo": {
-                            "@type": "ImageObject",
-                            "url": "<< MISSING: Add campaign logo URL >>"
-                        }
-                    },
-                    "mainEntityOfPage": {
-                        "@type": "WebPage",
-                        "@id": "https://emmacarterforcongress.org/news/housing-plan"
+                        "name": "Emma Carter for Congress"
                     }
                 };
             } else if (contentType === 'person') {
                 const hasDemocrat = prose.toLowerCase().includes('democrat');
-                const party = hasDemocrat ? 'Democratic Party' : '<< MISSING: Add party affiliation in prose >>';
+                const party = hasDemocrat ? 'Democratic Party' : '<< Add party in prose >>';
 
                 return {
                     "@context": "https://schema.org",
                     "@type": "Person",
                     "@id": "https://emmacarterforcongress.org/about",
                     "name": "Emma Carter",
-                    "image": "<< MISSING: Add headshot image URL >>",
                     "jobTitle": "Candidate for U.S. House",
                     "memberOf": {
                         "@type": "Organization",
                         "name": party
                     },
-                    "sameAs": [
-                        "https://emmacarterforcongress.org",
-                        "<< OPTIONAL: Add Twitter/Facebook URLs >>"
-                    ],
                     "address": {
                         "@type": "PostalAddress",
                         "addressLocality": "Oakland",
                         "addressRegion": "CA"
-                    },
-                    "potentialAction": [
-                        {
-                            "@type": "DonateAction",
-                            "target": {
-                                "@type": "EntryPoint",
-                                "urlTemplate": "https://emmacarterforcongress.org/donate"
-                            }
-                        }
-                    ]
+                    }
                 };
             } else if (contentType === 'event') {
                 const addressMatch = prose.match(/(\d+\s+[A-Za-z\s]+(?:Street|Avenue|Road|Boulevard|St|Ave|Rd|Blvd)[^,]*,\s*[A-Za-z\s]+,\s*CA\s+\d{5})/i);
@@ -821,25 +830,58 @@
                     "@id": "https://emmacarterforcongress.org/events/rally",
                     "name": headline,
                     "eventStatus": "https://schema.org/EventScheduled",
-                    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-                    "startDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[1]}` : "<< MISSING: Add start date/time >>",
-                    "endDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[2]}` : "<< MISSING: Add end date/time >>",
+                    "startDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[1]}` : "<< Add in prose >>",
+                    "endDate": dateMatch && timeMatch ? `${dateMatch[2]} ${timeMatch[2]}` : "<< Add in prose >>",
                     "location": {
                         "@type": "Place",
                         "name": "Jack London Square",
-                        "address": addressMatch ? addressMatch[0] : "<< MISSING: Add full street address >>"
+                        "address": addressMatch ? addressMatch[0] : "<< Add full address in prose >>"
                     },
                     "organizer": {
                         "@type": "Organization",
                         "name": "Emma Carter for Congress"
-                    },
-                    "offers": {
-                        "@type": "Offer",
-                        "url": "https://emmacarterforcongress.org/rsvp/rally",
-                        "price": "0",
-                        "priceCurrency": "USD",
-                        "availability": "https://schema.org/InStock"
                     }
+                };
+            } else if (contentType === 'issues') {
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    "@id": "https://emmacarterforcongress.org/issues",
+                    "name": "Issues",
+                    "about": {
+                        "@type": "Person",
+                        "name": "Emma Carter"
+                    }
+                };
+            } else if (contentType === 'qapage') {
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "QAPage",
+                    "@id": "https://emmacarterforcongress.org/qa/reproductive-rights",
+                    "mainEntity": {
+                        "@type": "Question",
+                        "name": headline,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "<< From answer section >>"
+                        }
+                    }
+                };
+            } else if (contentType === 'faqpage') {
+                return {
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "@id": "https://emmacarterforcongress.org/faq",
+                    "mainEntity": [
+                        {
+                            "@type": "Question",
+                            "name": "<< From Q&A pairs >>",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "<< From Q&A pairs >>"
+                            }
+                        }
+                    ]
                 };
             }
 
@@ -900,6 +942,90 @@
             document.getElementById('error-count').textContent = recs.errors.length;
             document.getElementById('warning-count').textContent = recs.warnings.length;
             document.getElementById('ok-count').textContent = '✓';
+        }
+
+        function highlightRecommendation(field, index) {
+            const rec = window.currentRecommendations[index];
+
+            // Clear previous highlights
+            document.querySelectorAll('.prose-highlight').forEach(el => {
+                el.classList.remove('prose-highlight');
+            });
+            document.querySelectorAll('.json-highlight').forEach(el => {
+                el.classList.remove('json-highlight');
+            });
+
+            // Expand JSON-LD preview if collapsed
+            const jsonContainer = document.getElementById('jsonld-container');
+            if (!jsonContainer.classList.contains('expanded')) {
+                jsonContainer.classList.add('expanded');
+            }
+
+            // Highlight in JSON-LD
+            setTimeout(() => {
+                const jsonPreview = document.getElementById('jsonld-preview');
+                const jsonHTML = jsonPreview.innerHTML;
+
+                // Find the field in JSON
+                const fieldPattern = new RegExp(`"${field}"\\s*:\\s*[^,}]+`, 'g');
+                const highlightedJSON = jsonHTML.replace(fieldPattern, (match) => {
+                    return `<span class="json-highlight">${match}</span>`;
+                });
+
+                jsonPreview.innerHTML = highlightedJSON;
+
+                // Scroll JSON preview to highlighted field
+                const highlighted = jsonPreview.querySelector('.json-highlight');
+                if (highlighted) {
+                    highlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+
+            // Highlight in prose based on recommendation type
+            const proseEditor = document.getElementById('prose-editor');
+            const proseText = proseEditor.innerText;
+
+            let searchTerms = [];
+
+            // Determine what to highlight based on field
+            if (field === 'datePublished') {
+                searchTerms = [proseText.match(/Oakland, CA — [^<\n]+/)?.[0]];
+            } else if (field === 'claims.evidence') {
+                searchTerms = [proseText.match(/\d+%[^\."]*/)?.[0]];
+            } else if (field.includes('contact')) {
+                searchTerms = ['###'];
+            } else if (field.includes('mentions')) {
+                searchTerms = [proseText.match(/[Hh]er opponent[^\."]*/)?.[0]];
+            } else if (field.includes('party') || field === 'memberOf.name') {
+                searchTerms = [proseText.match(/Emma Carter is[^\."]*/)?.[0]];
+            } else if (rec.searchText) {
+                searchTerms = [rec.searchText];
+            }
+
+            // Highlight text in prose
+            searchTerms = searchTerms.filter(t => t);
+            if (searchTerms.length > 0) {
+                searchTerms.forEach(term => {
+                    if (term && term.trim()) {
+                        const innerHTML = proseEditor.innerHTML;
+                        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`(${escapedTerm})`, 'gi');
+
+                        // Only highlight if not already in a tag
+                        const highlighted = innerHTML.replace(regex, (match) => {
+                            return `<mark class="prose-highlight">${match}</mark>`;
+                        });
+
+                        proseEditor.innerHTML = highlighted;
+
+                        // Scroll to highlighted text
+                        const highlightedEl = proseEditor.querySelector('.prose-highlight');
+                        if (highlightedEl) {
+                            highlightedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+            }
         }
     </script>
 </body>
