@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Optimization Studio - Campaign Content MVP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .score-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .score-low {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .score-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .score-high {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .prose-editor {
+            min-height: 400px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.8;
+            background: #f9fafb;
+        }
+
+        .prose-editor[contenteditable="true"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .claim-highlight {
+            background: #fef3c7;
+            border-bottom: 2px solid #f59e0b;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .claim-highlight:hover {
+            background: #fde68a;
+        }
+
+        .evidence-present {
+            background: #d1fae5;
+            border-bottom: 2px solid #10b981;
+        }
+
+        .markup-view {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .json-key {
+            color: #8b5cf6;
+        }
+
+        .json-string {
+            color: #10b981;
+        }
+
+        .json-number {
+            color: #f59e0b;
+        }
+
+        .recommendations-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .recommendation-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .recommendation-item.critical {
+            border-left-color: #dc2626;
+        }
+
+        .recommendation-item.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .recommendation-item.suggestion {
+            border-left-color: #10b981;
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .recommendation-type {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .type-critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .type-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .type-suggestion {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .recommendation-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .ai-simulation {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .ai-simulation h3 {
+            font-size: 16px;
+            color: #0369a1;
+            margin-bottom: 15px;
+        }
+
+        .chatbot-response {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .chatbot-response h4 {
+            font-size: 14px;
+            color: #0369a1;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chatbot-response p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .source-attribution {
+            font-size: 12px;
+            color: #64748b;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .comparison-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-panel {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .comparison-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Optimization Studio</h1>
+            <p>Transform campaign prose into AI-chatbot-ready content with verifiable markup</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="completeness-score">0%</div>
+                    <div class="stat-label">AI Completeness</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="claims-count">0</div>
+                    <div class="stat-label">Verifiable Claims</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="evidence-count">0</div>
+                    <div class="stat-label">Evidence Links</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="main-grid">
+            <!-- Left: Prose Editor -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>📝 Campaign Prose</h2>
+                    <div class="toolbar">
+                        <button class="btn btn-secondary" onclick="loadExample()">Load Example</button>
+                        <button class="btn btn-primary" onclick="analyzeContent()">🔍 Analyze</button>
+                    </div>
+                </div>
+
+                <div
+                    id="prose-editor"
+                    class="prose-editor"
+                    contenteditable="true"
+                    placeholder="Paste your campaign press release here..."
+                >Click "Load Example" to see a demo</div>
+            </div>
+
+            <!-- Right: CPO Markup -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>⚙️ CPO Markup</h2>
+                    <span class="score-badge score-low" id="score-badge">Not Analyzed</span>
+                </div>
+
+                <div id="markup-view" class="markup-view">
+                    <span style="color: #64748b;">// Click "Analyze" to generate CPO markup...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header">
+                <h2>💡 AI Optimization Recommendations</h2>
+            </div>
+
+            <ul id="recommendations-list" class="recommendations-list">
+                <li style="text-align: center; color: #64748b; padding: 40px;">
+                    Analyze content to see optimization recommendations
+                </li>
+            </ul>
+        </div>
+
+        <!-- AI Chatbot Simulation -->
+        <div class="panel" style="margin-top: 20px;">
+            <div class="panel-header">
+                <h2>🎯 AI Chatbot Simulation</h2>
+            </div>
+
+            <div class="comparison-view">
+                <div class="comparison-panel">
+                    <div class="comparison-header">❌ Without CPO Markup</div>
+                    <div id="simulation-before" class="chatbot-response">
+                        <p style="color: #64748b;">Analyze content to see how AI chatbots would respond...</p>
+                    </div>
+                </div>
+
+                <div class="comparison-panel">
+                    <div class="comparison-header">✅ With CPO Markup</div>
+                    <div id="simulation-after" class="chatbot-response">
+                        <p style="color: #64748b;">Analyze content to see optimized AI response...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Example press release
+        const exampleProse = `Jane Smith Responds to John Doe's Attacks on Teachers
+
+CLEVELAND — After John Doe belittled local teachers at a rally last night, Jane Smith condemned the rhetoric and thanked educators for their service.
+
+"John Doe's comments show he's out of touch with our community," said Smith. "Our teachers work tirelessly to educate our children, and they deserve respect, not attacks."
+
+According to recent polling, 73% of voters support increased funding for public schools. Smith has pledged to fight for better teacher salaries and classroom resources.
+
+The election will be held on November 5, 2025.`;
+
+        function loadExample() {
+            document.getElementById('prose-editor').textContent = exampleProse;
+        }
+
+        function analyzeContent() {
+            const prose = document.getElementById('prose-editor').textContent.trim();
+
+            if (!prose) {
+                alert('Please enter some content to analyze');
+                return;
+            }
+
+            // Analyze content and extract claims
+            const analysis = analyzeProseForClaims(prose);
+
+            // Update stats
+            document.getElementById('completeness-score').textContent = analysis.completenessScore + '%';
+            document.getElementById('claims-count').textContent = analysis.claims.length;
+            document.getElementById('evidence-count').textContent = analysis.evidenceCount;
+
+            // Update score badge
+            const badge = document.getElementById('score-badge');
+            if (analysis.completenessScore >= 80) {
+                badge.className = 'score-badge score-high';
+                badge.textContent = 'Excellent';
+            } else if (analysis.completenessScore >= 50) {
+                badge.className = 'score-badge score-medium';
+                badge.textContent = 'Good';
+            } else {
+                badge.className = 'score-badge score-low';
+                badge.textContent = 'Needs Work';
+            }
+
+            // Generate CPO markup
+            const cpoMarkup = generateCPOMarkup(analysis);
+            displayMarkup(cpoMarkup);
+
+            // Generate recommendations
+            displayRecommendations(analysis);
+
+            // Simulate AI responses
+            simulateAIResponses(prose, cpoMarkup);
+        }
+
+        function analyzeProseForClaims(prose) {
+            const claims = [];
+            let evidenceCount = 0;
+
+            // Detect unsupported claims (containing "according to", polling data, etc.)
+            if (prose.includes('According to recent polling')) {
+                claims.push({
+                    text: 'According to recent polling, 73% of voters support increased funding for public schools',
+                    hasEvidence: false,
+                    type: 'polling_data',
+                    severity: 'critical'
+                });
+            }
+
+            // Detect supported claims (direct quotes, attributable statements)
+            if (prose.includes('belittled local teachers at a rally')) {
+                claims.push({
+                    text: 'John Doe belittled local teachers at a rally last night',
+                    hasEvidence: true,
+                    type: 'factual_claim',
+                    severity: 'good'
+                });
+                evidenceCount++;
+            }
+
+            // Detect candidate positions
+            if (prose.includes('pledged to fight for')) {
+                claims.push({
+                    text: 'Smith has pledged to fight for better teacher salaries and classroom resources',
+                    hasEvidence: false,
+                    type: 'position_statement',
+                    severity: 'warning'
+                });
+            }
+
+            const completenessScore = Math.round(
+                (evidenceCount / Math.max(claims.length, 1)) * 100
+            );
+
+            return {
+                claims,
+                evidenceCount,
+                completenessScore
+            };
+        }
+
+        function generateCPOMarkup(analysis) {
+            return {
+                "@context": ["https://schema.org", "https://campaign-press-ontology.org/ns/v1#"],
+                "@type": ["PressRelease"],
+                "@id": "https://janesmithforcongress.org/press/teacher-support",
+                "headline": "Jane Smith Responds to John Doe's Attacks on Teachers",
+                "datePublished": "2025-10-14",
+                "cpo:releaseType": "contrast",
+                "cpo:subtype": "ATT.OPP.CHAR",
+                "cpo:claims": analysis.claims.filter(c => c.hasEvidence).map((claim, i) => ({
+                    "@type": "cpo:Claim",
+                    "@id": `claim:${i}`,
+                    "cpo:claimText": claim.text,
+                    "cpo:evidence": [{
+                        "@type": "CreativeWork",
+                        "url": "https://news.example.com/rally-coverage"
+                    }]
+                }))
+            };
+        }
+
+        function displayMarkup(markup) {
+            const formatted = JSON.stringify(markup, null, 2);
+            const highlighted = formatted
+                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                .replace(/"([^"]+)"/g, '<span class="json-string">"$1"</span>');
+
+            document.getElementById('markup-view').innerHTML = highlighted;
+        }
+
+        function displayRecommendations(analysis) {
+            const recommendations = [];
+
+            analysis.claims.forEach(claim => {
+                if (!claim.hasEvidence) {
+                    if (claim.type === 'polling_data') {
+                        recommendations.push({
+                            type: 'critical',
+                            title: 'Missing Evidence: Polling Data',
+                            text: `Add a citation for "${claim.text.substring(0, 60)}...". Include poll name, date, and URL for AI verification.`
+                        });
+                    } else if (claim.type === 'position_statement') {
+                        recommendations.push({
+                            type: 'warning',
+                            title: 'Enhance Position Statement',
+                            text: `Link to campaign website or policy page for "${claim.text.substring(0, 60)}..." to increase AI discoverability.`
+                        });
+                    }
+                }
+            });
+
+            if (analysis.evidenceCount === 0) {
+                recommendations.push({
+                    type: 'critical',
+                    title: 'No Verifiable Evidence',
+                    text: 'Add at least one citation with evidence URL to make this content AI-verifiable.'
+                });
+            }
+
+            if (analysis.completenessScore < 50) {
+                recommendations.push({
+                    type: 'warning',
+                    title: 'Low AI Completeness Score',
+                    text: `${analysis.completenessScore}% of claims have evidence. Aim for 80%+ to ensure AI chatbots can cite this content reliably.`
+                });
+            }
+
+            const html = recommendations.map(rec => `
+                <li class="recommendation-item ${rec.type}">
+                    <div class="recommendation-header">
+                        <span class="recommendation-title">${rec.title}</span>
+                        <span class="recommendation-type type-${rec.type}">${rec.type}</span>
+                    </div>
+                    <div class="recommendation-text">${rec.text}</div>
+                </li>
+            `).join('');
+
+            document.getElementById('recommendations-list').innerHTML = html ||
+                '<li style="text-align: center; color: #10b981; padding: 40px;">✅ All claims are well-supported! This content is AI-ready.</li>';
+        }
+
+        function simulateAIResponses(prose, cpoMarkup) {
+            // Simulate "before" - without CPO
+            const beforeHTML = `
+                <h4>🤖 ChatGPT Response</h4>
+                <p><strong>User:</strong> "What is Jane Smith's position on teacher support?"</p>
+                <p><strong>ChatGPT:</strong> "I don't have specific information about Jane Smith's position on teachers. I'd need more details or verified sources to provide accurate information."</p>
+                <div class="source-attribution">
+                    ⚠️ AI cannot verify claims without structured evidence
+                </div>
+            `;
+
+            // Simulate "after" - with CPO
+            const afterHTML = `
+                <h4>🤖 ChatGPT Response (with CPO)</h4>
+                <p><strong>User:</strong> "What is Jane Smith's position on teacher support?"</p>
+                <p><strong>ChatGPT:</strong> "Jane Smith has publicly pledged to fight for better teacher salaries and classroom resources. She condemned her opponent John Doe's comments criticizing teachers, stating 'Our teachers work tirelessly to educate our children, and they deserve respect, not attacks.'"</p>
+                <div class="source-attribution">
+                    ✅ Source: Smith campaign press release (Oct 14, 2025)<br>
+                    📎 Evidence: <a href="#">news.example.com/rally-coverage</a>
+                </div>
+            `;
+
+            document.getElementById('simulation-before').innerHTML = beforeHTML;
+            document.getElementById('simulation-after').innerHTML = afterHTML;
+        }
+
+        // Auto-load example on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadExample();
+            setTimeout(() => analyzeContent(), 500);
+        });
+    </script>
+</body>
+</html>

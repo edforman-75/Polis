@@ -795,6 +795,164 @@
             display: block;
         }
 
+        /* Changes View */
+        .changes-view {
+            display: none;
+        }
+
+        .changes-view.active {
+            display: block;
+        }
+
+        .change-item {
+            background: white;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 2px solid var(--gray-200);
+            transition: all 0.2s;
+        }
+
+        .change-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .change-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .change-type {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .change-type.addition {
+            background: #d1fae5;
+            color: var(--success);
+        }
+
+        .change-type.deletion {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .change-type.modification {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .change-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .change-content {
+            position: relative;
+        }
+
+        .change-text {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+        }
+
+        .change-original {
+            background: #fee2e2;
+            text-decoration: line-through;
+            color: #991b1b;
+        }
+
+        .change-modified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .change-reason {
+            font-size: 13px;
+            color: var(--gray-700);
+            padding: 8px 12px;
+            background: var(--gray-50);
+            border-radius: 4px;
+            border-left: 3px solid var(--primary);
+            margin-top: 8px;
+            cursor: help;
+            position: relative;
+        }
+
+        .change-reason::before {
+            content: "💡 Reason: ";
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .change-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--gray-900);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .change-reason:hover .change-tooltip {
+            opacity: 1;
+        }
+
+        .change-timestamp {
+            font-size: 11px;
+            color: var(--gray-600);
+            margin-top: 8px;
+        }
+
+        .btn-undo {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-undo:hover {
+            background: #dc2626;
+        }
+
+        .btn-redo {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-redo:hover {
+            background: #059f46;
+        }
+
         .section-card {
             background: white;
             border-radius: 6px;
@@ -943,6 +1101,7 @@
                 <div class="toolbar-actions">
                     <button class="toolbar-btn active" data-view="full" onclick="switchView('full')">Full Document</button>
                     <button class="toolbar-btn" data-view="sections" onclick="switchView('sections')">By Section</button>
+                    <button class="toolbar-btn" data-view="changes" onclick="switchView('changes')">Show Changes</button>
                 </div>
             </div>
 
@@ -955,6 +1114,13 @@
             <div class="section-view" id="sectionView">
                 <div id="sectionsContainer" style="padding: 20px;">
                     <!-- Sections will be dynamically rendered here -->
+                </div>
+            </div>
+
+            <!-- Show Changes View -->
+            <div class="changes-view" id="changesView" style="display: none;">
+                <div id="changesContainer" style="padding: 20px;">
+                    <!-- Changes will be dynamically rendered here -->
                 </div>
             </div>
         </div>
@@ -983,6 +1149,7 @@
                 <div class="panel-tab active" data-tab="all" onclick="switchTab('all')">All</div>
                 <div class="panel-tab" data-tab="compliance" onclick="switchTab('compliance')">Legal</div>
                 <div class="panel-tab" data-tab="style" onclick="switchTab('style')">Style</div>
+                <div class="panel-tab" data-tab="ai-seo" onclick="switchTab('ai-seo')">AI & SEO</div>
             </div>
 
             <div class="panel-content" id="recommendationsContent">
@@ -1044,6 +1211,19 @@
                         <label for="pref-auto-highlight">Highlight issues in document</label>
                     </div>
                 </div>
+
+                <div class="pref-group">
+                    <h4>User Identity</h4>
+                    <div class="pref-option" style="flex-direction: column; align-items: flex-start;">
+                        <label for="pref-user-name" style="margin-bottom: 4px;">Your Name:</label>
+                        <input type="text" id="pref-user-name" value="Editor" style="padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: 4px; width: 100%; max-width: 250px;">
+                    </div>
+                    <div class="pref-option" style="flex-direction: column; align-items: flex-start; margin-top: 12px;">
+                        <label for="pref-user-initials" style="margin-bottom: 4px;">Your Initials (3 letters):</label>
+                        <input type="text" id="pref-user-initials" value="ED" maxlength="3" style="padding: 6px 10px; border: 1px solid var(--gray-300); border-radius: 4px; width: 80px; text-transform: uppercase;">
+                        <small style="color: var(--gray-600); margin-top: 4px;">Shows who made each change in Show Changes view</small>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closePreferences()">Cancel</button>
@@ -1062,6 +1242,7 @@
                 quotes: [],
                 body: '',
                 fullText: '',
+                originalText: '', // Store original for comparison
                 status: 'draft', // draft, awaiting-research, ready-for-review, approved, published
                 dueDate: null,
                 priority: 'normal', // low, normal, high, urgent
@@ -1074,6 +1255,7 @@
                 dismissed: []
             },
             researchRequests: [],
+            changeHistory: [], // Track all changes made to document
             preferences: {
                 skipBoilerplate: true,
                 skipContact: true,
@@ -1085,7 +1267,11 @@
             },
             currentView: 'full',
             currentTab: 'all',
-            candidateName: 'Smith'  // TODO: Make this configurable
+            candidateName: 'Smith',  // TODO: Make this configurable
+            currentUser: {
+                name: 'Editor',
+                initials: 'ED'  // Three-letter initials
+            }
         };
 
         // Load preferences from localStorage
@@ -1093,8 +1279,16 @@
             const saved = localStorage.getItem('editorPreferences');
             if (saved) {
                 window.editorState.preferences = JSON.parse(saved);
-                applyPreferencesToUI();
             }
+
+            // Load user identity
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                window.editorState.currentUser = JSON.parse(savedUser);
+            }
+
+            // Always apply to UI (to populate form with defaults or loaded values)
+            applyPreferencesToUI();
         }
 
         function applyPreferencesToUI() {
@@ -1106,10 +1300,17 @@
             document.getElementById('pref-check-unsupported-claims').checked = prefs.checkUnsupportedClaims;
             document.getElementById('pref-show-diffs').checked = prefs.showDiffs;
             document.getElementById('pref-auto-highlight').checked = prefs.autoHighlight;
+
+            // Apply user identity
+            const user = window.editorState.currentUser;
+            document.getElementById('pref-user-name').value = user.name;
+            document.getElementById('pref-user-initials').value = user.initials;
         }
 
         // Show/hide preferences modal
         window.showPreferences = function() {
+            // Update UI with current values when opening modal
+            applyPreferencesToUI();
             document.getElementById('preferencesModal').classList.add('active');
         };
 
@@ -1127,14 +1328,24 @@
             prefs.showDiffs = document.getElementById('pref-show-diffs').checked;
             prefs.autoHighlight = document.getElementById('pref-auto-highlight').checked;
 
+            // Save user identity
+            const userName = document.getElementById('pref-user-name').value.trim() || 'Editor';
+            const userInitials = document.getElementById('pref-user-initials').value.trim().toUpperCase().substring(0, 3) || 'ED';
+
+            window.editorState.currentUser = {
+                name: userName,
+                initials: userInitials
+            };
+
             localStorage.setItem('editorPreferences', JSON.stringify(prefs));
+            localStorage.setItem('currentUser', JSON.stringify(window.editorState.currentUser));
             closePreferences();
 
             // Re-run checks with new preferences
             runAllChecks();
         };
 
-        // Switch between full/section view
+        // Switch between full/section/changes view
         window.switchView = function(view) {
             window.editorState.currentView = view;
 
@@ -1147,13 +1358,18 @@
             });
 
             // Show/hide views
+            document.getElementById('fullDocView').style.display = 'none';
+            document.getElementById('sectionView').classList.remove('active');
+            document.getElementById('changesView').classList.remove('active');
+
             if (view === 'full') {
                 document.getElementById('fullDocView').style.display = 'block';
-                document.getElementById('sectionView').classList.remove('active');
-            } else {
-                document.getElementById('fullDocView').style.display = 'none';
+            } else if (view === 'sections') {
                 document.getElementById('sectionView').classList.add('active');
                 syncSectionView();
+            } else if (view === 'changes') {
+                document.getElementById('changesView').classList.add('active');
+                renderChanges();
             }
         };
 
@@ -1716,12 +1932,218 @@ For more information, visit janesmithforcongress.org or contact Press Secretary 
             const structure = parseDocumentStructure(sampleText);
             window.editorState.document.structure = structure;
             window.editorState.document.fullText = sampleText;
+            window.editorState.document.originalText = sampleText; // Store original for comparison
 
             // 3. Render section view with interleaved quotes and body sections
             renderSections();
 
             runAllChecks();
         };
+
+        // === AI & SEO HELPER FUNCTIONS ===
+
+        function analyzeHeadline(headline) {
+            let score = 50; // Start at 50
+            const feedback = [];
+            let suggestion = headline;
+
+            // Check length (ideal: 60-100 characters)
+            if (headline.length < 40) {
+                score -= 15;
+                feedback.push('Headline is too short (less than 40 chars)');
+            } else if (headline.length > 100) {
+                score -= 10;
+                feedback.push('Headline is too long (over 100 chars)');
+            } else if (headline.length >= 60 && headline.length <= 80) {
+                score += 15;
+            }
+
+            // Check for action verbs
+            const actionVerbs = /\b(announces|launches|unveils|proposes|introduces|calls for|demands|fights for|champions)\b/i;
+            if (actionVerbs.test(headline)) {
+                score += 15;
+                feedback.push('✓ Contains strong action verb');
+            } else {
+                score -= 10;
+                feedback.push('Consider adding action verb (announces, launches, unveils, etc.)');
+            }
+
+            // Check for specificity (numbers, dates, locations)
+            const hasSpecifics = /\b(\d+|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow)\b/i;
+            if (hasSpecifics.test(headline)) {
+                score += 10;
+                feedback.push('✓ Contains specific details');
+            } else {
+                feedback.push('Consider adding specific numbers or dates');
+            }
+
+            // Check for candidate name
+            const candidateName = window.editorState.candidateName || 'Smith';
+            if (headline.includes(candidateName)) {
+                score += 10;
+                feedback.push('✓ Includes candidate name');
+            } else {
+                feedback.push('Consider including candidate name for recognition');
+            }
+
+            // Check for emotional/power words
+            const powerWords = /\b(historic|breakthrough|critical|urgent|essential|vital|transformative|game-changing)\b/i;
+            if (powerWords.test(headline)) {
+                score += 5;
+            }
+
+            // Cap score at 100
+            score = Math.min(100, Math.max(0, score));
+
+            // Generate suggestion if score is low
+            if (score < 70) {
+                suggestion = `${candidateName} Announces ${headline.replace(candidateName, '').replace(/announces?/i, '').trim()}`;
+            }
+
+            return {
+                score: score,
+                feedback: feedback.join('. '),
+                suggestion: suggestion
+            };
+        }
+
+        function generateMetaDescription(fullText) {
+            // Extract first 2-3 sentences or up to 160 chars
+            const sentences = fullText.match(/[^.!?]+[.!?]+/g) || [];
+            let description = '';
+
+            for (let sentence of sentences.slice(0, 3)) {
+                const trimmed = sentence.trim();
+                if ((description + trimmed).length <= 160) {
+                    description += (description ? ' ' : '') + trimmed;
+                } else {
+                    break;
+                }
+            }
+
+            // If still empty, just take first 157 chars + ellipsis
+            if (!description) {
+                description = fullText.substring(0, 157).trim() + '...';
+            }
+
+            // Ensure it ends properly
+            if (description.length > 160) {
+                description = description.substring(0, 157) + '...';
+            }
+
+            return description;
+        }
+
+        function generateURLSlug(headline) {
+            return headline
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, '-')          // Spaces to hyphens
+                .replace(/-+/g, '-')           // Multiple hyphens to single
+                .replace(/^-|-$/g, '');        // Trim hyphens from ends
+        }
+
+        function calculateReadability(fullText) {
+            // Flesch-Kincaid Grade Level calculation
+            const sentences = (fullText.match(/[.!?]+/g) || []).length || 1;
+            const words = fullText.split(/\s+/).length;
+            const syllables = fullText.split(/\s+/).reduce((count, word) => {
+                return count + countSyllables(word);
+            }, 0);
+
+            const gradeLevel = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
+
+            let rating = 'Good';
+            let feedback = '';
+
+            if (gradeLevel > 12) {
+                rating = 'Complex';
+                feedback = 'Consider simplifying language for broader audience';
+            } else if (gradeLevel < 8) {
+                rating = 'Easy';
+                feedback = 'Good readability for general public';
+            } else {
+                rating = 'Moderate';
+                feedback = 'Appropriate reading level for most audiences';
+            }
+
+            return {
+                grade: Math.round(gradeLevel * 10) / 10,
+                rating: rating,
+                feedback: feedback,
+                sentences: sentences,
+                words: words
+            };
+        }
+
+        function countSyllables(word) {
+            word = word.toLowerCase().replace(/[^a-z]/g, '');
+            if (word.length <= 3) return 1;
+
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+            word = word.replace(/^y/, '');
+            const syllables = word.match(/[aeiouy]{1,2}/g);
+            return syllables ? syllables.length : 1;
+        }
+
+        function extractKeywords(fullText) {
+            // Common stop words to exclude
+            const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why', 'how']);
+
+            // Extract words
+            const words = fullText.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+            const wordCount = {};
+            const totalWords = words.length;
+
+            // Count occurrences
+            words.forEach(word => {
+                if (!stopWords.has(word)) {
+                    wordCount[word] = (wordCount[word] || 0) + 1;
+                }
+            });
+
+            // Convert to array and calculate density
+            const keywords = Object.entries(wordCount)
+                .map(([word, count]) => ({
+                    word: word,
+                    count: count,
+                    density: ((count / totalWords) * 100).toFixed(2)
+                }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10); // Top 10 keywords
+
+            return keywords;
+        }
+
+        function generateSocialSnippet(fullText, headline) {
+            // Try to find a compelling quote first
+            const quoteMatch = fullText.match(/"([^"]{20,120})"/);
+
+            if (quoteMatch) {
+                const quote = quoteMatch[1];
+                const candidateName = window.editorState.candidateName || 'Smith';
+
+                // Format for Twitter: quote + attribution
+                let snippet = `"${quote}" - ${candidateName}`;
+
+                // Keep under 280 chars
+                if (snippet.length > 270) {
+                    snippet = `"${quote.substring(0, 240)}..." - ${candidateName}`;
+                }
+
+                return snippet;
+            }
+
+            // No good quote, use headline + first sentence
+            const firstSentence = (fullText.match(/[^.!?]+[.!?]+/) || [''])[0].trim();
+            let snippet = headline;
+
+            if (firstSentence && (snippet + ' ' + firstSentence).length <= 270) {
+                snippet += '. ' + firstSentence;
+            }
+
+            return snippet.substring(0, 280);
+        }
 
         // Run all quality checks
         function runAllChecks() {
@@ -1806,6 +2228,108 @@ For more information, visit janesmithforcongress.org or contact Press Secretary 
                         });
                     }
                 }
+            }
+
+            // === AI & SEO CHECKS ===
+
+            // 1. Headline Optimization
+            const headline = window.editorState.document.structure?.[0]?.content || '';
+            if (headline) {
+                const headlineScore = analyzeHeadline(headline);
+                if (headlineScore.score < 70) {
+                    recommendations.push({
+                        id: 'headline-optimization',
+                        category: 'ai-seo',
+                        severity: 'suggestion',
+                        title: `Headline Score: ${headlineScore.score}/100`,
+                        description: headlineScore.feedback,
+                        original: headline,
+                        suggestion: headlineScore.suggestion,
+                        location: 'inline',
+                        autoFix: false
+                    });
+                }
+            }
+
+            // 2. Meta Description Generation
+            if (fullText.length > 150) {
+                const metaDesc = generateMetaDescription(fullText);
+                recommendations.push({
+                    id: 'meta-description',
+                    category: 'ai-seo',
+                    severity: 'suggestion',
+                    title: 'Meta Description for SEO',
+                    description: 'Add this meta description to your webpage for better search visibility.',
+                    original: '',
+                    suggestion: metaDesc,
+                    location: 'metadata',
+                    autoFix: false
+                });
+            }
+
+            // 3. URL Slug Suggestion
+            if (headline) {
+                const urlSlug = generateURLSlug(headline);
+                recommendations.push({
+                    id: 'url-slug',
+                    category: 'ai-seo',
+                    severity: 'suggestion',
+                    title: 'Suggested URL Slug',
+                    description: 'Clean, SEO-friendly URL for this release.',
+                    original: '',
+                    suggestion: urlSlug,
+                    location: 'metadata',
+                    autoFix: false
+                });
+            }
+
+            // 4. Readability Analysis
+            const readability = calculateReadability(fullText);
+            if (readability.grade > 12) {
+                recommendations.push({
+                    id: 'readability-warning',
+                    category: 'ai-seo',
+                    severity: 'warning',
+                    title: `Readability: Grade ${readability.grade} (Too Complex)`,
+                    description: 'Content is too complex. Aim for grade 8-10 for broader accessibility.',
+                    original: '',
+                    suggestion: 'Use shorter sentences and simpler words. Break long paragraphs into smaller chunks.',
+                    location: 'general',
+                    autoFix: false
+                });
+            }
+
+            // 5. Keyword Density
+            const keywords = extractKeywords(fullText);
+            if (keywords.length > 0) {
+                const topKeyword = keywords[0];
+                recommendations.push({
+                    id: 'keyword-density',
+                    category: 'ai-seo',
+                    severity: 'suggestion',
+                    title: `Top Keywords: ${keywords.slice(0, 3).map(k => k.word).join(', ')}`,
+                    description: `Primary keyword "${topKeyword.word}" appears ${topKeyword.count} times (${topKeyword.density}% density).`,
+                    original: '',
+                    suggestion: keywords.length > 3 ? `Also consider: ${keywords.slice(3, 6).map(k => k.word).join(', ')}` : 'Good keyword distribution',
+                    location: 'general',
+                    autoFix: false
+                });
+            }
+
+            // 6. Social Media Snippet
+            const socialSnippet = generateSocialSnippet(fullText, headline);
+            if (socialSnippet) {
+                recommendations.push({
+                    id: 'social-snippet',
+                    category: 'ai-seo',
+                    severity: 'suggestion',
+                    title: 'Tweetable Quote (Social Media)',
+                    description: 'Pre-formatted social media snippet ready to share.',
+                    original: '',
+                    suggestion: socialSnippet,
+                    location: 'metadata',
+                    autoFix: false
+                });
             }
 
             window.editorState.recommendations = recommendations;
@@ -2086,6 +2610,28 @@ For more information, visit janesmithforcongress.org or contact Press Secretary 
             });
         }
 
+        // Track change in history
+        function trackChange(original, modified, reason, changeType) {
+            const user = window.editorState.currentUser;
+            const change = {
+                id: `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                type: changeType || 'modification', // addition, deletion, modification
+                original: original || '',
+                modified: modified || '',
+                reason: reason || 'Manual edit',
+                timestamp: new Date().toISOString(),
+                active: true, // Can be toggled with undo/redo
+                user: {
+                    name: user.name,
+                    initials: user.initials
+                }
+            };
+
+            window.editorState.changeHistory.push(change);
+            console.log('📝 Change tracked:', change);
+            return change;
+        }
+
         // Apply recommendation
         window.applyRecommendation = function(recId) {
             const rec = window.editorState.recommendations.find(r => r.id === recId);
@@ -2107,6 +2653,15 @@ For more information, visit janesmithforcongress.org or contact Press Secretary 
                 let content = bodyEl.textContent;
 
                 if (rec.location === 'inline' && rec.original) {
+                    // Track this change
+                    const changeType = rec.original ? 'modification' : 'addition';
+                    trackChange(
+                        rec.original,
+                        rec.suggestion,
+                        `${rec.title}: ${rec.description}`,
+                        changeType
+                    );
+
                     // Replace the original text with suggestion
                     content = content.replace(rec.original, rec.suggestion);
                     bodyEl.textContent = content;
@@ -2245,6 +2800,144 @@ For more information, visit janesmithforcongress.org or contact Press Secretary 
             }
 
             console.log(`📊 Document status: ${status}, Research requests: ${researchCount}`);
+        }
+
+        // Render changes view
+        function renderChanges() {
+            const container = document.getElementById('changesContainer');
+            const changes = window.editorState.changeHistory;
+
+            if (!changes || changes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--gray-700);">
+                        <p style="font-size: 18px; margin-bottom: 8px;">📋 No Changes Yet</p>
+                        <p style="font-size: 14px;">Apply quality check suggestions to see changes here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort changes by timestamp (newest first)
+            const sortedChanges = [...changes].reverse();
+
+            const html = sortedChanges.map(change => {
+                const date = new Date(change.timestamp);
+                const timeAgo = getTimeAgo(date);
+                const isActive = change.active;
+
+                return `
+                    <div class="change-item" data-change-id="${change.id}">
+                        <div class="change-header">
+                            <span class="change-type ${change.type}">${change.type}</span>
+                            <div class="change-actions">
+                                ${isActive ?
+                                    `<button class="btn-undo" onclick="undoChange('${change.id}')">↶ Undo</button>` :
+                                    `<button class="btn-redo" onclick="redoChange('${change.id}')">↷ Redo</button>`
+                                }
+                            </div>
+                        </div>
+
+                        <div class="change-content">
+                            ${change.original ? `
+                                <div class="change-text change-original">
+                                    ${escapeHtml(change.original)}
+                                </div>
+                            ` : ''}
+
+                            ${change.modified ? `
+                                <div class="change-text change-modified">
+                                    ${escapeHtml(change.modified)}
+                                </div>
+                            ` : ''}
+
+                            <div class="change-reason">
+                                ${escapeHtml(change.reason)}
+                                <div class="change-tooltip">
+                                    <strong>Changed by: ${change.user ? change.user.initials : 'N/A'}</strong> (${change.user ? change.user.name : 'Unknown'})<br>
+                                    ${escapeHtml(change.reason)}<br>
+                                    <em>${date.toLocaleString()}</em>
+                                </div>
+                            </div>
+
+                            <div class="change-timestamp">
+                                ${timeAgo} - ${change.user ? change.user.initials : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Undo a change
+        window.undoChange = function(changeId) {
+            const change = window.editorState.changeHistory.find(c => c.id === changeId);
+            if (!change || !change.active) return;
+
+            // Get current full text
+            const fullDocEl = document.getElementById('fullDocText');
+            let currentText = fullDocEl.textContent;
+
+            // Replace modified text with original
+            if (change.modified && change.original) {
+                currentText = currentText.replace(change.modified, change.original);
+            } else if (change.modified && !change.original) {
+                // This was an addition, so remove it
+                currentText = currentText.replace(change.modified, '');
+            }
+
+            // Update document
+            fullDocEl.textContent = currentText;
+            change.active = false;
+
+            // Re-sync views
+            syncFromFullDocument();
+
+            // Re-render changes view
+            renderChanges();
+
+            console.log('↶ Undid change:', change.id);
+        };
+
+        // Redo a change
+        window.redoChange = function(changeId) {
+            const change = window.editorState.changeHistory.find(c => c.id === changeId);
+            if (!change || change.active) return;
+
+            // Get current full text
+            const fullDocEl = document.getElementById('fullDocText');
+            let currentText = fullDocEl.textContent;
+
+            // Replace original text with modified
+            if (change.original && change.modified) {
+                currentText = currentText.replace(change.original, change.modified);
+            } else if (!change.original && change.modified) {
+                // This was an addition, restore it
+                currentText += '\n\n' + change.modified;
+            }
+
+            // Update document
+            fullDocEl.textContent = currentText;
+            change.active = true;
+
+            // Re-sync views
+            syncFromFullDocument();
+
+            // Re-render changes view
+            renderChanges();
+
+            console.log('↷ Redid change:', change.id);
+        };
+
+        // Helper function to get time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+            return `${Math.floor(seconds / 86400)} days ago`;
         }
 
         // Auto-run checks on content change
