@@ -588,70 +588,88 @@
             }
 
             if (contentType === 'press') {
-                // Check for proper dateline with time
+                const lines = prose.split('\n').filter(l => l.trim());
+
+                // Check for proper dateline with time (only if dateline exists)
                 const hasDateline = prose.includes('—') && prose.match(/\d{4}/);
                 const hasTime = prose.match(/\d{1,2}:\d{2}\s*(AM|PM|am|pm)/i);
 
                 if (!hasDateline) {
                     recs.errors.push({
                         label: 'Missing publication date in dateline',
-                        description: 'Replace dateline with: "Oakland, CA — October 14, 2025, 9:00 AM PT"',
+                        description: 'Add dateline after headline: "Oakland, CA — October 14, 2025, 9:00 AM PT"',
                         field: 'datePublished',
-                        suggestion: 'After the headline, add: Oakland, CA — [DATE], [TIME] PT'
+                        suggestion: 'Format: [City, State] — [Month Day, Year, Time AM/PM TZ]'
                     });
                 } else if (!hasTime) {
+                    // Only suggest adding time if there's a dateline without time
+                    const dateline = lines.find(l => l.includes('—')) || '';
                     recs.warnings.push({
                         label: 'Add time to dateline for precision',
-                        description: 'Change "October 14, 2025" to "October 14, 2025, 9:00 AM PT"',
+                        description: `In dateline "${dateline.substring(0, 50)}...", add time: "9:00 AM PT"`,
                         field: 'datePublished',
                         suggestion: 'AI systems prefer exact timestamps for news articles'
                     });
                 }
 
-                // Check lede paragraph
-                const lines = prose.split('\n').filter(l => l.trim());
+                // Check lede paragraph (only if it exists but is weak)
                 const firstPara = lines[2] || '';
-                if (firstPara.length < 80) {
-                    recs.errors.push({
-                        label: 'Lede paragraph too short',
-                        description: 'First paragraph should summarize who, what, when, where, why (100-150 words)',
+                if (firstPara && firstPara.length < 80) {
+                    recs.warnings.push({
+                        label: 'Strengthen lede paragraph',
+                        description: 'First paragraph should be 100-150 words summarizing who, what, when, where, why',
                         field: 'description',
-                        suggestion: 'Example: "[Candidate] today announced [action] at [location], proposing [specifics] that would [impact]"'
+                        suggestion: 'Add more context: location, specific actions, expected impact'
                     });
                 }
 
-                // Check for citations on data claims
-                const hasDataClaim = prose.match(/\d+%|percent|\d+ (voters|people|families)/i);
+                // Check for citations on data claims (only if there are uncited claims)
+                const hasDataClaim = prose.match(/\d+%|percent/i);
                 const hasCitation = prose.includes('(Source:') || prose.includes('according to') || prose.includes('data from');
 
                 if (hasDataClaim && !hasCitation) {
-                    const match = prose.match(/("[^"]*\d+%[^"]*"|[^\.]*\d+%[^\.]*)/);
+                    const match = prose.match(/("[^"]*\d+%[^"]*"|[^\."]*\d+%[^\."]*)/);
                     if (match) {
+                        const excerpt = match[0].substring(0, 60).replace(/^[^a-zA-Z0-9"]*/, '');
                         recs.warnings.push({
-                            label: 'Uncited data claim detected',
-                            description: `Add source after "${match[0].substring(0, 50)}..."`,
+                            label: 'Add citation for data claim',
+                            description: `Add source: "${excerpt}..." → "${excerpt} (Source: [Organization], [Year])..."`,
                             field: 'claims.evidence',
-                            suggestion: 'Replace "60% of renters" with "60% of renters (Source: Bay Area Housing Coalition, 2025)"'
+                            suggestion: 'Example: "(Source: Bay Area Housing Coalition, 2025)"'
                         });
                     }
                 }
 
-                // Check for contact info
-                if (!prose.toLowerCase().includes('contact:') && !prose.toLowerCase().includes('@')) {
+                // Check for contact info (only if missing)
+                const hasContact = prose.toLowerCase().includes('contact:') ||
+                                   prose.match(/\w+@\w+\.\w+/) ||
+                                   prose.match(/\d{3}-\d{3}-\d{4}/);
+
+                if (!hasContact) {
                     recs.warnings.push({
-                        label: 'Missing media contact',
-                        description: 'Add at end: "Contact: press@emmacarterforcongress.org" or "Media inquiries: [name], [phone]"',
+                        label: 'Add media contact info',
+                        description: 'After "###", add: "Contact: press@emmacarterforcongress.org"',
                         field: 'publisher.contactPoint',
-                        suggestion: 'Standard press release format includes contact info after "###"'
+                        suggestion: 'Helps journalists reach campaign for follow-up questions'
                     });
                 }
 
-                // Check for opponent contrast
-                if (prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('john doe')) {
-                    if (!prose.includes('voted against') && !prose.includes('opposed')) {
+                // Check for opponent contrast (only if opponent is mentioned vaguely)
+                const hasOpponentMention = prose.toLowerCase().includes('opponent') || prose.toLowerCase().includes('john doe');
+                const hasSpecificContrast = prose.includes('voted against') ||
+                                           prose.includes('opposed') ||
+                                           prose.includes('supports') ||
+                                           prose.includes('record');
+
+                if (hasOpponentMention && !hasSpecificContrast) {
+                    const opponentSentence = prose.split(/[.!?]/).find(s =>
+                        s.toLowerCase().includes('opponent') || s.toLowerCase().includes('john doe')
+                    );
+
+                    if (opponentSentence) {
                         recs.suggestions.push({
-                            label: 'Strengthen opponent contrast',
-                            description: 'Add specific voting record or policy position for context',
+                            label: 'Strengthen opponent contrast with specifics',
+                            description: `Replace "${opponentSentence.trim().substring(0, 60)}..." with specific voting record or policy position`,
                             field: 'mentions',
                             suggestion: 'Example: "Her opponent voted against the 2024 Housing Investment Act"'
                         });
@@ -659,79 +677,110 @@
                 }
 
             } else if (contentType === 'person') {
-                // Party affiliation check
-                if (!prose.toLowerCase().includes('democrat') && !prose.toLowerCase().includes('republican')) {
-                    const firstSentence = prose.split('.')[0];
+                // Party affiliation check (only if missing)
+                const hasParty = prose.toLowerCase().includes('democrat') || prose.toLowerCase().includes('republican');
+                if (!hasParty) {
+                    const firstSentence = prose.split(/[.!?]/)[0];
                     recs.errors.push({
-                        label: 'Missing party affiliation',
-                        description: `Change "${firstSentence.substring(0, 50)}..." to include party`,
+                        label: 'Add party affiliation',
+                        description: `In first sentence: "${firstSentence.substring(0, 60)}...", add party`,
                         field: 'memberOf.name',
-                        suggestion: 'Replace "Emma Carter is running" with "Emma Carter is a Democrat running"'
+                        suggestion: 'Change "Emma Carter is running" to "Emma Carter is a Democrat running"'
                     });
                 }
 
-                // Check for professional background
-                if (!prose.toLowerCase().includes('graduated') && !prose.toLowerCase().includes('degree')) {
+                // Check for professional background (only if missing)
+                const hasEducation = prose.toLowerCase().includes('graduated') ||
+                                    prose.toLowerCase().includes('degree') ||
+                                    prose.toLowerCase().includes('university') ||
+                                    prose.toLowerCase().includes('college');
+
+                if (!hasEducation) {
                     recs.warnings.push({
                         label: 'Add educational background',
-                        description: 'Include education: "Emma graduated from [University] with a degree in [Field]"',
+                        description: 'Add education after work experience: "Emma graduated from [University] with a degree in [Field]"',
                         field: 'alumniOf',
-                        suggestion: 'Educational credentials build credibility with voters'
+                        suggestion: 'Educational credentials build credibility'
                     });
                 }
 
-                // Check for local connection
-                if (!prose.toLowerCase().includes('lives in') && !prose.toLowerCase().includes('resident of')) {
+                // Check for local connection (only if missing)
+                const hasResidency = prose.toLowerCase().includes('lives in') ||
+                                    prose.toLowerCase().includes('resident of') ||
+                                    prose.toLowerCase().includes('hometown') ||
+                                    prose.toLowerCase().includes('born and raised');
+
+                if (!hasResidency) {
                     recs.warnings.push({
                         label: 'Add local residency',
-                        description: 'Mention where candidate lives: "She lives in Oakland\'s Fruitvale neighborhood"',
+                        description: 'Add where candidate lives: "She lives in Oakland\'s Fruitvale neighborhood with..."',
                         field: 'homeLocation',
-                        suggestion: 'Voters want to know you\'re part of the community'
+                        suggestion: 'Shows you\'re part of the community you want to represent'
                     });
                 }
 
             } else if (contentType === 'event') {
-                // Check for full address
-                if (!prose.match(/\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)/)) {
+                // Check for full address (only if incomplete)
+                const hasStreetAddress = prose.match(/\d+\s+[A-Za-z]+\s+(Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd)/);
+                const hasZipCode = prose.match(/\d{5}/);
+
+                if (!hasStreetAddress) {
                     recs.errors.push({
-                        label: 'Missing complete street address',
-                        description: 'Add full address: "Jack London Square Amphitheater, 55 Harrison Street, Oakland, CA 94607"',
+                        label: 'Add complete street address',
+                        description: 'Include street number and name: "55 Harrison Street, Oakland, CA 94607"',
                         field: 'location.address',
-                        suggestion: 'Google Maps and AI assistants need full street addresses'
+                        suggestion: 'Google Maps and AI assistants need full street addresses, not just venue names'
                     });
-                }
-
-                // Check for RSVP link
-                if (!prose.toLowerCase().includes('rsvp') && !prose.toLowerCase().includes('register')) {
+                } else if (!hasZipCode) {
                     recs.warnings.push({
-                        label: 'Add RSVP/registration link',
-                        description: 'Add at end: "RSVP at emmacarterforcongress.org/events/rally"',
-                        field: 'offers.url',
-                        suggestion: 'Makes it easy for supporters to sign up'
+                        label: 'Add ZIP code to address',
+                        description: 'Include ZIP code at end of address for precise location',
+                        field: 'location.address.postalCode',
+                        suggestion: 'Example: "Oakland, CA 94607"'
                     });
                 }
 
-                // Check for accessibility info
-                if (!prose.toLowerCase().includes('accessible') && !prose.toLowerCase().includes('accommodation')) {
+                // Check for RSVP link (only if missing)
+                const hasRSVP = prose.toLowerCase().includes('rsvp') ||
+                               prose.toLowerCase().includes('register') ||
+                               prose.toLowerCase().includes('sign up');
+
+                if (!hasRSVP) {
+                    recs.warnings.push({
+                        label: 'Add RSVP call-to-action',
+                        description: 'Add at end: "RSVP at emmacarterforcongress.org/events/[event-name]"',
+                        field: 'offers.url',
+                        suggestion: 'Makes it easy for supporters to confirm attendance'
+                    });
+                }
+
+                // Check for accessibility info (only if missing)
+                const hasAccessibility = prose.toLowerCase().includes('accessible') ||
+                                        prose.toLowerCase().includes('accommodation') ||
+                                        prose.toLowerCase().includes('wheelchair') ||
+                                        prose.toLowerCase().includes('asl');
+
+                if (!hasAccessibility) {
                     recs.suggestions.push({
                         label: 'Add accessibility information',
-                        description: 'Include: "This event is wheelchair accessible. For accommodations, email..."',
+                        description: 'Add: "This event is wheelchair accessible with ASL interpretation. For other needs, email [address]"',
                         field: 'accessibilityFeature',
-                        suggestion: 'Shows commitment to inclusive events'
+                        suggestion: 'Demonstrates commitment to inclusive, accessible events'
                     });
                 }
             }
 
-            // General CTA check
-            if (!prose.toLowerCase().includes('learn more at') &&
-                !prose.toLowerCase().includes('visit') &&
-                !prose.toLowerCase().includes('.org') &&
-                !prose.toLowerCase().includes('.com')) {
+            // General CTA check (only if no website mentioned)
+            const hasWebsite = prose.toLowerCase().includes('learn more at') ||
+                              prose.toLowerCase().includes('visit') ||
+                              prose.match(/\w+\.(?:org|com|net)/);
+
+            if (!hasWebsite && contentType !== 'person') { // Person bios usually don't need CTA
                 recs.suggestions.push({
                     label: 'Add website call-to-action',
                     description: 'End with: "Learn more at emmacarterforcongress.org"',
                     field: 'potentialAction',
-                    suggestion: 'Drives traffic to campaign website for donations and volunteers'
+                    suggestion: 'Drives traffic to website for donations, volunteering, and more info'
                 });
             }
 
