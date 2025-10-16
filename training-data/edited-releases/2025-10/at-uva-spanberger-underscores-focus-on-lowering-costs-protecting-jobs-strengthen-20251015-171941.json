@@ -1,0 +1,38 @@
+{
+  "saved": "2025-10-15T17:19:41.502029",
+  "prose": {
+    "headline": "At UVA, Spanberger Underscores Focus on Lowering Costs, Protecting Jobs, & Strengthening Schools",
+    "dateline": "Charlottesville, VA \u2014 September 18, 2025",
+    "content": "Congresswoman Abigail Spanberger \u2014 an alumna of the University of Virginia \u2014 last night sat down in the Rotunda Dome Room on Grounds with Dr. Larry Sabato, founder and director of the UVA Center for Politics. During the conversation, Spanberger emphasized her plans to lower costs for Virginians, protect Virginia's economy, and strengthen Virginia's public schools as the next Governor of the Commonwealth.\n\n\"The bill will increase costs in housing, in energy, and in healthcare \u2014 and in healthcare specifically, it will be nearly catastrophic for Virginia. More than 350,000 Virginians are likely to lose their healthcare. We know that at least six rural hospitals are likely to close.\"\n\n\"I do think it's incredibly important that we actually have a Governor who will stand up for our economy and the Virginians who've lost jobs \u2014 and push back against a reckless administration that is wreaking havoc on our economy.\"\n\n\"Public schools are central to the strength of our communities, our civic engagement, and the future of our workforce and the next generation. Investing in schools, paying teachers, and ensuring that our kids have strong school buildings surrounding them is a major priority.\""
+  },
+  "jsonld": {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "@id": "https://abigailspanberger.com/news/at-uva-spanberger-underscores-focus-on-lowering-costs-protecting-jobs-strengthen",
+    "headline": "At UVA, Spanberger Underscores Focus on Lowering Costs, Protecting Jobs, & Strengthening Schools",
+    "description": "Congresswoman Abigail Spanberger \u2014 an alumna of the University of Virginia \u2014 last night sat down in the Rotunda Dome Room on Grounds with Dr. Larry Sabato, founder and director of the UVA Center fo...",
+    "datePublished": "2025-09-18T10:00:00-04:00",
+    "dateModified": "2025-09-18T10:00:00-04:00",
+    "author": {
+      "@type": "Organization",
+      "name": "Abigail Spanberger for Governor"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Abigail Spanberger for Governor",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.google.com/imgres?q=headshot%20of%20abigail%20spanberger&imgurl=https%3A%2F%2Fabigailspanberger.com%2Fwp-content%2Fuploads%2F2025%2F04%2FShareimg.png&imgrefurl=https%3A%2F%2Fabigailspanberger.com%2F&docid=JHnXnuVE7Cj7iM&tbnid=C_u2Uzj4XZfZxM&vet=12ahUKEwi-sPuCtaeQAxWNI0QIHUC9IlQQM3oECBUQAA..i&w=1200&h=628&hcb=2&ved=2ahUKEwi-sPuCtaeQAxWNI0QIHUC9IlQQM3oECBUQAA"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://abigailspanberger.com/news/at-uva-spanberger-underscores-focus-on-lowering-costs-protecting-jobs-strengthen"
+    }
+  },
+  "validation": {
+    "score": "100%",
+    "timestamp": "2025-10-16T00:19:04.921Z"
+  },
+  "editor": "markup-trainer"
+}
