@@ -48,38 +48,68 @@
     "notes": "Full committee transcript; extract relevant pages for Spanberger."
   },
   {
-    "id": "uva-law-panel-racial-equity",
-    "title": "UVA Law Panel on Racial Equity \u2014 Transcript (PDF)",
-    "speaker": "Panel incl. references to Spanberger",
-    "date": null,
-    "type": "panel_transcript_pdf",
-    "source_kind": "pdf",
-    "source_url": "https://www.law.virginia.edu/sites/default/files/transcripts/racial%20equity-%20PLACE.pdf",
-    "license_note": "University content; use within internal research bounds.",
+    "id": "cspan-virginia-gubernatorial-debate-2025",
+    "title": "Virginia Gubernatorial Debate (C\u2011SPAN)",
+    "speaker": "Abigail Spanberger (Democratic nominee)",
+    "date": "2025-10-09",
+    "type": "broadcast_event",
+    "source_kind": "cspan_program",
+    "source_url": "https://www.c-span.org/program/campaign-2026/virginia-gubernatorial-debate/666941",
+    "license_note": "Export transcript/CC per C\u2011SPAN terms; store text internally.",
     "topics": [
-      "racial-equity",
-      "academia"
+      "debate",
+      "governor-2025"
     ],
-    "notes": "Includes mentions/quotes; not a full Spanberger speech."
+    "notes": "Use cspan_export_helper.md + cspan_parse.py to normalize captions."
   },
   {
-    "id": "cspan-profile",
-    "title": "C\u2011SPAN \u2014 Abigail Spanberger profile & appearances",
+    "id": "cspan-user-clip-closing-remarks",
+    "title": "Abigail Spanberger \u2014 Closing Remarks (User Clip, C\u2011SPAN)",
     "speaker": "Abigail Spanberger",
     "date": null,
-    "type": "appearance_index",
-    "source_kind": "cspan",
-    "source_url": "https://www.c-span.org/person/abigail-spanberger/116283/",
-    "license_note": "Check C\u2011SPAN terms; captions/transcripts may require C\u2011SPAN tools.",
+    "type": "clip",
+    "source_kind": "cspan_program",
+    "source_url": "https://www.c-span.org/video/?c4755629%2Fabigail-spanberger-closing-remarks=",
+    "license_note": "User clip on C\u2011SPAN; export captions if available.",
     "topics": [
-      "congress",
-      "media"
+      "debate",
+      "closing-remarks"
     ],
-    "notes": "Use C\u2011SPAN APIs or manual export to capture transcripts/CC."
+    "notes": "Short clip; still useful for quotation indexing."
   },
   {
-    "id": "yt-rally-virginia-full-speech",
-    "title": "YouTube \u2014 FULL SPEECH: Abigail Spanberger rallies in Virginia",
+    "id": "wtvr-usps-survey-2024",
+    "title": "Hundreds of Virginians still having USPS issues \u2014 Spanberger survey (WTVR)",
+    "speaker": "Abigail Spanberger (quoted)",
+    "date": "2024-05-22",
+    "type": "interview_text",
+    "source_kind": "news_html",
+    "source_url": "https://www.wtvr.com/news/local-news/abigail-spanberger-usps-issues-may-22-2024",
+    "license_note": "Use excerpts for internal KB; respect outlet terms.",
+    "topics": [
+      "usps",
+      "constituent-services"
+    ],
+    "notes": "News article with quotes; scrape paragraphs."
+  },
+  {
+    "id": "nbc12-vcu-poll-2025",
+    "title": "VCU poll shows narrowing gap in VA races \u2014 includes Spanberger (NBC12)",
+    "speaker": "Abigail Spanberger (candidate, referenced)",
+    "date": "2025-09-10",
+    "type": "interview_text",
+    "source_kind": "news_html",
+    "source_url": "https://www.nbc12.com/2025/09/10/vcu-poll-shows-narrowing-gap-between-democratic-republican-candidates-va-races/",
+    "license_note": "Use excerpts for internal KB; respect outlet terms.",
+    "topics": [
+      "polling",
+      "governor-2025"
+    ],
+    "notes": "Political segment coverage; may include Spanberger quotes."
+  },
+  {
+    "id": "youtube-rally-full-speech",
+    "title": "FULL SPEECH: Rally in Virginia (YouTube)",
     "speaker": "Abigail Spanberger",
     "date": null,
     "type": "video_cc",
@@ -90,216 +120,6 @@
       "campaign-speech",
       "rally"
     ],
-    "notes": "Auto or human captions likely available; fetch via YouTube Transcript API if permitted."
-  },
-  {
-    "id": "yt-va-chamber-speech",
-    "title": "YouTube \u2014 Remarks at Virginia Chamber of Commerce",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "video_cc",
-    "source_kind": "youtube_cc",
-    "source_url": "https://www.youtube.com/watch?v=DdgybR-ixww",
-    "license_note": "Respect YouTube TOS; use captions for internal reference.",
-    "topics": [
-      "economy",
-      "business"
-    ],
-    "notes": "Pull auto captions and clean."
-  },
-  {
-    "id": "virginia-mercury-on-the-record",
-    "title": "Virginia Mercury \u2014 On The Record: Abigail Spanberger",
-    "speaker": "Abigail Spanberger",
-    "date": "2025-09-09",
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://virginiamercury.com/2025/09/09/on-the-record-abigail-spanberger/",
-    "license_note": "News outlet; cite excerpts under fair use for internal KB.",
-    "topics": [
-      "interview",
-      "policy"
-    ],
-    "notes": "Q&A style; treat as media hit transcript for internal search."
-  },
-  {
-    "id": "camp-hampton-convocation",
-    "title": "Hampton University Convocation \u2014 As Prepared for Delivery",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "prepared_remarks",
-    "source_kind": "campaign_html",
-    "source_url": "https://abigailspanberger.com/spanberger-delivers-keynote-address-at-hampton-convocation-highlights-universitys-long-history-of-preparing-leaders-for-lives-of-service/",
-    "license_note": "Campaign site; include only if campaign sources allowed.",
-    "topics": [
-      "education",
-      "service"
-    ],
-    "notes": "Campaign-hosted text; optional depending on your policy."
-  },
-  {
-    "id": "cspan-event-town-hall-1",
-    "title": "C\u2011SPAN \u2014 Town Hall/Call\u2011In (Example Slot)",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "broadcast_event",
-    "source_kind": "cspan_program",
-    "source_url": "https://www.c-span.org/video/?example_program_id",
-    "license_note": "Export transcript/CC per C\u2011SPAN terms; store text internally.",
-    "topics": [
-      "town-hall",
-      "constituents"
-    ],
-    "notes": "Replace URL with actual program link; use helper to parse exported captions."
-  },
-  {
-    "id": "wtvr-cbs6-interview",
-    "title": "WTVR CBS 6 Richmond \u2014 Interview/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://www.wtvr.com/",
-    "license_note": "Use excerpts for internal KB; respect outlet terms.",
-    "topics": [
-      "local-tv",
-      "richmond"
-    ],
-    "notes": "Search station site for Spanberger interview pages; paste final URL when known."
-  },
-  {
-    "id": "nbc12-wwbt-interview",
-    "title": "NBC12 WWBT Richmond \u2014 Interview/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://www.nbc12.com/",
-    "license_note": "Use excerpts for internal KB; respect outlet terms.",
-    "topics": [
-      "local-tv",
-      "richmond"
-    ],
-    "notes": "Paste the specific story URL once identified."
-  },
-  {
-    "id": "wavy10-norfolk-speech",
-    "title": "WAVY 10 Norfolk \u2014 Speech/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "segment_video",
-    "source_kind": "station_youtube_cc",
-    "source_url": "https://www.youtube.com/@WAVYTV10/videos",
-    "license_note": "Use captions under platform TOS for internal reference.",
-    "topics": [
-      "local-tv",
-      "hampton-roads"
-    ],
-    "notes": "Find specific video with Spanberger; then replace with watch URL."
-  },
-  {
-    "id": "wset-abc13-lynchburg",
-    "title": "WSET ABC13 Lynchburg \u2014 Interview/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://wset.com/",
-    "license_note": "Use excerpts for internal KB; respect outlet terms.",
-    "topics": [
-      "local-tv",
-      "lynchburg"
-    ],
-    "notes": "Paste final story URL."
-  },
-  {
-    "id": "wdbj7-roanoke",
-    "title": "WDBJ7 Roanoke \u2014 Interview/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://www.wdbj7.com/",
-    "license_note": "Use excerpts for internal KB; respect outlet terms.",
-    "topics": [
-      "local-tv",
-      "roanoke"
-    ],
-    "notes": "Paste final story URL."
-  },
-  {
-    "id": "whsv-harrisonburg",
-    "title": "WHSV Harrisonburg \u2014 Interview/Segment",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "interview_text",
-    "source_kind": "news_html",
-    "source_url": "https://www.whsv.com/",
-    "license_note": "Use excerpts for internal KB; respect outlet terms.",
-    "topics": [
-      "local-tv",
-      "harrisonburg"
-    ],
-    "notes": "Paste final story URL."
-  },
-  {
-    "id": "uva-events-spanberger",
-    "title": "University of Virginia \u2014 Events/News (Spanberger)",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "university_event",
-    "source_kind": "web_html",
-    "source_url": "https://news.virginia.edu/",
-    "license_note": "University content; cite and store excerpts for internal search.",
-    "topics": [
-      "academia",
-      "uva"
-    ],
-    "notes": "Search site for event pages or transcripts."
-  },
-  {
-    "id": "vcu-events-spanberger",
-    "title": "Virginia Commonwealth University \u2014 Events/News (Spanberger)",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "university_event",
-    "source_kind": "web_html",
-    "source_url": "https://www.vcu.edu/news/",
-    "license_note": "University content; cite and store excerpts for internal search.",
-    "topics": [
-      "academia",
-      "vcu"
-    ],
-    "notes": "Search site for event pages or transcripts."
-  },
-  {
-    "id": "wm-events-spanberger",
-    "title": "William & Mary \u2014 Events/News (Spanberger)",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "university_event",
-    "source_kind": "web_html",
-    "source_url": "https://www.wm.edu/news/",
-    "license_note": "University content; cite and store excerpts for internal search.",
-    "topics": [
-      "academia",
-      "w&m"
-    ],
-    "notes": "Search site for event pages or transcripts."
-  },
-  {
-    "id": "vt-events-spanberger",
-    "title": "Virginia Tech \u2014 Events/News (Spanberger)",
-    "speaker": "Abigail Spanberger",
-    "date": null,
-    "type": "university_event",
-    "source_kind": "web_html",
-    "source_url": "https://news.vt.edu/",
-    "license_note": "University content; cite and store excerpts for internal search.",
-    "topics": [
-      "academia",
-      "vt"
-    ],
-    "notes": "Search site for event pages or transcripts."
+    "notes": "Fetch captions via youtube_transcript_api if available."
   }
 ]
